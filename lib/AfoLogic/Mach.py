@@ -123,17 +123,16 @@ def f_seed_days():
 
 def f_contractseeding_occurs():
     '''
-    #todo i think this can be removed because contract seeding is hooked up to the yield penalty.
     This function just sets the period when contract seeding must occur (period when wet seeding begins).
-    Contract seeding is not hooked up to yield penalty because if you're going to hire someone you will hire
-    them at the optimum time. Contract seeding is hooked up to poc so this param stops the model having late seeding
-    (contract seeding must occur in the first seeding period).
+    Contract seeding is hooked up to yield penalty because contractors can not always be hired at the optimum time.
+    Contract seeding is hooked up to poc so the yield penalty stops the model having late seeding
     '''
-    contract_start_z = per.f_wet_seeding_start_date()
+    contract_start_z = zfun.f_seasonal_inp(pinp.period['start_contract_seeding_gs1_z'], numpy=True, axis=0)
+    contract_end_z = zfun.f_seasonal_inp(pinp.period['end_contract_seeding_gs1_z'], numpy=True, axis=0)
     mach_periods = per.f_p_dates_df()
-    start_pz = mach_periods.values[:-1]
-    end_pz = mach_periods.values[1:]
-    contractseeding_occur_pz = np.logical_and(start_pz <= contract_start_z, contract_start_z < end_pz)
+    labour_period_start_p5z = mach_periods.values[:-1]
+    labour_period_end_p5z = mach_periods.values[1:]
+    contractseeding_occur_pz = (labour_period_start_p5z < contract_end_z) * (labour_period_end_p5z > contract_start_z)
     contractseeding_occur_pz = pd.DataFrame(contractseeding_occur_pz,index=mach_periods.index[:-1],columns=mach_periods.columns)
     return contractseeding_occur_pz * 1
     # params['contractseeding_occur'] = (mach_periods==contract_start).squeeze().to_dict()
@@ -469,6 +468,7 @@ def f_sowing_timeliness_penalty(r_vals):
     keys_l = pinp.general['i_lmu_idx']
     len_z = len(keys_z)
     len_k = len(keys_k)
+    prob_z = zfun.f_z_prob()
 
 
     ##calc the yield penalty for each day of the year
@@ -485,14 +485,38 @@ def f_sowing_timeliness_penalty(r_vals):
     ##yield penalty relative to sowing at the optimum time.
     seeding_penalty_zkp0 = cum_seeding_penalty_zkp0 - np.max(cum_seeding_penalty_zkp0, axis=-1, keepdims=True)
 
+    ##the penalty before the start of dry sowing is equal to the penalty at the end of the year
+    seeding_penalty_zkp0[:,:,doy_p0 < pinp.crop['dry_seed_start']] = seeding_penalty_zkp0[:,:,-1:]
+
     ##sowing before the break (dry seeding) has the same sowing penalty as sowing on the first day of wet seeding.
+    ## note the penalty is the weighted average of all seasons that have not broken (because of the season clustering).
     ## dry seeding may occur a yield penalty due to more weed pressure or less seed vigour due to time in the ground but this penalty is handled in the yield input
+    ### 1) Break-day penalty for each weather-year and crop:
+    break_penalty_zk = seeding_penalty_zkp0[np.arange(len_z)[:, None], np.arange(len_k)[None, :], season_break_z[:, None].astype(int)]
+
+    ### 2) For each calendar day p0, find which weather-years have NOT yet broken by that day:
+    M_p0z = (season_break_z[None, :] > doy_p0[:, None])  # shape [P0, Z]
+
+    ### 3) Build per-day weights from prob_z over only the not-yet-broken years; normalize each day.
+    weights_p0z = M_p0z * prob_z[None, :]  # shape [P0, Z]
+    weights_sums = weights_p0z.sum(axis=1, keepdims=True)  # shape [P0, 1]
+    # Avoid divide-by-zero; if sum==0 (all years already broken), keep weights at 0
+    weights_norm_p0z = np.divide(
+        weights_p0z,
+        np.where(weights_sums == 0.0, 1.0, weights_sums),
+    )
+
+    ### 4) Compute the per-day, probability-weighted average of break-day penalties across z':
+    avg_break_penalty_kp0 = np.einsum('pz,zk->pk', weights_norm_p0z, break_penalty_zk).T  # [K, P0]
+
+    ### 5) Assign this average to all *dry* days for each z.
     for z in np.arange(len_z):
-        for k in np.arange(len_k):
-            period_is_drysowing_p0 = np.logical_and(doy_p0 >= pinp.crop['dry_seed_start'],
-                                               doy_p0 < season_break_z[z])
-            period_is_break_p0 = doy_p0 == season_break_z[z]
-            seeding_penalty_zkp0[z,k,period_is_drysowing_p0] = seeding_penalty_zkp0[z,k,period_is_break_p0]
+        dry_mask_p0 = np.logical_and(
+            doy_p0 >= pinp.crop['dry_seed_start'],
+            doy_p0 < season_break_z[z]
+        )  # shape [P0]
+        # broadcast assign: left side [K, #dry_days] ← right side [K, #dry_days]
+        seeding_penalty_zkp0[z][:, dry_mask_p0] = avg_break_penalty_kp0[:, dry_mask_p0]
 
     ##scale for lmu (l by p)
     seeding_penalty_lmu_scalar_lp0 = seeding_penalty_lmu_scalar_l_p.values[:,a_p_p0]

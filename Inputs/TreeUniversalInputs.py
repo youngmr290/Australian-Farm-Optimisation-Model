@@ -25,7 +25,7 @@ tree_inputs = {
         "between_row_spacing": 4.3,  # meters
         "within_row_spacing": 4.3,  # meters
         "side_buffer": 5,  # meters
-        "biodiversity_credits": 2,  # credits/ha
+        "biodiversity_value": 17000,  # $/ha
         "shrub_density": 0,  # stems/ha
 
         # biomass green tonnes per hectare per year
@@ -46,12 +46,13 @@ tree_inputs = {
         # crop / pasture production - Parameters represents the relative production by distance from the trees
         "protected_side_production_logistic_params": {
             #
-            "offset": 0.0204,
-            "k": 0.3474,
-            "x0": 4.9304,
-            "a": 8038.0492,
-            "mu": -2583.9371,
-            "sigma": 785.5683
+            "offset": 0.0100,
+            "k": 0.3440,
+            "x0": 4.9254,
+            "a": 0.1673,
+            "mu": -69.3331,
+            "sigma": 87.7954,
+            "x_anchor": 100
         },
         "nonprotected_side_production_logistic_params": {
             "L": 1.0,
@@ -60,7 +61,7 @@ tree_inputs = {
             "offset": 0.1587
         },
 
-        # Microclimate - Parameters represents the relative production by distance from the trees
+        # Microclimate - Parameters represents the relative climate by distance from the trees
         "ws_logistic_params": {
             "L": 1,
             "k": 0.0238,
@@ -80,13 +81,13 @@ tree_inputs = {
     ###############
     "plantation_structure_1": {
         "number_of_belts": 5,  #for block planting this should be 1
-        "distance_between_belts": 150, # meters - for block plantins this should be the width of adjacent paddock.
+        "distance_between_belts": 100, # meters - for block plantins this should be the width of adjacent paddock.
         "propn_paddock_adj": 1,  # proportion of paddock adjacent to the belt. This should be less than 1 if planting next to bush or other non-arable area.
         "number_of_rows": 2,
         "between_row_spacing": 2.0,  # meters
         "within_row_spacing": 2.0,  # meters
         "side_buffer": 4,  # meters
-        "biodiversity_credits": 1,  # credits/ha
+        "biodiversity_value": 8500,  # $/ha
         "shrub_density": 0,  # stems/ha
 
         # biomass green tonnes per hectare per year
@@ -106,12 +107,13 @@ tree_inputs = {
 
         # crop / pasture production - Parameters represents the relative production by distance from the trees
         "protected_side_production_logistic_params": {
-            "offset": 0.0204,
-            "k": 0.3474,
-            "x0": 4.9304,
-            "a": 8038.0492,
-            "mu": -2583.9371,
-            "sigma": 785.5683
+            "offset": 0.0100,
+            "k": 0.3440,
+            "x0": 4.9254,
+            "a": 0.1673,
+            "mu": -69.3331,
+            "sigma": 87.7954,
+            "x_anchor": 100
         },
         "nonprotected_side_production_logistic_params": {
             "L": 1.0,
@@ -120,7 +122,7 @@ tree_inputs = {
             "offset": 0.1587
         },
 
-        # Microclimate - Parameters represents the relative production by distance from the trees
+        # Microclimate - Parameters represents the relative climate by distance from the trees
         "ws_logistic_params": {
             "L": 1,
             "k": 0.0238,
@@ -146,7 +148,7 @@ tree_inputs = {
         "between_row_spacing": 6.0,  # meters
         "within_row_spacing": 6.0,  # meters
         "side_buffer": 5,  # meters
-        "biodiversity_credits": 5,  # credits/ha
+        "biodiversity_value": 22500,  # $/ha
         "shrub_density": 300,  # stems/ha
 
         # biomass green tonnes per hectare per year
@@ -166,12 +168,13 @@ tree_inputs = {
 
         # crop / pasture production - Parameters represents the relative production by distance from the trees
         "protected_side_production_logistic_params": {
-            "offset": 0.0204,
-            "k": 0.3474,
-            "x0": 4.9304,
-            "a": 8038.0492,
-            "mu": -2583.9371,
-            "sigma": 785.5683
+            "offset": 0.0100,
+            "k": 0.3440,
+            "x0": 4.9254,
+            "a": 0.1673,
+            "mu": -69.3331,
+            "sigma": 87.7954,
+            "x_anchor": 100
         },
         "nonprotected_side_production_logistic_params": {
             "L": 1.0,
@@ -180,7 +183,7 @@ tree_inputs = {
             "offset": 0.1587
         },
 
-        # Microclimate - Parameters represents the relative production by distance from the trees
+        # Microclimate - Parameters represents the relative climate by distance from the trees
         "ws_logistic_params": {
             "L": 1,
             "k": 0.0238,
@@ -200,13 +203,13 @@ tree_inputs = {
     ###############
     "plantation_structure_3": {
         "number_of_belts": 5,  #for block planting this should be 1
-        "distance_between_belts": 150, # meters - for block plantins this should be the width of adjacent paddock.
+        "distance_between_belts": 100, # meters - for block plantins this should be the width of adjacent paddock.
         "propn_paddock_adj": 1,  # proportion of paddock adjacent to the belt. This should be less than 1 if planting next to bush or other non-arable area.
         "number_of_rows": 2,
         "between_row_spacing": 2.0,  # meters
         "within_row_spacing": 2.0,  # meters
         "side_buffer": 4,  # meters
-        "biodiversity_credits": 0,  # credits/ha
+        "biodiversity_value": 4500,  # $/ha
         "shrub_density": 0,  # stems/ha
 
         # biomass green tonnes per hectare per year
@@ -226,21 +229,22 @@ tree_inputs = {
 
         # crop / pasture production - Parameters represents the relative production by distance from the trees
         "protected_side_production_logistic_params": {
-            "offset": 0.006,
-            "k": 0.2956,
-            "x0": 2.4377,
-            "a": 0.0871,
-            "mu": 12.1192,
-            "sigma": 2.6905
+            "offset": 0.1311,
+            "k": 0.2987,
+            "x0": 3.5821,
+            "a": 0.1098,
+            "mu": 12.4200,
+            "sigma": 2.8331,
+            "x_anchor": 100
         },
         "nonprotected_side_production_logistic_params": {
             "L": 1.0,
-            "k": 0.3929,
-            "x0": 3.8014,
-            "offset": 0.1882
+            "k": 0.4140,
+            "x0": 4.6975,
+            "offset": 0.2699
         },
 
-        # Microclimate - Parameters represents the relative production by distance from the trees
+        # Microclimate - Parameters represents the relative climate by distance from the trees
         "ws_logistic_params": {
             "L": 1,
             "k": 0.1760,
@@ -289,14 +293,14 @@ tree_inputs = {
     # Biodiversity
     ###############
     "biodiversity_costs": {
-        "setup": 40, #$/ha
+        "setup": 10000, #$/farm
         "annual_monitoring": 25, #$/ha
     },
     ###############
     # Carbon sequestration
     ###############
     "sequestration_costs": {
-        "setup": 40, #$/ha
+        "setup": 10000, #$/farm
         "annual_monitoring": 25, #$/ha
     },
     "fuel_used": {
@@ -318,7 +322,6 @@ tree_inputs = {
     # Prices
     ###############
     "carbon_price": 40,  # $/t co2e
-    "biodiversity_credit_price": 2500,  # $/credit
     "biomass_price": 50,  # $/t green
 }
 
@@ -452,14 +455,18 @@ if __name__ == '__main__':
     from scipy.optimize import curve_fit
     from scipy.special import erf
 
-    def fit_gauss_tail(x_data, y_data, p0=None, show_plot=True):
-        """
-        Function is a combination of a logistic function and a Gaussian bump, adjusted to ensure the tail returns to 1.
 
-        Fit the function:
-        Y(x) = Y_normal + a*exp(-((x-b)/c)**2) - p/(x+q)
-        to the provided data (x_data, y_data).
-        
+    def fit_gauss_tail(x_data, y_data, x_anchor, p0=None, show_plot=True):
+        """
+        Fit a logistic + Gaussian-bump model and anchor it so that the curve equals 1 at `x_anchor`.
+
+        Model BEFORE anchoring:
+            g(x) = offset + (1 - offset) / (1 + exp(-k*(x - x0))) + a * exp(-((x - mu)/sigma)^2)
+
+        Anchoring (applied inside this function for the fitted curve):
+            f(x) = g(x) - (g(x_anchor) - 1)
+        so that f(x_anchor) = 1 exactly, and f(x) → 1 as x → +∞.
+
         Parameters
         ----------
         x_data : array-like
@@ -467,55 +474,57 @@ if __name__ == '__main__':
         y_data : array-like
             The y-values of your data.
         p0 : list or None
-            Optional initial guesses for [Y_normal, a, b, c, p, q].
-            If None, uses a default set of guesses.
+            Optional initial guesses [offset, k, x0, a, mu, sigma].
         show_plot : bool
-            If True, display a plot of the data and the fitted curve.
-        
+            If True, plot the data and the fitted (anchored) curve on [min(x_data), max(x_data)].
+        x_anchor : float
+            The distance (e.g., 80) at which the curve is forced to equal 1.
+
         Returns
         -------
-        params : array
-            The best-fit parameters in the order [Y_normal, a, b, c, p, q].
-        cov : 2D array
-            The covariance matrix from curve_fit.
+        params : np.ndarray
+            Best-fit parameters [offset, k, x0, a, mu, sigma] for the *raw* model g(x).
+            (Anchoring is applied externally when evaluating/plotting.)
+        cov : 2D np.ndarray
+            Covariance matrix from curve_fit.
         """
-        
-        # Define the model
-        def gaussian_bump_return_to_one(x, offset, k, x0, a, mu, sigma):
-            logistic_part = offset + (1 - offset) / (1 + np.exp(-k * (x - x0)))
-            bump = a * np.exp(-((x - mu) / sigma) ** 2)
-            return logistic_part + bump - bump[-1]  # ensures tail returns to 1
-
-        # If no initial guesses are provided, pick some defaults
         if p0 is None:
-            p0 = [0.2, 0.5, 5.0, 0.1, 15.0, 10.0]  # offset, k, x0, a, mu, sigma
+            # offset, k, x0, a, mu, sigma
+            p0 = [0.2, 0.5, 5.0, 0.1, 15.0, 10.0]
 
-        # Fit the model to the data
-        try:
-            params, cov = curve_fit(
-                gaussian_bump_return_to_one,
-                x_data,
-                y_data,
-                p0=p0,
-                maxfev=20000
-            )
-        except RuntimeError as e:
-            print("Fit failed:", e)
-            return None, None
+        def gaussian_bump_anchored(x, offset, k, x0, a, mu, sigma):
+            # raw logistic + Gaussian
+            g = offset + (1 - offset) / (1 + np.exp(-k * (x - x0))) \
+                + a * np.exp(-((x - mu) / sigma) ** 2)
+            # compute g at the anchor and shift so f(x_anchor)=1
+            g_anchor = offset + (1 - offset) / (1 + np.exp(-k * (x_anchor - x0))) \
+                       + a * np.exp(-((x_anchor - mu) / sigma) ** 2)
+            return g - (g_anchor - 1.0)
+
+        # Fit the anchored model (smooth; no hard clamping here)
+        params, cov = curve_fit(
+            gaussian_bump_anchored,
+            x_data,
+            y_data,
+            p0=p0,
+            maxfev=20000
+        )
 
         if show_plot:
-            x_fit = np.linspace(min(x_data), max(x_data), 300)
-            y_fit = gaussian_bump_return_to_one(x_fit, *params)
+            xx = np.linspace(float(np.min(x_data)), float(np.max(x_data)), 400)
+            yy = gaussian_bump_anchored(xx, *params)
             plt.figure(figsize=(6, 4))
             plt.scatter(x_data, y_data, color='red', label='Data')
-            plt.plot(x_fit, y_fit, color='green', label='Custom Fit')
+            plt.plot(xx, yy, color='green', label=f'Fit (anchored @ {x_anchor:g} m)')
+            plt.axvline(x_anchor, ls='--', lw=1, color='gray')
             plt.xlabel('Distance from Trees (m)')
-            plt.ylabel('Relative Windspeed')
-            plt.title('Custom Fit: Logistic + Gaussian Bump')
+            plt.ylabel('Relative Production')
+            plt.title('Logistic + Gaussian (anchored)')
             plt.legend()
             plt.grid(True)
             plt.tight_layout()
             plt.show()
+
         # Print the results
         offset_fit, k_fit, x0_fit, a_fit, mu_fit, sigma_fit = params
         print("Fitted parameters:")
@@ -525,9 +534,9 @@ if __name__ == '__main__':
         print(f"  a      = {a_fit:.4f}")
         print(f"  mu     = {mu_fit:.4f}")
         print(f"  sigma  = {sigma_fit:.4f}")
-        
-        return params, cov
+        print(f"  x_anchor  = {x_anchor:.4f}")
 
+        return params, cov
 
     def fit_logistic_model(x_data, y_data, p0=None, show_plot=True):
         """
@@ -608,7 +617,7 @@ if __name__ == '__main__':
     fit_results = {}
 
     for name, y_data in config_data.items():
-        print(f"\nFitting logistic model for {name}")
+        print(f"\nFitting WS logistic model for {name}")
         params, cov = fit_logistic_model(x_data, y_data, show_plot=True)
         fit_results[name] = {
             "params": params,
@@ -623,14 +632,14 @@ if __name__ == '__main__':
         "Config 1": np.array([0.24, 0.43, 0.62, 0.81, 1.00, 1.00, 1.00]),
         "Config 2": np.array([0.24, 0.43, 0.62, 0.81, 1.00, 1.00, 1.00]),
         "Config 3": np.array([0.24, 0.43, 0.62, 0.81, 1.00, 1.00, 1.00]),
-        "Config 4": np.array([0.33, 0.53, 0.71, 0.86, 1.00, 1.00, 1.00])
+        "Config 4": np.array([0.35, 0.52, 0.68, 0.84, 1.00, 1.00, 1.00])
     }
 
     # Fit and store results
     fit_results = {}
 
     for name, y_data in config_data.items():
-        print(f"\nFitting logistic model for {name}")
+        print(f"\nFitting yield impact non-protected side logistic model for {name}")
         params, cov = fit_logistic_model(x_data, y_data, show_plot=True, p0 = [1.0, 5.5, 0.24])
         fit_results[name] = {
             "params": params,
@@ -641,19 +650,20 @@ if __name__ == '__main__':
     # Get parameters for yield impact protected side
     # ---------------------------
     x_data = np.array([0, 2.75, 5.5, 8.25, 11, 15, 20, 30, 40, 80])
+    x_anchor = 100 #distance from trees where production is back to 100%
     config_data = {
         "Config 1": np.array([0.24, 0.43, 0.62, 0.81, 1.00, 1.02, 1.04, 1.04, 1.04, 1.00]),
         "Config 2": np.array([0.24, 0.43, 0.62, 0.81, 1.00, 1.02, 1.04, 1.04, 1.04, 1.00]),
         "Config 3": np.array([0.24, 0.43, 0.62, 0.81, 1.00, 1.02, 1.04, 1.04, 1.04, 1.00]),
-        "Config 4": np.array([0.33, 0.53, 0.71, 0.86, 1.00, 1.004, 1.008, 1.008, 1.008, 1.00])
+        "Config 4": np.array([0.35, 0.52, 0.68, 0.84, 1.00, 1.02, 1.015, 1.008, 1.008, 1.00])
     }
 
     # Fit and store results
     fit_results = {}
 
     for name, y_data in config_data.items():
-        print(f"\nFitting logistic model for {name}")
-        params, cov = fit_gauss_tail(x_data, y_data, show_plot=True)
+        print(f"\nFitting yield impact protected side logistic model for {name}")
+        params, cov = fit_gauss_tail(x_data, y_data, x_anchor, show_plot=True)
         fit_results[name] = {
             "params": params,
             "covariance": cov

@@ -332,13 +332,16 @@ def f_con_harv_stub_nap_cons(model):
 
     '''
     def harv_stub_nap_cons(model,q,s,p6,z):
-        if any(model.p_nap_prop[p6,z] or model.p_harv_prop[p6,z,k] for k in model.s_crops) and pe.value(model.p_wyear_inc_qs[q, s]):
-            return sum(-paspy.f_pas_me(model,q,s,p6,f,z)
-                       + sum(model.p_harv_prop[p6,z,k] / (1 - model.p_harv_prop[p6,z,k])
-                             * model.v_stub_con[q,s,z,p6,f,k,sc,s2] * model.p_stub_md[f,p6,z,k,sc]
-                             for k in model.s_crops for sc in model.s_stub_cat for s2 in model.s_biomass_uses)
-                       + model.p_nap_prop[p6,z] / (1 - model.p_nap_prop[p6,z]) * paspy.f_nappas_me(model,q,s,p6,f,z)
-                       for f in model.s_feed_pools) <= 0
+
+        nap_exists = (model.p_nap_prop[p6, z] != 0)
+        stub_exists = len(model.s_stub_k_by_p6z[p6, z]) > 0
+        if (nap_exists or stub_exists) and pe.value(model.p_wyear_inc_qs[q, s]):
+            return sum(
+                -paspy.f_pas_me(model,q,s,p6,f,z)
+                + stubpy.f1_stub_consumed_in_harvest_period(model,q,s,p6,f,z)
+                + model.p_nap_prop[p6,z] / (1 - model.p_nap_prop[p6,z]) * paspy.f_nappas_me(model,q,s,p6,f,z)
+                for f in model.s_feed_pools
+            ) <= 0
         else:
             return pe.Constraint.Skip
     model.con_harv_stub_nap_cons = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_feed_periods,model.s_season_types,rule=harv_stub_nap_cons,
@@ -827,57 +830,203 @@ def f_con_minroe(model):
 
 
 def f_objective(model):
+    r'''
+    The objective of the model is to maximise expected utility. In the case of
+    risk neutrality, expected utility is equivalent to expected profit, meaning
+    that the optimal farm management plan is that which maximises farm profit.
+    In the case of risk aversion, utility increases at a diminishing rate as
+    profit increases. Thus, when farm profit is low, an extra dollar of profit
+    provides more utility than when farm profit is high. This means a risk
+    averse farmer aims to reduce profit variation (i.e. increase profit in poor
+    years at the cost of reduced profit in the good years). For example, if the
+    crop and stock enterprise on the modelled farm are similar but grain prices
+    are more volatile, then risk aversion will shift resources towards the
+    stock enterprise to reduce risk (profit variation).
+
+    The expected return used to calculate utility includes the net cash flow for
+    a given price and weather scenario, minus a cost to represent a minimum
+    return on operating costs incurred (MINROE), minus the cost of depreciation,
+    and minus the opportunity cost on the farm assets (total value of all
+    assets times the discount rate, to ensure that the assets generate a minimum
+    ROA). MINROE and asset opportunity costs are discussed in more detail in the
+    finance section, and their inclusion is controlled by the user.
+
+    Constant absolute risk-aversion (CARA) and constant relative risk-aversion
+    (CRRA) are two well known utility functions. Both have been previously used
+    in stochastic farm modelling (see :cite:p:`KINGWELL1994, kingwell1996`) and
+    both methods are included in AFO. A third expo-power utility function is
+    also included in AFO. This provides a flexible middle ground between
+    CARA and CRRA, overcoming many of their limitations and allowing risk aversion to change with the scale of returns.
+    The expo-power function we are using is based on :cite:p:`holt2002`
+    variant of the original function introduced by :cite:p:`saha1993`.
+    All three utility functions are nonlinear. To accommodate this in AFO, a
+    piecewise-linear approximation is used, with 13 linear segments applied over
+    the relevant range of profit values.
+
+    As an alternative to expected-utility maximisation, AFO also allows a
+    mean–CVaR (Conditional Value at Risk) objective. In this case, the model
+    chooses a farm plan by balancing expected profit against downside (tail)
+    risk in low-profit states.
+
+    **CARA is a negative exponential curve:**
+
+    :math:`U = 1-exp(-a*x)`
+
+    where :math:`U` is utility, :math:`a` is the Pratt–Arrow coefficient of
+    absolute risk aversion, and :math:`x` is the return to management and
+    capital. The coefficient :math:`a` is a user input that controls the level
+    of risk aversion. Earlier farm modelling work by :cite:p:`KINGWELL1994` used values of 0.000003 and
+    0.000005 to represent moderate and high levels of risk aversion
+    respectively, based on profit levels typical at the time.
+
+    To ensure comparability under contemporary farm conditions—where average profit levels are substantially
+    higher—we calibrate CARA parameters based on relative risk aversion evaluated at a representative
+    modern profit level. We target coefficients of relative risk aversion consistent with Kingwell’s classifications:
+
+    - Moderate risk aversion: 0.78
+    - High risk aversion: 1.30
+
+    Given the relationship :math:`R = a x`, the corresponding CARA parameter is
+    computed as: :math:`a = R / x`. where :math:`x` is the representative annual farm profit. This
+    ensures updated parameters express the *same behavioural strength* of risk
+    aversion as earlier work, but scaled to current economic settings.
+
+    **CRRA is a power utility function:**
+
+    :math:`U = W^(1-R) / (1-R)`
+
+    where :math:`U` is utility, :math:`W` is terminal wealth, and :math:`R`
+    is the relative risk aversion coefficient. The CRRA method affects
+    risk aversion through wealth, meaning that MINROE and asset opportunity
+    costs influence the implied level of risk aversion. :cite:p:`kingwell1996`
+    used values of :math:`R` between 0.1 and 3.0 to represent low to high
+    risk aversion. A key limitation is that CRRA cannot be applied when the
+    terminal wealth level becomes negative.
+
+    **Expo-power Utility:**
+
+    :math: `U(x) = (1 - exp(-α x^{1-r})) / α`
+
+    where:
+
+    - :math:`x` is the profit in each weather–price state.
+    - :math:`r` is a shape parameter controlling how risk aversion
+      changes with the size of profit. For `0 < r < 1`, the expo-power utility function exhibits decreasing absolute
+      risk aversion (DARA) and increasing relative risk aversion (IRRA).
+    - :math:`a` is a scale parameter determining the overall level of risk
+      aversion. It is calibrated so that the coefficient of relative risk aversion at
+      the reference profit level matches the levels used in the CARA formulation.
+
+    The curvature parameter :math:`r` for the expo-power utility is based on
+    empirical estimates from farmer risk-preference studies.
+    Results using agricultural lotteries yield :math:`r = 0.641`
+    (:cite:p:`loduca2024`). Comparable estimates can be derived from earlier
+    studies using equivalent expo-power formulations, including
+    :math:`r = 0.635` from :cite:p:`saha1994` and :math:`r = 0.643` from
+    :cite:p:`bocqueho2014`. These values cluster tightly around 0.64, and broader
+    evidence from European farming systems suggests a plausible range between
+    0.6 and 0.8 (:cite:p:`rommel2022`). Accordingly, we adopt
+    :math:`r = 0.64` as a representative baseline value.
+    This value reflects moderate curvature and means relative risk aversion increases
+    with income.
+
+    The parameter :math:`a` is not taken directly from the literature but is
+    calibrated so that the resulting coefficient of relative risk aversion at the
+    reference profit level (AUD 500,000) matches the same “moderate” and “high”
+    risk aversion levels used for the CARA specification (0.78 and 1.30), ensuring
+    comparability across utility forms.
+
+    In this formulation, AFO treats :math:`x` (profit) as the “thing at risk,”
+    rather than full terminal wealth. This simplifies both interpretation and
+    implementation, and aligns with the existing CARA-based specification.
+    Wealth can be incorporated in future developments by replacing
+    :math:`x` with :math:`W = W_0 + x`.
+
+    **Mean–CVaR Tail-Risk Method:**
+
+    Let :math:`W` denote terminal profit in each weather–price state, and define
+    loss as :math:`L = -W`. For a confidence level :math:`\alpha \in (0,1)`
+    (for example, :math:`\alpha = 0.95`) and a risk-aversion coefficient
+    :math:`\lambda > 0`, AFO uses the following CVaR definition:
+
+    .. math::
+
+       \text{CVaR}_\alpha(L)
+       = \eta + \frac{1}{1-\alpha}\,\mathbb{E}\big[(L - \eta)^+\big],
+
+    where :math:`\eta` is an endogenous VaR-like threshold and
+    :math:`(L - \eta)^+` denotes the positive part of :math:`L - \eta`.
+    The objective in this mode is
+
+    .. math::
+
+       \max \ \mathbb{E}[W] \;-\; \lambda \,\text{CVaR}_\alpha(L),
+
+    so that higher values of :math:`\lambda` place more weight on limiting extreme
+    losses in bad years. This mean–CVaR specification does not rely on a utility
+    transformation of profit. However, the same terminal profit measure is used
+    as in the CARA/CRRA/expo-power cases, so results remain comparable across
+    risk specifications.
+
+    **Calibration and scaling of terminal wealth points**
+
+    The piecewise-linear approximation to the utility function is constructed over
+    a grid of terminal profit values given by ``tw_points``. These breakpoints
+    should be chosen to cover the range of profit outcomes implied by the price–
+    weather states in the model, with some buffer for unusually good or bad years.
+    Changing the minimum or maximum values of ``tw_points`` does not alter the
+    underlying risk-aversion parameters (e.g. CARA :math:`a`, CRRA :math:`R`,
+    expo-power :math:`r` and :math:`a`), but it does affect how accurately the
+    utility curve is approximated in the extreme tails.
+
+    For CRRA and expo-power, AFO applies utility to total wealth,
+
+    .. math::
+
+       W = W_0 + x,
+
+    where :math:`x` is terminal profit and :math:`W_0` is an initial wealth level
+    specified by the user (``i_initial_wealth``). This shift ensures that wealth
+    remains positive even when profit is negative. However, it also means that the
+    effective scale at which risk aversion is evaluated depends on both profit and
+    initial wealth.
+
+    In the CARA and expo-power specifications, risk-aversion coefficients are
+    calibrated at a representative profit level :math:`x_\text{ref}`. For example,
+    the expo-power coefficient :math:`a` is chosen so that the coefficient of
+    relative risk aversion at :math:`x_\text{ref} = 650{,}000` matches Kingwell's
+    "moderate" or "high" risk-aversion benchmarks. When an initial wealth
+    :math:`W_0` is introduced, the relevant reference argument becomes
+
+    .. math::
+
+       W_\text{ref} = W_0 + x_\text{ref}.
+
+    If :math:`W_0` or :math:`x_\text{ref}` is changed substantially, the original
+    calibration of :math:`a` will no longer imply the same level of relative risk
+    aversion at the new reference wealth. In that case, :math:`a` should be
+    recomputed using the expo-power relative risk aversion expression
+
+    .. math::
+
+       R(W) = r + a (1 - r)\, W^{\,1-r},
+
+    by solving for :math:`a` at the desired target :math:`R(W_\text{ref})`. An
+    analogous consideration applies to the CARA coefficient :math:`a`, where the
+    calibration :math:`a = R / x_\text{ref}` assumes a particular reference profit
+    scale.
+
+    For CRRA, the parameter :math:`R` is itself the coefficient of relative risk
+    aversion and does not depend on wealth. Introducing :math:`W_0` therefore does
+    not change :math:`R` in the Arrow–Pratt sense, although it does change the
+    absolute sensitivity to a given dollar change in profit relative to total
+    wealth. Users who alter ``tw_points``, initial wealth or the representative
+    profit level should be aware of these scale effects and, if necessary,
+    recalibrate the CARA and expo-power coefficients to preserve their intended
+    behavioural interpretation.
+
+
     '''
-    The objective of the model is to maximise expected utility. In the case of risk neutrality,
-    expected utility is equivalent to expected profit, meaning that the optimal farm management plan is that which
-    maximises farm profit. In the case of risk aversion, utility increases at a diminishing rate as profit increases.
-    Thus, when farm profit is low, an extra dollar of profit provide more utility than when farm profit is high.
-    This means, a risk adverse farmer aims to reduce profit variation (i.e. increase
-    profit in poor years at the cost of reduced profit in the good years). For example, if the crop and stock
-    enterprise on the modelled farm are similar but grain prices are more volatile, then risk aversion
-    will shift resources towards the stock enterprise to reduce risk (profit variation).
-
-    The expected return used to calculate utility includes the net cash flow for a given price and weather scenario,
-    minus a cost to represent a minimum
-    return on operating costs incurred (MINROE), minus the cost of depreciation, and minus the opportunity cost on the
-    farm assets (total value of all assets times the discount rate  (to ensure that the assets generate a minimum ROA)).
-    MINROE and asset opportunity costs are discussed in more detail in the finance section, and their inclusion is
-    controlled by the user.
-
-    Constant absolute risk-aversion (CARA) and constant relative risk-aversion (CRRA) are two well known utility functions.
-    Both have been previously used in stochastic farm modelling (see :cite:p:`KINGWELL1994, kingwell1996`) and both
-    methods are included in AFO (note: alternative utility functions can easily be added).
-    CARA is a negative exponential curve: :math:`U = 1-exp(-a*x)` where :math:`U` is utility, :math:`a` is the
-    Pratt-Arrow coefficient of absolute risk aversion and x is the return to management and capital.
-    The Pratt-Arrow coefficient is a user input that controls the level of risk aversion. :cite:p:`KINGWELL1994`
-    used two levels: 0.000 003 and 0.000 005 to represent moderate and high levels risk-aversion.
-    CRRA is a power function denoted by: :math:`U = W^(1-R) / (1-R)` where :math:`U` is utility, :math:`W` is terminal
-    wealth and :math:`R` is the relative risk aversion coefficient.
-    The relative risk aversion coefficient is a user defined input that controls the level of risk aversion.
-    :cite:p:`kingwell1996` used values within the range of 0.1 to 3.0 to represent low to high levels of risk-aversion.
-
-    Both methods have limitations, most of which can be minimised if the modeler is aware.
-    A CARA specification implies there are no wealth effects on a farmer's income and price security decisions.
-    In practice, the CARA specification means that the farmer's risk management
-    decisions, particularly in favourable states of nature (e.g. good weather-years with high commodity prices)
-    when a farmer's wealth is boosted, will be different and more concerned with income stability than those
-    that would arise with a CRRA specification. The limitation of the CRRA method is that it cannot handle a negative
-    terminal state. Additionally, because CRRA is impacted by terminal wealth, MINROE and asset opportunity cost (discussed in the finance section)
-    will affect the impact of risk aversion, which is not technically correct because these are not real costs incurred
-    by the farmer.
-
-    The utility functions discussed above are non-linear. To accommodate this in AFO, a piecewise technique is
-    applied which approximates the function using 13 linear segments.
-
-    '''
-    #todo in a future risk aversion analysis review the work by Scott M. Swinton (university of Michigan) he talks about
-    # another risk system that is a combination of relative and absolute risk aversion.
-    # The expo-power function we are using is based on Holt & Laurie’s variant of the original function introduced by Saha.  Here are the references:
-    # Saha, A. (1993). Expo‐power utility: a ‘flexible’form for absolute and relative risk aversion. American Journal of Agricultural Economics, 75(4), 905-913.
-    # Holt, C. A., & Laury, S. K. (2002). Risk Aversion and Incentive Effects. American Economic Review, 92(5), 1644-1655.
-
-    #todo another idea that is probably more akin to farmers attitude is to use the lowest 20% of years as measure of risk
-    # rather than the spread between years as traditionally done.
 
     ##terminal wealth transfer constraint - combine cashflow with depreciation, MINROE and asset value
     p7_end = list(model.s_season_periods)[-1]
@@ -887,30 +1036,43 @@ def f_objective(model):
             return (model.v_terminal_wealth[q,s,z,c1] - model.v_credit[q,s,c1,p7_end,z] + model.v_debit[q,s,c1,p7_end,z] # have to include debit otherwise model selects lots of debit to increase credit, hence can't just maximise credit.
                     + model.v_dep[q,s,p7_end,z] + model.v_minroe[q,s,p7_end,z] + model.v_asset_cost[q,s,p7_end,z]
                     - model.v_tradevalue[q, s, p7_end, z]
+                    # all variables with positive bounds (ie variables that can be negative e.g. terminal_wealth are excluded) put a small neg number into objective. This stop cplex selecting variables that don't contribute to the objective (cplex selects variables to remove slack on constraints).
                     + 0.00001 * sum(sum(v[idx] for idx in v if idx[0]==q) for v in variables #only sum for given q (this is required for the MP model otherwise the variable bnd on the first year doesnt work because len q affect v_terminal wealth).
-                                       if v._rule_bounds._initializer.val[0] is not None and v._rule_bounds._initializer.val[0]>=0)) <=0 #all variables with positive bounds (ie variables that can be negative e.g. terminal_wealth are excluded) put a small neg number into objective. This stop cplex selecting variables that don't contribute to the objective (cplex selects variables to remove slack on constraints).
+                                       if v._rule_bounds._initializer.val[0] is not None and v._rule_bounds._initializer.val[0]>=0)) ==0 #had to make this == constraint so that the model soved correctly when risk was being used (otherwise there was a few cases where there was slack here ie the solver was not finding optimum)
         else:                                                                                                  #note; _rule_bounds.val[0] is the lower bound of each variable
             return pe.Constraint.Skip
     model.con_terminal_wealth = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_c1, rule=terminal_wealth,
                                      doc='tallies up terminal wealth so it can be transferred to the utility function.')
 
-    ##terminal wealth at each segment
-    tw_points = list(range(0, 1000000, 100000)) #majority of segments in expected profit range - these need to line up with terminal wealth before initial wealth is added.
-    tw_points.insert(0, -2000000) #add a low number to end to handle if profit is very low. Note utility will be linear for any values in this segment, thus shouldn't be common to have profit in this seg
-    tw_points.append(20000001) #add a high number to end to handle if profit is very high. Note utility will be linear for any values in this last segment, thus shouldn't be common to have profit in this seg
+    ##terminal wealth at each segment - smaller steps at low profit when utility function is steep
+    ###need to ensure lowest segement capture the lowest terminal wealth state - this can be checked by running model with price variation on but no risk.
+    tw_points = (
+            list(range(-500000, -200000, 50000)) +
+            list(range(-200000, 500000, 100000)) +
+            list(range(500000, 1200000, 200000)))
+    tw_points.append(2000000) #add a high number to end to handle if profit is very high. Note utility will be linear for any values in this last segment, thus shouldn't be common to have profit in this seg
+    tw_points = sorted(set(tw_points))  # ensure sorted and unique
     tw_points = np.array(tw_points)
-    if not uinp.general['i_inc_risk']:
-        utility_u = tw_points
+
+    # Default: risk-neutral linear utility (used also for CVaR case)
+    utility_u = tw_points
     ##CARA/CRRA utility function
-    elif uinp.general['i_utility_method']==1: #CARA
+    if uinp.general['i_utility_method']==1: #CARA
         a=uinp.general['i_cara_risk_coef']
         utility_u = (1-np.exp(-a*tw_points))*100 #need to multiply by 100 so the solver works (not 100% sure but seems to be due to the small change in obj making it hard to solve)
     ##CRRA utility function
     elif uinp.general['i_utility_method']==2: #CRRA
         Rr = uinp.general['i_crra_risk_coef']
-        initial_welth = uinp.general['i_crra_initial_wealth']
+        initial_welth = uinp.general['i_initial_wealth']
         t_tw_points = tw_points+initial_welth
         utility_u = t_tw_points**(1-Rr) / (1-Rr)
+    ##Expo-power Utility
+    elif uinp.general['i_utility_method']==3:
+        r = uinp.general['i_r_expo_risk_coef']
+        a = uinp.general['i_a_expo_risk_coef']
+        initial_welth = uinp.general['i_initial_wealth']
+        t_tw_points = tw_points+initial_welth
+        utility_u = (1 - np.exp(-a * t_tw_points**(1-r))) / a
 
     keys_u = np.array(['u%s' % i for i in range(len(tw_points))])
     p_tw_points = dict(zip(keys_u, tw_points))
@@ -937,11 +1099,66 @@ def f_objective(model):
     model.con_utility_segment_propn = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_c1, rule=utility_propn,
                                      doc='ensures terminal wealth points tally to 1. Required to stop utility function being unbounded.')
 
-    ##objective function (maximise utility)
-    return sum(sum(model.v_utility_points[q,s,z,c1,u] * model.p_utility[u] for u in model.s_utility_points)
-               * model.p_season_prob_qsz[q,s,z] * model.p_prob_c1[c1] * model.p_discount_factor_q[q]
-               for q in model.s_sequence_year for s in model.s_sequence for c1 in model.s_c1 for z in model.s_season_types
-               if pe.value(model.p_wyear_inc_qs[q,s]))
+    if uinp.general['i_utility_method'] <=3:
+        # Default objective (risk-neutral or CARA/CRRA/Expo)
+        return sum(sum(model.v_utility_points[q,s,z,c1,u] * model.p_utility[u] for u in model.s_utility_points)
+                   * model.p_season_prob_qsz[q,s,z] * model.p_prob_c1[c1] * model.p_discount_factor_q[q]
+                   for q in model.s_sequence_year for s in model.s_sequence for c1 in model.s_c1 for z in model.s_season_types
+                   if pe.value(model.p_wyear_inc_qs[q,s]))
+
+    # CVaR risk function (only used if method 4 selected) ---
+    if uinp.general['i_utility_method'] == 4:
+        alpha_tail = uinp.general['i_tail_alpha']   # e.g. 0.95
+        lambda_tail = uinp.general['i_tail_lambda'] # risk aversion to tail
+
+        # VaR on loss (single global)
+        model.v_eta = pe.Var(bounds=(None, None), doc='VaR level on loss')
+
+        # Shortfall variables per state
+        model.v_shortfall = pe.Var(
+            model.s_sequence_year, model.s_sequence,
+            model.s_season_types, model.s_c1,
+            bounds=(0, None),
+            doc='(loss - eta)+ per state'
+        )
+
+        def shortfall_rule(model, q, s, z, c1):
+            if pe.value(model.p_wyear_inc_qs[q, s]):
+                # Define loss as negative terminal wealth:
+                W = model.v_terminal_wealth[q, s, z, c1]
+                L = -W
+                return model.v_shortfall[q, s, z, c1] >= L - model.v_eta
+            else:
+                return pe.Constraint.Skip
+
+        model.con_shortfall = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_c1,
+            rule=shortfall_rule, doc='defines shortfall for CVaR')
+
+        # helper inlined: state probability (including discount)
+        def state_prob(q, s, z, c1):
+            return (model.p_season_prob_qsz[q, s, z] * model.p_prob_c1[c1] * model.p_discount_factor_q[q])
+
+        # Expected wealth
+        exp_wealth = sum(
+            model.v_terminal_wealth[q, s, z, c1] * state_prob(q, s, z, c1)
+            for q in model.s_sequence_year for s in model.s_sequence
+            for z in model.s_season_types for c1 in model.s_c1
+            if pe.value(model.p_wyear_inc_qs[q, s])
+        )
+
+        # Expected shortfall
+        exp_shortfall = sum(
+            model.v_shortfall[q, s, z, c1] * state_prob(q, s, z, c1)
+            for q in model.s_sequence_year for s in model.s_sequence
+            for z in model.s_season_types for c1 in model.s_c1
+            if pe.value(model.p_wyear_inc_qs[q, s])
+        )
+
+        CVaR = model.v_eta + (1.0 / (1.0 - alpha_tail)) * exp_shortfall
+
+        # Objective: mean - lambda * CVaR
+        return exp_wealth - lambda_tail * CVaR
+
 
 def f_con_MP(model, MP_lp_vars):
     ''''

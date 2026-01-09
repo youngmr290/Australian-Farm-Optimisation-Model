@@ -494,6 +494,7 @@ def f_property_inp_sa(pinp_defaults):
     ###sam
     ###sap
     ###saa
+    sheep['i_eqn_date_g1_p7'] = fun.f_sa(sheep['i_eqn_date_g1_p7'], sen.saa['eqn_date_g1_p7'], 2).astype('int')
     sheep['ia_r1_zig1'] = fun.f_sa(sheep['ia_r1_zig1'], sen.saa['r1_izg1'], 2).astype('int')
     sheep['ia_r2_isk2g1'] = fun.f_sa(sheep['ia_r2_isk2g1'], sen.saa['r2_isk2g1'], 2).astype('int')
     sheep['ia_r1_zig3'] = fun.f_sa(sheep['ia_r1_zig3'], sen.saa['r1_izg3'], 2).astype('int')
@@ -604,9 +605,6 @@ def f1_expand_p6():
         pasture_inputs[pasture]['i_dry_exists'] = np.max((a_p6std_p6z == pasture_inputs[pasture]['i_dry_exists']) * index_p6z, axis=0) \
                                                   - (np.count_nonzero(a_p6std_p6z == pasture_inputs[pasture]['i_dry_exists'], axis=0) -1) #have to minus count non zero in case an extra fp is added in the period dry pas becomes available. because in this case we still want to point at the first period it become available (opposite to end of gs)
 
-    ###crop residue
-    stubble['i_fp_end_stub_z'] = np.max((a_p6std_p6z == stubble['i_fp_end_stub_z']) * index_p6z, axis=0)
-
     ###fp index needs special handling because it isn't just expanded it is rebuilt
     period['i_fp_idx'] = ['fp%02d'%i for i in range(len(a_p6std_p6z))]
 
@@ -643,6 +641,7 @@ def f1_mask_lmu():
     f1_do_mask_lmu(general, "i_lmu_area", lmu_axis=0)
     f1_do_mask_lmu(general, "i_non_cropable_area_l", lmu_axis=0)
     f1_do_mask_lmu(general, "arable", lmu_axis=0)
+    f1_do_mask_lmu(general, "i_recharge_kl", lmu_axis=1)
 
     ##crop
     f1_do_mask_lmu(crop, "yield_by_lmu", lmu_axis=1)
@@ -683,6 +682,7 @@ def f1_mask_lmu():
     f1_do_mask_lmu(tree, "estimated_area_trees_l", lmu_axis=0)
     f1_do_mask_lmu(tree, "lmu_growth_scalar_l", lmu_axis=0)
     f1_do_mask_lmu(tree, "lmu_carbon_scalar_l", lmu_axis=0)
+    f1_do_mask_lmu(tree, "recharge_l", lmu_axis=0)
 
 def f1_do_mask_landuse(dict, key, landuse_axis_type, landuse_axis):
     '''
@@ -732,6 +732,7 @@ def f1_mask_landuse():
     ##general
     f1_do_mask_landuse(general, "i_phase_can_increase_kp7", landuse_axis_type="all", landuse_axis=0)
     f1_do_mask_landuse(general, "i_phase_can_reduce_kp7", landuse_axis_type="all", landuse_axis=0)
+    f1_do_mask_landuse(general, "i_recharge_kl", landuse_axis_type="all", landuse_axis=0)
 
     ##crop
     f1_do_mask_landuse(crop, "seeding_yield_penalty", landuse_axis_type="crop", landuse_axis=0)

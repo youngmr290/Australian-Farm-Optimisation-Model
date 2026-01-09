@@ -387,8 +387,8 @@ def f1_btrt0(dstwtr_propn,pss,pstw,pstr): #^this function is inflexible ie if yo
     progeny_numbers_b0yg[1,...] = 2 * pstw**2 #number of progeny surviving when there are no deaths is 2, therefore 2p^2
     progeny_numbers_b0yg[2,...] = 3 * pstr**3 #number of progeny surviving when there are no deaths is 3, therefore 3p^3
     progeny_numbers_b0yg[3,...] = 2 * pstw * (1 - pstw)  #the 2 is because it could be either progeny 1 that dies or progeny 2 that dies
-    progeny_numbers_b0yg[4,...] = 2 * (3* pstr**2 * (1 - pstr))  #the 2x is because there are 2 progeny surviving in the litter and the 3x because it could be either progeny 1, 2 or 3 that dies
-    progeny_numbers_b0yg[5,...] = 3* pstr * (1 - pstr)**2  #the 3x because it could be either progeny 1, 2 or 3 that survives
+    progeny_numbers_b0yg[4,...] = 2 * (3 * pstr**2 * (1 - pstr))  #the 2x is because there are 2 progeny surviving in the litter and the 3x because it could be either progeny 1, 2 or 3 that dies
+    progeny_numbers_b0yg[5,...] = 3 * pstr * (1 - pstr)**2  #the 3x because it could be either progeny 1, 2 or 3 that survives
     ##mul progeny numbers array with number of dams giving birth to that litter size to get the number of progeny surviving per dam giving birth.
     a_nfoet_b0 = sinp.stock['a_nfoet_b1'][sinp.stock['i_mask_b0_b1']] #create association between l0 and b0
     btrt_b0yg = progeny_numbers_b0yg * dstwtr_propn[a_nfoet_b0]
@@ -707,6 +707,7 @@ def f1_rev_sa(value, sa, age, sa_type):
     t_value = fun.f_sa(t_value, sa, sa_type)
 
     ###this is done so that the p axis doesnt get activated if the rev_sa is not used.
+    #todo Could add an if so that if all(rev_age_stage == 0) then don't add the p axis simply apply the SA (is that just "return t_value"?)
     if np.all(t_value==value): #if adjusted value is the same as the initial value then no sa was applied.
         return value
     else:
@@ -1064,7 +1065,7 @@ def f_energy_nfs(cm, cg, lw, fat, muscle, viscera, mei, km, i_steepness, density
     return hp_maint, hp_mei, meme_cs
 
 
-def f_foetus_cs(cb1, cp, nfoet, rc_start, w_b_std_y, w_b_exp_y, w_f_start, nw_f_start, nwf_age_f, guw_age_f
+def f_foetus_cs(cb1, cp, nfoet, rc_start, w_b_std_y, w_b_exp_y, w_f_start, nw_f_start, guw_start, nwf_age_f, guw_age_f
                 , dce_age_f, rev_trait_value):
     '''
     :param cb1: Numpy array, sim parameters - parameters altered by LSLN (b1 axis).
@@ -1113,10 +1114,12 @@ def f_foetus_cs(cb1, cp, nfoet, rc_start, w_b_std_y, w_b_exp_y, w_f_start, nw_f_
     w_f = w_f * fun.f_divide(nec, nec_prior)
     ##Weight of the gravid uterus (conceptus - mid-period)
     guw = nfoet * (nw_gu + (w_f - nw_f))
-    return w_f, nec, nw_f, guw
+    ##Change in weight of gravid uterus
+    d_guw = guw - guw_start
+    return w_f, nec, nw_f, guw, d_guw
 
 
-def f_foetus_nfs(cg, cp, step, c_start, muscle_start, d_muscle, nfoet, w_b_exp_y, w_f_start
+def f_foetus_nfs(cg, cp, step, c_start, muscle_start, d_muscle, nfoet, w_b_exp_y, w_f_start, guw_start
                  , nwf_age_f, guw_age_f, dcdt_age_f, gest_propn, rev_trait_value):
     '''
 
@@ -1162,7 +1165,9 @@ def f_foetus_nfs(cg, cp, step, c_start, muscle_start, d_muscle, nfoet, w_b_exp_y
     w_f = w_f_start + d_w_f * step
     ##Weight of the gravid uterus (conceptus - mid-period)
     guw = nfoet * (nw_gu + (w_f - nw_f))
-    return w_f, dc, nw_f, guw
+    ##Change in weight of gravid uterus
+    d_guw = guw - guw_start
+    return w_f, dc, nw_f, guw, d_guw
 
 
 def f1_carryforward_u1(cu1, cg, ebg, period_between_joinstartend, period_between_mated90, period_between_d90birth
@@ -1175,6 +1180,32 @@ def f1_carryforward_u1(cu1, cg, ebg, period_between_joinstartend, period_between
     coeff_cf1 = fun.f_update(coeff_cf1, cu1[4,...], period_between_birthwean)
     ##Calculate the increment (d_cf) from the coefficient, the change in LW (kg/d) and the days per period
     d_cf = coeff_cf1 * ebg * cg[18, ...] * days_period * period_propn
+    return d_cf
+
+
+def f1_carryforward_u6(cu6, lw, lwc, days_period, is_join, between_joinstartend=False, between_mated90=False
+                       , between_d90birth=False, between_birthwean=False, between_weanjoin=False):
+    ''' Function to calculate the carry forward amount for a production relationship that requires LW & LWC from
+        joining through to when the production is calculated (from end of joining through to next joining).
+        This function can handle quadratic coefficients on any of the LW or LWC timings (different to u1)'''
+
+    ##Select coefficient to increment the carry forward quantity based on the current period for lw, lw2, lwc & lwc2
+    ### can only be the coefficient from one of the periods and the later period overwrites the earlier period.
+    coeff_lwj = fun.f_update(0, cu6[0,...], is_join) #note cu6 has already had the first axis (production parameter) sliced when it was passed in
+    coeff_lwc = fun.f_update(0, cu6[2,...], between_joinstartend) #note cu6 has already had the first axis (production parameter) sliced when it was passed in
+    coeff_lwc = fun.f_update(coeff_lwc, cu6[4,...], between_mated90)
+    coeff_lwc = fun.f_update(coeff_lwc, cu6[6,...], between_d90birth)
+    coeff_lwc = fun.f_update(coeff_lwc, cu6[8,...], between_birthwean)
+    coeff_lwc = fun.f_update(coeff_lwc, cu6[10,...], between_weanjoin)
+    coeff_lwj2 = fun.f_update(0, cu6[1,...], is_join) #note cu6 has already had the first axis (production parameter) sliced when it was passed in
+    coeff_lwc2 = fun.f_update(0, cu6[3,...], between_joinstartend) #note cu6 has already had the first axis (production parameter) sliced when it was passed in
+    coeff_lwc2 = fun.f_update(coeff_lwc2, cu6[5,...], between_mated90)
+    coeff_lwc2 = fun.f_update(coeff_lwc2, cu6[7,...], between_d90birth)
+    coeff_lwc2 = fun.f_update(coeff_lwc2, cu6[9,...], between_birthwean)
+    coeff_lwc2 = fun.f_update(coeff_lwc2, cu6[11,...], between_weanjoin)
+    ##Calculate the increment (d_cf) from the coefficient, the change in LW (kg/d) and the days per period
+    d_cf = (coeff_lwj * lw + coeff_lwj2 * lw**2
+            + (coeff_lwc * lwc + coeff_lwc2 * lwc**2) * days_period)
     return d_cf
 
 
@@ -1593,13 +1624,13 @@ def f_chill_cs(cc, ck, ffcfw_start, rc_start, sl_start, mei, hp_total, meme, new
     mec = nec / kc
     mel = nel / kl
     mew = new / kw
-    ##Body area m2
+    ##Body area m2 - Surface area controls the amount of heat loss (when combined with insulation and ambient temp).
     area = f1_surface_area(cc, ffcfw_start)
     ##Calculate insulation
     in_tissue, in_ext_m0p1 = f_insulation(cc, ffcfw_start, rc_start, sl_start, ws, rain_p1, index_m0)
     ##Ambient temp & temperature reduction due to clear skies (2 hourly)
     temperature_m0 = f1_temp_m0(temp_ave, temp_max, temp_min, index_m0)
-    ##Lower critical temperature (period)
+    ##Lower critical temperature (period) - Below which they have to increase heat production to stay warm.
     temp_lc, temp_lc_m0p1 = f_templc(cc, ffcfw_start, rc_start, sl_start, hp_total, temp_ave, temp_max, temp_min, ws
                                      , rain_p1, index_m0)
     ##Extra ME required to keep warm
@@ -2270,16 +2301,15 @@ def f_conception_mu2(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, doj, d
     Calculation of dam conception using a back transformed logistic function. Using coefficients developed in
     Murdoch University trials that mated for 2 cycles.
 
-    Conception is the change in the numbers of animals in each slice of e & b as a proportion of the numbers
-    in the NM slice (e[0]b[0]). The adjustment of the actual numbers occurs in f1_period_end_nums()
+    Conception is represented in the code as a change in the numbers of animals in each slice of e & b as a proportion
+    of the numbers in the NM slice (e[0]b[0]). The adjustment of the actual numbers occurs in f1_period_end_nums()
     This function calculates the change in the proportions (the total should add to 0)
 
     The general approach is to calculate the probability of conception less than or equal to 1,2,3 foetuses
     similar to f_conception_cs() except LMAT is "less than" and probability is calculated from a back transformed
     calculation with linear and quadratic terms.
     The calculation includes terms for LW at joining, Age at joining and LW change during joining.
-    The estimation of cumulative probability as fitted in the LMAT trial is scaled by a day of year factor, this
-    is derived from the factor used for the GrazPlan adjustment but requires calculating in this function.
+    The estimation of cumulative probability as fitted in the LMAT trial is scaled by a day of joining factor.
     The probability is an estimate of the number of dams carrying that number of young to birth if mated for the
     number of cycles assessed in the trial. The parameters could be altered to represent a single cycle however
     this correction hasn't been made (as of Apr 2022) and the adjustment is made in this function.
@@ -2328,10 +2358,10 @@ def f_conception_mu2(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, doj, d
         ##Calculate the transformed estimates of proportion empty (slice cu2 allowing for active i axis)
         cutoff0 = cb1_sliced[:,:,1:2,...] + cu2_sliced[-1, ...] + (cu2_sliced[0, ...] * maternallw_mating
                                                                  + cu2_sliced[1, ...] * maternallw_mating ** 2
-                                                                 + cu2_sliced[2, ...] * age
-                                                                 + cu2_sliced[3, ...] * age ** 2
-                                                                 + cu2_sliced[4, ...] * lwc
-                                                                 + cu2_sliced[5, ...] * lwc ** 2
+                                                                 + cu2_sliced[2, ...] * lwc
+                                                                 + cu2_sliced[3, ...] * lwc ** 2
+                                                                 + cu2_sliced[4, ...] * age
+                                                                 + cu2_sliced[5, ...] * age ** 2
                                                                  + cu2_sliced[6, ...] * nlb
                                                                  + cu2_sliced[7, ...] * nlb ** 2
                                                                  + cu2_sliced[8, ...] * srw
@@ -2550,7 +2580,7 @@ def f_sire_req(sire_propn_a1e1b1nwzida0e0b0xyg1g0, sire_periods_g0p8, i_sire_rec
 #     return chill_adjust_b1
 
 
-def f_ws_adjust(relative_ws_c, numbers_b1, dse_per_hd, nfoet_b1, scan, propn_carrying_capacity_c, shelter_rank_c):
+def f_ws_adjust(relative_ws_c, numbers_b1, dse_per_hd, nfoet_b1, scan, propn_carrying_capacity_c):
     '''Calculate the adjustment of wind speed across the b1 axis based on differential allocation of single-,
     twin- and triplet-bearing dams to sheltered paddocks.
 
@@ -2574,6 +2604,7 @@ def f_ws_adjust(relative_ws_c, numbers_b1, dse_per_hd, nfoet_b1, scan, propn_car
     indx_rank = fun.f_expand(np.arange(np.max(rank_b1) + 1), -len(dse_b1.shape)-1)
     propn_total_dse_ranked_rb1 = propn_total_dse_b1 * (rank_b1 == indx_rank)
 
+    shelter_rank_c = np.argsort(relative_ws_c)  # ranking of the c slices based on the ws
     section_allocation_ctab1g = np.zeros((len(shelter_rank_c),) + propn_total_dse_ranked_rb1.shape[1:])
 
     # Loop over each shelter.
@@ -2715,7 +2746,7 @@ def f_mortality_progeny_cs(cd, cb1, w_b, rc_birth, cv_weight, w_b_exp_y, period_
     ##Exposure index
     xo_p1p2 = (cd[8, ..., na,na] - cd[9, ..., na,na] * rc_birth_p1p2 + cd[10, ..., na,na] * chill_index_p1[..., na]
                + cb1[10, ..., na,na])  #Note: in CSIRO equations cb1 is slice [11] but the coefficient has been changed
-    ##Progeny mortality at birth from exposure
+    ##Progeny mortality at birth from exposure (note: saa_mortalityx includes rev_mortalityx)
     mortalityx = np.average(fun.f_back_transform(xo_p1p2), axis=(-1, -2)) * period_is_birth  #axis -1 & -2 are p1 & p2
     ##Apply SA to progeny mortality due to exposure
     mortalityx = fun.f_sa(mortalityx, sap_mortalityp, sa_type = 1, value_min = 0)
@@ -2821,7 +2852,8 @@ def f_mortality_dam_mu2(cu2, ce, cb1, cf_csc, csc, cs, cv_cs, period_between_sca
     ### Mortality is calculated each loop and only retained if the period is pre-birth
     cs_p1p2 = fun.f_distribution7(cs, cv=cv_cs)[...,na]
     csc_p1p2 = fun.f_distribution7(cf_csc, cv=cv_cs)[...,na,:]
-    ### If selected, cap the CS for the ewe mortality calculation to remove the upper end of the quadratic effect that was added
+    ### If selected, cap the CS for the ewe mortality calculation to remove the upper end of the quadratic effect.
+    ### The quadratic effect would have increased mortality when CS is above the cap.
     cap = cu2[23, -2, ...,na,na]
     cs_p1p2 = fun.f_update(cs_p1p2, np.minimum(cs_p1p2, cap), cap != 0)
     ###calculate transformed mortality
@@ -2836,6 +2868,46 @@ def f_mortality_dam_mu2(cu2, ce, cb1, cf_csc, csc, cs, cv_cs, period_between_sca
     ##Adjust by sensitivity on peri-natal dam mortality - need to include periods_is so the saa only gets applied in one period.
     mortalitye_mu = fun.f_sa(mortalitye_mu, saa_mortalitye * period_is_prebirth, sa_type = 2, value_min = 0) * (mortalitye_mu > 0)
     return mortalitye_mu, cf_csc
+
+
+def f_mortality_dam_EL(cu6, cb1, cf_value, lw, lwc, cv_lw, nfoet_b1, days_period, saa_mortalitye, is_join
+                       , is_prebirth, between_mated90, between_d90birth):
+    '''
+    Peri natal Dam mortality of ewe lambs due to: LW at birth, LW change during pregnancy & birth type.
+    The mortality is incurred at the pre-birth period and can't be incurred each period because of the back transformation.
+    '''
+    ###Combine the coefficients from cu6 & cb1 into a single array to be passed to f1_carryforward()
+    ###slice of first axis of cu6 for mortality of EL dams
+    cu6_slc1 = 23
+    ###slices of 2nd axis of cu6 that need incrementing with cb1 coefficients
+    cu6_slices = [0, 1, 4, 6]
+    ###slices of first axis of cb1 are to be added to cu6. Note: requires same number of entries as above and corresponding order
+    cb1_slices = [27, 28, 29, 30]
+    ###Initialise the destination array so that coefficients can be assigned, shape is determined by cu6 and cb1
+    coeff_shape = np.broadcast_shapes(cu6.shape, cb1.shape[1:])
+    coeff_combined = np.broadcast_to(cu6, coeff_shape).copy()
+    ###Use fancy indexing to sum the arrays
+    coeff_combined[cu6_slc1, cu6_slices, ...] = cu6[cu6_slc1, cu6_slices, ...] + cb1[cb1_slices, na, na, ...]
+    ###The estimate of mortality includes a distribution for both the LW & LW change
+    ###Note: Mortality is calculated each loop and only retained if the period is pre-birth
+    lw_p1p2 = fun.f_distribution7(lw, cv=cv_lw)[...,na]
+    lwc_p1p2 = fun.f_distribution7(lwc, cv=cv_lw)[...,na,:]
+
+    ## Carry forward EL dam mortality increment (the component of the transformed mortality linked to LW & LW change)
+    ###pass other args with na for the p1 & p2 axes that have been added to LW & LWC
+    d_cf = f1_carryforward_u6(coeff_combined[cu6_slc1, ...,na,na], lw_p1p2, lwc_p1p2, days_period[...,na,na], is_join[...,na,na]
+                              , between_mated90 = between_mated90[...,na,na], between_d90birth = between_d90birth[...,na,na])
+    ### Calculate the cumulative carried forward value
+    cf_value = cf_value + d_cf
+    ###calculate transformed mortality by adding the coefficients that are not in the carry forward (b1 adj & intercept)
+    t_mortalitye_p1p2 = cf_value + cb1[31, ...,na,na] + cu6[cu6_slc1, -1, ...,na,na]
+    ##Back transform the mortality (Logit)
+    mortalitye_p1p2 = fun.f_back_transform(t_mortalitye_p1p2)
+    ##Average across the p1 & p2 axes (range of LW & LW change within the mob) if period is birth for reproducing ewes
+    mortalitye = np.mean(mortalitye_p1p2, axis=(-1,-2)) * is_prebirth * (nfoet_b1 > 0)
+    ##Adjust by sensitivity on peri-natal dam mortality - need to include periods_is so the saa only gets applied in one period.
+    mortalitye = fun.f_sa(mortalitye, saa_mortalitye * is_prebirth, sa_type = 2, value_min = 0) * (mortalitye > 0)
+    return mortalitye, cf_value
 
 
 def f_mortality_pregtox_mu(cb1, cg, nw_start, ebg, sd_ebg, days_period, period_is_pregtox, gest_propn):
@@ -2903,14 +2975,64 @@ def f_mortality_progeny_mu(cu2, cb1, cx, ce, w_b, w_b_std, cv_weight, foo, chill
     mortalityx = f1_rev_update('era', mortalityx, rev_trait_value)
     return mortalityx
 
+
+def f_mortality_progeny_EL(cu6, cb1, cx, cf_value, lw, lwc, cv_lw, foo, chill_index_p1, mob_size, days_period
+                , rev_trait_value, sap_mortalityp, saa_mortalityx, is_join, is_birth, between_mated90, between_d90birth):
+    '''
+    Calculate the mortality of progeny at birth due to mis-mothering and exposure
+    using the equations developed in P.PSH.1180 – More lambs from ewes lambs through developing and extending best practice
+    Chill index, FOO and mob size were added using other data.
+    Calculates twin lamb survival from proportion of twin ewes lactating.
+    '''
+    ###Combine the coefficients from cu6 & cb1 into a single array to be passed to f1_carryforward()
+    ###slice of first axis of cu6 for mortality of EL dams
+    cu6_slc1 = 8
+    ###slices of 2nd axis of cu6 that need incrementing with cb1 coefficients
+    cu6_slices = [0, 1, 4, 5, 6, 7]
+    ###slices of first axis of cb1 are to be added to cu6. Note: requires same number of entries as above and corresponding order
+    cb1_slices = [32, 33, 34, 35, 36, 37]
+    ###Initialise the destination array so that coefficients can be assigned, shape is determined by cu6 and cb1
+    coeff_shape = np.broadcast_shapes(cu6.shape, cb1.shape[1:])
+    coeff_combined = np.broadcast_to(cu6, coeff_shape).copy()
+    ###Use fancy indexing to sum the arrays
+    coeff_combined[cu6_slc1, cu6_slices, ...] = cu6[cu6_slc1, cu6_slices, ...] + cb1[cb1_slices, na, na, ...]
+    ###The estimate of mortality includes a distribution for both the LW & LW change
+    ###Note: Mortality is calculated each loop and only retained if the period is pre-birth
+    lw_p1p2 = fun.f_distribution7(lw, cv=cv_lw)[...,na]
+    lwc_p1p2 = fun.f_distribution7(lwc, cv=cv_lw)[...,na,:]
+
+    ## Carry forward EL dam lactating increment (the component of the transformed lactation propn linked to LW & LW change)
+    ###pass other args with na for the p1 & p2 axes that have been added to LW & LWC
+    d_cf = f1_carryforward_u6(coeff_combined[cu6_slc1, ...,na,na], lw_p1p2, lwc_p1p2, days_period[...,na,na], is_join[...,na,na]
+                              , between_mated90 = between_mated90[...,na,na], between_d90birth = between_d90birth[...,na,na])
+    ##Increment the total carry forward value
+    cf_value = cf_value + d_cf
+    ##calculate transformed proportion lactating by adding the coefficients that are not in the carry forward
+    t_lactating_p1p2 = (cf_value + cb1[38, ...,na,na] + cu6[cu6_slc1, -1, ...,na,na]
+                      + (cu6[8, 12, ..., na,na] + cx[9, ..., na, na]) * chill_index_p1[...,na])
+    #                 + cu2[8, 4, ..., na, na] * foo[..., na, na] + cu2[8, 5, ..., na, na] * foo[..., na, na] ** 2  #Could include foo,
+    #                 + cu2[8, -1, ..., na, na] + cb1[8, ..., na, na] + cb1[9, ..., na, na] * mob_size[..., na, na] #mob size
+    #                 + cx[8, ..., na,na])                                                                          #and gender using the mu2 coefficients
+    ##back transform to proportion lactating
+    lactating = (np.average(fun.f_back_transform(t_lactating_p1p2),axis = (-1,-2)))  #p1p2 axes averaged
+    ##convert from % lactating to mortality and include conversion from % lactating to survival for twins.
+    mortalityx = (1 - (cb1[39, ...] + lactating * cb1[40, ...])) * is_birth
+    ##Apply SA to progeny mortality at birth (LTW)
+    mortalityx = fun.f_sa(mortalityx, sap_mortalityp, sa_type = 1, value_min = 0)
+    mortalityx = fun.f_sa(mortalityx, saa_mortalityx * (mortalityx > 0), sa_type = 2, value_min = 0)
+    ##Process the Ewe Rearing Ability REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
+    mortalityx = f1_rev_update('era', mortalityx, rev_trait_value)
+    return mortalityx, cf_value
+
+
 #############################
 #functions for end of loop #
 ###########################
 
-def f1_period_start_prod(numbers, var, prejoin_tup, season_tup, period_is_startseason, mask_min_lw_z, mask_min_wa_lw_w,
-                         mask_max_lw_z, mask_max_wa_lw_w, period_is_prejoin=0, group=None, scan_management=0, gbal=0,
-                         drysretained_scan=1, drysretained_birth=1, stub_lw_idx=np.array(np.nan), len_gen_t=1, a_t_g=0,
-                         period_is_startdvp=False):
+def f1_period_start_prod(numbers, var, b1_pos, p_pos, w_pos, prejoin_tup, z_pos, period_is_startseason, mask_min_lw_z
+                         , mask_min_wa_lw_w, mask_max_lw_z, mask_max_wa_lw_w, period_is_prejoin=0, group=None
+                         , scan_management=0, gbal=0, drysretained_scan=1, drysretained_birth=1
+                         , stub_lw_idx=np.array(np.nan), len_gen_t=1, a_t_g=0, period_is_startdvp=False):
     '''
     Production is weighted at prejoining across e&b axes and at season start across the z axis.
 
@@ -2935,12 +3057,12 @@ def f1_period_start_prod(numbers, var, prejoin_tup, season_tup, period_is_starts
     ##a)if generating with t axis reset the sale slices to the retained slice at the start of each dvp
     if np.any(period_is_startdvp) and len_gen_t>1:
         a_t_g = np.broadcast_to(a_t_g, var_start.shape)
-        temporary = np.take_along_axis(var_start, a_t_g, axis=sinp.stock['i_p_pos']) #t is in the p pos
+        temporary = np.take_along_axis(var_start, a_t_g, axis=p_pos) #t is in the p pos
         var_start = fun.f_update(var_start, temporary, period_is_startdvp)
 
     ##b) Calculate temporary values as if period is start of season
     if np.any(period_is_startseason):
-        var_start = f1_season_wa(numbers, var_start, season_tup, mask_min_lw_z, mask_min_wa_lw_w, mask_max_lw_z, mask_max_wa_lw_w, period_is_startseason)
+        var_start = f1_season_wa(numbers, var_start, z_pos, mask_min_lw_z, mask_min_wa_lw_w, mask_max_lw_z, mask_max_wa_lw_w, period_is_startseason)
 
     ##c) Calculated weighted average of var_start if period_is_prejoin (because the classes from the prior year are re-combined at pre-joining)
     ### If the dams have been scanned or assessed for gbal then the number of drys is adjusted based on the estimated management
@@ -2950,7 +3072,7 @@ def f1_period_start_prod(numbers, var, prejoin_tup, season_tup, period_is_starts
     ###at the beginning of the prejoin DVP which doesn't affect apparent mortality.
     if group==1 and np.any(period_is_prejoin):
         ###inputs
-        b1_pos = sinp.stock['i_b1_pos']
+        # b1_pos = sinp.stock['i_b1_pos']
         nfoet_b1 = fun.f_expand(sinp.stock['a_nfoet_b1'],b1_pos)
         nyatf_b1 = fun.f_expand(sinp.stock['a_nyatf_b1'],b1_pos)
         ###scale numbers if drys are expected to have been sold at scanning (in the generator we don't know if drys are actually sold since pyomo optimises this, so this is just our best estimate)
@@ -2967,7 +3089,7 @@ def f1_period_start_prod(numbers, var, prejoin_tup, season_tup, period_is_starts
 
     ##for stubble index the w axis to make the starting animal for the next period
     if np.all(np.logical_not(np.isnan(stub_lw_idx))):
-        var_start[...] = np.take_along_axis(var_start, stub_lw_idx, sinp.stock['i_w_pos'])
+        var_start[...] = np.take_along_axis(var_start, stub_lw_idx, w_pos)
     return var_start
 
 
@@ -2990,8 +3112,15 @@ def f1_season_wa(numbers, var, season, mask_min_lw_wz, mask_min_wa_lw_w, mask_ma
     :param period_is_startseason: boolean array with True for period is start of season
     :return: production variable with a singleton z axis
     '''
+
     ##weighted average along z axis
     temporary = fun.f_weighted_average(var,numbers,season,keepdims=True, non_zero=True)
+
+    ##broadcast the mask to var.shape to ensure the same shape, necessary for cases where var has p1p2 axes
+    mask_min_lw_wz = np.broadcast_to(mask_min_lw_wz, var.shape) #needs z
+    mask_min_wa_lw_w = np.broadcast_to(mask_min_wa_lw_w, temporary.shape) #no z
+    mask_max_lw_wz = np.broadcast_to(mask_max_lw_wz, var.shape) #needs z
+    mask_max_wa_lw_w = np.broadcast_to(mask_max_wa_lw_w, temporary.shape) #no z
 
     ##adjust production for min lw: the w slices with the minimum lw get assigned the production associated with the animal from the season with the lightest animal (this is so the light animals in the poor seasons are not disregarded when distributing in PP).
     ##use masked array to average the production from the z slices with the lightest animal (this is required in case multiple z slices have the same weight animals)
@@ -3012,7 +3141,7 @@ def f1_season_wa(numbers, var, season, mask_min_lw_wz, mask_min_wa_lw_w, mask_ma
     return var
 
 
-def f1_condensed(var, lw_idx, condense_w_mask, i_n_len, i_w_len, i_n_fvp_period, period_is_condense):
+def f1_condensed(var, lw_idx, condense_w_mask, i_n_len, i_w_len, n_pos, w_pos, i_n_fvp_period, period_is_condense):
     """
     Condense variable to x common points along the w axis when period_is_condense.
     Currently this function only handle 2 or 3 initial liveweights. The order of the returned W axis is M, H, L for 3 initial lws or H, L for 2 initial lws.
@@ -3040,14 +3169,15 @@ def f1_condensed(var, lw_idx, condense_w_mask, i_n_len, i_w_len, i_n_fvp_period,
     :return:
     """
     if np.any(period_is_condense):
-        var = np.broadcast_to(var,lw_idx.shape).copy() #need to copy so array can be assigned to down below
-        condense_w_mask = np.broadcast_to(condense_w_mask,lw_idx.shape)
+        array_shape = np.broadcast_shapes(var.shape, lw_idx.shape)  #required to handle cases where var has p1p2 axes and is larger than lw_idx
+        var = np.broadcast_to(var,array_shape).copy() #need to copy so array can be assigned to down below
+        condense_w_mask = np.broadcast_to(condense_w_mask,array_shape)
         temporary = np.zeros_like(var)  #this is done to ensure that temp has the same size as var.
         ##test if array has diagonal and calc temp variables as if start of dvp - if there is not a diagonal use the alternative system for reallocating at the end of a DVP
         if i_n_len >= i_w_len:
             ###this method was the way we first tried - no longer used (might be used later if we add nutrient options back in)
             ### np.diagonal removes the n axis so it is added back in using the expand function, but that is a singleton, Therefore that is the reason that temp must be the same size as var. That will ensure that the new n axis is the same length as it used to before np diagonal
-            temporary[...] = np.expand_dims(np.rollaxis(temporary.diagonal(axis1= sinp.stock['i_w_pos'], axis2= sinp.stock['i_n_pos']),-1,sinp.stock['i_w_pos']), sinp.stock['i_n_pos']) #roll w axis back into place and add na for n (np.diagonal removes the second axis in the diagonal and moves the other axis to the end)
+            temporary[...] = np.expand_dims(np.rollaxis(temporary.diagonal(axis1= w_pos, axis2= n_pos),-1,w_pos), n_pos) #roll w axis back into place and add na for n (np.diagonal removes the second axis in the diagonal and moves the other axis to the end)
         else:
             '''
             possible idea to handle more than 3 starting lws.
@@ -3065,68 +3195,68 @@ def f1_condensed(var, lw_idx, condense_w_mask, i_n_len, i_w_len, i_n_fvp_period,
                         sl = [slice(None)] * temporary.ndim
                         sl_start_med = i*int(i_n_len ** i_n_fvp_period)
                         sl_end_med = (i+1)*int(i_n_len ** i_n_fvp_period)
-                        sl[sinp.stock['i_w_pos']] = slice(sl_start_med, sl_end_med)
+                        sl[w_pos] = slice(sl_start_med, sl_end_med)
                         if i_n_len >= 3:
-                            temporary[tuple(sl)] = f_dynamic_slice(var, sinp.stock['i_w_pos'], sl_start_med, sl_start_med+1)  # the pattern that is feed supply 1 (median) for the entire year (the top w pattern)
+                            temporary[tuple(sl)] = f_dynamic_slice(var, w_pos, sl_start_med, sl_start_med+1)  # the pattern that is feed supply 1 (median) for the entire year (the top w pattern)
                         else:
-                            temporary[tuple(sl)] = np.mean(var_sorted_mort, axis=sinp.stock['i_w_pos'], keepdims=True) ^this line wont work if more than 3 lws, somehow need to take mean of subsection of w axis depending on number of initial w. # average of all animals with less than 10% mort
+                            temporary[tuple(sl)] = np.mean(var_sorted_mort, axis=w_pos, keepdims=True) ^this line wont work if more than 3 lws, somehow need to take mean of subsection of w axis depending on number of initial w. # average of all animals with less than 10% mort
 
                     elif i==1:
                         #calc high - using sorted var
                         sl = [slice(None)] * temporary.ndim
-                        sl[sinp.stock['i_w_pos']] = slice(i*int(i_n_len ** i_n_fvp_period), (i+1)*int(i_n_len ** i_n_fvp_period))
-                        temporary[tuple(sl)] = np.mean(f_dynamic_slice(var_sorted, sinp.stock['i_w_pos'], i_w_len - int(i_w_len / 10), -1), sinp.stock['i_w_pos'], keepdims=True)  # average of the top lw patterns
+                        sl[w_pos] = slice(i*int(i_n_len ** i_n_fvp_period), (i+1)*int(i_n_len ** i_n_fvp_period))
+                        temporary[tuple(sl)] = np.mean(f_dynamic_slice(var_sorted, w_pos, i_w_len - int(i_w_len / 10), -1), w_pos, keepdims=True)  # average of the top lw patterns
 
                     else: #i==2 (low w)
                         #calc low
-                        numbers_start_sorted = np.take_along_axis(numbers_start_condense, lw_idx, axis=sinp.stock['i_w_pos'])
-                        numbers_sorted = np.take_along_axis(numbers, lw_idx, axis=sinp.stock['i_w_pos'])
-                        low_slice = np.argmax(np.sum(numbers_start_sorted, axis=prejoin_tup + (season_tup,), keepdims=True)
-                                                     / np.sum(numbers_sorted, axis=prejoin_tup + (season_tup,), keepdims=True) > 0.9
-                                                     , axis=sinp.stock['i_w_pos'])  # returns the index of the first w slice that has mort less the 10%.
-                        low_slice = np.expand_dims(low_slice, axis=sinp.stock['i_w_pos']) #add singleton w axis back
+                        numbers_start_sorted = np.take_along_axis(numbers_start_condense, lw_idx, axis=w_pos)
+                        numbers_sorted = np.take_along_axis(numbers, lw_idx, axis=w_pos)
+                        low_slice = np.argmax(np.sum(numbers_start_sorted, axis=prejoin_tup + (z_pos,), keepdims=True)
+                                                     / np.sum(numbers_sorted, axis=prejoin_tup + (z_pos,), keepdims=True) > 0.9
+                                                     , axis=w_pos)  # returns the index of the first w slice that has mort less the 10%.
+                        low_slice = np.expand_dims(low_slice, axis=w_pos) #add singleton w axis back
                         sl = [slice(None)] * temporary.ndim
-                        sl[sinp.stock['i_w_pos']] = slice(i*int(i_n_len ** i_n_fvp_period), (i+1)*int(i_n_len ** i_n_fvp_period))
-                        temporary[tuple(sl)] = np.take_along_axis(var_sorted, low_slice, sinp.stock['i_w_pos'])
+                        sl[w_pos] = slice(i*int(i_n_len ** i_n_fvp_period), (i+1)*int(i_n_len ** i_n_fvp_period))
+                        temporary[tuple(sl)] = np.take_along_axis(var_sorted, low_slice, w_pos)
                                      
             '''
             #todo this function assumes a certain w axis order. we could change this and make it more flexible by using inputs for sinp.structuralsa['i_adjp_lw_initial_w1'].
             # this is how we did it for the mask_gen_condensed_values_used.
             ###sort var based on animal lw
             ma_var = np.ma.masked_array(var, np.logical_not(condense_w_mask))
-            ma_var_sorted = np.take_along_axis(ma_var, lw_idx, axis=sinp.stock['i_w_pos']) #sort into production order (base on lw) so we can select the production of the lowest lw animals with mort less than 10% - note sorts in ascending order
+            ma_var_sorted = np.take_along_axis(ma_var, lw_idx, axis=w_pos) #sort into production order (base on lw) so we can select the production of the lowest lw animals with mort less than 10% - note sorts in ascending order
 
             ###count number of w slices which have been masked out
-            idx_min_lw = np.count_nonzero(condense_w_mask==0, axis=sinp.stock['i_w_pos'], keepdims=True) #index of the min lw with mort less than 10%
-            n_lw = np.min(np.count_nonzero(condense_w_mask, axis=sinp.stock['i_w_pos'])) #number of included w slices
+            idx_min_lw = np.count_nonzero(condense_w_mask==0, axis=w_pos, keepdims=True) #index of the min lw with mort less than 10%
+            n_lw = np.min(np.count_nonzero(condense_w_mask, axis=w_pos)) #number of included w slices
 
             ##to handle varying number of initial lws
             if sinp.structuralsa['i_w_start_len1'] == 2:
                 ###add high pattern - this will not handle situations where the top 10% lw animals all have higher mortality than the threshold.
                 temporary[...] = np.mean(
-                    fun.f_dynamic_slice(ma_var_sorted,sinp.stock['i_w_pos'],i_w_len - int(math.ceil(n_lw / 10)), None), # ceil is used to handle cases where nutrition options is 1 (e.g. only 3 lw patterns)
-                    sinp.stock['i_w_pos'],keepdims=True)  # average of the top lw patterns
+                    fun.f_dynamic_slice(ma_var_sorted,w_pos,i_w_len - int(math.ceil(n_lw / 10)), None), # ceil is used to handle cases where nutrition options is 1 (e.g. only 3 lw patterns)
+                    w_pos,keepdims=True)  # average of the top lw patterns
 
                 ###low pattern - production level of the lowest nutrition profile that has a mortality less than 10% for the year
                 sl = [slice(None)] * temporary.ndim
-                sl[sinp.stock['i_w_pos']] = slice(-int(i_n_len ** i_n_fvp_period), None)
-                temporary[tuple(sl)] = np.take_along_axis(ma_var_sorted, idx_min_lw, sinp.stock['i_w_pos']) #if you get an error here it probably means no animals had mort less than 10%
+                sl[w_pos] = slice(-int(i_n_len ** i_n_fvp_period), None)
+                temporary[tuple(sl)] = np.take_along_axis(ma_var_sorted, idx_min_lw, w_pos) #if you get an error here it probably means no animals had mort less than 10%
 
             else:
                 ###add high pattern - this will not handle situations where the top 10% lw animals all have higher mortality than the threshold.
-                temporary[...] = np.mean(fun.f_dynamic_slice(ma_var_sorted, sinp.stock['i_w_pos'], i_w_len - int(math.ceil(n_lw / 10)), None),  #ceil is used to handle cases where nutrition options is 1 (e.g. only 3 lw patterns)
-                                         sinp.stock['i_w_pos'], keepdims=True)  # average of the top lw patterns
+                temporary[...] = np.mean(fun.f_dynamic_slice(ma_var_sorted, w_pos, i_w_len - int(math.ceil(n_lw / 10)), None),  #ceil is used to handle cases where nutrition options is 1 (e.g. only 3 lw patterns)
+                                         w_pos, keepdims=True)  # average of the top lw patterns
 
                 ###add mid pattern (w 0 - 27) - use slice method in case w axis changes position (can't use MRYs dynamic slice function because we are assigning)
                 ###the medium condense is the average of all animals with less than 10% mort.
                 sl = [slice(None)] * temporary.ndim
-                sl[sinp.stock['i_w_pos']] = slice(0, int(i_n_len ** i_n_fvp_period))
-                temporary[tuple(sl)] = np.mean(ma_var_sorted, axis=sinp.stock['i_w_pos'], keepdims=True)  # average of all animals with less than 10% mort
+                sl[w_pos] = slice(0, int(i_n_len ** i_n_fvp_period))
+                temporary[tuple(sl)] = np.mean(ma_var_sorted, axis=w_pos, keepdims=True)  # average of all animals with less than 10% mort
 
                 ###low pattern - production level of the lowest nutrition profile that has a mortality less than 10% for the year
                 sl = [slice(None)] * temporary.ndim
-                sl[sinp.stock['i_w_pos']] = slice(-int(i_n_len ** i_n_fvp_period), None)
-                temporary[tuple(sl)] = np.take_along_axis(ma_var_sorted, idx_min_lw, sinp.stock['i_w_pos']) #if you get an error here it probably means no animals had mort less than 10%
+                sl[w_pos] = slice(-int(i_n_len ** i_n_fvp_period), None)
+                temporary[tuple(sl)] = np.take_along_axis(ma_var_sorted, idx_min_lw, w_pos) #if you get an error here it probably means no animals had mort less than 10%
 
         ###Update if the period is condense (shearing for offs and prejoining for dams)
         var = fun.f_update(var, temporary, period_is_condense)
@@ -3147,7 +3277,7 @@ def f1_adjust_pkl_condensed_axis_len(temporary, i_w_len, i_t_len):
         temporary = np.concatenate([temporary]*i_t_len, axis=t_pos) #won't work if pkl trial had t axis but current trial doesn't - to handle this would require passing in the a_t_g association.
     return temporary
 
-def f1_period_start_nums(numbers, prejoin_tup, season_tup, period_is_startseason, season_propn_z, group=None, nyatf_b1 = 0
+def f1_period_start_nums(numbers, prejoin_tup, z_pos, period_is_startseason, season_propn_z, group=None, nyatf_b1 = 0
                         , numbers_initial_repro=0, gender_propn_x=1, period_is_prejoin=0, period_is_birth=False, prevperiod_is_wean=False
                         ,len_gen_t=1, a_t_g=0, period_is_startdvp=False):
 
@@ -3159,7 +3289,7 @@ def f1_period_start_nums(numbers, prejoin_tup, season_tup, period_is_startseason
 
     ##b) reallocate for season type
     if np.any(period_is_startseason):
-        temporary = np.sum(numbers * season_propn_z, axis = season_tup, keepdims=True) #Calculate temporary values as if period_is_break
+        temporary = np.sum(numbers * season_propn_z, axis = z_pos, keepdims=True) #Calculate temporary values as if period_is_break
         numbers = fun.f_update(numbers, temporary, period_is_startseason)  #Set values where it is beginning of season
     ##c)things for dams - prejoining and moving between classes
     if group==1 and np.any(period_is_prejoin):

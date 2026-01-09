@@ -680,46 +680,66 @@ def f_logistic_integral(x, L, k, x0, offset):
     """
     return offset*x + (L - offset)/k * np.log(1 + np.exp(k*(x - x0)))
 
-def f_combined_integral(x, offset, k, x0, a, mu, sigma, x_max):
+def f_combined_integral(x, offset, k, x0, a, mu, sigma, x_anchor):
     """
-    Compute the indefinite integral of a custom function that combines:
-      - a logistic component (representing gradual increase from offset to 1), and
-      - a Gaussian "bump" (representing a temporary overshoot above 1),
-      adjusted so that the tail returns to 1 at large distances.
+    Indefinite integral (from 0 to x) of the anchored-and-clamped production function.
 
-    The function being integrated is:
-        f(x) = offset + (1 - offset) / (1 + exp(-k * (x - x0))) + a * exp(-((x - mu)/sigma)^2) - a * exp(-((x_max - mu)/sigma)^2)
+    Definition:
+      Let g(x) = offset + (1 - offset)/(1 + exp(-k*(x - x0))) + a*exp(-((x - mu)/sigma)^2)
+      Let h    = g(x_anchor) - 1
+      Define the anchored function       f_anchor(x) = g(x) - h so that f_anchor(x_anchor) = 1
+      Define the clamped production      f(x) = f_anchor(x) for x <= x_anchor, and f(x) = 1 for x > x_anchor
+
+    This function returns:
+        F(x) = ∫_0^x f(t) dt
+
+    Notes
+    -----
+    - For x <= x_anchor:
+        F(x) = [A(x) - A(0)] - h * x
+      where A is the antiderivative of g.
+
+    - For x > x_anchor:
+        F(x) = ([A(x_anchor) - A(0)] - h * x_anchor) + 1 * (x - x_anchor)
+
+    - Uses log1p(exp(.)) for numerical stability in the logistic integral.
 
     Parameters
     ----------
-    x : float or np.ndarray
-        The x-value(s) at which to evaluate the indefinite integral.
-    offset : float
-        The base value of the logistic function at x → -∞.
-    k : float
-        The steepness of the logistic curve.
-    x0 : float
-        The inflection point (center) of the logistic curve.
-    a : float
-        The amplitude of the Gaussian bump.
-    mu : float
-        The center of the Gaussian bump.
-    sigma : float
-        The standard deviation (spread) of the Gaussian bump.
-    x_max : float
-        The x-location used to anchor the tail of the bump to return the function to 1.
+    x : float
+        Upper limit of integration (lower limit fixed at 0).
+    offset, k, x0, a, mu, sigma : floats
+        Parameters of the raw model g(x) from `fit_gauss_tail`.
+    x_anchor : float
+        Distance at which the curve equals 1 and remains exactly 1 thereafter.
 
     Returns
     -------
-    float or np.ndarray
-        The value of the indefinite integral at x.
+    float
+        Value of ∫_0^x f(t) dt.
     """
     from scipy.special import erf
-    logistic_int = offset * x + (1 - offset) / k * np.log(1 + np.exp(k * (x - x0)))
-    bump_int = a * (np.sqrt(np.pi) / 2) * sigma * erf((x - mu) / sigma)
-    bump_tail = a * np.exp(-((x_max - mu) / sigma) ** 2) * x
-    return logistic_int + bump_int - bump_tail
 
+    x = float(x)
+
+    # Antiderivative of g(x) = logistic + Gaussian bump
+    # ∫ logistic dx  +  ∫ Gaussian dx
+    def A(t):
+        logistic_int = offset * t + (1 - offset) / k * np.log1p(np.exp(k * (t - x0)))
+        bump_int = a * (np.sqrt(np.pi) / 2) * sigma * erf((t - mu) / sigma)
+        return logistic_int + bump_int
+
+    # Compute anchor shift h = g(x_anchor) - 1
+    g_anchor = offset + (1 - offset) / (1 + np.exp(-k * (x_anchor - x0))) \
+               + a * np.exp(-((x_anchor - mu) / sigma) ** 2)
+    h = g_anchor - 1.0
+
+    if x <= x_anchor:
+        return (A(x) - A(0.0)) - h * x
+    else:
+        head = (A(x_anchor) - A(0.0)) - h * x_anchor
+        tail = 1.0 * (x - x_anchor)
+        return head + tail
 
 def f_dynamic_slice(arr, axis, start, stop, step=1, axis2=None, start2=None, stop2=None, step2=1):
     ##check if arr is int - this is the case for the first loop because arr may be initialised as 0
@@ -1094,6 +1114,117 @@ def f1_make_pyomo_dict(param, index, loop_axis_pos=None, index_loop_axis_pos=Non
     ##make index a tuple and zip with param and make dict
     tup = tuple(map(tuple,index_masked))
     return dict(zip(tup, param_masked))
+
+import numpy as np
+na = np.newaxis
+
+
+def build_active_index(
+    masks,
+    axis_keys,
+    reduce_extra_axes="any",
+    active_condition="!=0",
+):
+    """
+    Build a list of active index tuples from one or more masks.
+
+    Parameters
+    ----------
+    masks : np.ndarray or list of np.ndarray
+        Single mask or list of masks. They will be broadcast to a common
+        shape and combined with logical AND.
+
+        Example shapes:
+            (k,p6,p5,z,l)
+            (p6,z)  -> will be broadcast if needed
+
+    axis_keys : list of 1D arrays
+        Keys for each axis you want in the final index (left-most axes
+        after broadcasting).
+
+        Example:
+            axis_keys = [keys_k, keys_p6, keys_p5, keys_z, keys_l]
+
+    reduce_extra_axes : "any" | "all" | None | list[int]
+        How to collapse extra dimensions beyond len(axis_keys).
+
+        - "any": active if any extra axis is True.
+        - "all": active if all extra axes are True.
+        - list[int]: explicit axes to reduce over.
+        - None: require mask.ndim == len(axis_keys).
+
+    active_condition : str
+        How to treat non-bool masks (if masks are numeric):
+
+        - "!=0": mask != 0
+        - ">0":  mask > 0
+
+    Returns
+    -------
+    list[tuple]
+        A list of tuples (key0, key1, ..., keyN) where the combined mask is active.
+    """
+
+    # --- 1. Normalise to a combined boolean mask ---
+    if isinstance(masks, (list, tuple)):
+        arrs = []
+        for m in masks:
+            m = np.asarray(m)
+            if m.dtype == bool:
+                arrs.append(m)
+            else:
+                if active_condition == "!=0":
+                    arrs.append(m != 0)
+                elif active_condition == ">0":
+                    arrs.append(m > 0)
+                else:
+                    raise ValueError("unsupported active_condition")
+        combined = np.logical_and.reduce(arrs)
+    else:
+        m = np.asarray(masks)
+        if m.dtype == bool:
+            combined = m
+        else:
+            if active_condition == "!=0":
+                combined = (m != 0)
+            elif active_condition == ">0":
+                combined = (m > 0)
+            else:
+                raise ValueError("unsupported active_condition")
+
+    # --- 2. Reduce extra axes if needed ---
+    n_keep = len(axis_keys)
+    if combined.ndim < n_keep:
+        raise ValueError("mask has fewer dims than axis_keys")
+
+    if combined.ndim > n_keep:
+        if reduce_extra_axes is None:
+            raise ValueError("mask has extra dims and reduce_extra_axes is None")
+
+        if isinstance(reduce_extra_axes, str):
+            extra_axes = tuple(range(n_keep, combined.ndim))
+            if reduce_extra_axes == "any":
+                combined = np.any(combined, axis=extra_axes)
+            elif reduce_extra_axes == "all":
+                combined = np.all(combined, axis=extra_axes)
+            else:
+                raise ValueError("unknown reduce_extra_axes string")
+        else:
+            # explicit list of axes
+            combined = np.any(combined, axis=tuple(reduce_extra_axes))
+
+    # Now combined.shape must match the len of each axis_keys[i]
+    # --- 3. Extract active indices and map to keys ---
+    idx = np.nonzero(combined)
+    active = []
+
+    for indices in zip(*idx):
+        # indices is like (ik, ip6, ip5, iz, il)
+        key_tuple = tuple(axis_keys[ax][i] for ax, i in enumerate(indices))
+        active.append(key_tuple)
+
+    return active
+
 
 def write_variablesummary(model, trial_name, obj, option=0, property_id=''):
     '''

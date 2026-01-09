@@ -52,6 +52,7 @@ def f_reshape_uinp_defaults(uinp_defaults):
     cl1 = (uinp_defaults["parameters_inp"]['i_cl1_len'], uinp_defaults["parameters_inp"]['i_cl1_len2'],-1)
     cu1 = (uinp_defaults["parameters_inp"]['i_cu1_len'], uinp_defaults["parameters_inp"]['i_cu1_len2'],-1)
     cu2 = (uinp_defaults["parameters_inp"]['i_cu2_len'], uinp_defaults["parameters_inp"]['i_cu2_len2'],-1)
+    cu6 = (uinp_defaults["parameters_inp"]['i_cu6_len'], uinp_defaults["parameters_inp"]['i_cu6_len2'],-1)
     cx = (uinp_defaults["parameters_inp"]['i_cx_len'], uinp_defaults["parameters_inp"]['i_cx_len2'],-1)
 
     ###price
@@ -77,6 +78,8 @@ def f_reshape_uinp_defaults(uinp_defaults):
     uinp_defaults["parameters_inp"]['i_cu1_y'] = np.reshape(uinp_defaults["parameters_inp"]['i_cu1_y'], cu1)
     uinp_defaults["parameters_inp"]['i_cu2_c2'] = np.reshape(uinp_defaults["parameters_inp"]['i_cu2_c2'], cu2)
     uinp_defaults["parameters_inp"]['i_cu2_y'] = np.reshape(uinp_defaults["parameters_inp"]['i_cu2_y'], cu2)
+    uinp_defaults["parameters_inp"]['i_cu6_c2'] = np.reshape(uinp_defaults["parameters_inp"]['i_cu6_c2'], cu6)
+    uinp_defaults["parameters_inp"]['i_cu6_y'] = np.reshape(uinp_defaults["parameters_inp"]['i_cu6_y'], cu6)
     uinp_defaults["parameters_inp"]['i_cx_c2'] = np.reshape(uinp_defaults["parameters_inp"]['i_cx_c2'], cx)
     uinp_defaults["parameters_inp"]['i_cx_y'] = np.reshape(uinp_defaults["parameters_inp"]['i_cx_y'], cx)
 
@@ -141,10 +144,10 @@ def f_universal_inp_sa(uinp_defaults):
 
     ##general
     ###SAV
-    general['i_inc_risk'] = fun.f_sa(general['i_inc_risk'], sen.sav['inc_risk_aversion'], 5)
     general['i_utility_method'] = fun.f_sa(general['i_utility_method'], sen.sav['utility_method'], 5)
     general['i_cara_risk_coef'] = fun.f_sa(general['i_cara_risk_coef'], sen.sav['cara_risk_coef'], 5)
     general['i_crra_risk_coef'] = fun.f_sa(general['i_crra_risk_coef'], sen.sav['crra_risk_coef'], 5)
+    general['i_a_expo_risk_coef'] = fun.f_sa(general['i_a_expo_risk_coef'], sen.sav['expo_risk_coef'], 5)
 
     ##finance
     ###SAV
@@ -218,6 +221,9 @@ def f_universal_inp_sa(uinp_defaults):
     tree["controls"]['include_biodiversity_credit'] = fun.f_sa(tree["controls"]['include_biodiversity_credit'], sen.sav['include_biodiversity_credit'], 5)
     tree["controls"]['include_harvesting'] = fun.f_sa(tree["controls"]['include_harvesting'], sen.sav['include_harvesting'], 5)
     ###sam
+    tree['carbon_price'] = fun.f_sa(tree['carbon_price'], sen.sam['price_carbon_credit'])
+    tree['biomass_price'] = fun.f_sa(tree['biomass_price'], sen.sam['price_tree_biomass'])
+    tree[f"plantation_structure_{tree['controls']['plantation_structure']}"]['biodiversity_value'] = fun.f_sa(tree[f"plantation_structure_{tree['controls']['plantation_structure']}"]['biodiversity_value'], sen.sam['price_biodiversity_credit'])
     ###sap
     ###saa
     ###sat
@@ -270,7 +276,8 @@ def f_universal_inp_sa(uinp_defaults):
     parameters['i_ck_c2'] = fun.f_sa(parameters['i_ck_c2'].astype(float), sen.sav['ck_c1c2'], 5) #energy efficiency parameters
     parameters['i_cl0_c2'] = fun.f_sa(parameters['i_cl0_c2'].astype(float), sen.sav['cl0_c1c2'], 5) #genotype litter size params
     parameters['i_cu2_c2'] = fun.f_sa(parameters['i_cu2_c2'].astype(float), sen.sav['cu2_c1c2'], 5) #Murdoch Uni parameters
-    parameters['i_ce_c2'][2,...] = fun.f_sa(parameters['i_ce_c2'][2,...].astype(float), sen.sav['bnd_twice_dry_propn'], 5) #propn of twice drys
+    parameters['i_cu6_c2'] = fun.f_sa(parameters['i_cu6_c2'].astype(float), sen.sav['cu6_c1c2'], 5) #Murdoch Uni parameters
+    parameters['i_ce_c2'][0,...] = fun.f_sa(parameters['i_ce_c2'][0,...].astype(float), sen.sav['bnd_twice_dry_propn'], 5) #propn of twice drys
     ###SAM - these have to be converted to float so that the blank column becomes nan rather that None
     parameters['i_ci_c2'] = fun.f_sa(parameters['i_ci_c2'].astype(float),sen.sam['ci_c1c2'])
     parameters['i_cl_c2'] = fun.f_sa(parameters['i_cl_c2'].astype(float),sen.sam['cl_c1c2'])    #lactation parameters

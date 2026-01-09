@@ -93,11 +93,10 @@ def f_biomass2residue():
     The total mass of crop residues at first grazing (harvest for stubble and an inputted date for fodder) is
     calculated as a product of the biomass, harvest index and proportion harvested.
 
-    .. note:: Any frost impact on residue production has not been included because frost is captured within the
-              seeding penalty inputs because it changes based on sowing date.
-              Residue production can be positively impacted by frost because frost during the plants flowering stage
+    .. note:: Residue production can be positively impacted by frost because frost during the plants flowering stage
               can damage cell tissue and reduce grain fill :cite:p:`RN144`. This results in less grain and more residue
-              due to not using energy resources to fill grain.
+              due to not using energy resources to fill grain. However, this is not currently captured in the
+              calculation of residue as it is challenging to represent and isn't a significant error.
 
     This is a separate function because it is used in residue simulator.
     '''
@@ -118,41 +117,63 @@ def crop_residue_all(params, r_vals, nv, cat_propn_s1_ks2):
 
 
     '''
-    ##general
-    len_p6 = len(per.f_feed_periods()) - 1
-    len_nv = nv['len_nv']
+    # -------------------------
+    # General setup
+    # -------------------------
+    ##feed period
+    feed_period_dates_p6z = per.f_feed_periods()
+    fp_end_p6z = feed_period_dates_p6z[1:]
+    fp_start_p6z = feed_period_dates_p6z[:-1]
+    len_p6 = len(feed_period_dates_p6z) - 1
     index_p6 = np.arange(len_p6)
 
     ##nv stuff
+    len_nv = nv['len_nv']
     nv_is_not_confinement_f = np.full(len_nv, True)
     nv_is_not_confinement_f[-1] = np.logical_not(nv['confinement_inc']) #if confinement is included the last nv pool is confinement.
     me_threshold_fp6z = np.swapaxes(nv['nv_cutoff_ave_p6fz'], axis1=0, axis2=1)
     stub_me_eff_gainlose = uinp.stubble['i_stub_me_eff_gainlose']
 
+    # -------------------------
+    # (A) Domain masks early
+    # -------------------------
+
+    ##Within/between child-z masks for FEED PERIOD constraints
+    season_start_z = per.f_season_periods()[0,:] #slice season node to get season start
+    period_is_seasonstart_p6z = fp_start_p6z==season_start_z
+    _, _, mask_childz_within_fp_p6z, mask_childz_between_fp_p6z  = zfun.f_season_transfer_mask(
+        fp_start_p6z, period_is_seasonstart_pz=period_is_seasonstart_p6z, z_pos=-1)
+
+    ## Season mask — used everywhere
+    mask_fp_z8var_p6z = mask_childz_within_fp_p6z | mask_childz_between_fp_p6z
+    mask_fp_z8var_zp6 = mask_fp_z8var_p6z.T
+
     ##create mask which is stubble available. Stubble is available from the period harvest starts to the beginning of the following growing season.
     ##if the end date of the fp is after harvest then stubble is available.
-    feed_period_dates_p6z = per.f_feed_periods()
-    fp_end_p6z = feed_period_dates_p6z[1:]
-    fp_start_p6z = feed_period_dates_p6z[:-1]
     harv_date_zk = zfun.f_seasonal_inp(pinp.crop['start_harvest_crops'].values, numpy=True, axis=1).swapaxes(0,1)
     period_is_harvest_p6zk = np.logical_and(fp_end_p6z[...,na] >= harv_date_zk, fp_start_p6z[...,na] <= harv_date_zk)
     idx_fp_start_stub_zk = fun.searchsort_multiple_dim(feed_period_dates_p6z, harv_date_zk, 1, 0, side='right') - 1
 
-    idx_fp_end_stub_z = zfun.f_seasonal_inp(pinp.stubble['i_fp_end_stub_z'], numpy=True, axis=0)
+    ##stubble is destocked X days before early break - you dont know the type of season in advanced therefore must destock all z before the early break just in case
+    season_break_z = zfun.f_seasonal_inp(pinp.general['i_break'], numpy=True)
+    destock_days_prior_brk = pinp.stubble['i_destock_stub']
+    date_destocked = np.min(season_break_z) + 364 - destock_days_prior_brk #incremented to the next yr.
+    in_period_p6z = (fp_start_p6z <= date_destocked) & (date_destocked < fp_end_p6z)
+    idx_fp_end_stub_z = np.argmax(in_period_p6z, axis=0).astype(int)
 
     mask_stubble_exists_p6zk = np.logical_or(np.logical_and(index_p6[:,na,na]>=idx_fp_start_stub_zk, index_p6[:,na,na]<=idx_fp_end_stub_z[:,na]),
                                              np.logical_and(idx_fp_end_stub_z[:,na] < idx_fp_start_stub_zk,
                                                             np.logical_or(index_p6[:,na,na]>=idx_fp_start_stub_zk, index_p6[:,na,na]<=idx_fp_end_stub_z[:,na])))
 
+    ##stub category transfer mask
+    keys_s1 = uinp.stubble['i_stub_cat_idx']
+    len_s1 = len(keys_s1)
+    sc_index = np.arange(len_s1)
+    mask_sc_has_next_s1 = sc_index < (len_s1-1) # A..I
 
-    # #############################
-    # # Total stubble production  #
-    # #############################
-    # ##calc yield - frost and seeding rate not accounted for because they don't effect stubble.
-    # rot_yields_rkl_p7z = phs.f_rot_yield(for_stub=True)
-    # ##calc stubble
-    # residue_per_grain_k = f_cropresidue_production()
-    # rot_stubble_rkl_p7z = rot_yields_rkl_p7z.mul(residue_per_grain_k, axis=0, level=1)
+    cat_is_A_s1 = (np.arange(len_s1) == 0)
+    mask_cat_a_prov_p6zks1 = cat_is_A_s1 * period_is_harvest_p6zk[..., na]
+
 
     #########################
     # deterioration         #
@@ -171,6 +192,65 @@ def crop_residue_all(params, r_vals, nv, cat_propn_s1_ks2):
     ###quality of each category is inputted at harvest.
     qual_declined_p6zk = (1 - uinp.stubble['quality_deterioration']) ** average_days_since_harv_p6zk.astype(float)
 
+    # -------------------------
+    # Category proportions (k,s1,s2) (k already masked)
+    # -------------------------
+    len_s2 = len(uinp.stubble['i_idx_s2'])
+    cat_propn_ks1s2 = cat_propn_s1_ks2.values.reshape(len_s1, -1, len_s2).swapaxes(0, 1)
+    cat_propn_ks1s2 = cat_propn_ks1s2[pinp.crop_landuse_mask_k1, :, :]
+
+    # -------------------------
+    # Category transfer params + Trampling
+    # -------------------------
+    ##Note: In the sim each category has a minimum of 1kg so that the following transfers always work.
+
+    ##quantity of cat A stubble provided from 1t of total stubble at harvest - only cat A is provided at harvest
+    cat_a_prov_p6zks1s2 = 1000 * cat_propn_ks1s2 * mask_cat_a_prov_p6zks1[..., na]
+
+    ##amount of available stubble required to consume 1t of each cat in each fp (includes trampling)
+    #todo This trampling could be improved by spreading the quantity trampled across the lower quality categories
+    tramp_effect_ks1s2 = uinp.stubble['trampling'][:,na,na] * cat_propn_ks1s2 #mul by cat propn because only want to include the trampling of the categry being consumed.
+    stub_req_ks1s2 = 1000*(1+tramp_effect_ks1s2)
+
+    ##amount of next category provide by consumption of current category.
+    stub_prov_ks1s2 = np.roll(cat_propn_ks1s2, shift=-1,axis=1)/cat_propn_ks1s2*1000
+    stub_prov_ks1s2[:, ~mask_sc_has_next_s1, :] = 0 #final cat doesn't provide anything
+
+    ##############################
+    #transfers between periods   #
+    ##############################
+    ##transfer a given cat to the next period. Only cat A is available at harvest - it comes from the rotation phase.
+    stub_transfer_prov_p6zk = 1000 * np.roll(quant_declined_since_harv_p6zk, shift=-1, axis=0)/quant_declined_since_harv_p6zk #divide to capture only the decay during the curent period (quant_decline is the decay since harv)
+    stub_transfer_prov_p6zk = stub_transfer_prov_p6zk * mask_stubble_exists_p6zk * np.roll(np.logical_not(period_is_harvest_p6zk), -1, axis=0) # Backup to ensure that last years stubble doesnt transfer past next harvest
+
+    ##transfer requirment
+    stub_transfer_req_p6zk = 1000 * mask_stubble_exists_p6zk
+
+    ###############
+    #Proportion of the fp where stubble grazing can't occur - stop sheep consuming more than possible because harvest is not at the start of the period
+    ###############
+    fp_len_p6z = fp_end_p6z - fp_start_p6z
+
+    ## --- (1) Pre-harvest block: stubble can't be grazed before harvest happens in that period ---
+    # fraction of period BEFORE harvest (blocked)
+    stub_preharvest_block_frac_p6zk  = np.clip(fun.f_divide(fp_len_p6z[...,na] - (fp_end_p6z[...,na] - harv_date_zk), fp_len_p6z[...,na]),0, 1)
+    ### if harvest is not in this period, set to 0 (no pre-harvest block for stubble availability)
+    stub_preharvest_block_frac_p6zk[stub_preharvest_block_frac_p6zk>=1] = 0
+
+    # --- (2) Post-destock block: once sheep are destocked, remainder of period is not grazeable ---
+    # date_destocked is a scalar (same for all z); numpy broadcasts across (p6,z)
+    stub_postdestock_block_frac_p6z  = np.clip(fun.f_divide(fp_len_p6z - (fp_end_p6z - date_destocked), fp_len_p6z),0, 1)
+    # Convert from "fraction of period before destock" to "fraction of period after destock (not available for grazing)"
+    stub_postdestock_block_frac_p6z = 1 - stub_postdestock_block_frac_p6z
+    # if destock after the period ends -> no block
+    stub_postdestock_block_frac_p6z[date_destocked >= fp_end_p6z] = 0
+    # if destock before the period starts -> no blocked (because stubble doesnt exist.
+    stub_postdestock_block_frac_p6z[date_destocked <= fp_start_p6z] = 0
+
+    ##combine
+    stub_unavailable_frac_p6zk  = stub_postdestock_block_frac_p6z[:,:,na] + stub_preharvest_block_frac_p6zk
+    stub_unavailable_frac_p6zk = np.clip(stub_unavailable_frac_p6zk, 0, 1)
+
     ###############
     # M/D & vol   #
     ###############
@@ -184,12 +264,6 @@ def crop_residue_all(params, r_vals, nv, cat_propn_s1_ks2):
     4) calcs the md of each stubble category (dmd to MD)
     
     '''
-    len_k = len(sinp.general['i_idx_k1'])
-    len_s2 = len(uinp.stubble['i_idx_s2'])
-    len_s1 = len(uinp.stubble['i_stub_cat_dmd_s1'])
-    cat_propn_ks1s2 = cat_propn_s1_ks2.values.reshape(len_s1,-1,len_s2).swapaxes(0,1)
-    cat_propn_ks1s2 = cat_propn_ks1s2[pinp.crop_landuse_mask_k1,:,:] #mask k
-
 
     ##quality of each category in each period
     ###scale dmd at harvest to each period.
@@ -285,59 +359,18 @@ def crop_residue_all(params, r_vals, nv, cat_propn_s1_ks2):
     residue_harv_ch4_zk = ch4_burning_zk
     residue_cons_ch4_p6zk = ch4_burning_cons_p6zk
 
-    ###########
-    #trampling#
-    ###########
-    #for now this is just a single number however the input could be changed to per period
-    tramp_effect_ks1s2 = uinp.stubble['trampling'][:,na,na] * cat_propn_ks1s2 #mul by cat propn because only want to include the trampling of the categry being consumed.
+    ## Apply existence mask for interpretability
+    stock_ch4_stub_p6zks1 *= mask_stubble_exists_p6zk[..., na]
+    stock_n2o_stub_p6zks1 *= mask_stubble_exists_p6zk[..., na]
+    co2e_stub_cons_p6zks1  *= mask_stubble_exists_p6zk[..., na]
+    residue_cons_n2o_p6zk  *= mask_stubble_exists_p6zk
+    residue_cons_ch4_p6zk  *= mask_stubble_exists_p6zk
 
-    ################################
-    # allow access to next category#
-    ################################
-
-    ##Note: In the sim each category has a minimum of 1kg so that the following transfers always work.
-
-    ##quantity of cat A stubble provided from 1t of total stubble at harvest
-    cat_a_prov_p6zks1s2 = 1000 * cat_propn_ks1s2 * np.logical_and(np.arange(len(uinp.stubble['i_stub_cat_idx']))[:,na]==0
-                                                      ,period_is_harvest_p6zk[...,na,na]) #Only cat A is provided at harvest
-
-    ##amount of available stubble required to consume 1t of each cat in each fp
-    #todo This trampling could be improved by spreading the quantity trampled across the lower quality categories
-    stub_req_ks1s2 = 1000*(1+tramp_effect_ks1s2)
-
-    ##amount of next category provide by consumption of current category.
-    stub_prov_ks1s2 = np.roll(cat_propn_ks1s2, shift=-1,axis=1)/cat_propn_ks1s2*1000
-    stub_prov_ks1s2[:,-1,:] = 0 #final cat doesn't provide anything
-
-
-    ##############################
-    #transfers between periods   #
-    ##############################
-    ##transfer a given cat to the next period. Only cat A is available at harvest - it comes from the rotation phase.
-    stub_transfer_prov_p6zk = 1000 * np.roll(quant_declined_since_harv_p6zk, shift=-1, axis=0)/quant_declined_since_harv_p6zk #divide to capture only the decay during the curent period (quant_decline is the decay since harv)
-    stub_transfer_prov_p6zk = stub_transfer_prov_p6zk * mask_stubble_exists_p6zk  #no transfer can occur when stubble doesn't exist
-    stub_transfer_prov_p6zk = stub_transfer_prov_p6zk * np.roll(np.logical_not(period_is_harvest_p6zk), -1, 0) #last yrs stubble doesn't transfer past the following harv.
-
-    ##transfer requirment - mask out harvest period because last years stubble can not be consumed after this years harvest.
-    stub_transfer_req_p6zk = 1000 * mask_stubble_exists_p6zk   # No transfer can occur when stubble doesn't exist or at harvest.
-
-    ###############
-    #harvest p con# stop sheep consuming more than possible because harvest is not at the start of the period
-    ###############
-    #how far through each period does harv start? note: 0 for each period harv doesn't start in. Used to calc stub consumption limit in harv period
-    fp_len_p6z = fp_end_p6z - fp_start_p6z
-    cons_propn_p6zk = np.clip(fun.f_divide(fp_len_p6z[...,na] - (fp_end_p6z[...,na] - harv_date_zk), fp_len_p6z[...,na]),0, np.inf)
-    cons_propn_p6zk[cons_propn_p6zk>=1] = 0 #cons_prop can not be 1 else div0 error in pyomo.
 
     ######################
     #apply season mask   #
     ######################
-    ##mask
-    mask_fp_z8var_p6z = zfun.f_season_transfer_mask(fp_start_p6z, z_pos=-1, mask=True)
-    mask_fp_z8var_zp6 = mask_fp_z8var_p6z.T
-
-    ##apply mask
-    cons_propn_p6zk = cons_propn_p6zk * mask_fp_z8var_p6z[...,na]
+    stub_unavailable_frac_p6zk = stub_unavailable_frac_p6zk * mask_fp_z8var_p6z[...,na]
     stub_transfer_prov_p6zk = stub_transfer_prov_p6zk * mask_fp_z8var_p6z[...,na]
     stub_transfer_req_p6zk = stub_transfer_req_p6zk * mask_fp_z8var_p6z[...,na]
     cat_a_prov_p6zks1s2 = cat_a_prov_p6zks1s2 * mask_fp_z8var_p6z[...,na,na,na]
@@ -384,13 +417,13 @@ def crop_residue_all(params, r_vals, nv, cat_propn_s1_ks2):
     # params['rot_stubble'] = rot_stubble_rkl_p7z.stack([0,1]).to_dict()
 
     ##'require' params ie consuming 1t of stubble B requires 1.002t from the constraint (0.002 accounts for trampling)
-    params['transfer_req'] = fun.f1_make_pyomo_dict(stub_req_ks1s2, arrays_ks1s2)
+    params['cat_transfer_req'] = fun.f1_make_pyomo_dict(stub_req_ks1s2, arrays_ks1s2)
 
     ###'provide' from cat to cat ie consuming 1t of cat A provides 2t of cat b
-    params['transfer_prov'] = fun.f1_make_pyomo_dict(stub_prov_ks1s2, arrays_ks1s2)
+    params['cat_transfer_prov'] = fun.f1_make_pyomo_dict(stub_prov_ks1s2, arrays_ks1s2)
 
     ###harv con
-    params['cons_prop'] = fun.f1_make_pyomo_dict(cons_propn_p6zk, arrays_p6zk)
+    params['stub_unavailable_frac_p6zk'] = fun.f1_make_pyomo_dict(stub_unavailable_frac_p6zk, arrays_p6zk)
 
     ###feed period transfer
     params['stub_transfer_prov'] = fun.f1_make_pyomo_dict(stub_transfer_prov_p6zk, arrays_p6zk)
@@ -413,6 +446,31 @@ def crop_residue_all(params, r_vals, nv, cat_propn_s1_ks2):
     params['co2e_stub_cons_p6zks1'] = fun.f1_make_pyomo_dict(co2e_stub_cons_p6zks1, arrays_p6zks1)
     params['co2e_stub_production_zk'] = fun.f1_make_pyomo_dict(co2e_stub_production_zk, arrays_zk)
 
+    ##--- build active index masks for sparse Pyomo sets - more notes in corresponding pyomo module ---
+    base_mask_p6zk = mask_stubble_exists_p6zk & mask_fp_z8var_p6z[..., na]
+    # transfer_mask_p6zk = mask_transfer_p6zk & mask_fp_z8var_p6z[...,na]
+
+    axis_keys_p6zk = [keys_p6, keys_z, keys_k]
+    axis_keys_p6zks1 = [keys_p6, keys_z, keys_k, keys_s1]
+    params['idx_stub_base_p6zk'] = fun.build_active_index(base_mask_p6zk, axis_keys_p6zk)
+    # params['idx_stub_transfer_p6zk'] = fun.build_active_index(transfer_mask_p6zk, axis_keys_p6zk)
+    params['idx_stub_cat_A_prov_p6zks1'] = fun.build_active_index(mask_cat_a_prov_p6zks1, axis_keys_p6zks1)
+
+    base_within_p6zk = base_mask_p6zk & mask_childz_within_fp_p6z[..., na]
+    base_between_p6zk = base_mask_p6zk & mask_childz_between_fp_p6z[..., na]
+
+    params['idx_stub_base_within_p6zk'] = fun.build_active_index(base_within_p6zk, [keys_p6, keys_z, keys_k])
+    params['idx_stub_base_between_p6zk'] = fun.build_active_index(base_between_p6zk, [keys_p6, keys_z, keys_k])
+
+
+    ###active z in each p6. see extra notes in corresponding pyomo module.
+    stub_z8_by_p6k = {}
+    stub_k_by_p6z = {}
+    for (p6, z, k) in params['idx_stub_base_p6zk']:
+        stub_z8_by_p6k.setdefault((p6, k), []).append(z)
+        stub_k_by_p6z.setdefault((p6, z), set()).add(k)
+    params['stub_z8_by_p6k'] = {pk: sorted(zs) for pk, zs in stub_z8_by_p6k.items()}
+    params['stub_k_by_p6z'] = {pz: sorted(ks) for pz, ks in stub_k_by_p6z.items()}
     ###########
     #report   #
     ###########

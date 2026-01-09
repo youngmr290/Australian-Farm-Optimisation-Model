@@ -36,6 +36,7 @@ def f_create_report_dfs(non_exist_trials):
     reports["stacked_dam_dvp_dates"] = pd.DataFrame()  # dam dvp dates
     reports["stacked_repro_dates"] = pd.DataFrame()  # dam repro dates
     reports["stacked_offs_dvp_dates"] = pd.DataFrame()  # offs dvp dates
+    reports["stacked_deepflow"] = pd.DataFrame()  # sale price
     reports["stacked_saleprice"] = pd.DataFrame()  # sale price
     reports["stacked_salegrid_dams"] = pd.DataFrame()  # sale grid
     reports["stacked_salegrid_yatf"] = pd.DataFrame()  # sale grid
@@ -114,6 +115,7 @@ def f_create_report_dfs(non_exist_trials):
     reports["stacked_napcon"] = pd.DataFrame()  # non-arable pasture feed consumed
     reports["stacked_poccon"] = pd.DataFrame()  # pasture on crop paddocks feed consumed
     reports["stacked_supcon"] = pd.DataFrame()  # supplement feed consumed
+    reports["stacked_supdsecon"] = pd.DataFrame()  # supplement feed consumed
     reports["stacked_stubcon"] = pd.DataFrame()  # stubble feed consumed
     reports["stacked_cropcon"] = pd.DataFrame()  # crop consumed from early season crop grazing
     reports["stacked_cropcon_available"] = pd.DataFrame()  # crop consumed from early season crop grazing
@@ -229,6 +231,10 @@ def f_concat_reports(stacked_reports, reports, report_run, trial_name):
         offs_dvp_dates = pd.concat([reports["offs_dvp_dates"]], keys=[trial_name],
                                    names=['Trial'])  # add trial name as index level
         stacked_reports["stacked_offs_dvp_dates"] = rfun.f_append_dfs(stacked_reports["stacked_offs_dvp_dates"], offs_dvp_dates)
+
+    if report_run.loc['run_deepflow', 'Run']:
+        deepflow = pd.concat([reports["deepflow"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
+        stacked_reports["stacked_deepflow"] = rfun.f_append_dfs(stacked_reports["stacked_deepflow"], deepflow)
 
     if report_run.loc['run_saleprice', 'Run']:
         saleprice = pd.concat([reports["saleprice"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
@@ -564,6 +570,10 @@ def f_concat_reports(stacked_reports, reports, report_run, trial_name):
         supcon = pd.concat([reports["supcon"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
         stacked_reports["stacked_supcon"] = rfun.f_append_dfs(stacked_reports["stacked_supcon"], supcon)
 
+    if report_run.loc['run_supdsecon', 'Run']:
+        supdsecon = pd.concat([reports["supdsecon"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
+        stacked_reports["stacked_supdsecon"] = rfun.f_append_dfs(stacked_reports["stacked_supdsecon"], supdsecon)
+
     if report_run.loc['run_stubcon', 'Run']:
         stubcon = pd.concat([reports["stubcon"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
         stacked_reports["stacked_stubcon"] = rfun.f_append_dfs(stacked_reports["stacked_stubcon"], stubcon)
@@ -702,6 +712,8 @@ def f_save_reports(report_run, reports, processor):
         df_settings = rfun.f_df2xl(writer, reports["stacked_wethers_n_crossys_numbers_summary"], 'wethers_n_xb_numbers_summary', df_settings, option=xl_display_mode)
     if report_run.loc['run_emissions', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_emissions"], 'emissions', df_settings, option=xl_display_mode)
+    if report_run.loc['run_deepflow', 'Run']:
+        df_settings = rfun.f_df2xl(writer, reports["stacked_deepflow"], 'deepflow', df_settings, option=xl_display_mode)
     if report_run.loc['run_saleprice', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_saleprice"], 'saleprice', df_settings, option=xl_display_mode)
     if report_run.loc['run_salegrid_dams', 'Run']:
@@ -869,6 +881,8 @@ def f_save_reports(report_run, reports, processor):
         df_settings = rfun.f_df2xl(writer, reports["stacked_poccon"], 'poccon', df_settings, option=xl_display_mode)
     if report_run.loc['run_supcon', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_supcon"], 'supcon', df_settings, option=xl_display_mode)
+    if report_run.loc['run_supdsecon', 'Run']:
+        df_settings = rfun.f_df2xl(writer, reports["stacked_supdsecon"], 'supdsecon', df_settings, option=xl_display_mode)
     if report_run.loc['run_stubcon', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_stubcon"], 'stubcon', df_settings, option=xl_display_mode)
     if report_run.loc['run_cropcon', 'Run']:
