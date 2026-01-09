@@ -223,6 +223,7 @@ def f_farmer_lmu_adj(a_lmuregion_lmufarmer):
     fun.f1_lmuregion_to_lmufarmer(general, "i_lmu_area", a_lmuregion_lmufarmer, lmu_axis=0, lmu_flag=lmu_flag)
     fun.f1_lmuregion_to_lmufarmer(general, "i_non_cropable_area_l", a_lmuregion_lmufarmer, lmu_axis=0, lmu_flag=lmu_flag)
     fun.f1_lmuregion_to_lmufarmer(general, "arable", a_lmuregion_lmufarmer, lmu_axis=0, lmu_flag=lmu_flag)
+    fun.f1_lmuregion_to_lmufarmer(general, "i_recharge_kl", a_lmuregion_lmufarmer, lmu_axis=1, lmu_flag=lmu_flag)
 
     ##crop
     fun.f1_lmuregion_to_lmufarmer(crop, "yield_by_lmu", a_lmuregion_lmufarmer, lmu_axis=1, lmu_flag=lmu_flag)
@@ -263,6 +264,7 @@ def f_farmer_lmu_adj(a_lmuregion_lmufarmer):
     fun.f1_lmuregion_to_lmufarmer(tree, "estimated_area_trees_l", a_lmuregion_lmufarmer, lmu_axis=0, lmu_flag=lmu_flag)
     fun.f1_lmuregion_to_lmufarmer(tree, "lmu_growth_scalar_l", a_lmuregion_lmufarmer, lmu_axis=0, lmu_flag=lmu_flag)
     fun.f1_lmuregion_to_lmufarmer(tree, "lmu_carbon_scalar_l", a_lmuregion_lmufarmer, lmu_axis=0, lmu_flag=lmu_flag)
+    fun.f1_lmuregion_to_lmufarmer(tree, "recharge_l", a_lmuregion_lmufarmer, lmu_axis=0, lmu_flag=lmu_flag)
 
 
 #######################
