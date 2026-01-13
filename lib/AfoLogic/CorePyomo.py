@@ -124,7 +124,7 @@ def coremodel_all(trial_name, model, method, nv, print_debug_output, MP_lp_vars)
     if method=="CPLEX" and not shutil.which("cplex") == None:
         ##solve with cplex if it exists
         solver = pe.SolverFactory('cplex')
-        solver_result = solver.solve(model, warmstart=True, tee=True)  # tee=True for solver output - may be useful for troubleshooting, currently warmstart doesnt do anything (could only get it to work for MIP)
+        solver_result = solver.solve(model, warmstart=True, tee=False)  # tee=True for solver output - may be useful for troubleshooting, currently warmstart doesnt do anything (could only get it to work for MIP)
     elif method=="glpk":
         ##solve with glpk to see options enter glpsol --help into command prompt.
         solver = pe.SolverFactory('glpk')
