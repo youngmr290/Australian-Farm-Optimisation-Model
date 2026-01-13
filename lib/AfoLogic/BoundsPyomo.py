@@ -60,9 +60,7 @@ def f1_boundarypyomo_local(params, model):
     total_dams_scanned_bound_inc = np.any(sen.sav['bnd_total_dams_scanned'] != '-') #equal to bound on the total number of mated dams at scanning
     bnd_propn_dams_retained_inc = np.any(sen.sav['bnd_propn_dams_retained_og1'] != '-') #force a propn of 5yo dams to be retained.
     propn_mated_inc = np.any(sen.sav['bnd_propn_dams_mated_og1'] != '-')
-    w_set_inc = fun.f_sa(False, sen.sav['propn_mated_w_inc'], 5)
-    bnd_propn_dams_mated_inc = propn_mated_inc and not(w_set_inc) #include bnd_propn_mated without a w set.
-    bnd_propn_dams_mated_w_inc = propn_mated_inc and w_set_inc #include bnd_propn_mated with a w set.
+    bnd_propn_dams_mated_inc = propn_mated_inc and not(sen.sav['bnd_fs_opt_inc'])#include bnd_propn_mated (summed over w axis). If running fs optimisation a different version of the bnd is used.
     bnd_sale_twice_drys_inc = fun.f_sa(False, sen.sav['bnd_sale_twice_dry_inc'], 5) #proportion of drys sold (can be sold at either sale opp)
     bnd_propn_singles_inc = np.any(sen.sav['min_propn_singles_sold_og1'] != '-') #include bound on the minimum proportion of singles sold
     bnd_propn_twins_inc = np.any(sen.sav['min_propn_twins_sold_og1'] != '-') #include bound on the minimum proportion of twins sold
@@ -79,6 +77,7 @@ def f1_boundarypyomo_local(params, model):
     biomass_graze_bound_inc = np.any(sen.sav['bnd_biomass_graze_k1'] != '-')   # controls if biomass grazed bnd is included.(which is the proportion of crop biomass that is grazed)
     #todo need to make this input below in uinp. Then test the constraint works as expected.
     emissions_bnd_inc = False#uinp.emissions['co2e_limit']>0  # controls if total farm emissions are constrained.
+    bnd_fs_opt_inc = sen.sav['bnd_fs_opt_inc']
 
 
     if bounds_inc:
@@ -285,15 +284,6 @@ def f1_boundarypyomo_local(params, model):
             model.p_dams_lobound = pe.Param(model.s_sale_dams, model.s_dvp_dams, model.s_season_types, model.s_groups_dams,
                                             default=0, initialize=params['stock']['p_dams_lobound'])
 
-            ##if True this puts the lo_bnd across each starting weight - this is used in the fs optimisation to ensure each starting w has numbers and gets an optimum fs.
-            ## This can make the model infeasible.
-            if sen.sav['lobnd_across_startw']:
-                model.s_startw_dams = pe.Set(initialize=params['stock']['startw_idx_dams'], doc='Standard LW patterns dams')
-                model.p_dams_w_is_startw_ws = pe.Param(model.s_lw_dams, model.s_startw_dams, default=0, initialize=params['stock']['p_dams_w_is_startw_ws'])
-            else:
-                model.s_startw_dams = pe.Set(initialize=['all_w'], doc='Standard LW patterns dams')
-                model.p_dams_w_is_startw_ws = pe.Param(model.s_lw_dams, model.s_startw_dams, default=1, initialize=1)
-
             ##manual set the bound - usually done using SAV but this is just a quick and dirty method for debugging
             # arrays = [model.s_sale_dams, model.s_dvp_dams, model.s_lw_dams, model.s_season_types, model.s_groups_dams]   #more sets can be added here to customise the bound
             # index_tvwzg = fun.cartesian_product_simple_transpose(arrays)
@@ -307,18 +297,18 @@ def f1_boundarypyomo_local(params, model):
             # dams_lobound = dict(zip(tup_tvwzg, dams_lobound))
 
             ###constraint
-            def f_dam_lobound(model, q, s, k2, t, v, ws, z, g1):
+            def f_dam_lobound(model, q, s, k2, t, v, z, g1):
                 if (pe.value(model.p_wyear_inc_qs[q, s]) and pe.value(model.p_dams_lobound[t,v,z,g1])!=0
                     and any(pe.value(model.p_mask_dams[k2,t,v,w8,z,g1]) != 0 for w8 in model.s_lw_dams)):
                     return sum(model.v_dams[q,s,k2,t,v,a,n,w8,z,i,y,g1]
                                for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
                                for i in model.s_tol for y in model.s_gen_merit_dams
-                               if pe.value(model.p_mask_dams[k2,t,v,w8,z,g1]) == 1 and pe.value(model.p_dams_w_is_startw_ws[w8,ws])==1
+                               if pe.value(model.p_mask_dams[k2,t,v,w8,z,g1]) == 1
                                ) >= model.p_dams_lobound[t,v,z,g1]
                 else:
                     return pe.Constraint.Skip
             model.con_dams_lobound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_k2_birth_dams, model.s_sale_dams
-                                                   , model.s_dvp_dams, model.s_startw_dams, model.s_season_types, model.s_groups_dams
+                                                   , model.s_dvp_dams, model.s_season_types, model.s_groups_dams
                                                    , rule=f_dam_lobound, doc='min number of dams')
 
         ##dams upper bound
@@ -384,15 +374,6 @@ def f1_boundarypyomo_local(params, model):
             model.p_offs_lobound = pe.Param(model.s_k3_damage_offs, model.s_sale_offs, model.s_dvp_offs, model.s_season_types, model.s_gender,
                                             model.s_groups_offs, default=0, initialize=params['stock']['p_offs_lobound'])
 
-            ##if True this puts the lo_bnd across each starting weight - this is used in the fs optimisation to ensure each starting w has numbers and gets an optimum fs.
-            ## This can make the model infeasible.
-            if sen.sav['lobnd_across_startw']:
-                model.s_startw_offs = pe.Set(initialize=params['stock']['startw_idx_offs'], doc='Standard LW patterns offs')
-                model.p_offs_w_is_startw_ws = pe.Param(model.s_lw_offs, model.s_startw_offs, default=0, initialize=params['stock']['p_offs_w_is_startw_ws'])
-            else:
-                model.s_startw_offs = pe.Set(initialize=['all_w'], doc='Standard LW patterns offs')
-                model.p_offs_w_is_startw_ws = pe.Param(model.s_lw_offs, model.s_startw_offs, default=1, initialize=1)
-
             ##manual set the bound - usually done using SAV but this is just a quick and dirty method for debugging
             ###keys to build arrays for the specified slices
             # arrays = [model.s_sale_offs, model.s_dvp_offs, model.s_lw_offs,model.s_season_types, model.s_gender, model.s_groups_offs]   #more sets can be added here to customise the bound
@@ -409,19 +390,19 @@ def f1_boundarypyomo_local(params, model):
             # offs_lowbound = dict(zip(tup_tvwzxg, offs_lowbound))
 
             ###constraint
-            def f_off_lobound(model, q, s, k3, k5, t, v, ws, z, x, g3):
+            def f_off_lobound(model, q, s, k3, k5, t, v, z, x, g3):
                 if (pe.value(model.p_wyear_inc_qs[q, s]) and pe.value(model.p_offs_lobound[k3,t,v,z,x,g3])!=0\
                         and any(pe.value(model.p_mask_offs[k3,v,w8,z,x,g3]) != 0 for w8 in model.s_lw_offs)):
                     return sum(model.v_offs[q,s,k3,k5,t,v,n3,w8,z,i,a,x,y3,g3]
                                for a in model.s_wean_times for n3 in model.s_nut_offs
                                for w8 in model.s_lw_offs for i in model.s_tol for y3 in model.s_gen_merit_offs
-                               if pe.value(model.p_mask_offs[k3,v,w8,z,x,g3]) == 1 and pe.value(model.p_offs_w_is_startw_ws[w8,ws])==1
+                               if pe.value(model.p_mask_offs[k3,v,w8,z,x,g3]) == 1
                                ) >= model.p_offs_lobound[k3,t,v,z,x,g3]
                 else:
                     return pe.Constraint.Skip
             model.con_offs_lobound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_k3_damage_offs
                                                    , model.s_k5_birth_offs, model.s_sale_offs, model.s_dvp_offs
-                                                   , model.s_startw_offs, model.s_season_types, model.s_gender, model.s_groups_offs
+                                                   , model.s_season_types, model.s_gender, model.s_groups_offs
                                                    , rule=f_off_lobound, doc='min number of offs')
 
         ##offs upper bound
@@ -591,32 +572,6 @@ def f1_boundarypyomo_local(params, model):
                                if pe.value(model.p_mask_dams[k2,t,v,w8,z,g1]) == 1) * (1 - model.p_prop_dams_mated[v,z,g1])
             model.con_propn_dams_mated = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_dvp_dams, model.s_season_types, model.s_groups_dams, rule=f_propn_dams_mated,
                                                        doc='proportion of dams mated')
-
-        ##bound to fix the proportion of dams being mated - Proportion fixed optimised across the w axis
-        ###build bound if turned on
-        if bnd_propn_dams_mated_w_inc:
-            ###build param - inf values are skipped in the constraint building so inf means the model can optimise the propn mated
-            model.p_prop_dams_mated = pe.Param(model.s_dvp_dams, model.s_season_types, model.s_groups_dams
-                                               , default=0, initialize=params['stock']['p_prop_dams_mated'])
-            ###constraint
-            #todo add an i axis to the constraint
-            def f_propn_dams_mated_w(model, q, s, v, w8, z, g1):
-                if (pe.value(model.p_prop_dams_mated[v,z,g1])==np.inf or not pe.value(model.p_wyear_inc_qs[q, s]) or
-                        all(pe.value(model.p_mask_dams[k2,t,v,w8,z,g1]) == 0
-                            for k2 in model.s_k2_birth_dams for t in model.s_sale_dams)):
-                    return pe.Constraint.Skip
-                else:
-                    return sum(model.v_dams[q,s,'NM-0',t,v,a,n,w8,z,i,y,g1] for t in model.s_sale_dams
-                               for a in model.s_wean_times for n in model.s_nut_dams
-                               for i in model.s_tol for y in model.s_gen_merit_dams
-                               if pe.value(model.p_mask_dams['NM-0',t,v,w8,z,g1]) == 1
-                               ) == sum(model.v_dams[q,s,k2,t,v,a,n,w8,z,i,y,g1] for k2 in model.s_k2_birth_dams
-                               for t in model.s_sale_dams for a in model.s_wean_times for n in model.s_nut_dams
-                               for i in model.s_tol for y in model.s_gen_merit_dams
-                               if pe.value(model.p_mask_dams[k2,t,v,w8,z,g1]) == 1) * (1 - model.p_prop_dams_mated[v,z,g1])
-            model.con_propn_dams_mated_w = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_dvp_dams
-                                                , model.s_lw_dams, model.s_season_types, model.s_groups_dams
-                                                , rule=f_propn_dams_mated_w, doc='proportion of dams mated with w set')
 
         ##bound to fix the proportion of twice dry dams sold. Proportion of twice dry dams is an input in uinp ce[2, ....].
         ###build bound if turned on
@@ -1041,3 +996,133 @@ def f1_boundarypyomo_local(params, model):
 
 
 
+
+
+#-----------Bounds used for FS optimisation------------- #
+
+        if bnd_fs_opt_inc:
+            '''
+            For the FS optimisation we want to force in animals in each starting w for each k and each t.
+            This ensures that we identify the optimal pattern for each starting w.
+            
+            This is achieved with the following 3 bnds:
+            
+                - Lower bound on the number of dams in each start w (ie w0-27, 27-54, 54-81).The bnd is only active for next V is condense.
+                - Bound propn mated for each start w. This forces some mated and some not mated animals in each start W. 
+                - Bound min propn sold. This forces a propn of animals to be sold in each start W. (if no animals exist none need to be sold). Occurs for all V
+            
+            To stop these bnds going infeasible the numbers bounds have some slack on the RHS (for example to handle if no prog provide dams in the lightest W slice).
+
+            '''
+            ##special sets that specify which w belongs to which start W.
+            model.s_startw_dams = pe.Set(initialize=params['stock']['startw_idx_dams'],
+                                         doc='Standard LW patterns dams')
+            model.p_dams_w_is_startw_ws = pe.Param(model.s_lw_dams, model.s_startw_dams, default=0,
+                                                   initialize=params['stock']['p_dams_w_is_startw_ws'])
+
+
+            ##lo_bnd across each starting weight - only for the v before condensing. Sum k2 axis because that is handled by bnd propn mated (this saves the model going infeasible if for example there are no triples for one class of sheep).
+            def f_dam_lobound_fs_opt(model, q, s, t, v, ws, z, g1):
+                if (pe.value(model.p_wyear_inc_qs[q, s])
+                        and any(pe.value(model.p_mask_dams[k2, t, v, w8, z, g1]) != 0 for k2 in model.s_k2_birth_dams for w8 in model.s_lw_dams)
+                        and v in params['stock']['p_condensenext_v_dams']):
+                    return sum(model.v_dams[q, s, k2, t, v, a, n, w8, z, i, y, g1]
+                               for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
+                               for i in model.s_tol for y in model.s_gen_merit_dams for k2 in model.s_k2_birth_dams
+                               if pe.value(model.p_mask_dams[k2, t, v, w8, z, g1]) == 1 and pe.value(
+                        model.p_dams_w_is_startw_ws[w8, ws]) == 1
+                               ) >= 0.5
+                else:
+                    return pe.Constraint.Skip
+
+            model.con_dams_lobound_fs_opt = pe.Constraint(model.s_sequence_year, model.s_sequence,
+                                                   model.s_sale_dams, model.s_dvp_dams, model.s_startw_dams, model.s_season_types,
+                                                   model.s_groups_dams, rule=f_dam_lobound_fs_opt, doc='min number of dams')
+
+
+            ##min sale bound - all v
+            def f_min_propn_dams_sold_fs_opt(model, q, s, k2, t_, v, ws, z, i, y, g1):
+                if (pe.value(model.p_wyear_inc_qs[q, s]) and any(pe.value(model.p_mask_dams[k2,t_,v,w8,z,g1])==1 for w8 in model.s_lw_dams)):
+                    return sum(model.v_dams[q,s,k2,t_,v,a,n,w8,z,i,y,g1]
+                               for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
+                               if pe.value(model.p_mask_dams[k2,t_,v,w8,z,g1]) == 1 and pe.value(
+                               model.p_dams_w_is_startw_ws[w8, ws]) == 1
+                               ) >= sum(model.v_dams[q,s,k2,t,v,a,n,w8,z,i,y,g1] for t in model.s_sale_dams
+                                        for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
+                                        if pe.value(model.p_mask_dams[k2,t,v,w8,z,g1]) == 1 and pe.value(
+                                        model.p_dams_w_is_startw_ws[w8, ws]) == 1
+                                        ) * 0.05
+                else:
+                    return pe.Constraint.Skip
+            model.con_min_propn_dams_sold_fs_opt = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_k2_birth_dams
+                                                      , model.s_sale_t_dams, model.s_dvp_dams, model.s_startw_dams, model.s_season_types, model.s_tol
+                                                      , model.s_gen_merit_dams, model.s_groups_dams, rule=f_min_propn_dams_sold_fs_opt
+                                                      , doc='proportion of dams sold each opportunity')
+
+            ##bound to fix the proportion of dams being mated - in relevant v
+            ###build param - inf values are skipped in the constraint building so inf means the model can optimise the propn mated
+            model.p_prop_dams_mated_fs_opt = pe.Param(model.s_dvp_dams, model.s_season_types, model.s_groups_dams
+                                               , default=0, initialize=params['stock']['p_prop_dams_mated'])
+            def f_propn_dams_mated_fs_opt(model, q, s, v, ws, z, i, g1):
+                if (pe.value(model.p_prop_dams_mated_fs_opt[v,z,g1])==np.inf or not pe.value(model.p_wyear_inc_qs[q, s]) or
+                        all(pe.value(model.p_mask_dams[k2,t,v,w8,z,g1]) == 0
+                            for k2 in model.s_k2_birth_dams for t in model.s_sale_dams for w8 in model.s_lw_dams)):
+                    return pe.Constraint.Skip
+                else:
+                    return sum(model.v_dams[q,s,'NM-0',t,v,a,n,w8,z,i,y,g1] for t in model.s_sale_dams
+                               for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
+                               for y in model.s_gen_merit_dams
+                               if pe.value(model.p_mask_dams['NM-0',t,v,w8,z,g1]) == 1 and pe.value(
+                                   model.p_dams_w_is_startw_ws[w8, ws]) == 1
+                               ) == sum(model.v_dams[q,s,k2,t,v,a,n,w8,z,i,y,g1] for k2 in model.s_k2_birth_dams
+                               for t in model.s_sale_dams for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
+                               for i in model.s_tol for y in model.s_gen_merit_dams
+                               if pe.value(model.p_mask_dams[k2,t,v,w8,z,g1]) == 1 and pe.value(
+                                  model.p_dams_w_is_startw_ws[w8, ws]) == 1) * (1 - model.p_prop_dams_mated_fs_opt[v,z,g1])
+            model.con_propn_dams_mated_fs_opt = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_dvp_dams
+                                                , model.s_startw_dams, model.s_season_types, model.s_tol, model.s_groups_dams
+                                                , rule=f_propn_dams_mated_fs_opt, doc='proportion of dams mated with w set')
+
+
+            ##offs: lo_bnd across each starting weight - this is used in the fs optimisation to ensure each starting w has numbers and gets an optimum fs.
+            model.s_startw_offs = pe.Set(initialize=params['stock']['startw_idx_offs'], doc='Standard LW patterns offs')
+            model.p_offs_w_is_startw_ws = pe.Param(model.s_lw_offs, model.s_startw_offs, default=0,
+                                                   initialize=params['stock']['p_offs_w_is_startw_ws'])
+
+            def f_off_lobound_fs_opt(model, q, s, k3, k5, t, v, ws, z, x, g3):
+                if (pe.value(model.p_wyear_inc_qs[q, s])
+                        and any(pe.value(model.p_mask_offs[k3, v, w8, z, x, g3]) != 0 for w8 in model.s_lw_offs)
+                        and v in params['stock']['p_condensenext_v_offs']):
+                    return sum(model.v_offs[q, s, k3, k5, t, v, n3, w8, z, i, a, x, y3, g3]
+                               for a in model.s_wean_times for n3 in model.s_nut_offs
+                               for w8 in model.s_lw_offs for i in model.s_tol for y3 in model.s_gen_merit_offs
+                               if pe.value(model.p_mask_offs[k3, v, w8, z, x, g3]) == 1 and pe.value(
+                        model.p_offs_w_is_startw_ws[w8, ws]) == 1
+                               ) >= 0.5
+                else:
+                    return pe.Constraint.Skip
+
+
+            model.con_offs_lobound_fs_opt = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_k3_damage_offs
+                                                   , model.s_k5_birth_offs, model.s_sale_offs, model.s_dvp_offs
+                                                   , model.s_startw_offs, model.s_season_types, model.s_gender, model.s_groups_offs
+                                                   , rule=f_off_lobound_fs_opt, doc='min number of offs')
+
+            ##offs: min sale bound - all v
+            def f_min_propn_offs_sold_fs_opt(model, q, s, k3, k5, t_, v, ws, z, i, y3, x, g3):
+                if (pe.value(model.p_wyear_inc_qs[q, s]) and any(pe.value(model.p_mask_offs[k3, v, w8, z, x, g3]) != 0 for w8 in model.s_lw_offs)):
+                    return sum(model.v_offs[q, s, k3, k5, t_, v, n3, w8, z, i, a, x, y3, g3]
+                               for a in model.s_wean_times for n3 in model.s_nut_offs for w8 in model.s_lw_offs
+                               if pe.value(model.p_mask_offs[k3, v, w8, z, x, g3]) == 1 and pe.value(
+                               model.p_offs_w_is_startw_ws[w8, ws]) == 1
+                               ) >= sum(model.v_offs[q, s, k3, k5, t, v, n3, w8, z, i, a, x, y3, g3] for t in model.s_sale_dams
+                                        for a in model.s_wean_times for n3 in model.s_nut_offs for w8 in model.s_lw_offs
+                                        if pe.value(model.p_mask_offs[k3, v, w8, z, x, g3]) == 1 and pe.value(
+                                        model.p_offs_w_is_startw_ws[w8, ws]) == 1
+                                        ) * 0.05
+                else:
+                    return pe.Constraint.Skip
+            model.con_min_propn_offs_sold_fs_opt = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_k3_damage_offs, model.s_k5_birth_offs
+                                                      , model.s_sale_t_offs, model.s_dvp_offs, model.s_startw_offs, model.s_season_types, model.s_tol
+                                                      , model.s_gen_merit_offs, model.s_gender, model.s_groups_offs, rule=f_min_propn_offs_sold_fs_opt
+                                                      , doc='proportion of dams sold each opportunity')

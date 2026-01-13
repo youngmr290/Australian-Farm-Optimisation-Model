@@ -10615,6 +10615,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     params['p_prop_twice_dry_dams'] = fun.f1_make_pyomo_dict(prop_twice_dry_dams_va1e1b1nwzida0e0b0xyg1, arrays_vziyg1)
     params['p_prejoin_v_dams'] = keys_v1[dvp_type_va1e1b1nwzida0e0b0xyg1[:,0,0,0,0,0,0,0,0,0,0,0,0,0,0]==prejoin_vtype1] #get the dvp keys which are prejoining (same for all animals hence take slice 0)
     params['p_scan_v_dams'] = keys_v1[dvp_type_va1e1b1nwzida0e0b0xyg1[:,0,0,0,0,0,0,0,0,0,0,0,0,0,0]==scan_vtype1] #get the dvp keys which are scan (same for all animals hence take slice 0)
+    params['p_condense_v_dams'] = keys_v1[dvp_type_va1e1b1nwzida0e0b0xyg1[:,0,0,0,0,0,0,0,0,0,0,0,0,0,0]==condense_vtype1] #get the dvp keys which are condense (same for all animals hence take slice 0)
+    params['p_condensenext_v_dams'] = keys_v1[np.roll(dvp_type_va1e1b1nwzida0e0b0xyg1[:,0,0,0,0,0,0,0,0,0,0,0,0,0,0]==condense_vtype1, shift=-1, axis=0)] #get the dvp keys for the v before condensing (same for all animals hence take slice 0)
+    params['p_condense_v_offs'] = keys_v3[dvp_type_va1e1b1nwzida0e0b0xyg3[:,0,0,0,0,0,0,0,0,0,0,0,0,0,0]==condense_vtype3] #get the dvp keys which are condense (same for all animals hence take slice 0)
+    params['p_condensenext_v_offs'] = keys_v3[np.roll(dvp_type_va1e1b1nwzida0e0b0xyg3[:,0,0,0,0,0,0,0,0,0,0,0,0,0,0]==condense_vtype3, shift=-1, axis=0)] #get the dvp keys for the v before condensing (same for all animals hence take slice 0)
 
     ##minimum proportion of singles that are sold
     ###convert to p axis
