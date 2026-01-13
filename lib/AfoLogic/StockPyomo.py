@@ -37,6 +37,7 @@ def f1_stockpyomo_local(params, model, MP_lp_vars):
     model.s_gen_merit_dams = pe.Set(initialize=params['y_idx_dams'], doc='genetic merit of dams')
     model.s_sale_dams = pe.Set(initialize=params['t_idx_dams'], doc='Sales within the year for dams')
     model.s_sale_t_dams = pe.Set(initialize=params['t_idx_dams'][0:2], doc='T slices where sale can occur for dams')
+    model.s_retained_t_dams = pe.Set(initialize=params['t_idx_dams'][2:], doc='T slices where dams are retained')
     model.s_dvp_offs = pe.Set(ordered=True, initialize=params['dvp_idx_offs'], doc='Decision variable periods for offs') #ordered so they can be indexed in constraint to determine previous period
     model.s_damage = pe.Set(initialize=params['d_idx'], doc='age of mother - offs')
     model.s_k3_damage_offs = pe.Set(initialize=params['k3_idx_offs'], doc='age of mother - offs')
@@ -377,16 +378,20 @@ def f1_stockpyomo_local(params, model, MP_lp_vars):
     # if using the fs_optimisation bounds then we add some slack to the RHS of numbers bnd to stop infeasibility.
     if sen.sav['bnd_fs_opt_inc']:
         lo_bnd = 0.5
-        propn_mated = 0.05
+        propn_mated = 0.5 #this is a sav but it varies by other axes so just input a rough number for simplicity
         propn_sold = 0.05
-        n_dvp_dams = len(l_v1)
+        n_dvp_per_condense_dams = 5 #this is a higher to work if nodes are included
         n_sale_t_dams = 2
-        n_dvp_offs = len(l_v3)
+        n_dvp_per_condense_offs = 4 #this is a higher to work if nodes are included
         n_sale_t_offs = len(model.s_sale_t_offs)
 
-        dams_RHS_fs_opt = 2 * lo_bnd * (1 + propn_mated / (1-propn_mated)) * (1 + n_sale_t_dams * propn_sold / (1 - n_sale_t_dams * propn_sold))**n_dvp_dams
+        dams_RHS_fs_opt = 2 * lo_bnd / propn_mated / (1 - n_sale_t_dams * propn_sold)**n_dvp_per_condense_dams
 
-        offs_RHS_fs_opt = 2 * lo_bnd * (1 + n_sale_t_offs * propn_sold / (1 - n_sale_t_offs * propn_sold))**n_dvp_offs
+        offs_RHS_fs_opt = 2 * lo_bnd / (1 - n_sale_t_offs * propn_sold)**n_dvp_per_condense_offs
+
+        ###store and use in the bnds
+        params['fs_opt_lo_bnd'] = lo_bnd
+        params['fs_opt_propn_sold'] = propn_sold
 
     else:
         dams_RHS_fs_opt = 0
