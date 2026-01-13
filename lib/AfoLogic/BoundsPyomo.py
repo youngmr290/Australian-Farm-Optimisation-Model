@@ -77,7 +77,7 @@ def f1_boundarypyomo_local(params, model):
     biomass_graze_bound_inc = np.any(sen.sav['bnd_biomass_graze_k1'] != '-')   # controls if biomass grazed bnd is included.(which is the proportion of crop biomass that is grazed)
     #todo need to make this input below in uinp. Then test the constraint works as expected.
     emissions_bnd_inc = False#uinp.emissions['co2e_limit']>0  # controls if total farm emissions are constrained.
-    bnd_fs_opt_inc = sen.sav['bnd_fs_opt_inc']
+    bnd_fs_opt_inc = sen.sav['bnd_fs_opt_inc']  # implement the extra constraints and RHS for fs Optimisation
 
 
     if bounds_inc:
@@ -1005,16 +1005,22 @@ def f1_boundarypyomo_local(params, model):
 
         if bnd_fs_opt_inc:
             '''
-            For the FS optimisation we want to force in animals in each starting w for each k and each t.
-            This ensures that we identify the optimal pattern for each starting w.
+            To identify an optimal feed supply for as many different animal classes as possible it is useful 
+            to force in small number of animals in classes that might not otherwise be selected.
+            This is useful for different starting weight (w), sale time options (t), time of lambing (i) & genetic merit (y)
             
             This is achieved with the following 3 bnds:
             
-                - Lower bound on the number of dams in each start w (ie w0-27, 27-54, 54-81).The bnd is only active for next V is condense.
-                - Bound propn mated for each start w. This forces some mated and some not mated animals in each start W. 
-                - Bound min propn sold. This forces a propn of animals to be sold in each start W. (if no animals exist none need to be sold). Occurs for all V
+                - Lower bound on the number of dams in each start w (ie w0-27, 27-54, 54-81).The bnd is on final number
+                     prior to the next condense (i.e. next V is condense). Final numbers is better than initial numbers 
+                     because number of sales can then be constrained as a minimum.  
+                - Bound propn mated for each start w. This forces some mated and some not mated animals in each start W.
+                    The ewes that are mated then populate across the k2 axis, which ensures that each k2 is optimised. 
+                - Bound min propn sold. This forces a propn of animals to be sold in each t, summed across start W
+                    for each v. If no animals exist none need to be sold.
             
-            To stop these bnds going infeasible the numbers bounds have some slack on the RHS (for example to handle if no prog provide dams in the lightest W slice).
+            To stop these bnds going infeasible the numbers bounds have slack added to the RHS.
+                This can be necessary for example to handle if no prog provide dams in the lightest W slice.
 
             '''
             ##special sets that specify which w belongs to which start W.
