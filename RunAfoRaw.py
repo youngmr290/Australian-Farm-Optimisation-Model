@@ -15,7 +15,7 @@ from lib.RawVersion import SaveOutputs as out
 ############
 ##controls #
 ############
-force_run = True #set to True if you want to force all trials to run even if they are up to date.
+force_run = False #set to True if you want to force all trials to run even if they are up to date.
 solver_method = 'CPLEX'     #options CPLEX, glpk, cbc, ipopt, HiGHS (default)
 print_debug_output = False
 # np.seterr(all='raise')
