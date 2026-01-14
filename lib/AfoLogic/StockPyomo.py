@@ -379,7 +379,7 @@ def f1_stockpyomo_local(params, model, MP_lp_vars):
     if sen.sav['bnd_fs_opt_inc']:
         lo_bnd = 0.5
         propn_mated = 0.5 #this is a sav but it varies by other axes so just input a rough number for simplicity
-        propn_sold = 0.05
+        propn_sold = 0.001  #a low number so that the absolute number sold is small in each t slice. Also reduces the 'free' animals
         n_dvp_per_condense_dams = 5 #this is a higher to work if nodes are included
         n_sale_t_dams = 2
         n_dvp_per_condense_offs = 4 #this is a higher to work if nodes are included
