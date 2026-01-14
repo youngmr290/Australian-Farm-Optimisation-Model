@@ -2353,8 +2353,8 @@ def f_conception_mu2(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, doj, d
         ##Select slice 24 (Ewe Lamb coefficients) or 25 (maiden ewe coefficients) or 26 (mature ewe coefficients) of cb1 & cu2 based on age of the dam. Note: age adds a,e,b axes onto the sliced array
         cb1_sliced = fun.f_update(cb1[26, ...], cb1[24, ...], age < 364)
         cu2_sliced = fun.f_update(cu2[26, ...], cu2[24, ...], age < 364)
-        cb1_sliced = fun.f_update(cb1_sliced, cb1[25, ...], np.logical_and(364 < age, age < 728))
-        cu2_sliced = fun.f_update(cu2_sliced, cu2[25, ...], np.logical_and(364 < age, age < 728))
+        cb1_sliced = fun.f_update(cb1_sliced, cb1[25, ...], np.logical_and(364 <= age, age < 728))
+        cu2_sliced = fun.f_update(cu2_sliced, cu2[25, ...], np.logical_and(364 <= age, age < 728))
         ##Calculate the transformed estimates of proportion empty (slice cu2 allowing for active i axis)
         cutoff0 = cb1_sliced[:,:,1:2,...] + cu2_sliced[-1, ...] + (cu2_sliced[0, ...] * maternallw_mating
                                                                  + cu2_sliced[1, ...] * maternallw_mating ** 2
