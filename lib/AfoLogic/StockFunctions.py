@@ -1183,7 +1183,7 @@ def f1_carryforward_u1(cu1, cg, ebg, period_between_joinstartend, period_between
     return d_cf
 
 
-def f1_carryforward_u6(cu6, lw, lwc, days_period, is_join, between_joinstartend=False, between_mated90=False
+def f1_carryforward_u6(cu6, lw, lwc, days_period, is_mating, between_joinstartend=False, between_mated90=False
                        , between_d90birth=False, between_birthwean=False, between_weanjoin=False):
     ''' Function to calculate the carry forward amount for a production relationship that requires LW & LWC from
         joining through to when the production is calculated (from end of joining through to next joining).
@@ -1191,13 +1191,13 @@ def f1_carryforward_u6(cu6, lw, lwc, days_period, is_join, between_joinstartend=
 
     ##Select coefficient to increment the carry forward quantity based on the current period for lw, lw2, lwc & lwc2
     ### can only be the coefficient from one of the periods and the later period overwrites the earlier period.
-    coeff_lwj = fun.f_update(0, cu6[0,...], is_join) #note cu6 has already had the first axis (production parameter) sliced when it was passed in
+    coeff_lwj = fun.f_update(0, cu6[0,...], is_mating) #note cu6 has already had the first axis (production parameter) sliced when it was passed in
     coeff_lwc = fun.f_update(0, cu6[2,...], between_joinstartend) #note cu6 has already had the first axis (production parameter) sliced when it was passed in
     coeff_lwc = fun.f_update(coeff_lwc, cu6[4,...], between_mated90)
     coeff_lwc = fun.f_update(coeff_lwc, cu6[6,...], between_d90birth)
     coeff_lwc = fun.f_update(coeff_lwc, cu6[8,...], between_birthwean)
     coeff_lwc = fun.f_update(coeff_lwc, cu6[10,...], between_weanjoin)
-    coeff_lwj2 = fun.f_update(0, cu6[1,...], is_join) #note cu6 has already had the first axis (production parameter) sliced when it was passed in
+    coeff_lwj2 = fun.f_update(0, cu6[1,...], is_mating) #note cu6 has already had the first axis (production parameter) sliced when it was passed in
     coeff_lwc2 = fun.f_update(0, cu6[3,...], between_joinstartend) #note cu6 has already had the first axis (production parameter) sliced when it was passed in
     coeff_lwc2 = fun.f_update(coeff_lwc2, cu6[5,...], between_mated90)
     coeff_lwc2 = fun.f_update(coeff_lwc2, cu6[7,...], between_d90birth)
@@ -2870,7 +2870,7 @@ def f_mortality_dam_mu2(cu2, ce, cb1, cf_csc, csc, cs, cv_cs, period_between_sca
     return mortalitye_mu, cf_csc
 
 
-def f_mortality_dam_EL(cu6, cb1, cf_value, lw, lwc, cv_lw, nfoet_b1, days_period, saa_mortalitye, is_join
+def f_mortality_dam_EL(cu6, cb1, cf_value, lw, lwc, cv_lw, nfoet_b1, days_period, saa_mortalitye, is_mating
                        , is_prebirth, between_mated90, between_d90birth):
     '''
     Peri natal Dam mortality of ewe lambs due to: LW at birth, LW change during pregnancy & birth type.
@@ -2880,9 +2880,9 @@ def f_mortality_dam_EL(cu6, cb1, cf_value, lw, lwc, cv_lw, nfoet_b1, days_period
     ###slice of first axis of cu6 for mortality of EL dams
     cu6_slc1 = 23
     ###slices of 2nd axis of cu6 that need incrementing with cb1 coefficients
-    cu6_slices = [0, 1, 4, 6]
+    cu6_slices = [0, 1, 4, 6, -1]
     ###slices of first axis of cb1 are to be added to cu6. Note: requires same number of entries as above and corresponding order
-    cb1_slices = [27, 28, 29, 30]
+    cb1_slices = [27, 28, 29, 30, 31]
     ###Initialise the destination array so that coefficients can be assigned, shape is determined by cu6 and cb1
     coeff_shape = np.broadcast_shapes(cu6.shape, cb1.shape[1:])
     coeff_combined = np.broadcast_to(cu6, coeff_shape).copy()
@@ -2895,12 +2895,12 @@ def f_mortality_dam_EL(cu6, cb1, cf_value, lw, lwc, cv_lw, nfoet_b1, days_period
 
     ## Carry forward EL dam mortality increment (the component of the transformed mortality linked to LW & LW change)
     ###pass other args with na for the p1 & p2 axes that have been added to LW & LWC
-    d_cf = f1_carryforward_u6(coeff_combined[cu6_slc1, ...,na,na], lw_p1p2, lwc_p1p2, days_period[...,na,na], is_join[...,na,na]
+    d_cf = f1_carryforward_u6(coeff_combined[cu6_slc1, ...,na,na], lw_p1p2, lwc_p1p2, days_period[...,na,na], is_mating[...,na,na]
                               , between_mated90 = between_mated90[...,na,na], between_d90birth = between_d90birth[...,na,na])
     ### Calculate the cumulative carried forward value
     cf_value = cf_value + d_cf
     ###calculate transformed mortality by adding the coefficients that are not in the carry forward (b1 adj & intercept)
-    t_mortalitye_p1p2 = cf_value + cb1[31, ...,na,na] + cu6[cu6_slc1, -1, ...,na,na]
+    t_mortalitye_p1p2 = cf_value + coeff_combined[cu6_slc1, -1, ...,na,na]       #cb1[31, ...,na,na] + cu6[cu6_slc1, -1, ...,na,na]
     ##Back transform the mortality (Logit)
     mortalitye_p1p2 = fun.f_back_transform(t_mortalitye_p1p2)
     ##Average across the p1 & p2 axes (range of LW & LW change within the mob) if period is birth for reproducing ewes
