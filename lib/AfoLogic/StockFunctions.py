@@ -2355,11 +2355,14 @@ def f_conception_mu2(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, doj, d
         cu2_sliced = fun.f_update(cu2[26, ...], cu2[24, ...], age < 364)
         cb1_sliced = fun.f_update(cb1_sliced, cb1[25, ...], np.logical_and(364 <= age, age < 728))
         cu2_sliced = fun.f_update(cu2_sliced, cu2[25, ...], np.logical_and(364 <= age, age < 728))
+        ##Use the LW & LWC of the '11' (singles) slice of the b1_axis because it is the slice that contains the ewes that will be mated
+        slc_11 = [slice(None)] * len(maternallw_mating.shape)
+        slc_11[b1_pos] = slice(2, 3)
         ##Calculate the transformed estimates of proportion empty (slice cu2 allowing for active i axis)
-        cutoff0 = cb1_sliced[:,:,1:2,...] + cu2_sliced[-1, ...] + (cu2_sliced[0, ...] * maternallw_mating
-                                                                 + cu2_sliced[1, ...] * maternallw_mating ** 2
-                                                                 + cu2_sliced[2, ...] * lwc
-                                                                 + cu2_sliced[3, ...] * lwc ** 2
+        cutoff0 = cb1_sliced[:,:,1:2,...] + cu2_sliced[-1, ...] + (cu2_sliced[0, ...] * maternallw_mating[tuple(slc_11)]
+                                                                 + cu2_sliced[1, ...] * maternallw_mating[tuple(slc_11)] ** 2
+                                                                 + cu2_sliced[2, ...] * lwc[tuple(slc_11)]
+                                                                 + cu2_sliced[3, ...] * lwc[tuple(slc_11)] ** 2
                                                                  + cu2_sliced[4, ...] * age
                                                                  + cu2_sliced[5, ...] * age ** 2
                                                                  + cu2_sliced[6, ...] * nlb
