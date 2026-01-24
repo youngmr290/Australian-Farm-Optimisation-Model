@@ -2977,7 +2977,7 @@ def f_mortality_progeny_mu(cu2, cb1, cx, ce, w_b, w_b_std, cv_weight, foo, chill
 
 
 def f_mortality_progeny_EL(cu6, cb1, cx, cf_value, lw, lwc, cv_lw, foo, chill_index_p1, mob_size, days_period
-                , rev_trait_value, sap_mortalityp, saa_mortalityx, is_join, is_birth, between_mated90, between_d90birth):
+                , rev_trait_value, sap_mortalityp, saa_mortalityx, is_mating, is_birth, between_mated90, between_d90birth):
     '''
     Calculate the mortality of progeny at birth due to mis-mothering and exposure
     using the equations developed in P.PSH.1180 – More lambs from ewes lambs through developing and extending best practice
@@ -2988,9 +2988,9 @@ def f_mortality_progeny_EL(cu6, cb1, cx, cf_value, lw, lwc, cv_lw, foo, chill_in
     ###slice of first axis of cu6 for mortality of EL dams
     cu6_slc1 = 8
     ###slices of 2nd axis of cu6 that need incrementing with cb1 coefficients
-    cu6_slices = [0, 1, 4, 5, 6, 7]
+    cu6_slices = [0, 1, 4, 5, 6, 7, -1]
     ###slices of first axis of cb1 are to be added to cu6. Note: requires same number of entries as above and corresponding order
-    cb1_slices = [32, 33, 34, 35, 36, 37]
+    cb1_slices = [32, 33, 34, 35, 36, 37, 38]
     ###Initialise the destination array so that coefficients can be assigned, shape is determined by cu6 and cb1
     coeff_shape = np.broadcast_shapes(cu6.shape, cb1.shape[1:])
     coeff_combined = np.broadcast_to(cu6, coeff_shape).copy()
@@ -3003,12 +3003,13 @@ def f_mortality_progeny_EL(cu6, cb1, cx, cf_value, lw, lwc, cv_lw, foo, chill_in
 
     ## Carry forward EL dam lactating increment (the component of the transformed lactation propn linked to LW & LW change)
     ###pass other args with na for the p1 & p2 axes that have been added to LW & LWC
-    d_cf = f1_carryforward_u6(coeff_combined[cu6_slc1, ...,na,na], lw_p1p2, lwc_p1p2, days_period[...,na,na], is_join[...,na,na]
+    d_cf = f1_carryforward_u6(coeff_combined[cu6_slc1, ...,na,na], lw_p1p2, lwc_p1p2, days_period[...,na,na], is_mating[...,na,na]
                               , between_mated90 = between_mated90[...,na,na], between_d90birth = between_d90birth[...,na,na])
     ##Increment the total carry forward value
     cf_value = cf_value + d_cf
     ##calculate transformed proportion lactating by adding the coefficients that are not in the carry forward
-    t_lactating_p1p2 = (cf_value + cb1[38, ...,na,na] + cu6[cu6_slc1, -1, ...,na,na]
+    #todo connect up mob size - also requires a calculation of the correct relative mob sizes when mating EL
+    t_lactating_p1p2 = (cf_value + coeff_combined[cu6_slc1, -1, ...,na,na]     # + cb1[38, ...,na,na] + cu6[cu6_slc1, -1, ...,na,na]
                       + (cu6[8, 12, ..., na,na] + cx[9, ..., na, na]) * chill_index_p1[...,na])
     #                 + cu2[8, 4, ..., na, na] * foo[..., na, na] + cu2[8, 5, ..., na, na] * foo[..., na, na] ** 2  #Could include foo,
     #                 + cu2[8, -1, ..., na, na] + cb1[8, ..., na, na] + cb1[9, ..., na, na] * mob_size[..., na, na] #mob size
