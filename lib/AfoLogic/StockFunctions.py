@@ -652,7 +652,7 @@ def f1_feedsupply_adjust(attempts,feedsupply,itn):
     ##create empty array to put new feedsupply into, this is done so it doesn't have the itn axis (probably could just create from attempts array shape without last axis)
     feedsupply_new = np.zeros_like(feedsupply)
     ##which feedsupplies can be calculated using binary method - must have a negative and positive error
-    binary_mask = np.nanmin(attempts[...,1], axis=-1)/np.nanmax(attempts[...,1], axis=-1) < 0 #axis -1 is the itn axis ie take the min and max error from the previous iterations
+    binary_mask = fun.f_divide(np.nanmin(attempts[...,1], axis=-1), np.nanmax(attempts[...,1], axis=-1)) < 0 #axis -1 is the itn axis ie take the min and max error from the previous iterations
     if np.any(binary_mask):
         index_itn = np.arange(attempts.shape[-2])
         ##calc new feedsupply binary - take half of the two feedsupplies that have resulted in the error closest to 0. Only adds the binary result to slices that have a negative and a positive value (done using the mask created above)
