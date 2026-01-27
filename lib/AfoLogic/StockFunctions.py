@@ -993,6 +993,7 @@ def f_egraze(cm, lw, i_steepness, density, foo, confinement, intake_f, dmd):
     distance = distance * np.logical_not(confinement)
     ##Energy required for movement
     emove = cm[16, ...] * distance * lw
+    emove = fun.f_sa(emove, sen.sam['emove'])
     ##Extra energy required for chewing and ruminating
     emasticate = cm[6, ...] * lw * intake_f * (cm[7, ...] - dmd)
     ##Energy required for grazing (chewing and walking around)
