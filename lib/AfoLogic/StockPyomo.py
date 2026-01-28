@@ -391,7 +391,8 @@ def f1_stockpyomo_local(params, model, MP_lp_vars):
 
         ###store and use in the bnds
         params['fs_opt_lo_bnd'] = lo_bnd
-        params['fs_opt_propn_sold'] = propn_sold
+        params['fs_opt_min_propn_sold'] = propn_sold
+        params['fs_opt_max_propn_sold'] = 0.9 #this ensure that some animals remain (stops the model selling a class of sheep ie triplets)
 
     else:
         dams_RHS_fs_opt = 0

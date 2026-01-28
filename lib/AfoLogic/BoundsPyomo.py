@@ -59,8 +59,7 @@ def f1_boundarypyomo_local(params, model):
     prog_upbound_inc = any(value != 999999 for value in params['stock']['p_prog_upbound'].values()) #upper bound on prog
     total_dams_scanned_bound_inc = np.any(sen.sav['bnd_total_dams_scanned'] != '-') #equal to bound on the total number of mated dams at scanning
     bnd_propn_dams_retained_inc = np.any(sen.sav['bnd_propn_dams_retained_og1'] != '-') #force a propn of 5yo dams to be retained.
-    propn_mated_inc = np.any(sen.sav['bnd_propn_dams_mated_og1'] != '-')
-    bnd_propn_dams_mated_inc = propn_mated_inc and not(sen.sav['bnd_fs_opt_inc'])#include bnd_propn_mated (summed over w axis). If running fs optimisation a different version of the bnd is used.
+    bnd_propn_dams_mated_inc = np.any(sen.sav['bnd_propn_dams_mated_og1'] != '-')
     bnd_sale_twice_drys_inc = fun.f_sa(False, sen.sav['bnd_sale_twice_dry_inc'], 5) #proportion of drys sold (can be sold at either sale opp)
     bnd_propn_singles_inc = np.any(sen.sav['min_propn_singles_sold_og1'] != '-') #include bound on the minimum proportion of singles sold
     bnd_propn_twins_inc = np.any(sen.sav['min_propn_twins_sold_og1'] != '-') #include bound on the minimum proportion of twins sold
@@ -1030,22 +1029,38 @@ def f1_boundarypyomo_local(params, model):
                                                    initialize=params['stock']['p_dams_w_is_startw_ws'])
 
 
-            ##lo_bnd across each starting weight - only for the v before condensing. Sum k2 axis because that is handled by bnd propn mated (this saves the model going infeasible if for example there are no triples for one class of sheep).
-            def f_dam_lobound_fs_opt(model, q, s, t_, v, ws, z, i, y,  g1):
+            ##lo_bnd across each starting weight - only for the v before condensing.
+            # One bnd for not mated and one bnd for mated dont need to bnd every mated k slice (this saves the model going infeasible if for example there are no triples for one class of sheep).
+            def f_dam_lobound_nm_fs_opt(model, q, s, t_, v, ws, z, i, y,  g1):
                 if (pe.value(model.p_wyear_inc_qs[q, s])
                         and any(pe.value(model.p_mask_dams[k2, t_, v, w8, z, g1]) != 0 for k2 in model.s_k2_birth_dams for w8 in model.s_lw_dams)
                         and v in params['stock']['p_condensenext_v_dams']):
                     return sum(model.v_dams[q, s, k2, t_, v, a, n, w8, z, i, y, g1]
                                for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
-                               for k2 in model.s_k2_birth_dams
+                               for k2 in model.s_k2_birth_dams if k2=='NM-0'
+                               if pe.value(model.p_mask_dams[k2, t_, v, w8, z, g1]) == 1 and pe.value(
+                                model.p_dams_w_is_startw_ws[w8, ws]) == 1) >= params['stock']['fs_opt_lo_bnd']
+                else:
+                    return pe.Constraint.Skip
+            model.con_dams_lobound_nm_fs_opt = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_retained_t_dams,
+                    model.s_dvp_dams, model.s_startw_dams, model.s_season_types,
+                    model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, rule=f_dam_lobound_nm_fs_opt, doc='min number of dams')
+
+            def f_dam_lobound_mated_fs_opt(model, q, s, t_, v, ws, z, i, y,  g1):
+                if (pe.value(model.p_wyear_inc_qs[q, s])
+                        and any(pe.value(model.p_mask_dams[k2, t_, v, w8, z, g1]) != 0 for k2 in model.s_k2_birth_dams for w8 in model.s_lw_dams)
+                        and v in params['stock']['p_condensenext_v_dams']):
+                    return sum(model.v_dams[q, s, k2, t_, v, a, n, w8, z, i, y, g1]
+                               for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
+                               for k2 in model.s_k2_birth_dams if k2!='NM-0'
                                if pe.value(model.p_mask_dams[k2, t_, v, w8, z, g1]) == 1 and pe.value(
                         model.p_dams_w_is_startw_ws[w8, ws]) == 1
                                ) >= params['stock']['fs_opt_lo_bnd']
                 else:
                     return pe.Constraint.Skip
-            model.con_dams_lobound_fs_opt = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_retained_t_dams,
+            model.con_dams_lobound_mated_fs_opt = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_retained_t_dams,
                     model.s_dvp_dams, model.s_startw_dams, model.s_season_types,
-                    model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, rule=f_dam_lobound_fs_opt, doc='min number of dams')
+                    model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, rule=f_dam_lobound_mated_fs_opt, doc='min number of dams')
 
 
             ##min sale bound - all v
@@ -1059,7 +1074,7 @@ def f1_boundarypyomo_local(params, model):
                                         for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
                                         if pe.value(model.p_mask_dams[k2,t,v,w8,z,g1]) == 1 and pe.value(
                                         model.p_dams_w_is_startw_ws[w8, ws]) == 1
-                                        ) * params['stock']['fs_opt_propn_sold']
+                                        ) * params['stock']['fs_opt_min_propn_sold']
                 else:
                     return pe.Constraint.Skip
             model.con_min_propn_dams_sold_fs_opt = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_k2_birth_dams
@@ -1067,27 +1082,24 @@ def f1_boundarypyomo_local(params, model):
                                                       , model.s_gen_merit_dams, model.s_groups_dams, rule=f_min_propn_dams_sold_fs_opt
                                                       , doc='proportion of dams sold each opportunity')
 
-            ##bound to fix the proportion of dams being mated - in relevant v
-            ###build param - inf values are skipped in the constraint building so inf means the model can optimise the propn mated
-            model.p_prop_dams_mated_fs_opt = pe.Param(model.s_dvp_dams, model.s_season_types, model.s_groups_dams
-                                               , default=0, initialize=params['stock']['p_prop_dams_mated'])
-            def f_propn_dams_mated_fs_opt(model, q, s, v, ws, z, i, y, g1):
-                if (pe.value(model.p_prop_dams_mated_fs_opt[v,z,g1])==np.inf or not pe.value(model.p_wyear_inc_qs[q, s]) or
-                        all(pe.value(model.p_mask_dams[k2,t,v,w8,z,g1]) == 0
-                            for k2 in model.s_k2_birth_dams for t in model.s_sale_dams for w8 in model.s_lw_dams)):
-                    return pe.Constraint.Skip
-                else:
-                    return sum(model.v_dams[q,s,'NM-0',t,v,a,n,w8,z,i,y,g1] for t in model.s_sale_dams
+            #Max sale propn - to ensure the model doesnt sell a whole group of animals (ie triplets) and therefore doesnt generate optimal fs.
+            def f_max_propn_dams_sold_fs_opt(model, q, s, k2, t_, v, ws, z, i, y, g1):
+                if (pe.value(model.p_wyear_inc_qs[q, s]) and any(pe.value(model.p_mask_dams[k2,t_,v,w8,z,g1])==1 for w8 in model.s_lw_dams)):
+                    return sum(model.v_dams[q,s,k2,t_,v,a,n,w8,z,i,y,g1]
                                for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
-                               if pe.value(model.p_mask_dams['NM-0',t,v,w8,z,g1]) == 1 and pe.value(
-                                   model.p_dams_w_is_startw_ws[w8, ws]) == 1
-                               ) == sum(model.v_dams[q,s,k2,t,v,a,n,w8,z,i,y,g1] for k2 in model.s_k2_birth_dams
-                               for t in model.s_sale_dams for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
-                               if pe.value(model.p_mask_dams[k2,t,v,w8,z,g1]) == 1 and pe.value(
-                                  model.p_dams_w_is_startw_ws[w8, ws]) == 1) * (1 - model.p_prop_dams_mated_fs_opt[v,z,g1])
-            model.con_propn_dams_mated_fs_opt = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_dvp_dams
-                                                , model.s_startw_dams, model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams
-                                                , rule=f_propn_dams_mated_fs_opt, doc='proportion of dams mated with w set')
+                               if pe.value(model.p_mask_dams[k2,t_,v,w8,z,g1]) == 1 and pe.value(
+                               model.p_dams_w_is_startw_ws[w8, ws]) == 1
+                               ) <= sum(model.v_dams[q,s,k2,t,v,a,n,w8,z,i,y,g1] for t in model.s_sale_dams
+                                        for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
+                                        if pe.value(model.p_mask_dams[k2,t,v,w8,z,g1]) == 1 and pe.value(
+                                        model.p_dams_w_is_startw_ws[w8, ws]) == 1
+                                        ) * params['stock']['fs_opt_max_propn_sold']
+                else:
+                    return pe.Constraint.Skip
+            model.con_max_propn_dams_sold_fs_opt = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_k2_birth_dams
+                                                      , model.s_sale_t_dams, model.s_dvp_dams, model.s_startw_dams, model.s_season_types, model.s_tol
+                                                      , model.s_gen_merit_dams, model.s_groups_dams, rule=f_max_propn_dams_sold_fs_opt
+                                                      , doc='proportion of dams sold each opportunity')
 
 
             ##offs: lo_bnd across each starting weight - this is used in the fs optimisation to ensure each starting w has numbers and gets an optimum fs.
@@ -1123,7 +1135,7 @@ def f1_boundarypyomo_local(params, model):
                                         for a in model.s_wean_times for n3 in model.s_nut_offs for w8 in model.s_lw_offs
                                         if pe.value(model.p_mask_offs[k3, v, w8, z, x, g3]) == 1 and pe.value(
                                         model.p_offs_w_is_startw_ws[w8, ws]) == 1
-                                        ) * params['stock']['fs_opt_propn_sold']
+                                        ) * params['stock']['fs_opt_min_propn_sold']
                 else:
                     return pe.Constraint.Skip
             model.con_min_propn_offs_sold_fs_opt = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_k3_damage_offs, model.s_k5_birth_offs
