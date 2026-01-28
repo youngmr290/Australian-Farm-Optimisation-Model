@@ -1252,8 +1252,13 @@ def write_variablesummary(model, trial_name, obj, option=0, property_id=''):
         file.write("Variable %s\n" % v)  # \n makes new line
         for index in v:
             try:
-                if v[index].value > 0.0001 or v[index].value < -0.0001:
-                    file.write("   %s %s\n" % (index,v[index].value))
+                val = v[index].value
+                if val is None:
+                    continue
+
+                r = round(val, 4)  # round to 4 decimal places
+                if r != 0.0:  # drop values that become 0.0000 (or -0.0000)
+                    file.write("   %s %.4f\n" % (index, r))  # always print 4 d.p.
             except:
                 pass
     file.close()
