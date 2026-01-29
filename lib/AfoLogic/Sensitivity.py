@@ -253,6 +253,7 @@ def create_sa():
     sav['confinement_feeding_cost_factor'] = '-'  #reduction factor for sup feeding cost when in confinement
     sav['confinement_feeding_labour_factor'] = '-'  #reduction factor for sup feeding labour when in confinement
     ##SAM
+    sam['sup_prop_consumed'] = 1.0  #propn of grain consumed when paddock feeding
     ##SAP
     ##SAA
     ##SAT
@@ -388,6 +389,7 @@ def create_sa():
     ###stock feedsupply
     sav['feedsupply_adj_r2p'] = np.full_like(pinp.feedsupply['i_feedsupply_adj_options_r2p'], '-', dtype=object)  # SA value for feedsupply adjustment.
     sav['dams_confinement_P'] = np.full(len_P, '-', dtype=object)  # SA to control the gen periods dams are in confinement - this gets applied in FeedSupplyStock.py. Note, this will overwrite pkl so if using pkl to optimise confinement you most likely don’t want to use this SAV.
+    sav['offs_confinement_P'] = np.full(len_P, '-', dtype=object)  # SA to control the gen periods offs are in confinement - this gets applied in FeedSupplyStock.py. Note, this will overwrite pkl so if using pkl to optimise confinement you most likely don’t want to use this SAV.
     sav['target_ebg_dams_Pb'] = np.full((len_P, len_b1), '-', dtype=object)  # SA to set lw target
     sav['target_ebg_offs_Pb'] = np.full((len_P, len_b0), '-', dtype=object)  # SA to set lw target
     ###stock others
@@ -470,6 +472,7 @@ def create_sa():
     sam['pi_post_yatf'] = 1.0                        #Post loop potential intake of yatf
     sam['chill_index'] = 1.0                        #intermediate sam on chill index. Impacts lamb survival only, no effect on ME requirements.
     sam['heat_loss'] = 1.0                          #intermediate sam on heat loss - impact on energy requirements (set to 0 in REV analyses)
+    sam['emove'] = 1.0                          #intermediate sam on energy expenditure for moving
     sam['rr_og1'] = np.ones(pinp.sheep['i_scan_og1'].shape, dtype='float64')    # reproductive rate by age. Use shape that has og1
     sam['wean_redn_ol0g2'] = np.ones((len_o, len_l0, len_g2), dtype='float64')  #Adjust the number of yatf transferred at weaning - this is a high level sa, it impacts within a calculation not on an input
     ##SAP

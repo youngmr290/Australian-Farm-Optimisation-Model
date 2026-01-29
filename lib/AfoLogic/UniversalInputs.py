@@ -207,6 +207,7 @@ def f_universal_inp_sa(uinp_defaults):
     supfeed['i_confinement_feeding_cost_factor'] = fun.f_sa(supfeed['i_confinement_feeding_cost_factor'], sen.sav['confinement_feeding_cost_factor'], 5)
     supfeed['i_confinement_feeding_labour_factor'] = fun.f_sa(supfeed['i_confinement_feeding_labour_factor'], sen.sav['confinement_feeding_labour_factor'], 5)
     ###sam
+    supfeed['sup_md_vol'].loc['prop consumed'] = fun.f_sa(supfeed['sup_md_vol'].loc['prop consumed'], sen.sam['sup_prop_consumed'])
     ###sap
     ###saa
     ###sat

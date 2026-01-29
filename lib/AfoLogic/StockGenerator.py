@@ -3286,6 +3286,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 n_max_itn = sinp.stock['i_feedsupply_itn_max']
             shape = feedsupplyw_tpa1e1b1nwzida0e0b0xyg1[:, 0].shape + (n_max_itn,) + (2,) #slice 0 to remove the p axis
             attempts_dams = np.full(shape, np.nan) #initialise
+            feedsupplyw_tpa1e1b1nwzida0e0b0xyg3 = np.broadcast_to(feedsupplyw_tpa1e1b1nwzida0e0b0xyg3, (feedsupplyw_tpa1e1b1nwzida0e0b0xyg3+target_ebg_pb0offs[0]).shape).copy() #adds active b axis to fs which is required for the LWC target calcs.
             shape = feedsupplyw_tpa1e1b1nwzida0e0b0xyg3[:, 0].shape + (n_max_itn,) + (2,) #slice 0 to remove the p axis
             attempts_offs = np.full(shape, np.nan) #initialise
 

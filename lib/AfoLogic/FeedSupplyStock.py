@@ -421,6 +421,8 @@ def f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1n
     ## This allows the user to adjust confinement  by p axis because the pinp input is only p6.
     sa_dams_confinement_pg1 = fun.f_expand(sen.sav['dams_confinement_P'][0:len_p],p_pos) #slice P axis and expand axes
     t_confinement_stpa1e1b1nwzida0e0b0xyg1 = fun.f_sa(t_confinement_stpa1e1b1nwzida0e0b0xyg1, sa_dams_confinement_pg1, 5)
+    sa_offs_confinement_pg3 = fun.f_expand(sen.sav['offs_confinement_P'][0:mask_p_offs_p.sum()],p_pos) #slice P axis and expand axes
+    t_confinement_stpa1e1b1nwzida0e0b0xyg3 = fun.f_sa(t_confinement_stpa1e1b1nwzida0e0b0xyg3, sa_offs_confinement_pg3, 5)
 
     ##4c) add adjustment to std pattern if it is specified (mostly won't be included if using pkl_fs)
     ## adjustment is only calculated for dams
