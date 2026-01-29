@@ -187,7 +187,10 @@ def exp(solver_method, user_data, property, trial_name, trial_description, sinp_
     suppy.f1_suppyomo_local(params['sup'], model)
     cgzpy.f1_cropgrazepyomo_local(params['crpgrz'], model)
     slppy.f1_saltbushpyomo_local(params['slp'], model, MP_lp_vars)
+    pyomosuppy_end = time.time()
     stubpy.f1_stubpyomo_local(params['stub'], model, MP_lp_vars)
+    pyomocgzpy_end = time.time()
+    print(f'{trial_description}, time for crop graze pyomo: {pyomocgzpy_end - pyomosuppy_end:.2f} finished at {time.ctime()}')
     spy.f1_stockpyomo_local(params['stock'], model, MP_lp_vars)
     mvf.f1_mvf_pyomo(model)
     ###bounds-this must be done last because it uses sets built in some of the other modules
