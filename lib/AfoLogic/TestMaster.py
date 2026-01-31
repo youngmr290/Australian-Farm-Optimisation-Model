@@ -105,9 +105,9 @@ n_non_confinement_pools=4
 confinement_inc = False
 index_f = np.arange(n_non_confinement_pools+confinement_inc)
 ##create the upper and lower cutoffs. If there is a confinement slice then it will be populated with values but they never get used.
-nv_upper_p6fz = pinp.stock['i_nv_upper_p6z'][:,None,:]
+nv_upper_p6fz = pinp.sheep['i_nv_upper_p6z'][:,None,:]
 nv_upper_p6fz = zfun.f_seasonal_inp(nv_upper_p6fz,numpy=True,axis=-1)
-nv_lower_p6fz = pinp.stock['i_nv_lower_p6z'][:,None,:]
+nv_lower_p6fz = pinp.sheep['i_nv_lower_p6z'][:,None,:]
 nv_lower_p6fz = zfun.f_seasonal_inp(nv_lower_p6fz,numpy=True,axis=-1)
 nv_cutoff_lower_p6fz = nv_lower_p6fz + (
             nv_upper_p6fz - nv_lower_p6fz) / n_non_confinement_pools * index_f[:,None]
