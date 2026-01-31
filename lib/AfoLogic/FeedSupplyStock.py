@@ -537,9 +537,9 @@ def f1_j2_to_n(t_feedsupply_stpa1e1b1j2wzida0e0b0xyg, t_confinement_pa1e1b1nwzid
     confinement_std_pa1e1b1nwzida0e0b0xyg = t_confinement_pa1e1b1nwzida0e0b0xyg * fun.f_expand(bool_confinement_n, n_pos)
 
     ##7)Ensure that no feed supplies are outside the possible range
-    nv_min_p6a1e1b1j1wzida0e0b0xyg = fun.f_expand(pinp.stock['i_nv_lower_p6z'], left_pos=z_pos, left_pos2=p_pos, right_pos2=z_pos)
+    nv_min_p6a1e1b1j1wzida0e0b0xyg = fun.f_expand(pinp.sheep['i_nv_lower_p6z'], left_pos=z_pos, left_pos2=p_pos, right_pos2=z_pos)
     nv_min_pa1e1b1j1wzida0e0b0xyg = np.take_along_axis(nv_min_p6a1e1b1j1wzida0e0b0xyg,a_p6_pa1e1b1nwzida0e0b0xyg,0)
-    nv_max_p6a1e1b1j1wzida0e0b0xyg = fun.f_expand(pinp.stock['i_nv_upper_p6z'], left_pos=z_pos, left_pos2=p_pos, right_pos2=z_pos)
+    nv_max_p6a1e1b1j1wzida0e0b0xyg = fun.f_expand(pinp.sheep['i_nv_upper_p6z'], left_pos=z_pos, left_pos2=p_pos, right_pos2=z_pos)
     nv_max_pa1e1b1j1wzida0e0b0xyg = np.take_along_axis(nv_max_p6a1e1b1j1wzida0e0b0xyg,a_p6_pa1e1b1nwzida0e0b0xyg,0)
     feedsupply_std_stpa1e1b1nwzida0e0b0xyg = np.clip(feedsupply_std_stpa1e1b1nwzida0e0b0xyg, nv_min_pa1e1b1j1wzida0e0b0xyg, nv_max_pa1e1b1j1wzida0e0b0xyg)
 
