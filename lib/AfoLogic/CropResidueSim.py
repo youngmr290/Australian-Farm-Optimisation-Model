@@ -110,7 +110,6 @@ if __name__=="__main__":
     pinp.f_property_inp_sa(pinp_defaults)
 
     ##expand p6 axis to include nodes
-    sinp.f1_expand_p6()
     pinp.f1_expand_p6()
 
     #################
