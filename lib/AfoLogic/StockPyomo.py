@@ -375,24 +375,24 @@ def f1_stockpyomo_local(params, model, MP_lp_vars):
     l_g3 = list(model.s_groups_offs)
     l_w9_offs = list(model.s_lw_offs)
 
-    # if using the fs_optimisation bounds then we add some slack to the RHS of numbers bnd to stop infeasibility.
+    # if using the fs_optimisation bounds then we add some slack to the RHS of numbers transfer to stop infeasibility.
     if sen.sav['bnd_fs_opt_inc']:
-        lo_bnd = 0.5
-        propn_mated = 0.5 #this is a sav but it varies by other axes so just input a rough number for simplicity
-        propn_sold = 0.001  #a low number so that the absolute number sold is small in each t slice. Also reduces the 'free' animals
-        n_dvp_per_condense_dams = 5 #this is a higher to work if nodes are included
+        lo_bnd = 1.0    #lo bound on the number of animals in the classes constrained
+        propn_sold = 0.005  #a low number so that the absolute number sold is small in each t slice. Also reduces the 'free' animals
+        n_dvp_per_condense_dams = 5 #this is higher so it works if nodes are included
         n_sale_t_dams = 2
-        n_dvp_per_condense_offs = 4 #this is a higher to work if nodes are included
+        n_dvp_per_condense_offs = 4 #this is higher so it works if nodes are included
         n_sale_t_offs = len(model.s_sale_t_offs)
 
-        dams_RHS_fs_opt = 2 * lo_bnd / propn_mated / (1 - n_sale_t_dams * propn_sold)**n_dvp_per_condense_dams
+        ##Allow 20% (1.2) for mortality during the year. 2 for dams is to allow for mated and NM constraints
+        dams_RHS_fs_opt = 2 * 1.2 * lo_bnd / (1 - n_sale_t_dams * propn_sold)**n_dvp_per_condense_dams
 
-        offs_RHS_fs_opt = 2 * lo_bnd / (1 - n_sale_t_offs * propn_sold)**n_dvp_per_condense_offs
+        offs_RHS_fs_opt = 1.2 * lo_bnd / (1 - n_sale_t_offs * propn_sold)**n_dvp_per_condense_offs
 
         ###store and use in the bnds
         params['fs_opt_lo_bnd'] = lo_bnd
         params['fs_opt_min_propn_sold'] = propn_sold
-        params['fs_opt_max_propn_sold'] = 0.9 #this ensure that some animals remain (stops the model selling a class of sheep ie triplets)
+        params['fs_opt_max_propn_sold'] = 0.9 #this stops the model selling an entire class of sheep (e.g. triplets)
 
     else:
         dams_RHS_fs_opt = 0

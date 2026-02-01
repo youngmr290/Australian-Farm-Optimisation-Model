@@ -1038,7 +1038,8 @@ def f1_boundarypyomo_local(params, model):
 
 
             ##lo_bnd across each starting weight - only for the v before condensing.
-            # One bnd for not mated and one bnd for mated dont need to bnd every mated k slice (this saves the model going infeasible if for example there are no triples for one class of sheep).
+            ### One bnd for not mated and one bnd for mated summed across the k2 axis
+            ### The sum across k2 means that fewer 'free' animals are required to cover if the proportion of triplets is very low.
             def f_dam_lobound_nm_fs_opt(model, q, s, t_, v, ws, z, i, y,  g1):
                 if (pe.value(model.p_wyear_inc_qs[q, s])
                         and any(pe.value(model.p_mask_dams[k2, t_, v, w8, z, g1]) != 0 for k2 in model.s_k2_birth_dams for w8 in model.s_lw_dams)
@@ -1046,8 +1047,9 @@ def f1_boundarypyomo_local(params, model):
                     return sum(model.v_dams[q, s, k2, t_, v, a, n, w8, z, i, y, g1]
                                for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
                                for k2 in model.s_k2_birth_dams if k2=='NM-0'
-                               if pe.value(model.p_mask_dams[k2, t_, v, w8, z, g1]) == 1 and pe.value(
-                                model.p_dams_w_is_startw_ws[w8, ws]) == 1) >= params['stock']['fs_opt_lo_bnd']
+                               if pe.value(model.p_mask_dams[k2, t_, v, w8, z, g1]) == 1
+                                  and pe.value(model.p_dams_w_is_startw_ws[w8, ws]) == 1
+                               ) >= params['stock']['fs_opt_lo_bnd']
                 else:
                     return pe.Constraint.Skip
             model.con_dams_lobound_nm_fs_opt = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_retained_t_dams,
@@ -1066,9 +1068,9 @@ def f1_boundarypyomo_local(params, model):
                                ) >= params['stock']['fs_opt_lo_bnd']
                 else:
                     return pe.Constraint.Skip
-            model.con_dams_lobound_mated_fs_opt = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_retained_t_dams,
-                    model.s_dvp_dams, model.s_startw_dams, model.s_season_types,
-                    model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, rule=f_dam_lobound_mated_fs_opt, doc='min number of dams')
+            model.con_dams_lobound_mated_fs_opt = pe.Constraint(model.s_sequence_year, model.s_sequence,
+                    model.s_retained_t_dams, model.s_dvp_dams, model.s_startw_dams, model.s_season_types, model.s_tol,
+                    model.s_gen_merit_dams, model.s_groups_dams, rule=f_dam_lobound_mated_fs_opt, doc='min number of dams')
 
 
             ##min sale bound - all v. The reason sales are a min proportion rather than a min numbers is because animals may not exist across all k2 (e.g. triplets)
