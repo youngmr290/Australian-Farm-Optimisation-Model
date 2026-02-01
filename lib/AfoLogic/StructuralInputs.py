@@ -125,23 +125,6 @@ def f_structural_inp_sa(sinp_defaults):
     rep['i_store_feedbud'] = fun.f_sa(rep['i_store_feedbud'], sen.sav['feedbud_inc'], 5)
 
 
-##############################
-# handle inputs with p6 axis #
-##############################
-def f1_expand_p6():
-    ##When using DSP, expand inputs with a p6 axis for each season node.
-    ##has to be a separate function to the sa because values altered in SA impact a_p6std_p6z
-    ##have to import it here since sen.py imports this module
-    from . import Periods as per
-
-    ###get association between the input fp and the node adjusted fp
-    a_p6std_p6z = per.f_feed_periods(option=2)
-    ###apply association
-    ####stock
-    structuralsa['i_nv_upper_p6z'] = np.take_along_axis(structuralsa['i_nv_upper_p6'][:,None], a_p6std_p6z, axis=0)
-    structuralsa['i_nv_lower_p6z'] = np.take_along_axis(structuralsa['i_nv_lower_p6'][:,None], a_p6std_p6z, axis=0)
-
-
 ###############
 #landuse sets #
 ###############

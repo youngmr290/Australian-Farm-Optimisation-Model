@@ -210,7 +210,7 @@ def f_feed_periods(option=0):
     ##calc feed period dates from inputs plus adjust for node dates.
     fp_p6z = pinp.period['i_dsp_fp_date']
 
-    ##automatically adding nodes to fps resulted in error with scenesence - see google doc dsp section
+    ##automatically adding nodes to fps resulted in error with senescence - see google doc dsp section
     fp_std_p6z = fp_p6z
     # ###add node dates as feed periods if dsp
     # if sinp.structuralsa['i_inc_node_periods'] or np.logical_not(sinp.structuralsa['steady_state'] or np.count_nonzero(pinp.general['i_mask_z'])==1):
