@@ -85,7 +85,6 @@ def exp(solver_method, user_data, property, trial_name, trial_description, sinp_
     pinp.f_property_inp_sa(pinp_defaults)
 
     ##expand p6 axis to include nodes
-    sinp.f1_expand_p6()
     pinp.f1_expand_p6()
 
     ##check the rotations and inputs align - this means rotation method can be controlled using a SA

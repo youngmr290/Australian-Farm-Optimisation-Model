@@ -8049,9 +8049,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     pkl_fs_info['feedsupply_tpa1e1b1nwzida0e0b0xyg3'] = nv_tpoffs
 
     ##create the upper and lower cutoffs. If there is a confinement slice then it will be populated with values but they never get used.
-    nv_upper_p6ftpzg = fun.f_expand(sinp.structuralsa['i_nv_upper_p6z'], left_pos=z_pos, left_pos2=p_pos-3, right_pos2=z_pos)
+    nv_upper_p6ftpzg = fun.f_expand(pinp.sheep['i_nv_upper_p6z'], left_pos=z_pos, left_pos2=p_pos-3, right_pos2=z_pos)
     nv_upper_p6ftpzg = zfun.f_seasonal_inp(nv_upper_p6ftpzg,numpy=True,axis=z_pos)
-    nv_lower_p6ftpzg = fun.f_expand(sinp.structuralsa['i_nv_lower_p6z'], left_pos=z_pos, left_pos2=p_pos-3, right_pos2=z_pos)
+    nv_lower_p6ftpzg = fun.f_expand(pinp.sheep['i_nv_lower_p6z'], left_pos=z_pos, left_pos2=p_pos-3, right_pos2=z_pos)
     nv_lower_p6ftpzg = zfun.f_seasonal_inp(nv_lower_p6ftpzg,numpy=True,axis=z_pos)
     nv_cutoff_lower_p6ftpzg = nv_lower_p6ftpzg + (nv_upper_p6ftpzg - nv_lower_p6ftpzg)/n_non_confinement_pools * index_ftpa1e1b1nwzida0e0b0xyg
     nv_cutoff_upper_p6ftpzg = nv_lower_p6ftpzg + (nv_upper_p6ftpzg - nv_lower_p6ftpzg)/n_non_confinement_pools * (index_ftpa1e1b1nwzida0e0b0xyg + 1)

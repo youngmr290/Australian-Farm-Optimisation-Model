@@ -1007,19 +1007,27 @@ def f1_boundarypyomo_local(params, model):
             To identify an optimal feed supply for as many different animal classes as possible it is useful 
             to force in small number of animals in classes that might not otherwise be selected.
             This is useful for different starting weight (w), sale time options (t), time of lambing (i) & genetic merit (y)
+             
+            This is achieved with the following 4 bnds:
             
-            This is achieved with the following 3 bnds:
-            
-                - Lower bound on the number of dams in each start w (ie w0-27, 27-54, 54-81).The bnd is on final number
-                     prior to the next condense (i.e. next V is condense). Final numbers is better than initial numbers 
-                     because number of sales can then be constrained as a minimum.  
-                - Bound propn mated for each start w. This forces some mated and some not mated animals in each start W.
-                    The ewes that are mated then populate across the k2 axis, which ensures that each k2 is optimised. 
-                - Bound min propn sold. This forces a propn of animals to be sold in each t, summed across start W
-                    for each v. If no animals exist none need to be sold.
-            
-            To stop these bnds going infeasible the numbers bounds have slack added to the RHS.
-                This can be necessary for example to handle if no prog provide dams in the lightest W slice.
+                - Two lower bound on the number of dams within each start w (ie sum(w0-27), sum(w27-54), sum(w54-81)). 
+                    The bnd is on final number prior to the next condense (i.e. next V is condense).
+                    There are separate bounds for not-mated dams and mated dams to ensure a spread across the k2 axis.
+                    Note1: The ewes that are mated then populate across the k2 axis, which ensures that each k2 is 
+                        optimised. This approach is more robust than a low bound across all k2 because it reduces the
+                        chance of infeasibility if the proportion of triplets is lower than expected - see RHS below.
+                    Note2: bound could also be on initial numbers now that the sales constraints has min & max levels.  
+                - Bound min & max proportion sold. This forces a propn of animals to be sold in each t while ensuring 
+                    that some animals are retained. The constraint is summed within start W for each v.  
+
+            To stop the lower bnds going infeasible if there are no animals of the specified starting weight 
+            available at the end of the previous period, the numbers bounds have slack added to the RHS to cover the 
+            minimum numbers required. This can be necessary for example to handle if no prog provide dams in the 
+            lightest W slice.
+            Note: The slack provided on the RHS can be estimated more accurately (and therefore require a lower
+                 safety margin) using proportion sold rather than a low bound with a t and k2 set - this is linked to 
+                 the range in the proportion of triplets affecting the number of triplet-bearing ewes available to meet
+                 the lower bound.
 
             '''
             ##special sets that specify which w belongs to which start W.
@@ -1030,7 +1038,8 @@ def f1_boundarypyomo_local(params, model):
 
 
             ##lo_bnd across each starting weight - only for the v before condensing.
-            # One bnd for not mated and one bnd for mated dont need to bnd every mated k slice (this saves the model going infeasible if for example there are no triples for one class of sheep).
+            ### One bnd for not mated and one bnd for mated summed across the k2 axis
+            ### The sum across k2 means that fewer 'free' animals are required to cover if the proportion of triplets is very low.
             def f_dam_lobound_nm_fs_opt(model, q, s, t_, v, ws, z, i, y,  g1):
                 if (pe.value(model.p_wyear_inc_qs[q, s])
                         and any(pe.value(model.p_mask_dams[k2, t_, v, w8, z, g1]) != 0 for k2 in model.s_k2_birth_dams for w8 in model.s_lw_dams)
@@ -1038,8 +1047,9 @@ def f1_boundarypyomo_local(params, model):
                     return sum(model.v_dams[q, s, k2, t_, v, a, n, w8, z, i, y, g1]
                                for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
                                for k2 in model.s_k2_birth_dams if k2=='NM-0'
-                               if pe.value(model.p_mask_dams[k2, t_, v, w8, z, g1]) == 1 and pe.value(
-                                model.p_dams_w_is_startw_ws[w8, ws]) == 1) >= params['stock']['fs_opt_lo_bnd']
+                               if pe.value(model.p_mask_dams[k2, t_, v, w8, z, g1]) == 1
+                                  and pe.value(model.p_dams_w_is_startw_ws[w8, ws]) == 1
+                               ) >= params['stock']['fs_opt_lo_bnd']
                 else:
                     return pe.Constraint.Skip
             model.con_dams_lobound_nm_fs_opt = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_retained_t_dams,
@@ -1053,17 +1063,17 @@ def f1_boundarypyomo_local(params, model):
                     return sum(model.v_dams[q, s, k2, t_, v, a, n, w8, z, i, y, g1]
                                for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
                                for k2 in model.s_k2_birth_dams if k2!='NM-0'
-                               if pe.value(model.p_mask_dams[k2, t_, v, w8, z, g1]) == 1 and pe.value(
-                        model.p_dams_w_is_startw_ws[w8, ws]) == 1
+                               if pe.value(model.p_mask_dams[k2, t_, v, w8, z, g1]) == 1
+                                  and pe.value(model.p_dams_w_is_startw_ws[w8, ws]) == 1
                                ) >= params['stock']['fs_opt_lo_bnd']
                 else:
                     return pe.Constraint.Skip
-            model.con_dams_lobound_mated_fs_opt = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_retained_t_dams,
-                    model.s_dvp_dams, model.s_startw_dams, model.s_season_types,
-                    model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, rule=f_dam_lobound_mated_fs_opt, doc='min number of dams')
+            model.con_dams_lobound_mated_fs_opt = pe.Constraint(model.s_sequence_year, model.s_sequence,
+                    model.s_retained_t_dams, model.s_dvp_dams, model.s_startw_dams, model.s_season_types, model.s_tol,
+                    model.s_gen_merit_dams, model.s_groups_dams, rule=f_dam_lobound_mated_fs_opt, doc='min number of dams')
 
 
-            ##min sale bound - all v
+            ##min sale bound - all v. The reason sales are a min proportion rather than a min numbers is because animals may not exist across all k2 (e.g. triplets)
             def f_min_propn_dams_sold_fs_opt(model, q, s, k2, t_, v, ws, z, i, y, g1):
                 if (pe.value(model.p_wyear_inc_qs[q, s]) and any(pe.value(model.p_mask_dams[k2,t_,v,w8,z,g1])==1 for w8 in model.s_lw_dams)):
                     return sum(model.v_dams[q,s,k2,t_,v,a,n,w8,z,i,y,g1]
@@ -1080,9 +1090,9 @@ def f1_boundarypyomo_local(params, model):
             model.con_min_propn_dams_sold_fs_opt = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_k2_birth_dams
                                                       , model.s_sale_t_dams, model.s_dvp_dams, model.s_startw_dams, model.s_season_types, model.s_tol
                                                       , model.s_gen_merit_dams, model.s_groups_dams, rule=f_min_propn_dams_sold_fs_opt
-                                                      , doc='proportion of dams sold each opportunity')
+                                                      , doc='min proportion of dams sold each opportunity')
 
-            #Max sale propn - to ensure the model doesnt sell a whole group of animals (ie triplets) and therefore doesnt generate optimal fs.
+            #Max sale propn - to ensure the model doesn't sell a whole group of animals (ie triplets) and therefore doesn't generate optimal fs.
             def f_max_propn_dams_sold_fs_opt(model, q, s, k2, t_, v, ws, z, i, y, g1):
                 if (pe.value(model.p_wyear_inc_qs[q, s]) and any(pe.value(model.p_mask_dams[k2,t_,v,w8,z,g1])==1 for w8 in model.s_lw_dams)):
                     return sum(model.v_dams[q,s,k2,t_,v,a,n,w8,z,i,y,g1]
@@ -1099,7 +1109,7 @@ def f1_boundarypyomo_local(params, model):
             model.con_max_propn_dams_sold_fs_opt = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_k2_birth_dams
                                                       , model.s_sale_t_dams, model.s_dvp_dams, model.s_startw_dams, model.s_season_types, model.s_tol
                                                       , model.s_gen_merit_dams, model.s_groups_dams, rule=f_max_propn_dams_sold_fs_opt
-                                                      , doc='proportion of dams sold each opportunity')
+                                                      , doc='max proportion of dams sold each opportunity')
 
 
             ##offs: lo_bnd across each starting weight - this is used in the fs optimisation to ensure each starting w has numbers and gets an optimum fs.
