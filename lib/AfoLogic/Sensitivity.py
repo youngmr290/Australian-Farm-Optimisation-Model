@@ -285,14 +285,21 @@ def create_sa():
     sav['include_carbon_credit'] = '-'  #control inclusion of carbon credits
     sav['include_biodiversity_credit'] = '-'  #control inclusion of bio credits
     sav['include_harvesting'] = '-'  #control inclusion of harvesting
+    sav['price_carbon_credit'] = '-'  # price of a carbon credit
+    sav['price_tree_biomass'] = '-'  # price of harvested tree biomass
     ##SAM
     sam['price_carbon_credit'] = 1.0  #price of a carbon credit
-    sam['price_biodiversity_credit'] = 1.0  #price of a biodiversity credit
     sam['price_tree_biomass'] = 1.0  #price of harvested tree biomass
     ##SAP
     ##SAA
     ##SAT
     ##SAR
+
+    for structure in range(4):
+        ##SAV
+        sav['biodiversity_value', structure] = '-'  #value of biodiversity $/ha
+        ##SAM
+        sam['biodiversity_value', structure] = 1.0  #value of biodiversity $/ha
 
     ####################
     #Salt land pasture #

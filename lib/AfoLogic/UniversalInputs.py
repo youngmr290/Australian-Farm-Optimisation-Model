@@ -221,15 +221,25 @@ def f_universal_inp_sa(uinp_defaults):
     tree["controls"]['include_carbon_credit'] = fun.f_sa(tree["controls"]['include_carbon_credit'], sen.sav['include_carbon_credit'], 5)
     tree["controls"]['include_biodiversity_credit'] = fun.f_sa(tree["controls"]['include_biodiversity_credit'], sen.sav['include_biodiversity_credit'], 5)
     tree["controls"]['include_harvesting'] = fun.f_sa(tree["controls"]['include_harvesting'], sen.sav['include_harvesting'], 5)
+    tree['carbon_price'] = fun.f_sa(tree['carbon_price'], sen.sav['price_carbon_credit'], 5)
+    tree['biomass_price'] = fun.f_sa(tree['biomass_price'], sen.sav['price_tree_biomass'], 5)
     ###sam
     tree['carbon_price'] = fun.f_sa(tree['carbon_price'], sen.sam['price_carbon_credit'])
     tree['biomass_price'] = fun.f_sa(tree['biomass_price'], sen.sam['price_tree_biomass'])
-    tree[f"plantation_structure_{tree['controls']['plantation_structure']}"]['biodiversity_value'] = fun.f_sa(tree[f"plantation_structure_{tree['controls']['plantation_structure']}"]['biodiversity_value'], sen.sam['price_biodiversity_credit'])
     ###sap
     ###saa
     ###sat
     ###sar
 
+    for structure in range(4):
+        ###sav
+        tree[f"plantation_structure_{structure}"]['biodiversity_value'] = fun.f_sa(tree[f"plantation_structure_{structure}"]['biodiversity_value'], sen.sam['biodiversity_value', structure], 5)
+        ###sam
+        tree[f"plantation_structure_{structure}"]['biodiversity_value'] = fun.f_sa(tree[f"plantation_structure_{structure}"]['biodiversity_value'], sen.sam['biodiversity_value', structure])
+        ###sap
+        ###saa
+        ###sat
+        ###sar
     ##sheep
     ###SAV
     sheep['i_eqn_compare'] = fun.f_sa(sheep['i_eqn_compare'], sen.sav['eqn_compare'], 5)  #determines if both equation systems are being run and compared
