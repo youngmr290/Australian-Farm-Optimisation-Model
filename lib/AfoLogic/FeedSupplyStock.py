@@ -463,7 +463,7 @@ def f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1n
     else:
         feedsupplyw_tpa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(feedsupply_std_stpa1e1b1nwzida0e0b0xyg1[0], a_n_pa1e1b1nwzida0e0b0xyg1[na], axis=n_pos) #slice off the singleton s axis (this also handles cases where pkl fs has more starting weights than the current run)
         confinementw_tpa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(confinement_std_stpa1e1b1nwzida0e0b0xyg1[0], a_n_pa1e1b1nwzida0e0b0xyg1[na], axis=n_pos) #slice off the singleton s axis (this also handles cases where pkl fs has more starting weights than the current run)
-    if sinp.structuralsa['i_fs_use_pkl'] and (sinp.structuralsa['i_w_start_len3']==feedsupply_std_stpa1e1b1nwzida0e0b0xyg3.shape[w_pos]):
+    if sinp.structuralsa['i_fs_use_pkl'] and (sinp.structuralsa['i_w_start_len3']==feedsupply_std_stpa1e1b1nwzida0e0b0xyg3.shape[0]):
         ###offs
         len_w3 = a_n_pa1e1b1nwzida0e0b0xyg3.shape[w_pos]
         l_nut3 = int(len_w3/sinp.structuralsa['i_w_start_len3'])#number of nutrition patterns
