@@ -451,7 +451,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
     if report_run.loc['run_ebw_cut_dams', 'Run']:
         ##ebw for a select number of p periods
         type = 'stock'
-        prod = 'ebw_dams_k2tvPa1e1b1nw8ziyg1'
+        prod = 'lw_dams_k2tvPa1e1b1nw8ziyg1'    #changed to lw rather than ebw for the ewe lambs analysis
         na_prod = [0, 1]  #q,s
         prod_weights = 'Pe1b1_numbers_weights_k2tvPa1e1b1nw8ziyg1' #weight prod for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off-hand)
         na_prodweights = [0,1] #q,s
@@ -518,7 +518,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'fat_cut_dams', 'index', [5])      #p
         cols = f_update_default_controls(user_controls, 'fat_cut_dams', 'cols', [8]) #b1
         axis_slice = f_update_default_controls(user_controls, 'fat_cut_dams', 'axis_slice', {})
-        # axis_slice[2] = [2, 3, 1]     #the 11 slice  (in EL analysis only scanning for Preg Status)
+        # axis_slice[2] = [2, 3, 1]     #the 11 slice  (in ewe lambs analysis only to report the singles only)
         # axis_slice[4] = [0, 7, 1]  #All DVPs for Triplets
         reports["fat_cut_dams"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod
                                                 , weights=weights, na_weights=na_weights
@@ -552,7 +552,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'muscle_cut_dams', 'index', [5])      #p
         cols = f_update_default_controls(user_controls, 'muscle_cut_dams', 'cols', [8]) #b1
         axis_slice = f_update_default_controls(user_controls, 'muscle_cut_dams', 'axis_slice', {})
-        # axis_slice[2] = [2, 3, 1]     #the 11 slice  (in EL analysis only scanning for Preg Status)
+        # axis_slice[2] = [2, 3, 1]     #the 11 slice  (in ewe lambs analysis only to report the singles slice only)
         # axis_slice[4] = [0, 7, 1]  #All DVPs for Triplets
         reports["muscle_cut_dams"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod
                                                 , weights=weights, na_weights=na_weights
@@ -586,7 +586,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'viscera_cut_dams', 'index', [5])      #p
         cols = f_update_default_controls(user_controls, 'viscera_cut_dams', 'cols', [8]) #b1
         axis_slice = f_update_default_controls(user_controls, 'viscera_cut_dams', 'axis_slice', {})
-        # axis_slice[2] = [2, 3, 1]     #the 11 slice  (in EL analysis only scanning for Preg Status)
+        # axis_slice[2] = [2, 3, 1]     #the 11 slice  (in ewe lambs analysis only report the singles)
         # axis_slice[4] = [0, 7, 1]  #All DVPs for Triplets
         reports["viscera_cut_dams"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod
                                                 , weights=weights, na_weights=na_weights
@@ -664,7 +664,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'wbe_cut_dams', 'index', [5])      #p
         cols = f_update_default_controls(user_controls, 'wbe_cut_dams', 'cols', [8]) #b1
         axis_slice = f_update_default_controls(user_controls, 'wbe_cut_dams', 'axis_slice', {})
-        # axis_slice[2] = [2, 3, 1]     #the 11 slice  (in EL analysis only scanning for Preg Status)
+        # axis_slice[2] = [2, 3, 1]     #the 11 slice  (in ewe lambs analysis only report the singles)
         # axis_slice[4] = [0, 7, 1]  #All DVPs for Triplets
         reports["wbe_cut_dams"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod
                                                 , weights=weights, na_weights=na_weights

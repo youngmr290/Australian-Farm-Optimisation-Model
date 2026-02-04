@@ -9704,6 +9704,16 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                          * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:, na, ...]
                             == index_k2tva1e1b1nwzida0e0b0xyg1[:, :,:, na, ...]))
 
+    ##lw in select p slices to reduce size (for ewe lambs analysis - didn't connect yatf).
+    r_lw_k2tvPdams = (o_lw_tpdams[:, na, period_is_report_p, ...]
+                         * (a_v_pa1e1b1nwzida0e0b0xyg1[period_is_report_p] == index_vpa1e1b1nwzida0e0b0xyg1)
+                         * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:, na, ...]
+                            == index_k2tva1e1b1nwzida0e0b0xyg1[:, :, :, na, ...]))
+    # r_lw_k2tvPyatf = (o_lw_start_tpyatf[:, na, period_is_report_p, ...]
+    #                      * (a_v_pa1e1b1nwzida0e0b0xyg1[period_is_report_p] == index_vpa1e1b1nwzida0e0b0xyg1)
+    #                      * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:, na, ...]
+    #                         == index_k2tva1e1b1nwzida0e0b0xyg1[:, :,:, na, ...]))
+
     ##wbe in select p slices to reduce size.
     r_wbe_k2tvPdams = (r_wbe_tpdams[:, na, period_is_report_p, ...]
                          * (a_v_pa1e1b1nwzida0e0b0xyg1[period_is_report_p] == index_vpa1e1b1nwzida0e0b0xyg1)
@@ -11187,6 +11197,12 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                       mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:, :, :, na, ...], z_pos, k2TvPa1e1b1nwziyg1_shape)
     fun.f1_make_r_val(r_vals, r_ebw_k2tvPyatf, 'ebw_yatf_k2tvPa1e1b1nw8zixyg1',
                       mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:, :, :, na, ...], z_pos, k2TvPa1e1b1nwzixyg1_shape)
+
+    ###lw with only a few p slices (for ewe lambs analysis)
+    fun.f1_make_r_val(r_vals, r_lw_k2tvPdams, 'lw_dams_k2tvPa1e1b1nw8ziyg1',
+                      mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:, :, :, na, ...], z_pos, k2TvPa1e1b1nwziyg1_shape)
+    # fun.f1_make_r_val(r_vals, r_lw_k2tvPyatf, 'lw_yatf_k2tvPa1e1b1nw8zixyg1',
+    #                   mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:, :, :, na, ...], z_pos, k2TvPa1e1b1nwzixyg1_shape)
 
     ###WBE with only a few p slices
     fun.f1_make_r_val(r_vals, r_wbe_k2tvPdams, 'wbe_dams_k2tvPa1e1b1nw8ziyg1',

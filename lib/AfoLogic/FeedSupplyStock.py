@@ -431,7 +431,7 @@ def f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1n
         ##feedsupply is clipped in step 7 to ensure it is within a feasible range.
         # t_feedsupply_stpa1e1b1j2wzida0e0b0xyg1 = (t_feedsupply_stpa1e1b1j2wzida0e0b0xyg1 + t_fs_ageweaned_pa1e1b1nwzida0e0b0xyg1
         #                                           + t_fs_lsln_pa1e1b1nwzida0e0b0xyg1) #can't use += for some reason
-        #todo after Ewe Lambs uncomment the 2 lines above and delete the 6 lines of temporary code below
+        #todo after Ewe Lambs analysis uncomment the 2 lines above and delete the 6 lines of temporary code below
         ## For EL analysis don't adjust the NM slice (b1[0]) with the wean feed supply adjustment
         index_b1nwzida0e0b0xyg = fun.f_expand(np.arange(len_b1), b1_pos)
         t_feedsupply_stpa1e1b1j2wzida0e0b0xyg1 = (t_feedsupply_stpa1e1b1j2wzida0e0b0xyg1
