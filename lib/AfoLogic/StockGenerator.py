@@ -6075,14 +6075,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
             r_wean_ebw_tpyatf[:, p] = ebw_w_yatf  #outside the if statement because the days_period_yatf are 0 in the weaning period because weaning is at the start of the period
             o_wean_w_tpyatf[:, p] = w_w_yatf #outside the if statement because the days_period_yatf are 0 in the weaning period because weaning is at the start of the period
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
-                ###create a mask used to exclude w slices in the condensing func. exclude w slices that have greater than 10% mort or have been in the feedlot.
+                ###create a mask used to exclude w slices in the condensing func. exclude w slices that have greater than 10% mort (no feedlot mask for dams (only for offs) because feedlotting dams doesn't indicate they are being sold).
                 ### The logic behind this is that the model will not want to select animals with greater than 10% mort so not point using them to determine condensed weights
-                ### and animals that have been in the feed lot will have been sold therefore it is not useful to include these animal in the condensing because
-                ### this will increase the condensing weight but all the heavy animals were sold so the high condense weight becomes too high for many animals to distribute into and hence is a waste.
-                no_confinement_yatf = np.all(np.logical_not(confinementw_tpa1e1b1nwzida0e0b0xyg1[:,0:p]), axis=p_pos)  # True if animal has never been in feedlot
-                ###if all nut spread options include confinement then confinement w must be included in condensing.
-                ### ie if all n is confinement then overwrite no_confinement to True
-                no_confinement_yatf = np.logical_or(np.all(bool_confinement_g1_n), no_confinement_yatf)
 
                 ###mask for animals (slices of w) with mortality less than a threshold - True means mort is acceptable (below threshold)
                 numbers_start_condense_yatf = np.broadcast_to(numbers_start_condense_yatf, numbers_end_yatf.shape) #required for the first condensing because condense numbers start doesn't have all the axis.
@@ -6092,7 +6086,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 mort_mask_yatf = surv_yatf >= threshold
 
                 ###combine mort and feedlot mask - True means the w slice is included in condensing.
-                condense_w_mask_yatf = np.logical_and(no_confinement_yatf, mort_mask_yatf)
+                condense_w_mask_yatf = mort_mask_yatf
 
                 ###sorted index of w. used for condensing.
                 idx_sorted_w_yatf = np.argsort(ffcfw_yatf * condense_w_mask_yatf, axis=w_pos)
