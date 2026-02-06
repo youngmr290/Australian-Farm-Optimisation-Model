@@ -395,6 +395,7 @@ def create_sa():
     sav['target_ebg_offs_Pb'] = np.full((len_P, len_b0), '-', dtype=object)  # SA to set lw target
     ###stock others
     sav['nv_inc'] = '-'    #SA to store NV report values
+    sav['len_nv'] = '-'    #SA to store NV report values
     sav['lw_inc'] = '-'     #SA to store LW report values
     sav['ebw_inc'] = '-'  #SA to store EBW report values
     sav['wbe_inc'] = '-'  #SA to store EBW report values

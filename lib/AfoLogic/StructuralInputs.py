@@ -85,6 +85,7 @@ def f_structural_inp_sa(sinp_defaults):
     structuralsa['i_confinement_n1'] = fun.f_sa(structuralsa['i_confinement_n1'], sen.sav['confinement_n1'],5)
     structuralsa['i_nut_spread_n3'] = fun.f_sa(structuralsa['i_nut_spread_n3'], sen.sav['nut_spread_n3'],5)
     structuralsa['i_confinement_n3'] = fun.f_sa(structuralsa['i_confinement_n3'], sen.sav['confinement_n3'],5)
+    structuralsa['i_len_f'] = fun.f_sa(structuralsa['i_n1_len'], sen.sav['len_nv'],5)
     structuralsa['i_n1_len'] = fun.f_sa(structuralsa['i_n1_len'], sen.sav['n_fs_dams'],5)
     structuralsa['i_n3_len'] = fun.f_sa(structuralsa['i_n3_len'], sen.sav['n_fs_offs'],5)
     structuralsa['i_w_start_len1'] = fun.f_sa(structuralsa['i_w_start_len1'], sen.sav['n_initial_lw_dams'],5)
