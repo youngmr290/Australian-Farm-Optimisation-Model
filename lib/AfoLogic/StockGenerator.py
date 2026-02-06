@@ -4475,6 +4475,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 if np.any(target_ebg_pb0offs[p] != 9999) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p]>0):
                     ###calc error - base on w[0] (active w axis can confuse the fs because high starting w needs much higher diet to get same lwc)
                     error_offs = np.maximum(0,(fun.f_dynamic_slice(ebg_offs, w_pos, 0, 1) * days_period_pa1e1b1nwzida0e0b0xyg3[p]) - target_ebg_pb0offs[p] * (days_period_pa1e1b1nwzida0e0b0xyg3[p]>0)) #if 0 days in period then target is 0
+                    error_offs = fun.f_update(error_offs,0,confinementw_tpa1e1b1nwzida0e0b0xyg3[:,p,...])
                     ###store in attempts array - build new array assign old array and then add current itn results - done like this to handle the shape changing and because we don't know what shape feedsupply and error are before this loop starts
                     attempts_offs[...,itn,0] = feedsupplyw_tpa1e1b1nwzida0e0b0xyg3[:,p]
                     attempts_offs[...,itn,1] = error_offs
