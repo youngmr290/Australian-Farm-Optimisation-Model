@@ -986,18 +986,20 @@ def f_egraze(cm, lw, i_steepness, density, foo, confinement, intake_f, dmd):
     '''Extra energy required for eating paddock feed than an equivalent feed in a pen (walking, chewing and ruminating)
     Energy required for walking around the paddock is estimated from distance being a function of feed available
     Low quality paddock feed is likely to be longer fibre length which might increase the energy to chew and ruminate.
+
+    The Aust feeding standards have a comment: For animals given feed in pens or yards it can generally be assumed that graze = 0.
     '''
     ##Distance walked (horizontal equivalent)
     distance = (1 + np.tan(np.deg2rad(i_steepness))) * np.minimum(1, cm[17, ...] / density) / (cm[8, ...] * foo + cm[9, ...])
-    ##Set Distance walked to 0 if in confinement
-    distance = distance * np.logical_not(confinement)
     ##Energy required for movement
     emove = cm[16, ...] * distance * lw
-    emove = fun.f_sa(emove, sen.sam['emove'])
     ##Extra energy required for chewing and ruminating
     emasticate = cm[6, ...] * lw * intake_f * (cm[7, ...] - dmd)
     ##Energy required for grazing (chewing and walking around)
     egraze = emove + emasticate
+    ##Set egraze to 0 if in confinement - For animals given feed in pens or yards it can generally be assumed that graze = 0
+    egraze = egraze * np.logical_not(confinement)
+    egraze = fun.f_sa(egraze, sen.sam['emove'])
     return egraze
 
 
