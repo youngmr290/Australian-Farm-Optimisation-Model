@@ -3266,6 +3266,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 sam_mr_offs = sen.sam['mr_pw'] * fun.f_update(1, sen.sam['mr_adult'], zf2_offs == 1)
                 sam_pi_offs = sen.sam['pi_pw'] * fun.f_update(1, sen.sam['pi_adult'], zf2_offs == 1)
 
+                #start confinement is in sale t and weight above threshold.
+                p_is_confinement = (index_tva1e1b1nw8zida0e0b0xyg3>0)*(ffcfw_start_offs[:,na,...] > sen.sav['confinement_start_weight'])
+                confinementw_tpa1e1b1nwzida0e0b0xyg3[:, p:p+1] = p_is_confinement
+                feedsupplyw_tpa1e1b1nwzida0e0b0xyg3[:,p:p+1] = fun.f_update(feedsupplyw_tpa1e1b1nwzida0e0b0xyg3[:,p:p+1], 13.3, p_is_confinement)
 
             ##feed supply loop
             ##this loop is only required if a LW target is specified for the animals

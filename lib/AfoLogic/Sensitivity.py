@@ -252,6 +252,7 @@ def create_sa():
     sav['inc_sup_selectivity'] = '-'  #control inclusion of the sup selectivity bnd (maximum propn of potential intake used by supplement when paddock feeding).
     sav['confinement_feeding_cost_factor'] = '-'  #reduction factor for sup feeding cost when in confinement
     sav['confinement_feeding_labour_factor'] = '-'  #reduction factor for sup feeding labour when in confinement
+    sav['confinement_start_weight'] = 999  #reduction factor for sup feeding labour when in confinement
     ##SAM
     sam['sup_prop_consumed'] = 1.0  #propn of grain consumed when paddock feeding
     ##SAP
