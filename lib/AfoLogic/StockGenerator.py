@@ -8029,7 +8029,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     feedpools_start = time.time()
     ##nv masks and len
     confinement_inc = np.logical_or(np.any(confinementw_tpa1e1b1nwzida0e0b0xyg1),
-                                 np.any(confinementw_tpa1e1b1nwzida0e0b0xyg3)) #if any fs is confinement then need to include confinement pool
+                                 np.any(confinementw_tpa1e1b1nwzida0e0b0xyg3*0)) #if any fs is confinement then need to include confinement pool
     n_non_confinement_pools = sinp.structuralsa['i_len_f']
     len_f = n_non_confinement_pools + confinement_inc
     index_ftpa1e1b1nwzida0e0b0xyg = fun.f_expand(np.arange(len_f), p_pos-2)
@@ -8089,15 +8089,15 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     nv_propn_ftpoffs = np.logical_and(nv_tpoffs < nv_cutoff_upper_ftpzg[:,:,mask_p_offs_p,...], nv_tpoffs >= nv_cutoff_lower_ftpzg[:,:,mask_p_offs_p,...]) * 1
 
 
-    ###adjust the calculated proportions for the confinement pool. If in confinement then:
-    ####set all the slices to 0
-    nv_propn_ftpsire = fun.f_update(nv_propn_ftpsire, 0.0, confinementw_tpa1e1b1nwzida0e0b0xyg0)
-    nv_propn_ftpdams = fun.f_update(nv_propn_ftpdams, 0.0, confinementw_tpa1e1b1nwzida0e0b0xyg1)
-    nv_propn_ftpoffs = fun.f_update(nv_propn_ftpoffs, 0.0, confinementw_tpa1e1b1nwzida0e0b0xyg3)
-    ####set the confinement slice to 1.0
-    nv_propn_ftpsire[-1, ...] = fun.f_update(nv_propn_ftpsire[-1, ...], 1.0, confinementw_tpa1e1b1nwzida0e0b0xyg0)
-    nv_propn_ftpdams[-1, ...] = fun.f_update(nv_propn_ftpdams[-1, ...], 1.0, confinementw_tpa1e1b1nwzida0e0b0xyg1)
-    nv_propn_ftpoffs[-1, ...] = fun.f_update(nv_propn_ftpoffs[-1, ...], 1.0, confinementw_tpa1e1b1nwzida0e0b0xyg3)
+    # ###adjust the calculated proportions for the confinement pool. If in confinement then:
+    # ####set all the slices to 0
+    # nv_propn_ftpsire = fun.f_update(nv_propn_ftpsire, 0.0, confinementw_tpa1e1b1nwzida0e0b0xyg0)
+    # nv_propn_ftpdams = fun.f_update(nv_propn_ftpdams, 0.0, confinementw_tpa1e1b1nwzida0e0b0xyg1)
+    # nv_propn_ftpoffs = fun.f_update(nv_propn_ftpoffs, 0.0, confinementw_tpa1e1b1nwzida0e0b0xyg3)
+    # ####set the confinement slice to 1.0
+    # nv_propn_ftpsire[-1, ...] = fun.f_update(nv_propn_ftpsire[-1, ...], 1.0, confinementw_tpa1e1b1nwzida0e0b0xyg0)
+    # nv_propn_ftpdams[-1, ...] = fun.f_update(nv_propn_ftpdams[-1, ...], 1.0, confinementw_tpa1e1b1nwzida0e0b0xyg1)
+    # nv_propn_ftpoffs[-1, ...] = fun.f_update(nv_propn_ftpoffs[-1, ...], 1.0, confinementw_tpa1e1b1nwzida0e0b0xyg3)
 
     #######
     #co2e #
