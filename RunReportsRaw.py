@@ -42,13 +42,17 @@ def f_report(processor, trials, non_exist_trials):
     ##create empty df that are used to stack reports for each trial
     stacked_reps = rve.f_create_report_dfs(non_exist_trials)
 
-    ##run reports for each trial and stack with other trials
-    for trial_name in trials:
+    ##run reports for each trial and stack with other trials. Report progress occasionally
+    frequency = max(10, min(500, len(trials) // 5))
+    for i, trial_name in enumerate(trials):
         ###run
+        if i % frequency == 0:
+            print(f"{time.ctime()} processed trial {i}/{len(trials)-1}: {trial_name}")  #, flush=True)  # \r to overwrite each time and flush to force the print
         lp_vars, r_vals = rfun.load_pkl(trial_name)
         reports = rep.f_run_report(lp_vars,r_vals, report_run, trial_name, user_controls=user_controls)
         ###stack
         stacked_reps = rve.f_concat_reports(stacked_reps, reports, report_run, trial_name)
+    print("All trials processed")  # Final newline after loop completes
 
     ##save to excel
     rve.f_save_reports(report_run, stacked_reps, processor)
