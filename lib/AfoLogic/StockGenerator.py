@@ -6536,7 +6536,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                         , z_pos, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_dams, mask_min_wa_lw_w_dams
                                         , mask_max_lw_wz_dams, mask_max_wa_lw_w_dams, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1
                                         , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
-                                        , gbal = gbal_management_pa1e1b1nwzida0e0b0xyg1[p], stub_lw_idx=stub_lw_idx_dams #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
+                                        , gbal = gbal_management_pa1e1b1nwzida0e0b0xyg1[p]
+                                        , drysretained_scan=est_drys_retained_scan_pa1e1b1nwzida0e0b0xyg1[p]
+                                        , drysretained_birth=est_drys_retained_birth_pa1e1b1nwzida0e0b0xyg1[p] #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
+                                        , stub_lw_idx=stub_lw_idx_dams #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
                                         , len_gen_t=len_gen_t1, a_t_g=a_t_g1, period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1])
                 #todo 3 lines of temporary code for the Ewe Lamb project
                 ####Set the EBW in the random REV and reset the weight at birth
