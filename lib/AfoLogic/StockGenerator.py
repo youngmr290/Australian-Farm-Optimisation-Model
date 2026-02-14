@@ -3063,7 +3063,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
 
             ##dams
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-            ##Reproduction
+            ##Reproduction - reset repro value at joining
                 ###Lagged DR (lactation deficit)
                 ldr_start_dams = fun.f_update(ldr_start_dams, 1, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p])
                 ###Loss of potential milk due to consistent under production
@@ -3194,7 +3194,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 #### conceptus energy on day (for f_foetus_nfs())
                 c_day1 = w_b_exp_y_dams * nfoet_b1nwzida0e0b0xyg * ce_day1_f_dams
                 #### allocate the weight if it is prejoining (for f_foetus_nfs())
-                c_start_dams = fun.f_update(c_start_dams, c_day1, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p])
+                c_start_dams = fun.f_update(c_start_dams, c_day1, period_is_join_pa1e1b1nwzida0e0b0xyg1[p])
                 
                 ###windspeed
                 ws_adj_a1e1b1nwzida0e0b0xyg1 = sfun.f_ws_adjust(relative_ws_c, numbers_start_dams, dse_per_dam, nfoet_b1nwzida0e0b0xyg, 
