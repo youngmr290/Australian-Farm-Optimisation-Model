@@ -1206,13 +1206,18 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
             node_fvp_type_m[m] = np.full(node_fvp_m[m].shape, other_vtype3)
 
     ##stack & mask which dvps are included - this must be in the order as per the input mask
-    fvp_date_all_f3 = np.array([fvp_b0_start_ba1e1b1nwzida0e0b0xyg3,fvp_b1_start_ba1e1b1nwzida0e0b0xyg3,
-                                fvp_b2_start_ba1e1b1nwzida0e0b0xyg3, fvp_0_start_sa1e1b1nwzida0e0b0xyg3,
-                                fvp_1_start_sa1e1b1nwzida0e0b0xyg3, fvp_2_start_sa1e1b1nwzida0e0b0xyg3], dtype=object)
+    fvp_date_all_f3 = np.empty(6, dtype=object)
+    fvp_date_all_f3[:] = [fvp_b0_start_ba1e1b1nwzida0e0b0xyg3, fvp_b1_start_ba1e1b1nwzida0e0b0xyg3,
+        fvp_b2_start_ba1e1b1nwzida0e0b0xyg3, fvp_0_start_sa1e1b1nwzida0e0b0xyg3,
+        fvp_1_start_sa1e1b1nwzida0e0b0xyg3, fvp_2_start_sa1e1b1nwzida0e0b0xyg3,
+    ]
     fvp_date_all_f3 = np.concatenate([node_fvp_m[0:1], fvp_date_all_f3, user_fvp_u, node_fvp_m[1:]]) #seasons start needs to be first because it needs to be the first dvp in situations where there is a clash. so that distributing can occur from v_prev.
-    fvp_type_all_f3 = np.array([fvp_b0_type_va1e1b1nwzida0e0b0xyg3, fvp_b1_type_va1e1b1nwzida0e0b0xyg3,
-                                fvp_b2_type_va1e1b1nwzida0e0b0xyg3, fvp_0_type_va1e1b1nwzida0e0b0xyg3,
-                                fvp_1_type_va1e1b1nwzida0e0b0xyg3, fvp_2_type_va1e1b1nwzida0e0b0xyg3], dtype=object)
+    fvp_type_all_f3 = np.empty(6, dtype=object)
+
+    fvp_type_all_f3[:] = [fvp_b0_type_va1e1b1nwzida0e0b0xyg3, fvp_b1_type_va1e1b1nwzida0e0b0xyg3,
+        fvp_b2_type_va1e1b1nwzida0e0b0xyg3, fvp_0_type_va1e1b1nwzida0e0b0xyg3,
+        fvp_1_type_va1e1b1nwzida0e0b0xyg3, fvp_2_type_va1e1b1nwzida0e0b0xyg3,
+    ]
     fvp_type_all_f3 = np.concatenate([node_fvp_type_m[0:1], fvp_type_all_f3, user_fvp_type_u, node_fvp_type_m[1:]]) #seasons start needs to be first because it needs to be the first dvp in situations where there is a clash. so that distributing can occur from v_prev.
     ###if shearing is less than 3 sim periods after weaning then set the break fvp dates to the first date of the sim (so they aren't used)
     ### these initial fvps are turned off in MP when condensing at season start (because they are calculated assuming shearing is condensing - this could be altered if condensing at season start become default).
@@ -6999,6 +7004,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     if np.any(period_is_condense_pa1e1b1nwzida0e0b0xyg1[p + 1]): #using p+1 because this is being calculated at the end of the loop for next period.
                         ###slice the w axis just for the starting w slices.
                         pkl_ebw_condensed_dams = pkl_condensed_values['dams'][p]['ebw_dams']
+                        if not sinp.structuralsa['i_generate_with_t']:
+                            pkl_ebw_condensed_dams = np.take_along_axis(pkl_ebw_condensed_dams, a_t_tpg1[:,0,...], axis=p_pos)
+
                         pkl_ebw_condensed_dams = fun.f_dynamic_slice(pkl_ebw_condensed_dams, w_pos, start=0, stop=None,
                                                                      step=int(pkl_ebw_condensed_dams.shape[w_pos] / w_start_len1))
                         t_fs_w_reallocation_ta1e1b1nw8zida0e0b0xyg1s9 = sfun.f1_lw_distribution(pkl_ebw_condensed_dams,
@@ -7025,6 +7033,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     if np.any(period_is_condense_pa1e1b1nwzida0e0b0xyg3[p + 1]):
                         ###slice the w axis just for the starting w slices.
                         pkl_ebw_condensed_offs = pkl_condensed_values['offs'][p]['ebw_offs']
+                        if not sinp.structuralsa['i_generate_with_t']:
+                            pkl_ebw_condensed_offs=pkl_ebw_condensed_offs[0:1,...]
                         pkl_ebw_condensed_offs = fun.f_dynamic_slice(pkl_ebw_condensed_offs, w_pos, start=0, stop=None,
                                                                      step=int(pkl_ebw_condensed_offs.shape[w_pos] / w_start_len3))
                         t_fs_w_reallocation_ta1e1b1nw8zida0e0b0xyg3s9 = sfun.f1_lw_distribution(pkl_ebw_condensed_offs,
