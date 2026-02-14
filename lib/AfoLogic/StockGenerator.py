@@ -2897,7 +2897,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
         nw_start_dams = np.array([0.0])
         temp_lc_dams = np.array([0.0]) #this is calculated in the chill function, but it is required for the intake function so it is set to 0 for the first period.
         numbers_start_dams = numbers_initial_a1e1b1nwzida0e0b0xyg1
-        numbers_start_condense_dams = numbers_initial_a1e1b1nwzida0e0b0xyg1 #just need a default because this is processed using update function.
+        numbers_at_condense_dams = numbers_initial_a1e1b1nwzida0e0b0xyg1 #just need a default because this is processed using update function.
         scanning = 0 #variable is used only for reporting
         md_solid_dams = np.array([12.0])  # need a start value to convert ebw_initial to ffcfw
         # ebg_start_dams=0
@@ -5981,9 +5981,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                 ###create a mask used to exclude w slices in the condensing func. exclude w slices that have greater than 10% mort  (no feedlot mask for dams (only for offs) because feedlotting dams doesn't indicate they are being sold).
                 ###mask for animals (slices of w) with mortality less than a threshold - True means mort is acceptable (below threshold)
-                numbers_start_condense_dams = np.broadcast_to(numbers_start_condense_dams, numbers_end_dams.shape) #required for the first condensing because condense numbers start doesn't have all the axis.
+                numbers_at_condense_dams = np.broadcast_to(numbers_at_condense_dams, numbers_end_dams.shape) #required for the first condensing because condense numbers start doesn't have all the axis.
                 surv_dams = fun.f_divide(np.sum(numbers_end_dams,axis=prejoin_tup + season_tup, keepdims=True)
-                                         , np.sum(numbers_start_condense_dams, axis=prejoin_tup + season_tup, keepdims=True))  # sum e,b,z axis because numbers are distributed along those axes so need to sum to determine if w has mortality > 10%
+                                         , np.sum(numbers_at_condense_dams, axis=prejoin_tup + season_tup, keepdims=True))  # sum e,b,z axis because numbers are distributed along those axes so need to sum to determine if w has mortality > 10%
                 threshold = np.minimum(0.9, fun.f_divide(surv_dams.sum(w_pos,keepdims=True),(surv_dams!=0).sum(w_pos,keepdims=True)))  # threshold is the lower of average survival and 90% (animals with 0 survival are not included)
                 mort_mask_dams = surv_dams >= threshold
 
@@ -6980,7 +6980,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                         , len_gen_t=len_gen_t1, a_t_g=a_t_g1
                                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###numbers at the beginning of fvp 0 (used to calc mort for the lw patterns to determine the lowest feasible level - used in the start prod func)
-                numbers_start_condense_dams = fun.f_update(numbers_start_condense_dams, numbers_start_dams
+                numbers_at_condense_dams = fun.f_update(numbers_at_condense_dams, numbers_start_dams
                                                            , period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
 
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p-1:p+2,...] >0): #use p+2 so that initial numbers get set when birth is next period, p-1 so that numbers get set to 0 after weaning.
