@@ -2438,12 +2438,15 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     period_is_prejoin_pa1e1b1nwzida0e0b0xyg1 = sfun.f1_period_is_('period_is', date_prejoin_pa1e1b1nwzida0e0b0xyg1
                         , date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg) #g2 date born is the equivalent of date lambed g1
 
-    ###the weighted average of numbers and production at first prejoining (ewe lambs) doesnt need to occur. For ewe lambs the selection of NM/mating can occur in the prog2dams constraint. This is because we want to make sure the feedsupply for b[2] (b11) in dvp[0] represents an animal that is expected to be mated.
-    ### This is a control because there may be cases (ie DSP) when we want the ewe lambs to be clustered so that the model cal select propn mated at prejoining. In the DSP you may not want to lock in the mated status at weaning (because you might want to wait until summer conditions have unfolded (if there was a summer node)).
+    ###the weighted average of numbers and production at first prejoining (ewe lambs) doesn't normally want to occur
+    ### because the selection of NM/mating occurs in the prog2dams constraint so that the feedsupply for b[2] (b11) in dvp[0]
+    ### represents an animal that is mated. However, in some cases, such as the DSP, we want to allow selection of propn mated at prejoining.
+    ### Therefore this is a control to provide flexibility to turn off.
+    ### In the DSP you may not want to lock in the mated status at weaning (so summer conditions can change the decision (if there was a summer node)).
     period_is_firstprejoining_pa1e1b1nwzida0e0b0xyg1 = sfun.f1_period_is_('period_is', prejoining_oa1e1b1nwzida0e0b0xyg1[0]
                        , date_start_pa1e1b1nwzida0e0b0xyg, date_end_p=date_end_pa1e1b1nwzida0e0b0xyg)
     include_prejoin_average_pa1e1b1nwzida0e0b0xyg1 = np.logical_or(np.logical_not(period_is_firstprejoining_pa1e1b1nwzida0e0b0xyg1),
-                                                                   sen.sav['prejoin_ewe_lambs'])
+                                                                   sen.sav['firstprejoin_averaged'])
 
     period_is_join_pa1e1b1nwzida0e0b0xyg1 = sfun.f1_period_is_('period_is', date_joined_pa1e1b1nwzida0e0b0xyg1
                         , date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg) #g2 date born is the equivalent of date lambed g1
@@ -6543,7 +6546,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 ebw_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams, ebw_condensed_dams, b1_pos, p_pos, w_pos, prejoin_tup
                                         , z_pos, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_dams, mask_min_wa_lw_w_dams
                                         , mask_max_lw_wz_dams, mask_max_wa_lw_w_dams, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , group=1 , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
+                                        , group=1, scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
                                         , gbal = gbal_management_pa1e1b1nwzida0e0b0xyg1[p]
                                         , drysretained_scan=est_drys_retained_scan_pa1e1b1nwzida0e0b0xyg1[p]
                                         , drysretained_birth=est_drys_retained_birth_pa1e1b1nwzida0e0b0xyg1[p]  #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
@@ -6553,7 +6556,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 nw_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams, nw_start_condensed_dams, b1_pos, p_pos, w_pos, prejoin_tup
                                         , z_pos, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_dams, mask_min_wa_lw_w_dams
                                         , mask_max_lw_wz_dams, mask_max_wa_lw_w_dams, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , group=1 , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
+                                        , group=1, scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
                                         , gbal=gbal_management_pa1e1b1nwzida0e0b0xyg1[p]
                                         , drysretained_scan=est_drys_retained_scan_pa1e1b1nwzida0e0b0xyg1[p]
                                         , drysretained_birth=est_drys_retained_birth_pa1e1b1nwzida0e0b0xyg1[p] #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
@@ -6563,7 +6566,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 ebw_max_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams, ebw_max_condensed_dams, b1_pos, p_pos, w_pos, prejoin_tup
                                         , z_pos, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_dams, mask_min_wa_lw_w_dams
                                         , mask_max_lw_wz_dams, mask_max_wa_lw_w_dams, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , group=1 , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
+                                        , group=1, scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
                                         , gbal=gbal_management_pa1e1b1nwzida0e0b0xyg1[p]
                                         , drysretained_scan=est_drys_retained_scan_pa1e1b1nwzida0e0b0xyg1[p]
                                         , drysretained_birth=est_drys_retained_birth_pa1e1b1nwzida0e0b0xyg1[p] #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
@@ -6573,7 +6576,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 fat_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams, fat_condensed_dams, b1_pos, p_pos, w_pos, prejoin_tup
                                         , z_pos, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_dams, mask_min_wa_lw_w_dams
                                         , mask_max_lw_wz_dams, mask_max_wa_lw_w_dams, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , group=1 , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
+                                        , group=1, scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
                                         , gbal=gbal_management_pa1e1b1nwzida0e0b0xyg1[p]
                                         , drysretained_scan=est_drys_retained_scan_pa1e1b1nwzida0e0b0xyg1[p]
                                         , drysretained_birth=est_drys_retained_birth_pa1e1b1nwzida0e0b0xyg1[p] #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
@@ -6583,7 +6586,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 muscle_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams, muscle_condensed_dams, b1_pos, p_pos, w_pos, prejoin_tup
                                         , z_pos, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_dams, mask_min_wa_lw_w_dams
                                         , mask_max_lw_wz_dams, mask_max_wa_lw_w_dams, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , group=1 , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
+                                        , group=1, scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
                                         , gbal=gbal_management_pa1e1b1nwzida0e0b0xyg1[p]
                                         , drysretained_scan=est_drys_retained_scan_pa1e1b1nwzida0e0b0xyg1[p]
                                         , drysretained_birth=est_drys_retained_birth_pa1e1b1nwzida0e0b0xyg1[p] #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
@@ -6593,7 +6596,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 viscera_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams, viscera_condensed_dams, b1_pos, p_pos, w_pos, prejoin_tup
                                         , z_pos, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_dams, mask_min_wa_lw_w_dams
                                         , mask_max_lw_wz_dams, mask_max_wa_lw_w_dams, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , group=1 , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
+                                        , group=1, scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
                                         , gbal=gbal_management_pa1e1b1nwzida0e0b0xyg1[p]
                                         , drysretained_scan=est_drys_retained_scan_pa1e1b1nwzida0e0b0xyg1[p]
                                         , drysretained_birth=est_drys_retained_birth_pa1e1b1nwzida0e0b0xyg1[p] #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
@@ -6603,7 +6606,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 c_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams, c_condensed_dams, b1_pos, p_pos, w_pos, prejoin_tup
                                         , z_pos, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_dams, mask_min_wa_lw_w_dams
                                         , mask_max_lw_wz_dams, mask_max_wa_lw_w_dams, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , group=1 , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
+                                        , group=1, scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
                                         , gbal=gbal_management_pa1e1b1nwzida0e0b0xyg1[p]
                                         , drysretained_scan=est_drys_retained_scan_pa1e1b1nwzida0e0b0xyg1[p]
                                         , drysretained_birth=est_drys_retained_birth_pa1e1b1nwzida0e0b0xyg1[p] #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
@@ -6613,7 +6616,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 cfw_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams, cfw_condensed_dams, b1_pos, p_pos, w_pos, prejoin_tup
                                         , z_pos, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_dams, mask_min_wa_lw_w_dams
                                         , mask_max_lw_wz_dams, mask_max_wa_lw_w_dams, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , group=1 , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
+                                        , group=1, scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
                                         , gbal=gbal_management_pa1e1b1nwzida0e0b0xyg1[p]
                                         , drysretained_scan=est_drys_retained_scan_pa1e1b1nwzida0e0b0xyg1[p]
                                         , drysretained_birth=est_drys_retained_birth_pa1e1b1nwzida0e0b0xyg1[p] #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
@@ -6624,7 +6627,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                         , d_cfw_history_condensed_p2g1, b1_pos, p_pos, w_pos, prejoin_tup
                                         , z_pos, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_dams[na,...], mask_min_wa_lw_w_dams[na,...]
                                         , mask_max_lw_wz_dams[na,...], mask_max_wa_lw_w_dams[na,...], period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , group=1 , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
+                                        , group=1, scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
                                         , gbal=gbal_management_pa1e1b1nwzida0e0b0xyg1[p]
                                         , drysretained_scan=est_drys_retained_scan_pa1e1b1nwzida0e0b0xyg1[p]
                                         , drysretained_birth=est_drys_retained_birth_pa1e1b1nwzida0e0b0xyg1[p] #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
@@ -6634,7 +6637,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 fl_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams, fl_condensed_dams, b1_pos, p_pos, w_pos, prejoin_tup
                                         , z_pos, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_dams, mask_min_wa_lw_w_dams
                                         , mask_max_lw_wz_dams, mask_max_wa_lw_w_dams, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , group=1 , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
+                                        , group=1, scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
                                         , gbal=gbal_management_pa1e1b1nwzida0e0b0xyg1[p]
                                         , drysretained_scan=est_drys_retained_scan_pa1e1b1nwzida0e0b0xyg1[p]
                                         , drysretained_birth=est_drys_retained_birth_pa1e1b1nwzida0e0b0xyg1[p] #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
@@ -6644,7 +6647,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 fd_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams, fd_condensed_dams, b1_pos, p_pos, w_pos, prejoin_tup
                                         , z_pos, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_dams, mask_min_wa_lw_w_dams
                                         , mask_max_lw_wz_dams, mask_max_wa_lw_w_dams, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , group=1 , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
+                                        , group=1, scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
                                         , gbal=gbal_management_pa1e1b1nwzida0e0b0xyg1[p]
                                         , drysretained_scan=est_drys_retained_scan_pa1e1b1nwzida0e0b0xyg1[p]
                                         , drysretained_birth=est_drys_retained_birth_pa1e1b1nwzida0e0b0xyg1[p] #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
@@ -6654,7 +6657,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 fd_min_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams, fd_min_condensed_dams, b1_pos, p_pos, w_pos, prejoin_tup
                                         , z_pos, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_dams, mask_min_wa_lw_w_dams
                                         , mask_max_lw_wz_dams, mask_max_wa_lw_w_dams, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , group=1 , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
+                                        , group=1, scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
                                         , gbal=gbal_management_pa1e1b1nwzida0e0b0xyg1[p]
                                         , drysretained_scan=est_drys_retained_scan_pa1e1b1nwzida0e0b0xyg1[p]
                                         , drysretained_birth=est_drys_retained_birth_pa1e1b1nwzida0e0b0xyg1[p] #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
@@ -6664,7 +6667,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 ldr_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams, ldr_condensed_dams, b1_pos, p_pos, w_pos, prejoin_tup
                                         , z_pos, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p], mask_min_lw_wz_dams, mask_min_wa_lw_w_dams
                                         , mask_max_lw_wz_dams, mask_max_wa_lw_w_dams, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , group=1 , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
+                                        , group=1, scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
                                         , gbal=gbal_management_pa1e1b1nwzida0e0b0xyg1[p]
                                         , drysretained_scan=est_drys_retained_scan_pa1e1b1nwzida0e0b0xyg1[p]
                                         , drysretained_birth=est_drys_retained_birth_pa1e1b1nwzida0e0b0xyg1[p] #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
@@ -6674,7 +6677,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 lb_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams, lb_condensed_dams, b1_pos, p_pos, w_pos, prejoin_tup
                                         , z_pos, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_dams, mask_min_wa_lw_w_dams
                                         , mask_max_lw_wz_dams, mask_max_wa_lw_w_dams, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , group=1 , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
+                                        , group=1, scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
                                         , gbal=gbal_management_pa1e1b1nwzida0e0b0xyg1[p]
                                         , drysretained_scan=est_drys_retained_scan_pa1e1b1nwzida0e0b0xyg1[p]
                                         , drysretained_birth=est_drys_retained_birth_pa1e1b1nwzida0e0b0xyg1[p] #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
@@ -6684,7 +6687,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 rc_birth_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams, rc_birth_condensed_dams, b1_pos, p_pos, w_pos, prejoin_tup
                                         , z_pos, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_dams, mask_min_wa_lw_w_dams
                                         , mask_max_lw_wz_dams, mask_max_wa_lw_w_dams, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , group=1 , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p+1]
+                                        , group=1, scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p+1]
                                         , gbal=gbal_management_pa1e1b1nwzida0e0b0xyg1[p]
                                         , drysretained_scan=est_drys_retained_scan_pa1e1b1nwzida0e0b0xyg1[p]
                                         , drysretained_birth=est_drys_retained_birth_pa1e1b1nwzida0e0b0xyg1[p] #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
@@ -6694,7 +6697,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 w_f_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams, w_f_condensed_dams, b1_pos, p_pos, w_pos, prejoin_tup
                                         , z_pos, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_dams, mask_min_wa_lw_w_dams
                                         , mask_max_lw_wz_dams, mask_max_wa_lw_w_dams, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , group=1 , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p+1]
+                                        , group=1, scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p+1]
                                         , gbal=gbal_management_pa1e1b1nwzida0e0b0xyg1[p]
                                         , drysretained_scan=est_drys_retained_scan_pa1e1b1nwzida0e0b0xyg1[p]
                                         , drysretained_birth=est_drys_retained_birth_pa1e1b1nwzida0e0b0xyg1[p] #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
@@ -6704,7 +6707,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 guw_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams, guw_condensed_dams, b1_pos, p_pos, w_pos, prejoin_tup
                                         , z_pos, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_dams, mask_min_wa_lw_w_dams
                                         , mask_max_lw_wz_dams, mask_max_wa_lw_w_dams, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , group=1 , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
+                                        , group=1, scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
                                         , gbal=gbal_management_pa1e1b1nwzida0e0b0xyg1[p]
                                         , drysretained_scan=est_drys_retained_scan_pa1e1b1nwzida0e0b0xyg1[p]
                                         , drysretained_birth=est_drys_retained_birth_pa1e1b1nwzida0e0b0xyg1[p] #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
@@ -6714,7 +6717,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 nw_f_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams, nw_f_condensed_dams, b1_pos, p_pos, w_pos, prejoin_tup
                                         , z_pos, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_dams, mask_min_wa_lw_w_dams
                                         , mask_max_lw_wz_dams, mask_max_wa_lw_w_dams, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , group=1 , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
+                                        , group=1, scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
                                         , gbal=gbal_management_pa1e1b1nwzida0e0b0xyg1[p]
                                         , drysretained_scan=est_drys_retained_scan_pa1e1b1nwzida0e0b0xyg1[p]
                                         , drysretained_birth=est_drys_retained_birth_pa1e1b1nwzida0e0b0xyg1[p] #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
@@ -6724,7 +6727,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 cf_w_b_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams, cf_w_b_condensed_dams, b1_pos, p_pos, w_pos, prejoin_tup
                                         , z_pos, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_dams, mask_min_wa_lw_w_dams
                                         , mask_max_lw_wz_dams, mask_max_wa_lw_w_dams, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , group=1 , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
+                                        , group=1, scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
                                         , gbal=gbal_management_pa1e1b1nwzida0e0b0xyg1[p]
                                         , drysretained_scan=est_drys_retained_scan_pa1e1b1nwzida0e0b0xyg1[p]
                                         , drysretained_birth=est_drys_retained_birth_pa1e1b1nwzida0e0b0xyg1[p] #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
@@ -6734,7 +6737,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 cf_cfwltw_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams, cf_cfwltw_condensed_dams, b1_pos, p_pos, w_pos, prejoin_tup
                                         , z_pos, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_dams, mask_min_wa_lw_w_dams
                                         , mask_max_lw_wz_dams, mask_max_wa_lw_w_dams, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , group=1 , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
+                                        , group=1, scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
                                         , gbal=gbal_management_pa1e1b1nwzida0e0b0xyg1[p]
                                         , drysretained_scan=est_drys_retained_scan_pa1e1b1nwzida0e0b0xyg1[p]
                                         , drysretained_birth=est_drys_retained_birth_pa1e1b1nwzida0e0b0xyg1[p] #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
@@ -6744,7 +6747,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 cf_fdltw_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams, cf_fdltw_condensed_dams, b1_pos, p_pos, w_pos, prejoin_tup
                                         , z_pos, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_dams, mask_min_wa_lw_w_dams
                                         , mask_max_lw_wz_dams, mask_max_wa_lw_w_dams, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , group=1 , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
+                                        , group=1, scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
                                         , gbal=gbal_management_pa1e1b1nwzida0e0b0xyg1[p]
                                         , drysretained_scan=est_drys_retained_scan_pa1e1b1nwzida0e0b0xyg1[p]
                                         , drysretained_birth=est_drys_retained_birth_pa1e1b1nwzida0e0b0xyg1[p] #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
@@ -6755,7 +6758,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                         , cfw_ltwadj_condensed_dams, b1_pos, p_pos, w_pos, prejoin_tup
                                         , z_pos, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_dams, mask_min_wa_lw_w_dams
                                         , mask_max_lw_wz_dams, mask_max_wa_lw_w_dams, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , group=1 , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
+                                        , group=1, scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
                                         , gbal=gbal_management_pa1e1b1nwzida0e0b0xyg1[p]
                                         , drysretained_scan=est_drys_retained_scan_pa1e1b1nwzida0e0b0xyg1[p]
                                         , drysretained_birth=est_drys_retained_birth_pa1e1b1nwzida0e0b0xyg1[p] #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
@@ -6765,7 +6768,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 fd_ltwadj_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams, fd_ltwadj_condensed_dams, b1_pos, p_pos, w_pos, prejoin_tup
                                         , z_pos, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_dams, mask_min_wa_lw_w_dams
                                         , mask_max_lw_wz_dams, mask_max_wa_lw_w_dams, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , group=1 , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
+                                        , group=1, scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
                                         , gbal=gbal_management_pa1e1b1nwzida0e0b0xyg1[p]
                                         , drysretained_scan=est_drys_retained_scan_pa1e1b1nwzida0e0b0xyg1[p]
                                         , drysretained_birth=est_drys_retained_birth_pa1e1b1nwzida0e0b0xyg1[p] #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
@@ -9148,14 +9151,14 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ####Only different from the total because it excludes those providing to the same period
     numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 = (numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9
                                                             - numbers_provthis_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9)
-    ###at prejoining make all k28 animals provide k29[nm] - except the first prejoining (ewe lamb) when the selection of NM/mating occurs in the prog2dams constraint.
-    ### This is because we want to make sure the feedsupply for b[2] (b11) in dvp[0] represents an animal that is expected to be mated.
-    ### This also occurs in the generator.
-    ### this is optional. In the DSP you may not want to lock in the mated status at weaning (because you might want to wait until summer conditions have unfolded (if there was a summer node)).
+    ###at prejoining make all k28 animals provide k29[nm] - except the first prejoining (ewe lamb) when the selection of NM/mating can occur in the prog2dams constraint.
+    ### Early selection ensure the feedsupply for b[2] (b11) in dvp[0] represents an animal that is mated.
+    ### This is also represented in the generator.
+    ### However, it is optional because in the DSP including flexibility would allow the mating decision to be delayed until after a summer node (if included).
     dvp_is_firstprejoining_va1e1b1nwzida0e0b0xyg1 = dvp_start_va1e1b1nwzida0e0b0xyg1 == prejoining_oa1e1b1nwzida0e0b0xyg1[0]
     nextdvp_is_firstprejoining_va1e1b1nwzida0e0b0xyg1 = np.roll(dvp_is_firstprejoining_va1e1b1nwzida0e0b0xyg1, shift=-1, axis=0)
     include_prejoin_average_va1e1b1nwzida0e0b0xyg1 = np.logical_or(np.logical_not(nextdvp_is_firstprejoining_va1e1b1nwzida0e0b0xyg1),
-                                                                   sen.sav['prejoin_ewe_lambs'])
+                                                                   sen.sav['firstprejoin_averaged'])
 
     temporary = np.sum(numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9, axis=1, keepdims=True) * (index_k29tva1e1b1nwzida0e0b0xyg1g9[...,na] == 0)  # put the sum of the k29 in slice 0
     numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 = fun.f_update(numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9, temporary,
