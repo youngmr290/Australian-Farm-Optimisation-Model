@@ -3082,12 +3082,23 @@ def f1_period_start_prod(numbers, var, b1_pos, p_pos, w_pos, prejoin_tup, z_pos,
         # b1_pos = sinp.stock['i_b1_pos']
         nfoet_b1 = fun.f_expand(sinp.stock['a_nfoet_b1'],b1_pos)
         nyatf_b1 = fun.f_expand(sinp.stock['a_nyatf_b1'],b1_pos)
-        ###scale numbers if drys are expected to have been sold at scanning (in the generator we don't know if drys are actually sold since pyomo optimises this, so this is just our best estimate)
+        ewe_mated_b1 = fun.f_expand(sinp.stock['i_mated_b1'], b1_pos) * 1
+        ###scale numbers if empty ewes are expected to have been sold at scanning (in the generator we don't know if drys are actually sold since pyomo optimises this, so this is just our best estimate)
         ###can't occur at prejoining rather than at scanning & birth
-        temp = np.maximum(drysretained_scan, np.minimum(1, nfoet_b1)) * numbers
+        ###The numbers in the dry slice are scaled by drysretained_scan other slices including NM are unchanged
+        ###Build the scalar in steps
+        ewe_is_pregnant = np.minimum(1, nfoet_b1)    #0 not pregnant, 1 pregnant
+        ewe_is_not_empty = np.minimum(ewe_is_pregnant, (1-ewe_mated_b1))   #0 empty, 1 not mated or pregnant
+        scalar = np.maximum(drysretained_scan, ewe_is_not_empty)
+        temp = scalar * numbers
         scaled_numbers = fun.f_update(numbers, temp, scan_management >= 1) # only scale numbers if scanning occurs
         ###scale numbers if drys are expected to have been sold at birth (in the generator we don't know if drys are actually sold since pyomo optimises this, so this is just our best estimate)
-        temp = np.maximum(drysretained_birth, np.minimum(1, nyatf_b1)) * scaled_numbers
+        ###The numbers in the dry slice are scaled by drysretained_scan other slices including NM are unchanged
+        ###Build the scalar in steps
+        ewe_is_lactating = np.minimum(1, nyatf_b1)    #0 not lactating, 1 lactating
+        ewe_is_not_dry = np.minimum(ewe_is_lactating, (1-ewe_mated_b1))   #0 dry, 1 not mated or lactating
+        scalar = np.maximum(drysretained_birth, ewe_is_not_dry)
+        temp = scalar * scaled_numbers
         scaled_numbers = fun.f_update(scaled_numbers,temp, gbal >= 2)  # only scale numbers if differential management
         ###weighted average of e&b axis
         temporary = fun.f_weighted_average(var_start, scaled_numbers, prejoin_tup, keepdims=True, non_zero=True) #gets the weighted average of production in the different seasons
