@@ -3368,10 +3368,9 @@ def f1_collapse(ebw, startw_unique_next, period_is_condense, preiod_is_seasonsta
     '''
 
     # Step 1: compute percentile rank (0 to 100)
-    percentile_rank_season = fun.f1_percentile_rank_over_axes(ebw_masked, (w_pos,) + (z_pos,), descending=False)
-    percentile_rank_prejoin = fun.f1_percentile_rank_over_axes(ebw_masked, (w_pos,) + prejoin_tup, descending=False)
-    percentile_rank_prejoinseason = fun.f1_percentile_rank_over_axes(ebw_masked, (w_pos,) + (z_pos,) + prejoin_tup,
-                                                                     descending=False)
+    percentile_rank_season = fun.f1_percentile_over_axes(ebw_masked, (w_pos,) + (z_pos,))
+    percentile_rank_prejoin = fun.f1_percentile_over_axes(ebw_masked, (w_pos,) + prejoin_tup)
+    percentile_rank_prejoinseason = fun.f1_percentile_over_axes(ebw_masked, (w_pos,) + (z_pos,) + prejoin_tup)
 
     percentile_rank = fun.f_update(percentile_rank_season, percentile_rank_prejoin, period_is_prejoin)
     percentile_rank = fun.f_update(percentile_rank, percentile_rank_prejoinseason,

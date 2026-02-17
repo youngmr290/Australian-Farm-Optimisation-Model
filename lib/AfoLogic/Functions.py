@@ -95,22 +95,29 @@ def searchsort_multiple_dim(a, v, axis_a0, axis_v0, axis_a1=None, axis_v1=None, 
 
 #print(timeit.timeit(phases2,number=100)/100)
 
-def f1_percentile_rank_over_axes(arr, axes, descending=False, nan_last=True):
+def f1_percentile_over_axes(arr, axes, ascending=True):
     """
     Compute percentile rank within slices defined by packing `axes`.
 
-    NaNs are excluded from ranking and returned as NaN.
+    NaNs are excluded from ranking and returned as NaN in the percentile array.
 
     Percentile rank definition:
         rank / (count - 1) * 100
+
+    Rank is calculated using a double argsort. The rank can be reversed by sorting the negative of the array.
 
     Returns
     -------
     percentile : ndarray[float]
         Same shape as arr.
-        0 = smallest value in slice
-        100 = largest value in slice
-        NaN where arr is NaN or slice has <=1 valid value.
+        When ascending == True:
+            0 = smallest value in slice
+            100 = largest value in slice
+            NaN where arr is NaN or slice has <=1 valid value.
+        When ascending == False:
+            0 = largest value in slice
+            100 = smallest value in slice
+            NaN where arr is Nan or slice has <=1 valid value.
     """
     arr = np.asarray(arr)
     axes = tuple(a % arr.ndim for a in axes)
@@ -128,13 +135,7 @@ def f1_percentile_rank_over_axes(arr, axes, descending=False, nan_last=True):
     # Handle NaNs
     if np.issubdtype(flat.dtype, np.floating):
         nan_mask = np.isnan(flat)
-
-        if nan_last:
-            fill = -np.inf if descending else np.inf
-        else:
-            fill = np.inf if descending else -np.inf
-
-        sort_vals = np.where(nan_mask, fill, flat)
+        sort_vals = np.where(nan_mask, np.inf, flat)
         count = np.sum(~nan_mask, axis=-1, keepdims=True)
     else:
         nan_mask = None
@@ -142,11 +143,13 @@ def f1_percentile_rank_over_axes(arr, axes, descending=False, nan_last=True):
         count = np.full(flat.shape[:-1] + (1,), n, dtype=int)
 
     # ---- argsort → permutation ----
+    if not ascending:      # to get descending percentiles sort the negative of the values
+        sort_vals = -sort_vals
     order = np.argsort(sort_vals, axis=-1)
-    if descending:
-        order = order[..., ::-1]
 
     # ---- argsort again → rank ----
+    if not ascending:      # to get descending percentiles sort the negative of the values
+        order = -order
     rank = np.argsort(order, axis=-1).astype(float)
 
     # restore NaNs
