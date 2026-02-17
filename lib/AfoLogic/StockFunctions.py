@@ -3280,6 +3280,120 @@ def f1_condensed(var, lw_idx, condense_w_mask, i_n_len, i_w_len, n_pos, w_pos, i
         var = fun.f_update(var, temporary, period_is_condense)
     return var
 
+
+def f1_collapse(ebw, startw_unique_next, period_is_condense, preiod_is_seasonstart, lw_initial_a1e1b1nwzida0e0b0xyg,
+                period_is_prejoin=False, prejoin_tup=None, mortality_mask=0):
+    '''
+    This function is called when axes need collapsing from one period to the next.
+    The periods that require collapsing and the axes to collapse are:
+    1. Prejoining of dams: a1, e1 & b1
+    2. Season start: z
+    3. Condense: w
+    The function handles each individually or in combination and is controlled by the axes to be collapsed.
+
+    The function returns an array of pointers that can be used to create the production characteristics of the start animal.
+    The ebw of the start animals can then be used to calculate the distribution of animals from the end of one period
+    to the beginning of the next period.
+
+    The calculation in the function are based on target percentiles that reflect the spread of ebw across
+    the start weights in the next period.
+
+    The spread across the w axis and the other axes to be collapsed is used to determine the spread of animals
+    to represent in the next period. The w axis is always included even if the number of w in the next period is
+    the same as the number of w in this period.
+    '''
+
+    w_pos = sinp.stock['i_w_pos']
+    z_pos = sinp.stock['i_z_pos']
+    len_w = ebw.shape[w_pos]
+    index_wzida0e0b0xyg = fun.f_expand(np.arange(len_w), w_pos)
+
+    # temporary version of percentiles in percentile order
+    ##set the range the percentiles should cover.
+    index_q = (index_wzida0e0b0xyg / len_w * startw_unique_next).astype(int)
+    index_q = np.flip(index_q, w_pos)  # flip to get percentiles high weight to low weight.
+    t_target_percentiles = (index_q + 0.5) / (startw_unique_next) * 100
+    # Increase the spread of the lowest and highest percentile
+    slc1 = [slice(None)] * t_target_percentiles.ndim
+    slc1[w_pos] = slice(0, 1)
+    t_target_percentiles[tuple(slc1)] = (100 + t_target_percentiles[
+        tuple(slc1)]) / 2  # quarter the distance to 100 (eg 66 would become 91.75)
+    slc2 = [slice(None)] * t_target_percentiles.ndim
+    slc2[w_pos] = slice(-1, None)
+    t_target_percentiles[tuple(slc2)] = t_target_percentiles[
+                                            tuple(slc2)] / 2  # quarter the calculated value (eg 33 would become 8.25)
+    tolerance = t_target_percentiles[tuple(slc2)]
+
+    # arrange the percentiles in the order required for the w axis
+    ##There are 2 options:
+    # 1. w has been collapsed because period_is_condense & the order is determined from inputs in Structural.xls
+    # 2. w not collapse & order determined by the existing order of ebw across the w axis
+
+    ebw_season = np.average(ebw, axis=z_pos, keepdims=True)
+    ebw_prejoin = np.average(ebw, axis=prejoin_tup, keepdims=True)
+    ebw_prejoinseason = np.average(ebw, axis=(z_pos,) + prejoin_tup, keepdims=True)
+
+    order_season = np.argsort(-ebw_season, w_pos, )
+    order_prejoin = np.argsort(-ebw_prejoin, w_pos)
+    order_prejoinseason = np.argsort(-ebw_prejoinseason, w_pos)
+    order_condesed = np.argsort(-lw_initial_a1e1b1nwzida0e0b0xyg,
+                                w_pos)  # this needs an axis length that aligns with target_percentile(w_pos)
+
+    order = fun.f_update(order_season, order_prejoin, period_is_prejoin)
+    order = fun.f_update(order, order_prejoinseason, np.logical_and(period_is_prejoin, preiod_is_seasonstart))
+    order = fun.f_update(order, order_condesed, period_is_condense)
+
+    # create the target percentiles based on the required order
+    target_percentiles = np.take_along_axis(t_target_percentiles[None, ...], order, w_pos)  # add t axis
+
+    # identify the eligible animals for the selection of the starting animals
+    ##criteria can be changed, currently it is mortality < 10%. Ineligible animals are nan.
+    ebw_masked = np.where(mortality_mask, ebw, np.nan)
+
+    '''
+    Part B
+
+    Create pointers for entries in ebw that are within tolerance of the target percentiles.
+    The target percentiles are selected to represent the starting animals for the next period.
+    The approach is to calculate the percentile for each weight in ebw and then test if it is within the
+    tolerance of any values in the target percentile 1D array
+
+    params ebw: ebw array with ineligible animals (mortality > threshold) set to nan
+    params w_pos:
+    params target_percentile: a 1D array of the percentiles that represent the target animals
+    tolerance: the tolerance (in percentile points) to include animals in the definition of the target animal
+
+    Output:
+    pointers: an array of pointers to the target animal. value is -1 if the animal is not contributing to a target animal
+    '''
+
+    # Step 1: compute percentile rank (0 to 100)
+    percentile_rank_season = fun.f1_percentile_rank_over_axes(ebw_masked, (w_pos,) + (z_pos,), descending=False)
+    percentile_rank_prejoin = fun.f1_percentile_rank_over_axes(ebw_masked, (w_pos,) + prejoin_tup, descending=False)
+    percentile_rank_prejoinseason = fun.f1_percentile_rank_over_axes(ebw_masked, (w_pos,) + (z_pos,) + prejoin_tup,
+                                                                     descending=False)
+
+    percentile_rank = fun.f_update(percentile_rank_season, percentile_rank_prejoin, period_is_prejoin)
+    percentile_rank = fun.f_update(percentile_rank, percentile_rank_prejoinseason,
+                                   np.logical_and(period_is_prejoin, preiod_is_seasonstart))
+
+    # Step 2: remove the nan from rank and replace with -1
+    percentile_rank[np.isnan(percentile_rank)] = -1
+
+    # Step 3: compare to target_percentile #todo this adds w by w axes... this will be very large... Make sure this code only runs in the required preiods.
+    diff = np.abs(percentile_rank[..., None] - np.swapaxes(target_percentiles[..., None], w_pos - 1, -1))
+    closest_idx = np.argmin(diff, axis=-1)
+    closest_diff = np.min(diff, axis=-1)
+
+    # Step 4: apply tolerance
+    pointers = np.where(closest_diff <= tolerance, closest_idx, -1)
+
+    # step 5: if not condensing then update with -1.
+    pointers = fun.f_update(pointers, -1,
+                            np.logical_not(np.logical_or(np.logical_or(period_is_prejoin, preiod_is_seasonstart), period_is_condense)))
+
+    return pointers
+
 def f1_adjust_pkl_condensed_axis_len(temporary, i_w_len, i_t_len):
     ####handle when the current trial has a different number of w slices than the create trial
     if i_w_len!=temporary.shape[sinp.stock['i_w_pos']]:

@@ -94,6 +94,76 @@ def searchsort_multiple_dim(a, v, axis_a0, axis_v0, axis_a1=None, axis_v1=None, 
     return final
 
 #print(timeit.timeit(phases2,number=100)/100)
+
+def f1_percentile_rank_over_axes(arr, axes, descending=False, nan_last=True):
+    """
+    Compute percentile rank within slices defined by packing `axes`.
+
+    NaNs are excluded from ranking and returned as NaN.
+
+    Percentile rank definition:
+        rank / (count - 1) * 100
+
+    Returns
+    -------
+    percentile : ndarray[float]
+        Same shape as arr.
+        0 = smallest value in slice
+        100 = largest value in slice
+        NaN where arr is NaN or slice has <=1 valid value.
+    """
+    arr = np.asarray(arr)
+    axes = tuple(a % arr.ndim for a in axes)
+    k = len(axes)
+
+    # Move packed axes to end
+    moved = np.moveaxis(arr, axes, range(arr.ndim - k, arr.ndim))
+
+    rest_shape = moved.shape[:-k]
+    packed_shape = moved.shape[-k:]
+    n = int(np.prod(packed_shape))
+
+    flat = moved.reshape(*rest_shape, n)
+
+    # Handle NaNs
+    if np.issubdtype(flat.dtype, np.floating):
+        nan_mask = np.isnan(flat)
+
+        if nan_last:
+            fill = -np.inf if descending else np.inf
+        else:
+            fill = np.inf if descending else -np.inf
+
+        sort_vals = np.where(nan_mask, fill, flat)
+        count = np.sum(~nan_mask, axis=-1, keepdims=True)
+    else:
+        nan_mask = None
+        sort_vals = flat
+        count = np.full(flat.shape[:-1] + (1,), n, dtype=int)
+
+    # ---- argsort → permutation ----
+    order = np.argsort(sort_vals, axis=-1)
+    if descending:
+        order = order[..., ::-1]
+
+    # ---- argsort again → rank ----
+    rank = np.argsort(order, axis=-1).astype(float)
+
+    # restore NaNs
+    if nan_mask is not None:
+        rank[nan_mask] = np.nan
+
+    # ---- convert rank to percentile_rank ----
+    percentile_flat = rank / (count - 1) * 100
+
+    # reshape back
+    percentile = percentile_flat.reshape(*rest_shape, *packed_shape)
+    percentile = np.moveaxis(percentile,range(arr.ndim - k, arr.ndim),axes)
+
+    return percentile
+
+
+
 #
 def f_expand(array, left_pos=0, swap=False, ax1=0, ax2=1, right_pos=0, left_pos2=0, right_pos2=0
                      , left_pos3=0, right_pos3=0, condition = None, axis = 0, swap2=False, ax1_2=1, ax2_2=2,

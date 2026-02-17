@@ -6005,6 +6005,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 ### that go into the feedlot are used to create condensed animal because it is common to feedlot/confine retained dams at the start of the season.
                 condense_w_mask_dams = mort_mask_dams
 
+                #todo this can be removed with new structure.
                 ###sorted index of w. used for condensing.
                 idx_sorted_w_dams = np.argsort(ffcfw_dams * condense_w_mask_dams, axis=w_pos)
 
@@ -6311,135 +6312,43 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
 
 
-                
-                #start function
-                #this will replace f1_condense and f1_period_start_prod. The function will create the starting animal for next period.
-                #the lp will distrubute to this animal
-
-                '''background. each production value represents the production for a give sheep. the b axis is reproduction status ie single, twin, trip...
-                the w axis is the nutrition profile and the z axis is the season type.
-                at certain times ie start of season these animals are averaged back to a generic animal.
-                we need to ensure that when averageing back to an averge animal the w axis still has appropriate spread to capture the variaiton that occured before averageing.
-                At period is condense the w axis is condensed back to 3 unique weights. depending on the feeding leves this spreads back out during the year.
-                at period is start the z axis is condense but the w axis will stay full.
-                '''
-                # later add mort
-                # mort_mask_ravel = mort_mask_dams.ravel(axes+w_pos)
-
-                condense_tup = season_tup if period_is_startseason_pa1e1b1nwzida0e0b0xyg + prejoin_tup if period_is_prejoin_pa1e1b1nwzida0e0b0xyg1
-                if period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]:
-                    # if condense then we want to go back to the start w. w axis will still have the full number of sclices but they will be the same value.
-                    idx_w = arg_sort(lw_initial_a1e1b1nwzida0e0b0xyg1, w_pos) #this should look like w[0-27]=0, w[27-54]=27, w[54-81]=54
-                    len_active_w = count(unique(idx_w,w_pos)) #count how many different weight animals across w axis for new animal
-                    ebw_ravel = ebw_dams.ravel(axes + w_pos)
-                    ebw_ravel_idx = arg_sort(ebw_ravel, ravel_axis_pos)
-                    mask_ebw_ravel_top10 = ebw_ravel>(ebw_ravel, len_w/10) #animals with weight of top 10%
-                    mask_ebw_ravel_bottom10 = ebw_ravel<(ebw_ravel, len_w/10) #animals with weight of bottom 10%
-                    #build pointer that specifies which of the current animals are used to create the new animal. Note pointer is 999 if the animal is not used to create the new animal
-                    #the top 1/3 heaviest animals should point to 2. bottom 1/3 should point to 3 and middle should point to 0.
-                    pointer_activeW_ravelW = int(ebw_ravel_idx / len_active_w)
-                    #now lets update the heaviest and lightest. Because we only want to use 10%.
-                    # todo not sure this is flexible enough to handle changing number of start w.
-                    #set all the heaviest and lightest to 999
-                    pointer_activeW_ravelW[pointer_activeW_ravelW=1] = 999
-                    pointer_activeW_ravelW[pointer_activeW_ravelW=2] = 999
-                    #now update so that only the heaviest 10% are included in the pointer
-                    pointer_activeW_ravelW[mask_ebw_ravel_top10]=1
-                    pointer_activeW_ravelW[mask_ebw_ravel_bottom10]=2
-
-                    pointer_activeW_ravelW = np.fulllike(ebw_ravel.shape,999)
+                #todo test with and without include_prejoin_average_pa1e1b1nwzida0e0b0xyg1 to see how important.
+                if np.any(np.logical_or(np.logical_or(period_is_condense_pa1e1b1nwzida0e0b0xyg1[p + 1], period_is_startseason_pa1e1b1nwzida0e0b0xyg[p + 1]),
+                                        period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p + 1])):
+                    startw_unique_next = w_start_len1 * (n_fs_dams ** n_prior_fvps_pa1e1b1nwzida0e0b0xyg1[p+1])
+                    
+                    pointers_dams = sfun.f1_collapse(ebw_dams, startw_unique_next, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p + 1], period_is_startseason_pa1e1b1nwzida0e0b0xyg[p + 1],
+                               lw_initial_a1e1b1nwzida0e0b0xyg1, period_is_prejoin=period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p + 1], prejoin_tup=prejoin_tup, mortality_mask=mort_mask_dams)
 
 
-                else:
-                    weight_ebg=fun.f_weighted_average(ebw_dams, numbers_dams, condense_tup, keepdims=True, non_zero=True)
-                    idx_w = arg_sort(weight_ebg, w_pos) #rank which w slice is heaviest to lightest. if animals have the same weight they need to have the same index
-                    len_active_w = count(unique(idx_w,w_pos)) #count how many different weight animals across w axis
+                    #todo delete this. This is just a temp test. This is too simple because need to know which axes to average across...
+                    def grouped_mean(labels, values, mean_axes, w_pos):
+                        labels = np.asarray(labels)
+                        values = np.asarray(values)
 
-                    ebw_ravel = ebw_dams.ravel(axes+w_pos)
-                    ebw_ravel_idx = arg_sort(ebw_ravel, ravel_axis_pos)
-                    #create association between the ravels value and the active w ie if there are 81 w slices but only 3 active w then we need to group ebw_ravel into 3.
-                    pointer_activeW_ravelW =int(ebw_ravel_idx/len_active_w)
-                    pointer_activeW = unravel(pointer_activeW_ravelW)
+                        w_pos %= values.ndim
+                        if isinstance(mean_axes, int):
+                            mean_axes = (mean_axes,)
+                        mean_axes = tuple(ax % values.ndim for ax in mean_axes)
 
+                        J = values.shape[w_pos]
 
-                #example application - this takes the origional production param and averages the relevant slices to create new array.
-                for i in pointer_activeW:
-                    new_muscle_condensed_dams[i] = np.averageif(muscle_condensed_dams, pointer_activeW==i)
+                        # create broadcastable index array [0..J-1] along bucket axis
+                        idx = np.arange(J)
+                        shape = [1] * values.ndim
+                        shape[w_pos] = J
+                        idx = idx.reshape(shape)
 
-                
-                
-                # Prototype replacement for condense + period_start_prod (test-only, not wired into downstream state yet).
-                # UNSURE: whether this should use `numbers_end_dams` or `numbers_start_dams` for weighting.
-                # UNSURE: whether prejoin averaging should always use `include_prejoin_average` gate.
-                # UNSURE: whether the "top/bottom 10%" special handling should be retained during condense events.
-                startseason_now = np.any(period_is_startseason_pa1e1b1nwzida0e0b0xyg[p + 1])
-                prejoin_now = np.any(
-                    period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p + 1]
-                    * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p + 1]
-                )
-                condense_now = np.any(period_is_condense_pa1e1b1nwzida0e0b0xyg1[p + 1])
+                        mask = labels == idx
 
-                condense_axes = []
-                if startseason_now:
-                    condense_axes.extend(season_tup)
-                if prejoin_now:
-                    condense_axes.extend(prejoin_tup)
-                condense_tup = tuple(sorted(set(condense_axes)))
+                        sums = np.where(mask, values, 0).sum(axis=mean_axes)
+                        counts = mask.sum(axis=mean_axes)
 
-                # Build mapping from full w slices to active w groups.
-                # At condense: map all w to nearest starting-w anchor; otherwise identity map.
-                mean_axes_lw = tuple(ax for ax in range(lw_initial_a1e1b1nwzida0e0b0xyg1.ndim) if ax != w_pos)
-                lw_profile_w = np.mean(lw_initial_a1e1b1nwzida0e0b0xyg1, axis=mean_axes_lw)
-                if condense_now:
-                    n_anchor = max(1, w_start_len1)
-                    stride = max(1, int(np.floor(len_w1 / n_anchor)))
-                    anchor_idx = np.arange(0, len_w1, stride, dtype=np.int32)[:n_anchor]
-                    anchor_lw = lw_profile_w[anchor_idx]
-                    pointer_activeW_w = np.argmin(np.abs(lw_profile_w[:, na] - anchor_lw[na, :]), axis=1).astype(np.int32)
-                else:
-                    pointer_activeW_w = np.arange(len_w1, dtype=np.int32)
+                        out = sums / counts
+                        out[counts == 0] = np.nan
+                        return out
 
-                def _prototype_group_weighted_average(prod, weights, pointer_w, axes_to_avg):
-                    """Apply w-group mapping, then weighted-average selected non-w axes, and broadcast back."""
-                    prod_w = np.moveaxis(prod, w_pos, 0)
-                    wt_w = np.moveaxis(weights, w_pos, 0)
-                    out_w = np.zeros_like(prod_w)
-                    n_groups = int(np.max(pointer_w)) + 1 if pointer_w.size else 0
-
-                    for group_idx in range(n_groups):
-                        mask_group = pointer_w == group_idx
-                        if not np.any(mask_group):
-                            continue
-                        num = np.sum(prod_w[mask_group, ...] * wt_w[mask_group, ...], axis=0)
-                        den = np.sum(wt_w[mask_group, ...], axis=0)
-                        avg = np.divide(num, den, out=np.zeros_like(num), where=den > 0)
-                        out_w[mask_group, ...] = avg
-
-                    if axes_to_avg:
-                        moved_axes = tuple(sorted(ax + 1 if ax < w_pos else ax for ax in axes_to_avg if ax != w_pos))
-                        if moved_axes:
-                            num = np.sum(out_w * wt_w, axis=moved_axes, keepdims=True)
-                            den = np.sum(wt_w, axis=moved_axes, keepdims=True)
-                            avg = np.divide(num, den, out=np.zeros_like(num), where=den > 0)
-                            out_w = np.broadcast_to(avg, out_w.shape).copy()
-
-                    return np.moveaxis(out_w, 0, w_pos)
-
-                prototype_weight_source_dams = numbers_end_dams
-                pointer_activeW_ravelW = pointer_activeW_w.copy()
-
-                # Example prototype outputs for review/debug.
-                ebw_condensed_dams_prototype = _prototype_group_weighted_average(
-                    ebw_dams, prototype_weight_source_dams, pointer_activeW_w, condense_tup
-                )
-                muscle_condensed_dams_prototype = _prototype_group_weighted_average(
-                    muscle_dams, prototype_weight_source_dams, pointer_activeW_w, condense_tup
-                )
-
-
-
-
-
+                    grouped_mean(pointers_dams, ebw_dams, b1_pos, w_pos)
 
 
 
