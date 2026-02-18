@@ -137,6 +137,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ## calculate masks                #
     ###################################
     mort_flag_dams = True
+    mort_flag_offs = True
     ##select which breeds are included
     i_g3_inc = pinp.sheep['i_g3_inc']
     ##if generating for stubble then overwrite genotype selection
@@ -6181,14 +6182,16 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 mort_mask_offs = surv_offs >= threshold
 
                 ###print warning if min mort is greater than 10% since the previous condense
+                min_mort = 1 - np.max(surv_offs, axis=w_pos)
+                ####only use the retained t slice because if there is a dvp that spans two fvp and the animal is sold in
+                #### the first fvp then the fs may not be good in the second fvp (because the w are clustered e.g. w9 is high fs in the first fvp followed by medium)
+                if len_gen_t3 > 1:
+                    min_mort = min_mort[0]
+                if np.any(min_mort > 0.1):
+                    print('WARNING: HIGH MORTALITY OFFS: period ', p)
+                    mort_flag_offs = False
                 if np.any(period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1]):
-                    min_mort = 1 - np.max(surv_offs, axis=w_pos)
-                    ####only use the retained t slice because if there is a dvp that spans two fvp and the animal is sold in
-                    #### the first fvp then the fs may not be good in the second fvp (because the w are clustered e.g. w9 is high fs in the first fvp followed by medium)
-                    if len_gen_t3 > 1:
-                        min_mort = min_mort[0]
-                    if np.any(min_mort > 0.1):
-                        print('WARNING: HIGH MORTALITY OFFS: period ', p)
+                    mort_flag_offs = True
 
                 ###combine mort and feedlot mask - True means the w slice is included in condensing.
                 condense_w_mask_offs = np.logical_and(no_confinement_offs, mort_mask_offs)
