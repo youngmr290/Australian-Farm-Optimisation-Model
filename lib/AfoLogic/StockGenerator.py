@@ -136,6 +136,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ###################################
     ## calculate masks                #
     ###################################
+    mort_flag_dams = True
     ##select which breeds are included
     i_g3_inc = pinp.sheep['i_g3_inc']
     ##if generating for stubble then overwrite genotype selection
@@ -5993,13 +5994,15 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 ###print warning if min mort is greater than 10% since the previous condense
                 ###this is to ensure we are condensing to an animal that the lp will select (ie not point having an animal that has more than 10% mort)
                 ### Note 1: if ewe lambs FS is not set up for mating and it is estimated that ewe lambs are mated then a warning is likely to be triggered. No warning will be triggered if estimate mating propn is 0 because only a very small number of animals will be in the mated b slices and therefore because the b axis is summed to build surv_dams mort won't be significantly effected by them.
+                min_mort = 1 - np.max(surv_dams, axis=w_pos)
+                ####only use the retained t slice (animals that have multiple fvps per dvp and are sold in the first fvp only get medium fs in following fvps due to lw clustering e.g. w9 is high-medium-medium, so this can trigger unwanted mort warning)
+                if len_gen_t1 > 1:
+                    min_mort = min_mort[a_t_g1]
+                if np.any(min_mort > 0.1) and mort_flag_dams:
+                    print('WARNING: HIGH MORTALITY DAMS: period ', p)
+                    mort_flag_dams = False
                 if np.any(period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]):
-                    min_mort = 1 - np.max(surv_dams, axis=w_pos)
-                    ####only use the retained t slice (animals that have multiple fvps per dvp and are sold in the first fvp only get medium fs in following fvps due to lw clustering e.g. w9 is high-medium-medium, so this can trigger unwanted mort warning)
-                    if len_gen_t1 > 1:
-                        min_mort = min_mort[a_t_g1]
-                    if np.any(min_mort > 0.1):
-                        print('WARNING: HIGH MORTALITY DAMS: period ', p)
+                    mort_flag_dams = True
 
                 ###combine mort and feedlot mask  - True means the w slice is included in condensing. Currently dams
                 ### that go into the feedlot are used to create condensed animal because it is common to feedlot/confine retained dams at the start of the season.
