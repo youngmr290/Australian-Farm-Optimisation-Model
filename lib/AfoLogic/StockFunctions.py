@@ -3111,6 +3111,44 @@ def f1_period_start_prod(numbers, var, b1_pos, p_pos, w_pos, prejoin_tup, z_pos,
     return var_start
 
 
+def f1_period_start_prod2(pointers, var, p_pos, w_pos, prejoin_tup, period_is_startseason,
+                          period_is_condense, period_is_prejoin=0, stub_lw_idx=np.array(np.nan),
+                          len_gen_t=1, a_t_g=0, period_is_startdvp=False):
+    '''
+    Adjust production for next period.
+
+    1. rest sale t slices
+    2. create new animal after collapsing/condensing. At prejoining the b, e, a axes are collapsed.
+       At condensing the w axis is collapsed back to the start w. At season start the z axis is collapsed back.
+
+    An extra step occurs if generating for stubble. For stubble the function selects the starting animal for the
+    next period based on animal liveweight compare to the stubble trial. The animals that have the closest lw
+    to the paddock trial become the starting animals next period.
+    '''
+    ##Set variable level = value at end of previous
+    var_start = var
+
+    ##for stubble index the w axis to make the starting animal for the next period
+    #if generating for stubble then no collapse
+    if np.all(np.logical_not(np.isnan(stub_lw_idx))):
+        var_start[...] = np.take_along_axis(var_start, stub_lw_idx, w_pos)
+        return var_start
+
+
+    ##a)if generating with t axis reset the sale slices to the retained slice at the start of each dvp
+    if np.any(period_is_startdvp) and len_gen_t > 1:
+        a_t_g = np.broadcast_to(a_t_g, var_start.shape)
+        temporary = np.take_along_axis(var_start, a_t_g, axis=p_pos)  # t is in the p pos
+        var_start = fun.f_update(var_start, temporary, period_is_startdvp)
+
+    ##b)collapse axes for new starting animal
+    if np.any(np.logical_or(np.logical_or(period_is_startseason, period_is_prejoin), period_is_condense)):
+        var_start = f1_collapse(pointers, var_start, period_is_condense, period_is_startseason,
+                          period_is_prejoin, prejoin_tup)
+
+    return var_start
+
+
 def f1_season_wa(numbers, var, season, mask_min_lw_wz, mask_min_wa_lw_w, mask_max_lw_wz, mask_max_wa_lw_w, period_is_startseason):
     '''
     Perform weighted average across seasons, at the beginning of each season, so all seasons start from a common place.
@@ -3281,8 +3319,8 @@ def f1_condensed(var, lw_idx, condense_w_mask, i_n_len, i_w_len, n_pos, w_pos, i
     return var
 
 
-def f1_collapse(ebw, startw_unique_next, period_is_condense, preiod_is_seasonstart, lw_initial_a1e1b1nwzida0e0b0xyg,
-                period_is_prejoin=False, prejoin_tup=None, mortality_mask=0):
+def f1_collapse_pointers(ebw, startw_unique_next, period_is_condense, preiod_is_seasonstart, lw_initial_a1e1b1nwzida0e0b0xyg,
+                period_is_prejoin=False, prejoin_tup=None, inc_mask=True):
     '''
     This function is called when axes need collapsing from one period to the next.
     The periods that require collapsing and the axes to collapse are:
@@ -3302,6 +3340,9 @@ def f1_collapse(ebw, startw_unique_next, period_is_condense, preiod_is_seasonsta
     to represent in the next period. The w axis is always included even if the number of w in the next period is
     the same as the number of w in this period.
     '''
+    #todo replace this with MRY method. And update highest/lowest condense animal with highest and lowest start animal with mort less than 10%
+
+    #todo add option for condense to not be at SS or PJ. think this just requireds adding a 4th update (it needs to be first, part A is correct though)
 
     w_pos = sinp.stock['i_w_pos']
     z_pos = sinp.stock['i_z_pos']
@@ -3323,7 +3364,7 @@ def f1_collapse(ebw, startw_unique_next, period_is_condense, preiod_is_seasonsta
     t_target_percentiles[tuple(slc2)] = t_target_percentiles[
                                             tuple(slc2)] / 2  # quarter the calculated value (eg 33 would become 8.25)
     tolerance = t_target_percentiles[tuple(slc2)]
-
+    tolerance[...]=12
     # arrange the percentiles in the order required for the w axis
     ##There are 2 options:
     # 1. w has been collapsed because period_is_condense & the order is determined from inputs in Structural.xls
@@ -3348,7 +3389,7 @@ def f1_collapse(ebw, startw_unique_next, period_is_condense, preiod_is_seasonsta
 
     # identify the eligible animals for the selection of the starting animals
     ##criteria can be changed, currently it is mortality < 10%. Ineligible animals are nan.
-    ebw_masked = np.where(mortality_mask, ebw, np.nan)
+    ebw_masked = np.where(inc_mask, ebw, np.nan)
 
     '''
     Part B
@@ -3392,6 +3433,59 @@ def f1_collapse(ebw, startw_unique_next, period_is_condense, preiod_is_seasonsta
                             np.logical_not(np.logical_or(np.logical_or(period_is_prejoin, preiod_is_seasonstart), period_is_condense)))
 
     return pointers
+
+
+def f1_collapse(pointers, prod, period_is_condense, preiod_is_seasonstart, period_is_prejoin=False, prejoin_tup=None):
+    z_pos = sinp.stock['i_z_pos']
+
+    #todo can we achieve without w by w???
+    def f1_mean(mean_axes):
+        w_pos = sinp.stock['i_w_pos']
+        w_pos %= prod.ndim
+
+        if isinstance(mean_axes, int):
+            mean_axes = (mean_axes,)
+        mean_axes = tuple(ax % prod.ndim for ax in mean_axes)
+
+        # ensure original w axis is reduced (replaced by J)
+        if w_pos not in mean_axes:
+            mean_axes = mean_axes + (w_pos,)
+
+        J = prod.shape[w_pos]
+        idx = np.arange(J)
+
+        mask = (pointers[..., None] == idx)
+
+        # keepdims=True preserves dimensionality
+        sums = np.where(mask, prod[..., None], 0.0).sum(axis=mean_axes, keepdims=True)
+        counts = mask.sum(axis=mean_axes, keepdims=True)
+
+        out = fun.f_divide(sums, counts)
+        out = out.astype(float, copy=False)
+        out[counts == 0] = 0
+
+        # drop the old w axis (it is size 1 because keepdims=True)
+        out = np.squeeze(out, axis=w_pos)
+
+        # replace the reduced w axis with the bucket axis
+        out = np.moveaxis(out, -1, w_pos)
+
+        return out
+
+    condensed_prod_season = f1_mean(z_pos)
+    condensed_prod_prejoin = f1_mean(prejoin_tup)
+    condensed_prod_prejoinseason = f1_mean((z_pos,) + prejoin_tup)
+
+    condensed_prod = fun.f_update(condensed_prod_season, condensed_prod_prejoin,
+                                  period_is_prejoin)
+    condensed_prod = fun.f_update(condensed_prod, condensed_prod_prejoinseason,
+                                  np.logical_and(period_is_prejoin, preiod_is_seasonstart))
+
+    # step 5: update prod if condensing/seasonstart/prejoing
+    prod = fun.f_update(prod, condensed_prod, np.logical_or(np.logical_or(
+        period_is_prejoin, preiod_is_seasonstart), period_is_condense))
+
+    return prod
 
 def f1_adjust_pkl_condensed_axis_len(temporary, i_w_len, i_t_len):
     ####handle when the current trial has a different number of w slices than the create trial
@@ -4545,7 +4639,7 @@ def f1_cum_sum_dvp(arr,dvp_pointer,axis=0,shift=0):
     return final
 
 
-def f1_lw_distribution(ffcfw_dest_w8g, ffcfw_source_w8g, mask_dest_wg=1, index_w8=None, dvp_type_next_tvgw=0, vtype=0, for_feedsupply=False): #, w_pos, i_n_len, i_n_fvp_period, dvp_type_next_tvgw=0, vtype=0):
+def f1_lw_distribution(ffcfw_dest_w8g, ffcfw_source_w8g, mask_dest_wg=1, index_w8=None, mask_update_dist=True, for_feedsupply=False): #, w_pos, i_n_len, i_n_fvp_period, dvp_type_next_tvgw=0, vtype=0):
     """Distribute animals between periods when the animals are changing on the period junction. This change can
     be either 1. condensing at prejoining when animals are 'condensed' from the final number of LW profiles back to
     the initial number or 2. averaging animals at season start when weights at the end of all the seasons are
@@ -4686,7 +4780,7 @@ def f1_lw_distribution(ffcfw_dest_w8g, ffcfw_source_w8g, mask_dest_wg=1, index_w
         t_distribution_w8gw9[..., 0] = 1
 
     ##Set defaults for DVPs that don’t require distributing to 1 (these are masked later to remove those that are not required)
-    distribution_w8gw9 = fun.f_update(t_distribution_w8gw9, np.array([1],dtype='float32'), dvp_type_next_tvgw!=vtype) #make '1' a numpy array so it can be float32 to make f_update more data efficient.
+    distribution_w8gw9 = fun.f_update(np.array([1], dtype='float32'), t_distribution_w8gw9, mask_update_dist) #make '1' a numpy array so it can be float32 to make f_update more data efficient.
     return distribution_w8gw9
 
 

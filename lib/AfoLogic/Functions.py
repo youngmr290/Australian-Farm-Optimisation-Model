@@ -157,7 +157,12 @@ def f1_percentile_over_axes(arr, axes, ascending=True):
         rank[nan_mask] = np.nan
 
     # ---- convert rank to percentile_rank ----
-    percentile_flat = rank / (count - 1) * 100
+    denom = (count - 1).astype(float)
+    ok = count > 1
+    percentile_flat = np.full(rank.shape, np.nan, dtype=float)
+    np.divide(rank, denom, out=percentile_flat, where=ok)  # only divides where ok is True
+    percentile_flat *= 100.0
+
 
     # reshape back
     percentile = percentile_flat.reshape(*rest_shape, *packed_shape)
