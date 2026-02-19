@@ -171,7 +171,89 @@ def f1_percentile_over_axes(arr, axes, ascending=True):
     return percentile
 
 
+def f1_percentile_weighted(values, weights, axes):
+    """
+    Compute weighted percentile rank within slices defined by packing `axes`.
 
+    Invalid entries (NaN values, NaN weights, or weights <= 0) are excluded
+    from ranking and returned as NaN in the percentile array.
+
+    Weighted percentile rank definition:
+        (cumulative_weight - weight) / (total_weight - weight) * 100
+
+    Parameters
+    ----------
+    values : array_like
+        Input array to rank
+    weights : array_like
+        Weights corresponding to each value (same shape as values)
+    axes : int or tuple of ints
+        Axis or axes along which to compute percentile ranks
+
+    Returns
+    -------
+    percentile : ndarray[float]
+        Same shape as values.
+        ~100 is the highest value and ~0 is the lowest value in the packed axes, based on average weighted position.
+        Percentile is the centre of the weighting for the animal
+        NaN where values/weights are invalid or slice has no valid entries.
+    """
+    values = np.asarray(values)
+    weights = np.asarray(weights)
+
+    # Normalize axes to handle negative indices
+    axes = tuple(a % values.ndim for a in np.atleast_1d(axes))
+    k = len(axes)
+
+    # Move packed axes to end
+    values_moved = np.moveaxis(values, axes, range(values.ndim - k, values.ndim))
+    weights_moved = np.moveaxis(weights, axes, range(weights.ndim - k, weights.ndim))
+
+    rest_shape = values_moved.shape[:-k]
+    packed_shape = values_moved.shape[-k:]
+    n = int(np.prod(packed_shape))
+
+    # Flatten packed dimensions
+    values_flat = values_moved.reshape(*rest_shape, n)
+    weights_flat = weights_moved.reshape(*rest_shape, n)
+
+    # Valid entries mask and replace invalid values (inf) and weights (0)
+    valid = (np.isfinite(values_flat) & np.isfinite(weights_flat) & (weights_flat > 0))
+    sort_values = np.where(valid, values_flat, np.inf)
+    sort_weights = np.where(valid, weights_flat, 0.0)
+
+    # argsort values along packed axis
+    order = np.argsort(sort_values, axis=-1)
+
+    # reorder weights
+    sorted_weights = np.take_along_axis(sort_weights, order, axis=-1)
+
+    # cumulative weights
+    cum_weights = np.cumsum(sorted_weights, axis=-1)
+
+    # total weights (with keepdims for broadcasting). Note: same as np.sum(weights, axis=-1, keepdims) but more efficient
+    total_weights = cum_weights[..., -1:]
+    total_weights_safe = np.where(total_weights > 0, total_weights, np.nan)  # Avoid divide-by-zero safely
+
+    # compute percentile in sorted order
+    # Handle edge case where only one valid entry exists
+    has_multiple = total_weights_safe > sorted_weights
+    percentile_sorted = np.where(has_multiple
+                                , (cum_weights - sorted_weights/2) / (total_weights_safe) * 100.0
+                                , np.nan)
+
+    # unsort back to original order
+    inverse_order = np.argsort(order, axis=-1)
+    percentile_flat = np.take_along_axis(percentile_sorted, inverse_order, axis=-1)
+
+    # restore NaNs for invalid positions
+    percentile_flat = np.where(valid, percentile_flat, np.nan)
+
+    # Reshape and Move axes back to original positions
+    percentile = percentile_flat.reshape(*rest_shape, *packed_shape)
+    percentile = np.moveaxis(percentile, range(values.ndim - k, values.ndim), axes)
+
+    return percentile
 #
 def f_expand(array, left_pos=0, swap=False, ax1=0, ax2=1, right_pos=0, left_pos2=0, right_pos2=0
                      , left_pos3=0, right_pos3=0, condition = None, axis = 0, swap2=False, ax1_2=1, ax2_2=2,

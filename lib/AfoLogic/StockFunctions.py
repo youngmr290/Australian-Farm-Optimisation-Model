@@ -3319,7 +3319,7 @@ def f1_condensed(var, lw_idx, condense_w_mask, i_n_len, i_w_len, n_pos, w_pos, i
     return var
 
 
-def f1_collapse_pointers(ebw, startw_unique_next, period_is_condense, period_is_seasonstart, lw_initial_a1e1b1nwzida0e0b0xyg,
+def f1_collapse_pointers(ebw, numbers, startw_unique_next, period_is_condense, period_is_seasonstart, lw_initial_a1e1b1nwzida0e0b0xyg,
                 period_is_prejoin=False, prejoin_tup=None, inc_mask=True):
     '''
     This function is called when axes need collapsing from one period to the next.
@@ -3409,9 +3409,9 @@ def f1_collapse_pointers(ebw, startw_unique_next, period_is_condense, period_is_
     '''
 
     # Step 1: compute percentile rank (0 to 100)
-    percentile_rank_season = fun.f1_percentile_over_axes(ebw_masked, (w_pos,) + (z_pos,))
-    percentile_rank_prejoin = fun.f1_percentile_over_axes(ebw_masked, (w_pos,) + prejoin_tup)
-    percentile_rank_prejoinseason = fun.f1_percentile_over_axes(ebw_masked, (w_pos,) + (z_pos,) + prejoin_tup)
+    percentile_rank_season = fun.f1_percentile_weighted(ebw_masked, numbers, (w_pos,) + (z_pos,))
+    percentile_rank_prejoin = fun.f1_percentile_weighted(ebw_masked, numbers, (w_pos,) + prejoin_tup)
+    percentile_rank_prejoinseason = fun.f1_percentile_weighted(ebw_masked, numbers, (w_pos,) + (z_pos,) + prejoin_tup)
 
     percentile_rank = fun.f_update(percentile_rank_season, percentile_rank_prejoin, period_is_prejoin)
     percentile_rank = fun.f_update(percentile_rank, percentile_rank_prejoinseason,
