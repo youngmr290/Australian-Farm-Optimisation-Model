@@ -6298,7 +6298,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                         period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p + 1])):
                     startw_unique_next = w_start_len1 * (n_fs_dams ** n_prior_fvps_pa1e1b1nwzida0e0b0xyg1[p+1])
                     
-                    pointers_dams = sfun.f1_collapse_pointers(ebw_dams, numbers_start_dams, startw_unique_next,
+                    pointers_dams = sfun.f1_collapse_pointers(ebw_dams, numbers_end_dams, startw_unique_next,
                                                               period_is_condense_pa1e1b1nwzida0e0b0xyg1[p + 1],
                                                               period_is_startseason_pa1e1b1nwzida0e0b0xyg[p + 1],
                                                               lw_initial_a1e1b1nwzida0e0b0xyg1, period_is_prejoin=
@@ -6307,9 +6307,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                                               prejoin_tup=prejoin_tup)
 
                     #store for lw dist
-                    o_ebw_lw_dist_tpdams[:,p] = sfun.f1_collapse(pointers_dams, ebw_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p + 1],
-                         period_is_startseason_pa1e1b1nwzida0e0b0xyg[p + 1],
-                         period_is_prejoin=period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p + 1] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1], prejoin_tup=prejoin_tup)
+                    o_ebw_lw_dist_tpdams[:,p] = sfun.f1_collapse(pointers_dams, ebw_dams, numbers_end_dams,
+                         period_is_condense_pa1e1b1nwzida0e0b0xyg1[p + 1],period_is_startseason_pa1e1b1nwzida0e0b0xyg[p + 1],
+                         period_is_prejoin=period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p + 1] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1],
+                         prejoin_tup=prejoin_tup)
 
                 else:
                     pointers_dams = np.array([np.nan]) #empty array so f_start_prod still works in the early periods.
@@ -6462,138 +6463,138 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
             ###dams
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                 ###EBW (start - empty body weight)
-                ebw_start_dams = sfun.f1_period_start_prod2(pointers_dams, ebw_dams, p_pos, w_pos, prejoin_tup
+                ebw_start_dams = sfun.f1_period_start_prod2(pointers_dams, ebw_dams, numbers_end_dams, p_pos, w_pos, prejoin_tup
                     , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p + 1]
                     , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1]
                     , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1, period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###normal weight	- yes this is meant to be updated from nw_start
-                nw_start_dams = sfun.f1_period_start_prod2(pointers_dams, nw_start_dams, p_pos, w_pos, prejoin_tup
+                nw_start_dams = sfun.f1_period_start_prod2(pointers_dams, nw_start_dams, numbers_end_dams, p_pos, w_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p + 1]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
                                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###EBW maximum to date
-                ebw_max_start_dams = sfun.f1_period_start_prod2(pointers_dams, ebw_max_dams, p_pos, w_pos, prejoin_tup
+                ebw_max_start_dams = sfun.f1_period_start_prod2(pointers_dams, ebw_max_dams,numbers_end_dams, p_pos, w_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p + 1]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
                                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Weight of fat (start)
-                fat_start_dams = sfun.f1_period_start_prod2(pointers_dams, fat_dams, p_pos, w_pos, prejoin_tup
+                fat_start_dams = sfun.f1_period_start_prod2(pointers_dams, fat_dams, numbers_end_dams, p_pos, w_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p + 1]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
                                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Weight of muscle (start)
-                muscle_start_dams = sfun.f1_period_start_prod2(pointers_dams, muscle_dams, p_pos, w_pos, prejoin_tup
+                muscle_start_dams = sfun.f1_period_start_prod2(pointers_dams, muscle_dams, numbers_end_dams, p_pos, w_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p + 1]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
                                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Weight of viscera (start)
-                viscera_start_dams = sfun.f1_period_start_prod2(pointers_dams, viscera_dams, p_pos, w_pos, prejoin_tup
+                viscera_start_dams = sfun.f1_period_start_prod2(pointers_dams, viscera_dams, numbers_end_dams, p_pos, w_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p + 1]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
                                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Energy in the foetus (start)
-                c_start_dams = sfun.f1_period_start_prod2(pointers_dams, c_dams, p_pos, w_pos, prejoin_tup
+                c_start_dams = sfun.f1_period_start_prod2(pointers_dams, c_dams, numbers_end_dams, p_pos, w_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p + 1]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
                                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Clean fleece weight (start)
-                cfw_start_dams = sfun.f1_period_start_prod2(pointers_dams, cfw_dams, p_pos, w_pos, prejoin_tup
+                cfw_start_dams = sfun.f1_period_start_prod2(pointers_dams, cfw_dams, numbers_end_dams, p_pos, w_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p + 1]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
                                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Clean fleece weight (start)
-                d_cfw_history_start_p2g1 = sfun.f1_period_start_prod2(pointers_dams[na,...], d_cfw_history_dams_p2, p_pos, w_pos, prejoin_tup
+                d_cfw_history_start_p2g1 = sfun.f1_period_start_prod2(pointers_dams[na,...], d_cfw_history_dams_p2, numbers_end_dams[na,...], p_pos, w_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p + 1]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1]
                                         , stub_lw_idx=stub_lw_idx_dams[na,...], len_gen_t=len_gen_t1, a_t_g=a_t_g1
                                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Fibre length since shearing (start)
-                fl_start_dams = sfun.f1_period_start_prod2(pointers_dams, fl_dams, p_pos, w_pos, prejoin_tup
+                fl_start_dams = sfun.f1_period_start_prod2(pointers_dams, fl_dams, numbers_end_dams, p_pos, w_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p + 1]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
                                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Average FD since shearing (start)
-                fd_start_dams = sfun.f1_period_start_prod2(pointers_dams, fd_dams, p_pos, w_pos, prejoin_tup
+                fd_start_dams = sfun.f1_period_start_prod2(pointers_dams, fd_dams, numbers_end_dams, p_pos, w_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p + 1]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
                                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Minimum FD since shearing (start)
-                fd_min_start_dams = sfun.f1_period_start_prod2(pointers_dams, fd_min_dams, p_pos, w_pos, prejoin_tup
+                fd_min_start_dams = sfun.f1_period_start_prod2(pointers_dams, fd_min_dams, numbers_end_dams, p_pos, w_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p + 1]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
                                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Lagged DR (lactation deficit)
-                ldr_start_dams = sfun.f1_period_start_prod2(pointers_dams, ldr_dams, p_pos, w_pos, prejoin_tup
+                ldr_start_dams = sfun.f1_period_start_prod2(pointers_dams, ldr_dams, numbers_end_dams, p_pos, w_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p + 1]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
                                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Loss of potential milk due to consistent under production
-                lb_start_dams = sfun.f1_period_start_prod2(pointers_dams, lb_dams, p_pos, w_pos, prejoin_tup
+                lb_start_dams = sfun.f1_period_start_prod2(pointers_dams, lb_dams, numbers_end_dams, p_pos, w_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p + 1]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
                                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Loss of potential milk due to consistent under production
-                rc_birth_start_dams = sfun.f1_period_start_prod2(pointers_dams, rc_birth_dams, p_pos, w_pos, prejoin_tup
+                rc_birth_start_dams = sfun.f1_period_start_prod2(pointers_dams, rc_birth_dams, numbers_end_dams, p_pos, w_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p + 1]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
                                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Weight of foetus (start)
-                w_f_start_dams = sfun.f1_period_start_prod2(pointers_dams, w_f_dams, p_pos, w_pos, prejoin_tup
+                w_f_start_dams = sfun.f1_period_start_prod2(pointers_dams, w_f_dams, numbers_end_dams, p_pos, w_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p + 1]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
                                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Weight of gravid uterus (start)
-                guw_start_dams = sfun.f1_period_start_prod2(pointers_dams, guw_dams, p_pos, w_pos, prejoin_tup
+                guw_start_dams = sfun.f1_period_start_prod2(pointers_dams, guw_dams, numbers_end_dams, p_pos, w_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p + 1]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
                                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Normal weight of foetus (start)
-                nw_f_start_dams = sfun.f1_period_start_prod2(pointers_dams, nw_f_dams, p_pos, w_pos, prejoin_tup
+                nw_f_start_dams = sfun.f1_period_start_prod2(pointers_dams, nw_f_dams, numbers_end_dams, p_pos, w_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p + 1]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
                                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Birth weight carryover (running tally of foetal weight diff)
-                cf_w_b_start_dams = sfun.f1_period_start_prod2(pointers_dams, cf_w_b_dams, p_pos, w_pos, prejoin_tup
+                cf_w_b_start_dams = sfun.f1_period_start_prod2(pointers_dams, cf_w_b_dams, numbers_end_dams, p_pos, w_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p + 1]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
                                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###LTW CFW carryover (running tally of CFW diff)
-                cf_cfwltw_start_dams = sfun.f1_period_start_prod2(pointers_dams, cf_cfwltw_dams, p_pos, w_pos, prejoin_tup
+                cf_cfwltw_start_dams = sfun.f1_period_start_prod2(pointers_dams, cf_cfwltw_dams, numbers_end_dams, p_pos, w_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p + 1]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
                                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###LTW FD carryover (running tally of FD diff)
-                cf_fdltw_start_dams = sfun.f1_period_start_prod2(pointers_dams, cf_fdltw_dams, p_pos, w_pos, prejoin_tup
+                cf_fdltw_start_dams = sfun.f1_period_start_prod2(pointers_dams, cf_fdltw_dams, numbers_end_dams, p_pos, w_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p + 1]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
                                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ##dams LTW CFW (total adjustment, calculated at birth)
-                cfw_ltwadj_start_dams = sfun.f1_period_start_prod2(pointers_dams, cfw_ltwadj_dams, p_pos, w_pos, prejoin_tup
+                cfw_ltwadj_start_dams = sfun.f1_period_start_prod2(pointers_dams, cfw_ltwadj_dams, numbers_end_dams, p_pos, w_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p + 1]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
                                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ##dams LTW FD (total adjustment, calculated at birth)
-                fd_ltwadj_start_dams = sfun.f1_period_start_prod2(pointers_dams, fd_ltwadj_dams, p_pos, w_pos, prejoin_tup
+                fd_ltwadj_start_dams = sfun.f1_period_start_prod2(pointers_dams, fd_ltwadj_dams, numbers_end_dams, p_pos, w_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p + 1]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
@@ -6610,32 +6611,32 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 #                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
                 #                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Weaning weight carryover (running tally of foetal weight diff)
-                cf_w_w_start_dams = sfun.f1_period_start_prod2(pointers_dams, cf_w_w_dams, p_pos, w_pos, prejoin_tup
+                cf_w_w_start_dams = sfun.f1_period_start_prod2(pointers_dams, cf_w_w_dams, numbers_end_dams, p_pos, w_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p + 1]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
                                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Dam mortality carryover (running tally of coeff * dam LW change during pregnancy)
-                cf_mort_start_damsp1p2 = sfun.f1_period_start_prod2(pointers_dams[...,na,na], cf_mort_damsp1p2, p_pos-2, w_pos-2
+                cf_mort_start_damsp1p2 = sfun.f1_period_start_prod2(pointers_dams[...,na,na], cf_mort_damsp1p2, numbers_end_dams[...,na,na], p_pos-2, w_pos-2
                                         , tuple(x-2 for x in prejoin_tup)
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1,...,na,na], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p + 1,...,na,na]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1,...,na,na] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1,...,na,na]
                                         , stub_lw_idx=stub_lw_idx_dams[...,na,na], len_gen_t=len_gen_t1, a_t_g=a_t_g1
                                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1,...,na,na])
-                cf_lact_start_damsp1p2 = sfun.f1_period_start_prod2(pointers_dams[...,na,na], cf_lact_damsp1p2, p_pos-2, w_pos-2
+                cf_lact_start_damsp1p2 = sfun.f1_period_start_prod2(pointers_dams[...,na,na], cf_lact_damsp1p2, numbers_end_dams[...,na,na], p_pos-2, w_pos-2
                                         , tuple(x-2 for x in prejoin_tup)
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1,...,na,na], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p + 1,...,na,na]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1,...,na,na] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1,...,na,na]
                                         , stub_lw_idx=stub_lw_idx_dams[...,na,na], len_gen_t=len_gen_t1, a_t_g=a_t_g1
                                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1,...,na,na])
                 ###CS change carryover (running tally of dam CS change in late pregnancy)
-                cf_csc_start_dams = sfun.f1_period_start_prod2(pointers_dams, cf_csc_dams, p_pos, w_pos, prejoin_tup
+                cf_csc_start_dams = sfun.f1_period_start_prod2(pointers_dams, cf_csc_dams, numbers_end_dams, p_pos, w_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p + 1]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
                                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Average FOO during lactation (for weaning weight calculation)
-                foo_lact_ave_start = sfun.f1_period_start_prod2(pointers_dams, foo_lact_ave, p_pos, w_pos, prejoin_tup
+                foo_lact_ave_start = sfun.f1_period_start_prod2(pointers_dams, foo_lact_ave, numbers_end_dams, p_pos, w_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p + 1]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1

@@ -3111,7 +3111,7 @@ def f1_period_start_prod(numbers, var, b1_pos, p_pos, w_pos, prejoin_tup, z_pos,
     return var_start
 
 
-def f1_period_start_prod2(pointers, var, p_pos, w_pos, prejoin_tup, period_is_startseason,
+def f1_period_start_prod2(pointers, var, numbers, p_pos, w_pos, prejoin_tup, period_is_startseason,
                           period_is_condense, period_is_prejoin=0, stub_lw_idx=np.array(np.nan),
                           len_gen_t=1, a_t_g=0, period_is_startdvp=False):
     '''
@@ -3143,7 +3143,7 @@ def f1_period_start_prod2(pointers, var, p_pos, w_pos, prejoin_tup, period_is_st
 
     ##b)collapse axes for new starting animal
     if np.any(np.logical_or(np.logical_or(period_is_startseason, period_is_prejoin), period_is_condense)):
-        var_start = f1_collapse(pointers, var_start, period_is_condense, period_is_startseason,
+        var_start = f1_collapse(pointers, var_start, numbers, period_is_condense, period_is_startseason,
                           period_is_prejoin, prejoin_tup)
 
     return var_start
@@ -3449,11 +3449,11 @@ def f1_collapse_pointers(ebw, numbers, startw_unique_next, period_is_condense, p
     return pointers
 
 
-def f1_collapse(pointers, prod, period_is_condense, preiod_is_seasonstart, period_is_prejoin=False, prejoin_tup=None):
+def f1_collapse(pointers, prod, numbers, period_is_condense, period_is_seasonstart, period_is_prejoin=False, prejoin_tup=None):
     z_pos = sinp.stock['i_z_pos']
 
     #todo can we achieve without w by w???
-    def f1_mean(mean_axes):
+    def f1_mean(mean_axes, weights):
         w_pos = sinp.stock['i_w_pos']
         w_pos %= prod.ndim    #normalises position of w axis
 
@@ -3471,12 +3471,12 @@ def f1_collapse(pointers, prod, period_is_condense, preiod_is_seasonstart, perio
         mask = (pointers[..., None] == idx)
 
         # keepdims=True preserves dimensionality
-        sums = np.where(mask, prod[..., None], 0.0).sum(axis=mean_axes, keepdims=True)
-        counts = mask.sum(axis=mean_axes, keepdims=True)
+        sums = np.sum(np.where(mask, (prod * weights)[..., None], 0.0), axis=mean_axes, keepdims=True)
+        counts = np.sum(mask * weights[..., None], axis=mean_axes, keepdims=True)
 
-        out = fun.f_divide(sums, counts)
+        out = fun.f_divide(sums, counts, option=0)
         out = out.astype(float, copy=False)
-        out[counts == 0] = 0
+        # out[counts == 0] = 0
 
         # drop the old w axis (it is size 1 because keepdims=True)
         out = np.squeeze(out, axis=w_pos)
@@ -3486,18 +3486,17 @@ def f1_collapse(pointers, prod, period_is_condense, preiod_is_seasonstart, perio
 
         return out
 
-    condensed_prod_season = f1_mean(z_pos)
-    condensed_prod_prejoin = f1_mean(prejoin_tup)
-    condensed_prod_prejoinseason = f1_mean((z_pos,) + prejoin_tup)
+    condensed_prod_season = f1_mean(z_pos, numbers)
+    condensed_prod_prejoin = f1_mean(prejoin_tup, numbers)
+    condensed_prod_prejoinseason = f1_mean((z_pos,) + prejoin_tup, numbers)
 
-    condensed_prod = fun.f_update(condensed_prod_season, condensed_prod_prejoin,
-                                  period_is_prejoin)
+    condensed_prod = fun.f_update(condensed_prod_season, condensed_prod_prejoin, period_is_prejoin)
     condensed_prod = fun.f_update(condensed_prod, condensed_prod_prejoinseason,
-                                  np.logical_and(period_is_prejoin, preiod_is_seasonstart))
+                                  np.logical_and(period_is_prejoin, period_is_seasonstart))
 
-    # step 5: update prod if condensing/seasonstart/prejoing
-    prod = fun.f_update(prod, condensed_prod, np.logical_or(np.logical_or(
-        period_is_prejoin, preiod_is_seasonstart), period_is_condense))
+    # step 5: update prod if condensing/seasonstart/prejoining
+    prod = fun.f_update(prod, condensed_prod
+        , np.logical_or(np.logical_or(period_is_prejoin, period_is_seasonstart), period_is_condense))
 
     return prod
 
