@@ -173,7 +173,7 @@ def f1_percentile_over_axes(arr, axes, ascending=True):
 
 def f1_percentile_weighted(values, weights, axes):
     """
-    Compute weighted percentile rank within slices defined by packing `axes`.
+    Compute weighted percentile rank within slices defined by packing `axes` tuple.
 
     Invalid entries (NaN values, NaN weights, or weights <= 0) are excluded
     from ranking and returned as NaN in the percentile array.
@@ -188,14 +188,14 @@ def f1_percentile_weighted(values, weights, axes):
     weights : array_like
         Weights corresponding to each value (same shape as values)
     axes : int or tuple of ints
-        Axis or axes along which to compute percentile ranks
+        Axis or axes along which to compute percentile ranks. These are the axes being collapsed plus w
 
     Returns
     -------
     percentile : ndarray[float]
         Same shape as values.
         ~100 is the highest value and ~0 is the lowest value in the packed axes, based on average weighted position.
-        Percentile is the centre of the weighting for the animal
+        Percentile is the centre of the weighting for the animal, therefore not 0 to 100.
         NaN where values/weights are invalid or slice has no valid entries.
     """
     values = np.asarray(values)

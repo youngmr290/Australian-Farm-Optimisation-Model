@@ -3319,8 +3319,8 @@ def f1_condensed(var, lw_idx, condense_w_mask, i_n_len, i_w_len, n_pos, w_pos, i
     return var
 
 
-def f1_collapse_pointers(ebw, numbers, startw_unique_next, period_is_condense, period_is_seasonstart, lw_initial_a1e1b1nwzida0e0b0xyg,
-                period_is_prejoin=False, prejoin_tup=None, inc_mask=True):
+def f1_collapse_pointers(ebw, numbers, startw_unique_next, period_is_condense, period_is_seasonstart, 
+                lw_initial_a1e1b1nwzida0e0b0xyg, period_is_prejoin=False, prejoin_tup=None, inc_mask=True):
     '''
     This function is called when axes need collapsing from one period to the next.
     The periods that require collapsing and the axes to collapse are:
@@ -3328,44 +3328,121 @@ def f1_collapse_pointers(ebw, numbers, startw_unique_next, period_is_condense, p
     2. Season start: z
     3. Condense: w
     The function handles each individually or in combination and is controlled by the axes to be collapsed.
-
-    The function returns an array of pointers that can be used to create the production characteristics of the start animal.
-    The ebw of the start animals can then be used to calculate the distribution of animals from the end of one period
-    to the beginning of the next period.
-
-    The calculation in the function are based on target percentiles that reflect the spread of ebw across
-    the start weights in the next period.
+    The axes being collapsed define a group of animals that will be distributed to the starting aniamls
 
     The spread across the w axis and the other axes to be collapsed is used to determine the spread of animals
     to represent in the next period. The w axis is always included even if the number of w in the next period is
     the same as the number of w in this period.
+    
+    The function returns an array of pointers that can be used to create the production characteristics of the start animal.
+    The ebw of the start animals can then be used to calculate the distribution of animals from the end of one period
+    to the beginning of the next period.
+
+    There are 3 parts to the calculations in the function
+    Part A - calculate percentile rank within each collapsed group
+    Part B - calculate the target percentiles for the starting animals that reflect the spread of ebw across
+    the start weights in the next period.
+    Part C - Create pointers for entries in ebw that are within tolerance of the target percentiles.
+    The approach is to calculate the percentile for each weight in ebw and then test if it is within the
+    tolerance of any values in the target percentile array
+    #todo this approach which requires w by w array to be replaced with a searchsorted approach with 2w. See Debugging 3:pg 10
+
+    params ebw: ebw array with ineligible animals (mortality > threshold) set to nan
+    params numbers: the estimated number of animals (numbers_end) used to weight the percentiles
+    params startw_unique_next: the number of unique w in the next period. Note: unique w is reduced when condensing w.
+    lw_initial_a1e1b1nwzida0e0b0xyg: the target order of the weights when condensing w. 
+
+    Output:
+    pointers: an array of pointers to the position of this animal in the w axis of the target/collapsed animal. 
+              value is -1 if the animal is not contributing to a target animal
     '''
     #todo replace this with MRY method. And update highest/lowest condense animal with highest and lowest start animal with mort less than 10%
 
-    #todo add option for condense to not be at SS or PJ. think this just requireds adding a 4th update (it needs to be first, part A is correct though)
 
     w_pos = sinp.stock['i_w_pos']
     z_pos = sinp.stock['i_z_pos']
     len_w = ebw.shape[w_pos]
     index_wzida0e0b0xyg = fun.f_expand(np.arange(len_w), w_pos)
+    season_tup = (z_pos,)
+    prejoinseason_tup = season_tup + prejoin_tup
 
-    ##Create an array that is passing 1 to 1 for the number of unique w
-    index_unique_wzida0e0b0xyg = (index_wzida0e0b0xyg * startw_unique_next // len_w).astype(int)
+    ##########
+    # Part A #
+    ##########
+    
+    # identify the eligible animals for the selection of the starting animals
+    ##criteria can be changed, currently it is mortality < 10%. Ineligible animals are nan.
+    ebw_masked = np.where(inc_mask, ebw, np.nan)
 
-    # temporary version of percentiles in percentile order
-    ##set the range the percentiles should cover.
+    # Step 1: compute percentile rank weighted by numbers of animals in each collapsed axis (~0 to ~100)
+    percentile_rank_season = fun.f1_percentile_weighted(ebw_masked, numbers, (w_pos,) + season_tup)
+    percentile_rank_prejoin = fun.f1_percentile_weighted(ebw_masked, numbers, (w_pos,) + prejoin_tup)
+    percentile_rank_prejoinseason = fun.f1_percentile_weighted(ebw_masked, numbers, (w_pos,) + prejoinseason_tup)
+
+    percentile_rank = fun.f_update(percentile_rank_season, percentile_rank_prejoin, period_is_prejoin)
+    percentile_rank = fun.f_update(percentile_rank, percentile_rank_prejoinseason,
+                                   np.logical_and(period_is_prejoin, period_is_seasonstart))
+
+    # Step 2: remove the nan from rank and replace with -1
+    percentile_rank[np.isnan(percentile_rank)] = -1
+    
+    ##########
+    # Part B #
+    ##########
+
+    # temporary version of percentiles in descending numerical order
+    ## range in the percentile ranks because the percentiles don't cover the full range 0 to 100.
+    ## The range expands as the number of axes being collapsed increases
+    min_season = np.min(np.where(percentile_rank == -1, np.inf, percentile_rank), axis = season_tup, keepdims=True)
+    min_prejoin = np.min(np.where(percentile_rank == -1, np.inf, percentile_rank), axis = prejoin_tup, keepdims=True)
+    min_prejoinseason = np.min(np.where(percentile_rank == -1, np.inf, percentile_rank), axis = prejoinseason_tup, keepdims=True)
+    min = fun.f_update(min_season, min_prejoin, period_is_prejoin)
+    min = fun.f_update(min, min_prejoinseason, np.logical_and(period_is_prejoin, period_is_seasonstart))
+    max_season = np.max(np.where(percentile_rank == -1, -np.inf, percentile_rank), axis = season_tup, keepdims=True)
+    max_prejoin = np.max(np.where(percentile_rank == -1, -np.inf, percentile_rank), axis = prejoin_tup, keepdims=True)
+    max_prejoinseason = np.max(np.where(percentile_rank == -1, -np.inf, percentile_rank), axis = prejoinseason_tup, keepdims=True)
+    max = fun.f_update(max_season, max_prejoin, period_is_prejoin)
+    max = fun.f_update(max, max_prejoinseason, np.logical_and(period_is_prejoin, period_is_seasonstart))
+
+    ##space the percentiles across the range. Defined by an end gap and a step size
+    ### A simple calculation of the percentiles
+    ###           t_target_percentiles = (index_q + 0.5) / (startw_unique_next) * 100
+    ### spreads the targets evenly between 100 and 0, however, the aim is to increase the heavy end and reduce
+    ### the light end when there are increasing numbers of groups contributing to each start w, such as at condensing.
+    ### The number of groups contributing to each start w is represented in the ratio variable.
+    ### The calculations below calculate an end gap and a step size. The outcome would be the same as the simple
+    ### formula if the max and min were 100 and 0 and the ratio was 1.
+    ### The end gap is adjusted by the size of the axes being collapsed.
+    ### More and larger axes means a greater number of groups of animals contributing to each start animal
+    ### With more groups the end gap can be reduced and if passing 1 to 1 then the end gap is not reduced
+
+    ##Calculate the number of groups of animals that are being collapsed
+    #todo this isn't right because not all w slices are necessarily active (and ditto with the e & b axes for collapse at end of dvp0)
+    #need a unique w this or maybe some other way
+    n_groups_season = np.prod([ebw.shape[i] for i in (w_pos,) + season_tup])
+    n_groups_prejoin = np.prod([ebw.shape[i] for i in (w_pos,) + prejoin_tup])
+    n_groups_prejoinseason = np.prod([ebw.shape[i] for i in (w_pos,) + prejoinseason_tup])
+    ##update the number of groups based on the period
+    n_groups = 1    #only 1 group unless overwritten by being another period
+    n_groups = fun.f_update(n_groups, n_groups_season, period_is_seasonstart)
+    n_groups = fun.f_update(n_groups, n_groups_prejoin, period_is_prejoin)
+    n_groups = fun.f_update(n_groups, n_groups_prejoinseason, np.logical_and(period_is_prejoin, period_is_seasonstart))
+    ## calculate the ratio of the number of collapsed animals relative to the number of starting w
+    ratio = n_groups / startw_unique_next
+    ### Adjust the ratio to achieve the desire adjustment to the end gap, while ratio_adjusted = 1 when ratio == 1
+    adjuster = 25    #A lower value is a more extreme adjustment
+    ratio_adjusted = 1 + (ratio - 1) / adjuster
+
+    ##Calculate the end gap
+    end_gap = (max - min) / (2 * startw_unique_next * ratio_adjusted)
+    ##Calculate the step
+    percentile_step = ((max - min) - 2 * end_gap) / (startw_unique_next - 1)
     index_q = (index_wzida0e0b0xyg / len_w * startw_unique_next).astype(int)
     index_q = np.flip(index_q, w_pos)  # flip to get percentiles high weight to low weight.
-    t_target_percentiles = (index_q + 0.5) / (startw_unique_next) * 100
-    # Increase the spread of the lowest and highest percentile
-    slc1 = [slice(None)] * t_target_percentiles.ndim
-    slc1[w_pos] = slice(0, 1)
-    t_target_percentiles[tuple(slc1)] = (100 + t_target_percentiles[tuple(slc1)]) / 2  # halve the distance to 100 (eg 66 would become 91.75)
-    slc2 = [slice(None)] * t_target_percentiles.ndim
-    slc2[w_pos] = slice(-1, None)
-    t_target_percentiles[tuple(slc2)] /= 2  # halve the calculated value (eg w3: 16.7 would become 8.33)
-    tolerance = t_target_percentiles[tuple(slc2)]
-    tolerance[...]=12
+    t_target_percentiles = 100 - ((100 - max) + end_gap + (index_q + 0.5) * percentile_step)
+
+    tolerance = (100 - max) + end_gap + 0.5 * percentile_step
+
     # arrange the percentiles in the order required for the w axis
     ##There are 2 options:
     # 1. w has been collapsed because period_is_condense & the order is determined from inputs in Structural.xls
@@ -3385,40 +3462,13 @@ def f1_collapse_pointers(ebw, numbers, startw_unique_next, period_is_condense, p
     order = fun.f_update(order, order_condensed, period_is_condense)
 
     # create the target percentiles based on the required order
-    target_percentiles = np.take_along_axis(t_target_percentiles[None, ...], order, w_pos)  # add t axis
+    target_percentiles = np.take_along_axis(t_target_percentiles, order, w_pos)
 
-    # identify the eligible animals for the selection of the starting animals
-    ##criteria can be changed, currently it is mortality < 10%. Ineligible animals are nan.
-    ebw_masked = np.where(inc_mask, ebw, np.nan)
 
-    '''
-    Part B
-
-    Create pointers for entries in ebw that are within tolerance of the target percentiles.
-    The target percentiles are selected to represent the starting animals for the next period.
-    The approach is to calculate the percentile for each weight in ebw and then test if it is within the
-    tolerance of any values in the target percentile 1D array
-
-    params ebw: ebw array with ineligible animals (mortality > threshold) set to nan
-    params w_pos:
-    params target_percentile: a 1D array of the percentiles that represent the target animals
-    tolerance: the tolerance (in percentile points) to include animals in the definition of the target animal
-
-    Output:
-    pointers: an array of pointers to the target animal. value is -1 if the animal is not contributing to a target animal
-    '''
-
-    # Step 1: compute percentile rank (0 to 100)
-    percentile_rank_season = fun.f1_percentile_weighted(ebw_masked, numbers, (w_pos,) + (z_pos,))
-    percentile_rank_prejoin = fun.f1_percentile_weighted(ebw_masked, numbers, (w_pos,) + prejoin_tup)
-    percentile_rank_prejoinseason = fun.f1_percentile_weighted(ebw_masked, numbers, (w_pos,) + (z_pos,) + prejoin_tup)
-
-    percentile_rank = fun.f_update(percentile_rank_season, percentile_rank_prejoin, period_is_prejoin)
-    percentile_rank = fun.f_update(percentile_rank, percentile_rank_prejoinseason,
-                                   np.logical_and(period_is_prejoin, period_is_seasonstart))
-
-    # Step 2: remove the nan from rank and replace with -1
-    percentile_rank[np.isnan(percentile_rank)] = -1
+    ##########
+    # Part C #
+    ##########
+    # #todo add option for condense to not be at SS or PJ. think this just requires adding a 4th update (it needs to be first, part A is correct though)
 
     # Step 3: compare to target_percentile #todo this adds w by w axes... this will be very large... Make sure this code only runs in the required preiods.
     diff = np.abs(percentile_rank[..., None] - np.swapaxes(target_percentiles[..., None], w_pos - 1, -1))
@@ -3432,25 +3482,31 @@ def f1_collapse_pointers(ebw, numbers, startw_unique_next, period_is_condense, p
     pointers = fun.f_update(pointers, -1,
                             np.logical_not(np.logical_or(np.logical_or(period_is_prejoin, period_is_seasonstart), period_is_condense)))
 
-    # step 6: overwrite the pointers if the animals are passing 1:1 because there are no axes to collapse
-    ##This needs to be done at the end and can't be done at the start of the function because only part of the array may need to be overwritten
-    ##Calculate the number of groups of animals that are being collapsed
-    n_groups_season = np.prod([ebw.shape[i] for i in (z_pos,)])
-    n_groups_prejoin = np.prod([ebw.shape[i] for i in prejoin_tup])
-    n_groups_prejoinseason = np.prod([ebw.shape[i] for i in (z_pos, *prejoin_tup)])
-    ##update the number of groups based on the period
-    n_groups = 1    #only 1 group unless overwritten by being another period
-    n_groups = fun.f_update(n_groups, n_groups_season, period_is_seasonstart)
-    n_groups = fun.f_update(n_groups, n_groups_prejoin, period_is_prejoin)
-    n_groups = fun.f_update(n_groups, n_groups_prejoinseason, np.logical_and(period_is_prejoin, period_is_seasonstart))
-    ##if there is only 1 group contributing to the start animal of the next period then pass 1:1 (index unique_w)
-    fun.f_update(pointers, index_unique_wzida0e0b0xyg, n_groups == 1)
+    # # step 6: overwrite the pointers if the animals are passing 1:1 because there are no axes to collapse
+    # ##This needs to be done at the end and can't be done at the start of the function because only part of the array may need to be overwritten
+    #
+    # ##Create an array that is passing 1 to 1 for the number of unique w
+    # index_unique_wzida0e0b0xyg = (index_wzida0e0b0xyg * startw_unique_next // len_w).astype(int)
+    #
+    # ##Calculate the number of groups of animals that are being collapsed
+    # n_groups_season = np.prod([ebw.shape[i] for i in (z_pos,)])
+    # n_groups_prejoin = np.prod([ebw.shape[i] for i in prejoin_tup])
+    # n_groups_prejoinseason = np.prod([ebw.shape[i] for i in (z_pos, *prejoin_tup)])
+    # ##update the number of groups based on the period
+    # n_groups = 1    #only 1 group unless overwritten by being another period
+    # n_groups = fun.f_update(n_groups, n_groups_season, period_is_seasonstart)
+    # n_groups = fun.f_update(n_groups, n_groups_prejoin, period_is_prejoin)
+    # n_groups = fun.f_update(n_groups, n_groups_prejoinseason, np.logical_and(period_is_prejoin, period_is_seasonstart))
+    # ##if there is only 1 group contributing to the start animal of the next period then pass 1:1 (index unique_w)
+    # pointers = fun.f_update(pointers, index_unique_wzida0e0b0xyg, n_groups == 1)
 
     return pointers
 
 
 def f1_collapse(pointers, prod, numbers, period_is_condense, period_is_seasonstart, period_is_prejoin=False, prejoin_tup=None):
     z_pos = sinp.stock['i_z_pos']
+
+    numbers = np.maximum(0.00001, numbers)
 
     #todo can we achieve without w by w???
     def f1_mean(mean_axes, weights):
