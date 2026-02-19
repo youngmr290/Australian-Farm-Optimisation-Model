@@ -1,5 +1,5 @@
 Trial: Quick test
-Quick test profit: 438529.0609561387
+Quick test profit: 438529.0618579842
 Variable v_tree_area_l
 Variable v_phase_area
    ('q0', 's0', 'zm0', 'typ', 'AAAA2A1a', 'lmu1') 100.0000
@@ -106,9 +106,9 @@ Variable v_unharvested_yield
 Variable v_hay_made
 Variable v_hay_tobe_made
 Variable v_terminal_wealth
-   ('q0', 's0', 'typ', 'c1_0') 338252.0211
+   ('q0', 's0', 'typ', 'c1_0') 338252.0220
 Variable v_credit
-   ('q0', 's0', 'c1_0', 'zm0', 'typ') 518070.5132
+   ('q0', 's0', 'c1_0', 'zm0', 'typ') 518070.5141
 Variable v_debit
 Variable v_wc_credit
 Variable v_wc_debit
@@ -423,19 +423,15 @@ Variable v_stub_con
    ('q0', 's0', 'typ', 'fp08', 'nv0', 'of', 'e', 'Harv') 1.5125
    ('q0', 's0', 'typ', 'fp08', 'nv0', 'of', 'f', 'Harv') 1.2115
    ('q0', 's0', 'typ', 'fp08', 'nv1', 'of', 'c', 'Harv') 2.0793
-   ('q0', 's0', 'typ', 'fp08', 'nv0', 'rd', 'd', 'Harv') 2.6163
-   ('q0', 's0', 'typ', 'fp08', 'nv0', 'rd', 'e', 'Harv') 2.1256
-   ('q0', 's0', 'typ', 'fp08', 'nv0', 'rd', 'f', 'Harv') 2.1972
-   ('q0', 's0', 'typ', 'fp08', 'nv1', 'rd', 'c', 'Harv') 3.2828
+   ('q0', 's0', 'typ', 'fp08', 'nv0', 'rd', 'd', 'Harv') 2.7316
+   ('q0', 's0', 'typ', 'fp08', 'nv0', 'rd', 'e', 'Harv') 2.2193
+   ('q0', 's0', 'typ', 'fp08', 'nv0', 'rd', 'f', 'Harv') 2.2941
+   ('q0', 's0', 'typ', 'fp08', 'nv1', 'rd', 'c', 'Harv') 3.4275
    ('q0', 's0', 'typ', 'fp08', 'nv0', 'w', 'd', 'Harv') 24.3417
    ('q0', 's0', 'typ', 'fp08', 'nv0', 'w', 'e', 'Harv') 24.7399
    ('q0', 's0', 'typ', 'fp08', 'nv0', 'w', 'f', 'Harv') 20.0246
    ('q0', 's0', 'typ', 'fp08', 'nv1', 'w', 'c', 'Harv') 36.2544
    ('q0', 's0', 'typ', 'fp08', 'nv1', 'w', 'g', 'Harv') 2.8461
-   ('q0', 's0', 'typ', 'fp08', 'nv0', 'z', 'd', 'Harv') 0.1153
-   ('q0', 's0', 'typ', 'fp08', 'nv0', 'z', 'e', 'Harv') 0.0937
-   ('q0', 's0', 'typ', 'fp08', 'nv0', 'z', 'f', 'Harv') 0.0968
-   ('q0', 's0', 'typ', 'fp08', 'nv1', 'z', 'c', 'Harv') 0.1447
    ('q0', 's0', 'typ', 'fp09', 'nv0', 'b', 'd', 'Harv') 25.6490
    ('q0', 's0', 'typ', 'fp09', 'nv0', 'b', 'e', 'Harv') 20.3549
    ('q0', 's0', 'typ', 'fp09', 'nv0', 'b', 'f', 'Harv') 15.7659
@@ -445,10 +441,14 @@ Variable v_stub_con
    ('q0', 's0', 'typ', 'fp09', 'nv0', 'l', 'f', 'Graz') 3.3574
    ('q0', 's0', 'typ', 'fp09', 'nv1', 'l', 'b', 'Graz') 3.3541
    ('q0', 's0', 'typ', 'fp09', 'nv1', 'l', 'c', 'Graz') 7.7849
-   ('q0', 's0', 'typ', 'fp09', 'nv0', 'rd', 'c', 'Harv') 28.4370
-   ('q0', 's0', 'typ', 'fp09', 'nv0', 'rd', 'd', 'Harv') 22.6638
-   ('q0', 's0', 'typ', 'fp09', 'nv0', 'rd', 'e', 'Harv') 18.4127
-   ('q0', 's0', 'typ', 'fp09', 'nv0', 'rd', 'f', 'Harv') 19.0335
+   ('q0', 's0', 'typ', 'fp09', 'nv0', 'rd', 'c', 'Harv') 28.3040
+   ('q0', 's0', 'typ', 'fp09', 'nv0', 'rd', 'd', 'Harv') 22.5578
+   ('q0', 's0', 'typ', 'fp09', 'nv0', 'rd', 'e', 'Harv') 18.3266
+   ('q0', 's0', 'typ', 'fp09', 'nv0', 'rd', 'f', 'Harv') 18.9444
+   ('q0', 's0', 'typ', 'fp09', 'nv0', 'z', 'c', 'Harv') 0.1330
+   ('q0', 's0', 'typ', 'fp09', 'nv0', 'z', 'd', 'Harv') 0.1060
+   ('q0', 's0', 'typ', 'fp09', 'nv0', 'z', 'e', 'Harv') 0.0861
+   ('q0', 's0', 'typ', 'fp09', 'nv0', 'z', 'f', 'Harv') 0.0890
 Variable v_stub_transfer
    ('q0', 's0', 'typ', 'fp06', 'b', 'a', 'Harv') 90.9881
    ('q0', 's0', 'typ', 'fp06', 'b', 'b', 'Harv') 2.1477
@@ -468,7 +468,8 @@ Variable v_stub_transfer
    ('q0', 's0', 'typ', 'fp08', 'b', 'c', 'Harv') 24.1196
    ('q0', 's0', 'typ', 'fp08', 'l', 'b', 'Graz') 3.7035
    ('q0', 's0', 'typ', 'fp08', 'l', 'c', 'Graz') 0.7636
-   ('q0', 's0', 'typ', 'fp08', 'rd', 'c', 'Harv') 30.9626
+   ('q0', 's0', 'typ', 'fp08', 'rd', 'c', 'Harv') 30.8178
+   ('q0', 's0', 'typ', 'fp08', 'z', 'c', 'Harv') 0.1448
 Variable v_sire
    ('q0', 's0', 'B') 22.3528
 Variable v_dams

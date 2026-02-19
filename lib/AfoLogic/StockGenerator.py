@@ -6298,9 +6298,13 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                         period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p + 1])):
                     startw_unique_next = w_start_len1 * (n_fs_dams ** n_prior_fvps_pa1e1b1nwzida0e0b0xyg1[p+1])
                     
-                    pointers_dams = sfun.f1_collapse_pointers(ebw_dams, startw_unique_next, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p + 1], period_is_startseason_pa1e1b1nwzida0e0b0xyg[p + 1],
-                        lw_initial_a1e1b1nwzida0e0b0xyg1, period_is_prejoin=period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p + 1] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1]
-                        , prejoin_tup=prejoin_tup)
+                    pointers_dams = sfun.f1_collapse_pointers(ebw_dams, startw_unique_next,
+                                                              period_is_condense_pa1e1b1nwzida0e0b0xyg1[p + 1],
+                                                              period_is_startseason_pa1e1b1nwzida0e0b0xyg[p + 1],
+                                                              lw_initial_a1e1b1nwzida0e0b0xyg1, period_is_prejoin=
+                                                              period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p + 1] *
+                                                              include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p + 1],
+                                                              prejoin_tup=prejoin_tup)
 
                     #store for lw dist
                     o_ebw_lw_dist_tpdams[:,p] = sfun.f1_collapse(pointers_dams, ebw_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p + 1],
