@@ -95,6 +95,48 @@ def searchsort_multiple_dim(a, v, axis_a0, axis_v0, axis_a1=None, axis_v1=None, 
 
 #print(timeit.timeit(phases2,number=100)/100)
 
+def f1_unique_count(a, axes):
+    """
+    Count unique values along given axes.
+
+    Parameters
+    ----------
+    a : ndarray
+    axes : int or tuple of int
+
+    Returns
+    -------
+    counts : ndarray
+        Same shape as a but with the specified axes size = 1
+    """
+    a = np.asarray(a)
+
+    if isinstance(axes, int):
+        axes = (axes,)
+    axes = tuple(ax % a.ndim for ax in axes)
+
+    # Move target axes to front
+    moved = np.moveaxis(a, axes, range(len(axes)))
+
+    front_shape = moved.shape[:len(axes)]
+    rest_shape = moved.shape[len(axes):]
+
+    flat = moved.reshape(np.prod(front_shape), -1)
+
+    counts = np.empty(flat.shape[1], dtype=int)
+
+    for i in range(flat.shape[1]):
+        counts[i] = np.unique(flat[:, i]).size
+
+    counts = counts.reshape(rest_shape)
+
+    # expand axes back with size 1
+    for ax in sorted(axes):
+        counts = np.expand_dims(counts, axis=ax)
+
+    return counts
+
+#todo should be able to remove this function...
 def f1_percentile_over_axes(arr, axes, ascending=True):
     """
     Compute percentile rank within slices defined by packing `axes`.
