@@ -3335,7 +3335,7 @@ def f1_check_all_bins_present(pointers, w_pos, group_axes, expected_w):
     w_pos: int
     group_axes: tuple of axes that define the "collapsed group" you want to check within
                (e.g. (w_pos,) for condense, or (w_pos,z_pos) for seasonstart, etc.)
-    expected_w: 1D array of expected bin ids (e.g. np.arange(K))
+    expected_w: 1D array of expected bin ids (e.g. np.arange(K))  #todo this could be converted from startw_unique_next if it was passed as an arg
 
     Returns
     -------
@@ -3356,6 +3356,14 @@ def f1_check_all_bins_present(pointers, w_pos, group_axes, expected_w):
     ptr = pointers[..., None]                                                   # pointers.shape + (1,)
 
     # todo can we achieve without w by w???
+    # A method for this is to loop s in startw_unique_next and test seen[s] = np.any(pointers=w, reduce_axes, keep)
+    # w needs to be an adjusted version of s, because s is 0 to number of unique and w is 0 to 80 in the N33 model
+    # Something like w = s * len_w / startw_unique_next
+    # then same test for missing except it is axis=w_pos
+    # Early in the annual cycle this will be quick, for example in n33 there are only 9 unique weights for the first fvp
+    # so it would be a short loop, however, in the final fvp it is 81. But on balance it might still be quicker
+    # than an 81 x 81 numpy calculation for the entire year
+
     seen = np.any(ptr == exp, axis=reduce_axes, keepdims=True)                                 # reduces group axes
 
     missing = ~np.all(seen, axis=-1)                                            # missing any expected bin?
