@@ -3392,17 +3392,19 @@ def f1_collapse_pointers(ebw, numbers, startw_unique_next, period_is_condense, p
 
     # temporary version of percentiles in descending numerical order
     ## range in the percentile ranks because the percentiles don't cover the full range 0 to 100.
-    ## The range expands as the number of axes being collapsed increases
-    min_season = np.min(np.where(percentile_rank == -1, np.inf, percentile_rank), axis = season_tup, keepdims=True)
-    min_prejoin = np.min(np.where(percentile_rank == -1, np.inf, percentile_rank), axis = prejoin_tup, keepdims=True)
-    min_prejoinseason = np.min(np.where(percentile_rank == -1, np.inf, percentile_rank), axis = prejoinseason_tup, keepdims=True)
+    ## The range expands as the number of axes being collapsed increases (and the weighting on each group reduces)
+    min_season = np.min(np.where(percentile_rank == -1, 999, percentile_rank), axis = (w_pos,) + season_tup, keepdims=True)
+    min_prejoin = np.min(np.where(percentile_rank == -1, 999, percentile_rank), axis = (w_pos,) + prejoin_tup, keepdims=True)
+    min_prejoinseason = np.min(np.where(percentile_rank == -1, 999, percentile_rank), axis = (w_pos,) + prejoinseason_tup, keepdims=True)
     min = fun.f_update(min_season, min_prejoin, period_is_prejoin)
     min = fun.f_update(min, min_prejoinseason, np.logical_and(period_is_prejoin, period_is_seasonstart))
-    max_season = np.max(np.where(percentile_rank == -1, -np.inf, percentile_rank), axis = season_tup, keepdims=True)
-    max_prejoin = np.max(np.where(percentile_rank == -1, -np.inf, percentile_rank), axis = prejoin_tup, keepdims=True)
-    max_prejoinseason = np.max(np.where(percentile_rank == -1, -np.inf, percentile_rank), axis = prejoinseason_tup, keepdims=True)
+    min[min==999] = 0
+    max_season = np.max(np.where(percentile_rank == -1, -999, percentile_rank), axis = (w_pos,) + season_tup, keepdims=True)
+    max_prejoin = np.max(np.where(percentile_rank == -1, -999, percentile_rank), axis = (w_pos,) + prejoin_tup, keepdims=True)
+    max_prejoinseason = np.max(np.where(percentile_rank == -1, -999, percentile_rank), axis = (w_pos,) + prejoinseason_tup, keepdims=True)
     max = fun.f_update(max_season, max_prejoin, period_is_prejoin)
     max = fun.f_update(max, max_prejoinseason, np.logical_and(period_is_prejoin, period_is_seasonstart))
+    max[max==-999] = 100
 
     ##space the percentiles across the range. Defined by an end gap and a step size
     ### A simple calculation of the percentiles
@@ -3430,7 +3432,7 @@ def f1_collapse_pointers(ebw, numbers, startw_unique_next, period_is_condense, p
     ## calculate the ratio of the number of collapsed animals relative to the number of starting w
     ratio = n_groups / startw_unique_next
     ### Adjust the ratio to achieve the desire adjustment to the end gap, while ratio_adjusted = 1 when ratio == 1
-    adjuster = 25    #A lower value is a more extreme adjustment
+    adjuster = 50    #25    #A lower value is a more extreme adjustment
     ratio_adjusted = 1 + (ratio - 1) / adjuster
 
     ##Calculate the end gap
@@ -3438,10 +3440,10 @@ def f1_collapse_pointers(ebw, numbers, startw_unique_next, period_is_condense, p
     ##Calculate the step
     percentile_step = ((max - min) - 2 * end_gap) / (startw_unique_next - 1)
     index_q = (index_wzida0e0b0xyg / len_w * startw_unique_next).astype(int)
-    index_q = np.flip(index_q, w_pos)  # flip to get percentiles high weight to low weight.
-    t_target_percentiles = 100 - ((100 - max) + end_gap + (index_q + 0.5) * percentile_step)
+    # index_q = np.flip(index_q, w_pos)  # flip to get percentiles high weight to low weight.
+    t_target_percentiles = 100 - ((100 - max) + end_gap + index_q * percentile_step)
 
-    tolerance = (100 - max) + end_gap + 0.5 * percentile_step
+    tolerance = np.minimum(end_gap, percentile_step / 2)   #taking a minimum that includes percentile_step/2 ensures that they can't overlap
 
     # arrange the percentiles in the order required for the w axis
     ##There are 2 options:
