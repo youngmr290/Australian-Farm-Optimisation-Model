@@ -489,7 +489,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     o_numbers_start_tpoffs = np.zeros(tpg3, dtype =dtype) # filled with the initial numbers later, so that dvp0 (p0) has start numbers.
     o_numbers_end_tpoffs = np.zeros(tpg3, dtype =dtype) # filled with the initial numbers later, so that transfer can exist for dvps before weaning
     o_ffcfw_tpoffs = np.zeros(tpg3, dtype =dtype)
-    o_ffcfw_lw_dist_tpoffs = np.zeros(tpg3, dtype =dtype)
+    o_ebw_lw_dist_tpoffs = np.zeros(tpg3, dtype =dtype)
     o_nw_start_tpoffs = np.zeros(tpg3, dtype=dtype)
     o_mortality_offs = np.zeros(tpg3, dtype =dtype)
     o_lw_tpoffs = np.zeros(tpg3, dtype =dtype)
@@ -2855,7 +2855,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
         nw_start_sire = 0 #no dimensions to start
         temp_lc_sire = np.array([0.0]) #this is calculated in the chill function, but it is required for the intake function so it is set to 0 for the first period.
         numbers_start_sire = numbers_initial_zida0e0b0xyg0
-        numbers_start_condense_sire = numbers_initial_zida0e0b0xyg0 #just need a default because this is processed using update function.
+        numbers_at_condense_sire = numbers_initial_zida0e0b0xyg0 #just need a default because this is processed using update function.
         md_solid_sire = np.array([12.0])  # need a start value to convert ebw_initial to ffcfw
         # ebg_start_sire=0
 
@@ -2922,7 +2922,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
         cfw_start_yatf = 0.0
         temp_lc_yatf = np.array([0.0]) #this is calculated in the chill function, but it is required for the intake function so it is set to 0 for the first period.
         numbers_start_yatf = nyatf_b1nwzida0e0b0xyg * gender_propn_xyg   # nyatf is accounting for peri-natal mortality. But doesn't include the differential mortality of female and male offspring at birth
-        numbers_start_condense_yatf = numbers_start_yatf #just need a default because this is processed using update function.
+        numbers_at_condense_yatf = numbers_start_yatf #just need a default because this is processed using update function.
         numbers_end_yatf = 0.0 #need a default because this is required in f_start[p+1] prior to being assigned.
         #todo md_solid_yatf specified here is the value used for converting ffcfw_yatf to ebw at weaning, not just a dummy value.
         # Is there a way to make it the real M/D value?
@@ -2953,7 +2953,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
         nw_start_offs = 0.0
         temp_lc_offs = np.array([0.0]) #this is calculated in the chill function, but it is required for the intake function so it is set to 0 for the first period.
         numbers_start_offs = numbers_initial_ida0e0b0xyg3
-        numbers_start_condense_offs = numbers_initial_ida0e0b0xyg3 #just need a default because this is processed using update function.
+        numbers_at_condense_offs = numbers_initial_ida0e0b0xyg3 #just need a default because this is processed using update function.
         md_solid_offs = np.array([12.0])  # need a start value to convert ebw_initial to ffcfw
         fs_w_reallocation_ta1e1b1nw8zida0e0b0xyg3s9 = fun.f_expand(a_wstart_w3[:, na] == np.arange(w_start_len3),
                                                                    w_pos - 1, right_pos=-1, left_pos2=p_pos-2,right_pos2=w_pos - 1) #create default fs allocation - default means 1:1. This gets updated at period_is_condense.
@@ -5932,9 +5932,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p, ...] > 0):
                 ###create a mask used to exclude w slices in the condensing func. exclude w slices that have greater than 10% mort (no feedlot mask for sires (only for offs) because feedlotting sires doesn't indicate they are being sold).
                 ###mask for animals (slices of w) with mortality less than a threshold - True means mort is acceptable (below threshold)
-                numbers_start_condense_sire = np.broadcast_to(numbers_start_condense_sire, numbers_end_sire.shape) #required for the first condensing because condense numbers start doesn't have all the axis.
+                numbers_at_condense_sire = np.broadcast_to(numbers_at_condense_sire, numbers_end_sire.shape) #required for the first condensing because condense numbers start doesn't have all the axis.
                 surv_sire = fun.f_divide(np.sum(numbers_end_sire,axis=prejoin_tup + season_tup, keepdims=True)
-                                         , np.sum(numbers_start_condense_sire, axis=prejoin_tup + season_tup, keepdims=True))  # sum e,b,z axis because numbers are distributed along those axis so need to sum to determine if w has mortality > 10%
+                                         , np.sum(numbers_at_condense_sire, axis=prejoin_tup + season_tup, keepdims=True))  # sum e,b,z axis because numbers are distributed along those axis so need to sum to determine if w has mortality > 10%
                 threshold = np.minimum(0.9, fun.f_divide(surv_sire.sum(w_pos,keepdims=True),(surv_sire!=0).sum(w_pos,keepdims=True)))  # threshold is the lower of average survival and 90% (animals with 0 survival are not included)
                 mort_mask_sire = surv_sire >= threshold
 
@@ -6076,9 +6076,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 ### The logic behind this is that the model will not want to select animals with greater than 10% mort so not point using them to determine condensed weights
 
                 ###mask for animals (slices of w) with mortality less than a threshold - True means mort is acceptable (below threshold)
-                numbers_start_condense_yatf = np.broadcast_to(numbers_start_condense_yatf, numbers_end_yatf.shape) #required for the first condensing because condense numbers start doesn't have all the axis.
+                numbers_at_condense_yatf = np.broadcast_to(numbers_at_condense_yatf, numbers_end_yatf.shape) #required for the first condensing because condense numbers start doesn't have all the axis.
                 surv_yatf = fun.f_divide(np.sum(numbers_end_yatf,axis=z_pos, keepdims=True)
-                                        , np.sum(numbers_start_condense_yatf, axis=z_pos, keepdims=True))  # sum z axis because numbers are distributed along z axis so need to sum to determine if w has mortality > 10% (don't sum e&b because yatf stay in the same slice)
+                                        , np.sum(numbers_at_condense_yatf, axis=z_pos, keepdims=True))  # sum z axis because numbers are distributed along z axis so need to sum to determine if w has mortality > 10% (don't sum e&b because yatf stay in the same slice)
                 threshold = np.minimum(0.9, fun.f_divide(surv_yatf.sum(w_pos,keepdims=True),(surv_yatf!=0).sum(w_pos,keepdims=True)))  # threshold is the lower of average survival and 90% (animals with 0 survival are not included)
                 mort_mask_yatf = surv_yatf >= threshold
 
@@ -6150,9 +6150,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 no_confinement_offs = np.logical_or(np.all(bool_confinement_g3_n), no_confinement_offs)
 
                 ###mask for animals (slices of w) with mortality less than a threshold - True means mort is acceptable (below threshold)
-                numbers_start_condense_offs = np.broadcast_to(numbers_start_condense_offs, numbers_end_offs.shape) #required for the first condensing because condense numbers start doesn't have all the axis.
+                numbers_at_condense_offs = np.broadcast_to(numbers_at_condense_offs, numbers_end_offs.shape) #required for the first condensing because condense numbers start doesn't have all the axis.
                 surv_offs = fun.f_divide(np.sum(numbers_end_offs,axis=z_pos, keepdims=True)
-                                         , np.sum(numbers_start_condense_offs, axis=z_pos, keepdims=True))  # sum z axis because numbers are distributed along those axis so need to sum to determine if w has mortality > 10% (don't sum e&b because offs don't change slice)
+                                         , np.sum(numbers_at_condense_offs, axis=z_pos, keepdims=True))  # sum z axis because numbers are distributed along those axis so need to sum to determine if w has mortality > 10% (don't sum e&b because offs don't change slice)
                 threshold = np.minimum(0.9, fun.f_divide(surv_offs.sum(w_pos,keepdims=True),(surv_offs!=0).sum(w_pos,keepdims=True))) #threshold is the lower of average survival and 90% (animals with 0 survival are not included)
                 mort_mask_offs = surv_offs >= threshold
 
@@ -6168,35 +6168,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 if np.any(period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1]):
                     mort_flag_offs = True
 
-                ###combine mort and feedlot mask - True means the w slice is included in condensing.
-                condense_w_mask_offs = np.logical_and(no_confinement_offs, mort_mask_offs)
-
-                ###sorted index of w. used for condensing.
-                idx_sorted_w_offs = np.argsort(ffcfw_offs * condense_w_mask_offs, axis=w_pos) #set animal
-
-                ###mask with a true for f1_season_wa and f_start_prod to identify w & z slices with the lightest animal
-                mask_min_lw_wz_offs = np.isclose(ffcfw_offs, np.min(ffcfw_offs, axis=(w_pos, z_pos), keepdims=True)) #use isclose in case small rounding error in lw
-                ###mask with a true for the w slice with the lightest animal after taking the weighted average across z
-                t_ffcfw_offs = fun.f_weighted_average(ffcfw_offs, numbers_end_offs, z_pos, keepdims=True, non_zero=True)
-                mask_min_wa_lw_w_offs = np.isclose(t_ffcfw_offs, np.min(t_ffcfw_offs, axis=w_pos, keepdims=True)) #use isclose in case small rounding error in lw
-                #handle cases where multiple w slices have the same weight (we only want one true per w axis)
-
-                ###mask with a true for f1_season_wa and f_start_prod to identify w & z slices with the heaviest animal
-                mask_max_lw_wz_offs = np.isclose(ffcfw_offs, np.max(ffcfw_offs, axis=(w_pos, z_pos), keepdims=True)) #use isclose in case small rounding error in lw
-                ###mask with a true for the w slice with the heaviest animal after taking the weighted average across z
-                t_ffcfw_offs = fun.f_weighted_average(ffcfw_offs, numbers_end_offs, z_pos, keepdims=True, non_zero=True)
-                mask_max_wa_lw_w_offs = np.isclose(t_ffcfw_offs, np.max(t_ffcfw_offs, axis=w_pos, keepdims=True)) #use isclose in case small rounding error in lw
-
-
                 ###store output variables for the post-processing
                 o_numbers_start_tpoffs[:,p] = numbers_start_offs
                 o_numbers_end_tpoffs[:,p] = numbers_end_offs
                 o_ffcfw_tpoffs[:,p] = ffcfw_offs
-                ffcfw_season_toffs = sfun.f1_season_wa(numbers_end_offs, ffcfw_offs, z_pos, mask_min_lw_wz_offs, mask_min_wa_lw_w_offs
-                                                               , mask_max_lw_wz_offs, mask_max_wa_lw_w_offs, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1])
-                o_ffcfw_lw_dist_tpoffs[:,p] = sfun.f1_condensed(ffcfw_season_toffs, idx_sorted_w_offs, condense_w_mask_offs
-                                                              , n_fs_offs, len_w3, n_pos, w_pos, n_fvps_percondense_offs
-                                                              , period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])  #condensed lw at the end of the period before fvp0
                 o_nw_start_tpoffs[:,p] = nw_start_offs
                 o_mortality_offs[:,p] = mortality_offs
                 o_lw_tpoffs[:,p] = lw_offs
@@ -6367,39 +6342,24 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                         , n_fs_dams, len_w1, n_pos, w_pos, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
             ###offs
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
-                ###EBW (condense - empty body weight)
-                ebw_condensed_offs = sfun.f1_condensed(ebw_offs, idx_sorted_w_offs, condense_w_mask_offs
-                                        , n_fs_offs, len_w3, n_pos, w_pos, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])
-                ###normal weight	- yes this is meant to be updated from nw_start
-                nw_start_condensed_offs = sfun.f1_condensed(nw_start_offs, idx_sorted_w_offs, condense_w_mask_offs
-                                        , n_fs_offs, len_w3, n_pos, w_pos, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])
-                ###FFCFW maximum to date
-                ebw_max_condensed_offs = sfun.f1_condensed(ebw_max_offs, idx_sorted_w_offs, condense_w_mask_offs
-                                        , n_fs_offs, len_w3, n_pos, w_pos, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])
-                ###Weight of fat (condense)
-                fat_condensed_offs = sfun.f1_condensed(fat_offs, idx_sorted_w_offs, condense_w_mask_offs
-                                        , n_fs_offs, len_w3, n_pos, w_pos, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])
-                ###Weight of muscle (condense)
-                muscle_condensed_offs = sfun.f1_condensed(muscle_offs, idx_sorted_w_offs, condense_w_mask_offs
-                                        , n_fs_offs, len_w3, n_pos, w_pos, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])
-                ###Weight of viscera (condense)
-                viscera_condensed_offs = sfun.f1_condensed(viscera_offs, idx_sorted_w_offs, condense_w_mask_offs
-                                        , n_fs_offs, len_w3, n_pos, w_pos, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])
-                ###Clean fleece weight (condense)
-                cfw_condensed_offs = sfun.f1_condensed(cfw_offs, idx_sorted_w_offs, condense_w_mask_offs
-                                        , n_fs_offs, len_w3, n_pos, w_pos, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])
-                ###Clean fleece weight (condense)
-                d_cfw_history_condensed_p2g3 = sfun.f1_condensed(d_cfw_history_offs_p2, idx_sorted_w_offs[na,...], condense_w_mask_offs[na,...]
-                                        , n_fs_offs, len_w3, n_pos, w_pos, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])
-                ###Fibre length since shearing (condense)
-                fl_condensed_offs = sfun.f1_condensed(fl_offs, idx_sorted_w_offs, condense_w_mask_offs
-                                        , n_fs_offs, len_w3, n_pos, w_pos, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])
-                ###Average FD since shearing (condense)
-                fd_condensed_offs = sfun.f1_condensed(fd_offs, idx_sorted_w_offs, condense_w_mask_offs
-                                        , n_fs_offs, len_w3, n_pos, w_pos, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])
-                ###Minimum FD since shearing (condense)
-                fd_min_condensed_offs = sfun.f1_condensed(fd_min_offs, idx_sorted_w_offs, condense_w_mask_offs
-                                        , n_fs_offs, len_w3, n_pos, w_pos, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])
+
+                if np.any(np.logical_or(period_is_condense_pa1e1b1nwzida0e0b0xyg3[p + 1], period_is_startseason_pa1e1b1nwzida0e0b0xyg[p + 1])):
+                    #add 1 if not first period of fvp because the start animals branch out.
+                    exp = n_prior_fvps_pa1e1b1nwzida0e0b0xyg3[p+1] + np.where(period_is_startfvp_pa1e1b1nwzida0e0b0xyg3[p+1], 0, 1)
+                    startw_unique_next_offs = w_start_len3 * (n_fs_offs ** exp)
+
+                    pointers_offs, index_unique_w_offs = sfun.f1_collapse_pointers(p, ebw_offs, numbers_end_offs, startw_unique_next_offs,
+                          period_is_condense_pa1e1b1nwzida0e0b0xyg3[p + 1], period_is_startseason_pa1e1b1nwzida0e0b0xyg[p + 1],
+                          lw_initial_a1e1b1nwzida0e0b0xyg3)
+
+                    #store for lw dist
+                    o_ebw_lw_dist_tpoffs[:,p] = sfun.f1_collapse(pointers_offs, index_unique_w_offs, ebw_offs, numbers_end_offs,
+                         period_is_condense_pa1e1b1nwzida0e0b0xyg3[p + 1], period_is_startseason_pa1e1b1nwzida0e0b0xyg[p + 1],
+                         w_pos, z_pos)
+
+                else:
+                    pointers_offs = np.array([np.nan]) #empty array so f_start_prod still works in the early periods.
+                    index_unique_w_offs = np.array([np.nan]) #empty array so f_start_prod still works in the early periods.
 
             ##condense end numbers - have to condense the numbers before calc start production, but need to condense production using non-condensed end numbers
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
@@ -6409,10 +6369,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
                 numbers_end_condensed_yatf = sfun.f1_condensed(numbers_end_yatf, idx_sorted_w_yatf, condense_w_mask_yatf
                                         , n_fs_dams, len_w1, n_pos, w_pos, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
-
-            if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] > 0):
-                numbers_end_condensed_offs = sfun.f1_condensed(numbers_end_offs, idx_sorted_w_offs, condense_w_mask_offs
-                                        , n_fs_offs, len_w3, n_pos, w_pos, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])
 
             ##start production - this requires condensed end numbers
             ###sire
@@ -6715,59 +6671,59 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
             ###offs
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
                 ###EBW (start - empty body weight)
-                ebw_start_offs = sfun.f1_period_start_prod(numbers_end_condensed_offs, ebw_condensed_offs, b1_pos, p_pos, w_pos, prejoin_tup
-                                        , z_pos, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_offs, mask_min_wa_lw_w_offs
-                                        , mask_max_lw_wz_offs, mask_max_wa_lw_w_offs, stub_lw_idx=stub_lw_idx_offs, len_gen_t=len_gen_t3, a_t_g=a_t_g3
+                ebw_start_offs = sfun.f1_period_start_prod2(pointers_offs, index_unique_w_offs, ebw_offs, numbers_end_offs, p_pos, w_pos, z_pos, prejoin_tup
+                                        , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], period_is_condense_pa1e1b1nwzida0e0b0xyg3[p + 1]
+                                        , stub_lw_idx=stub_lw_idx_offs, len_gen_t=len_gen_t3, a_t_g=a_t_g3
                                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3[p+1])
                 ###normal weight	- yes this is meant to be updated from nw_start
-                nw_start_offs = sfun.f1_period_start_prod(numbers_end_condensed_offs, nw_start_condensed_offs, b1_pos, p_pos, w_pos, prejoin_tup
-                                        , z_pos, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_offs, mask_min_wa_lw_w_offs
-                                        , mask_max_lw_wz_offs, mask_max_wa_lw_w_offs, stub_lw_idx=stub_lw_idx_offs, len_gen_t=len_gen_t3, a_t_g=a_t_g3
+                nw_start_offs = sfun.f1_period_start_prod2(pointers_offs, index_unique_w_offs, nw_start_offs, numbers_end_offs, p_pos, w_pos, z_pos, prejoin_tup
+                                        , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], period_is_condense_pa1e1b1nwzida0e0b0xyg3[p + 1]
+                                        , stub_lw_idx=stub_lw_idx_offs, len_gen_t=len_gen_t3, a_t_g=a_t_g3
                                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3[p+1])
                 ###EBW maximum to date
-                ebw_max_start_offs = sfun.f1_period_start_prod(numbers_end_condensed_offs, ebw_max_condensed_offs, b1_pos, p_pos, w_pos, prejoin_tup
-                                        , z_pos, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_offs, mask_min_wa_lw_w_offs
-                                        , mask_max_lw_wz_offs, mask_max_wa_lw_w_offs, stub_lw_idx=stub_lw_idx_offs, len_gen_t=len_gen_t3, a_t_g=a_t_g3
+                ebw_max_start_offs = sfun.f1_period_start_prod2(pointers_offs, index_unique_w_offs, ebw_max_offs, numbers_end_offs, p_pos, w_pos, z_pos, prejoin_tup
+                                        , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], period_is_condense_pa1e1b1nwzida0e0b0xyg3[p + 1]
+                                        , stub_lw_idx=stub_lw_idx_offs, len_gen_t=len_gen_t3, a_t_g=a_t_g3
                                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3[p+1])
                 ###Weight of fat (start)
-                fat_start_offs = sfun.f1_period_start_prod(numbers_end_condensed_offs, fat_condensed_offs, b1_pos, p_pos, w_pos, prejoin_tup
-                                        , z_pos, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_offs, mask_min_wa_lw_w_offs
-                                        , mask_max_lw_wz_offs, mask_max_wa_lw_w_offs, stub_lw_idx=stub_lw_idx_offs, len_gen_t=len_gen_t3, a_t_g=a_t_g3
+                fat_start_offs = sfun.f1_period_start_prod2(pointers_offs, index_unique_w_offs, fat_offs, numbers_end_offs, p_pos, w_pos, z_pos, prejoin_tup
+                                        , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], period_is_condense_pa1e1b1nwzida0e0b0xyg3[p + 1]
+                                        , stub_lw_idx=stub_lw_idx_offs, len_gen_t=len_gen_t3, a_t_g=a_t_g3
                                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3[p+1])
                 ###Weight of muscle (start)
-                muscle_start_offs = sfun.f1_period_start_prod(numbers_end_condensed_offs, muscle_condensed_offs, b1_pos, p_pos, w_pos, prejoin_tup
-                                        , z_pos, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_offs, mask_min_wa_lw_w_offs
-                                        , mask_max_lw_wz_offs, mask_max_wa_lw_w_offs, stub_lw_idx=stub_lw_idx_offs, len_gen_t=len_gen_t3, a_t_g=a_t_g3
+                muscle_start_offs = sfun.f1_period_start_prod2(pointers_offs, index_unique_w_offs, muscle_offs, numbers_end_offs, p_pos, w_pos, z_pos, prejoin_tup
+                                        , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], period_is_condense_pa1e1b1nwzida0e0b0xyg3[p + 1]
+                                        , stub_lw_idx=stub_lw_idx_offs, len_gen_t=len_gen_t3, a_t_g=a_t_g3
                                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3[p+1])
                 ###Weight of viscera (start)
-                viscera_start_offs = sfun.f1_period_start_prod(numbers_end_condensed_offs, viscera_condensed_offs, b1_pos, p_pos, w_pos, prejoin_tup
-                                        , z_pos, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_offs, mask_min_wa_lw_w_offs
-                                        , mask_max_lw_wz_offs, mask_max_wa_lw_w_offs, stub_lw_idx=stub_lw_idx_offs, len_gen_t=len_gen_t3, a_t_g=a_t_g3
+                viscera_start_offs = sfun.f1_period_start_prod2(pointers_offs, index_unique_w_offs, viscera_offs, numbers_end_offs, p_pos, w_pos, z_pos, prejoin_tup
+                                        , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], period_is_condense_pa1e1b1nwzida0e0b0xyg3[p + 1]
+                                        , stub_lw_idx=stub_lw_idx_offs, len_gen_t=len_gen_t3, a_t_g=a_t_g3
                                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3[p+1])
                 ###Clean fleece weight (start)
-                cfw_start_offs = sfun.f1_period_start_prod(numbers_end_condensed_offs, cfw_condensed_offs, b1_pos, p_pos, w_pos, prejoin_tup
-                                        , z_pos, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_offs, mask_min_wa_lw_w_offs
-                                        , mask_max_lw_wz_offs, mask_max_wa_lw_w_offs, stub_lw_idx=stub_lw_idx_offs, len_gen_t=len_gen_t3, a_t_g=a_t_g3
+                cfw_start_offs = sfun.f1_period_start_prod2(pointers_offs, index_unique_w_offs, cfw_offs, numbers_end_offs, p_pos, w_pos, z_pos, prejoin_tup
+                                        , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], period_is_condense_pa1e1b1nwzida0e0b0xyg3[p + 1]
+                                        , stub_lw_idx=stub_lw_idx_offs, len_gen_t=len_gen_t3, a_t_g=a_t_g3
                                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3[p+1])
                 ###Clean fleece weight (start)
-                d_cfw_history_start_p2g3 = sfun.f1_period_start_prod(numbers_end_condensed_offs, d_cfw_history_condensed_p2g3
-                                        , b1_pos, p_pos, w_pos, prejoin_tup, z_pos, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1]
-                                        , mask_min_lw_wz_offs[na,...], mask_min_wa_lw_w_offs[na,...], mask_max_lw_wz_offs[na,...], mask_max_wa_lw_w_offs[na,...], stub_lw_idx=stub_lw_idx_offs[na,...]
+                d_cfw_history_start_p2g3 = sfun.f1_period_start_prod2(pointers_offs[na,...], index_unique_w_offs[na,...], d_cfw_history_offs_p2, numbers_end_offs[na,...]
+                                        , p_pos, w_pos, z_pos, prejoin_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1]
+                                        , period_is_condense_pa1e1b1nwzida0e0b0xyg3[p + 1], stub_lw_idx=stub_lw_idx_offs[na,...]
                                         , len_gen_t=len_gen_t3, a_t_g=a_t_g3, period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3[p+1])
                 ###Fibre length since shearing (start)
-                fl_start_offs = sfun.f1_period_start_prod(numbers_end_condensed_offs, fl_condensed_offs, b1_pos, p_pos, w_pos, prejoin_tup
-                                        , z_pos, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_offs, mask_min_wa_lw_w_offs
-                                        , mask_max_lw_wz_offs, mask_max_wa_lw_w_offs, stub_lw_idx=stub_lw_idx_offs, len_gen_t=len_gen_t3, a_t_g=a_t_g3
+                fl_start_offs = sfun.f1_period_start_prod2(pointers_offs, index_unique_w_offs, fl_offs, numbers_end_offs, p_pos, w_pos, z_pos, prejoin_tup
+                                        , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], period_is_condense_pa1e1b1nwzida0e0b0xyg3[p + 1]
+                                        , stub_lw_idx=stub_lw_idx_offs, len_gen_t=len_gen_t3, a_t_g=a_t_g3
                                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3[p+1])
                 ###Average FD since shearing (start)
-                fd_start_offs = sfun.f1_period_start_prod(numbers_end_condensed_offs, fd_condensed_offs, b1_pos, p_pos, w_pos, prejoin_tup
-                                        , z_pos, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_offs, mask_min_wa_lw_w_offs
-                                        , mask_max_lw_wz_offs, mask_max_wa_lw_w_offs, stub_lw_idx=stub_lw_idx_offs, len_gen_t=len_gen_t3, a_t_g=a_t_g3
+                fd_start_offs = sfun.f1_period_start_prod2(pointers_offs, index_unique_w_offs, fd_offs, numbers_end_offs, p_pos, w_pos, z_pos, prejoin_tup
+                                        , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], period_is_condense_pa1e1b1nwzida0e0b0xyg3[p + 1]
+                                        , stub_lw_idx=stub_lw_idx_offs, len_gen_t=len_gen_t3, a_t_g=a_t_g3
                                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3[p+1])
                 ###Minimum FD since shearing (start)
-                fd_min_start_offs = sfun.f1_period_start_prod(numbers_end_condensed_offs, fd_min_condensed_offs, b1_pos, p_pos, w_pos, prejoin_tup
-                                        , z_pos, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_offs, mask_min_wa_lw_w_offs
-                                        , mask_max_lw_wz_offs, mask_max_wa_lw_w_offs, stub_lw_idx=stub_lw_idx_offs, len_gen_t=len_gen_t3, a_t_g=a_t_g3
+                fd_min_start_offs = sfun.f1_period_start_prod2(pointers_offs, index_unique_w_offs, fd_min_offs, numbers_end_offs, p_pos, w_pos, z_pos, prejoin_tup
+                                        , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], period_is_condense_pa1e1b1nwzida0e0b0xyg3[p + 1]
+                                        , stub_lw_idx=stub_lw_idx_offs, len_gen_t=len_gen_t3, a_t_g=a_t_g3
                                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3[p+1])
 
 
@@ -6777,7 +6733,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 numbers_start_sire = sfun.f1_period_start_nums(numbers_end_sire, prejoin_tup, z_pos
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], season_propn_zida0e0b0xyg, group=0)
                 ###numbers at the beginning of fvp 0 (used to calc mort for the lw patterns to determine the lowest feasible level - used in the start prod func)
-                numbers_start_condense_sire = fun.f_update(numbers_start_condense_sire, numbers_start_sire, False) #currently sire don't have any fvp
+                numbers_at_condense_sire = fun.f_update(numbers_at_condense_sire, numbers_start_sire, False) #currently sire don't have any fvp
 
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                 numbers_start_dams = sfun.f1_period_start_nums(numbers_end_dams, prejoin_tup, z_pos
@@ -6799,7 +6755,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                         , len_gen_t=len_gen_t1, a_t_g=a_t_g1, period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p + 1])
                 ###numbers at the beginning of fvp 0 (used to calc mort for the lw patterns to determine the lowest feasible level - used in the start prod func)
                 if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p, ...] > 0):
-                    numbers_start_condense_yatf = fun.f_update(numbers_start_condense_yatf, numbers_start_yatf
+                    numbers_at_condense_yatf = fun.f_update(numbers_at_condense_yatf, numbers_start_yatf
                                                            , period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
 
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
@@ -6807,7 +6763,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], season_propn_zida0e0b0xyg, group=3
                                         , len_gen_t=len_gen_t3, a_t_g=a_t_g3, period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3[p + 1])
                 ###numbers at the beginning of fvp 0 (used to calc mort for the lw patterns to determine the lowest feasible level - used in the start prod func)
-                numbers_start_condense_offs = fun.f_update(numbers_start_condense_offs, numbers_start_offs
+                numbers_at_condense_offs = fun.f_update(numbers_at_condense_offs, numbers_start_offs
                                                            , period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])
 
             ##adjust FS based on condensed animal
@@ -8229,7 +8185,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                 on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_matingend_pa1e1b1nwzida0e0b0xyg1)
 
     ##number of dvps between mating and weaning - used to roll numbers in wean & scan % report
-    a_prev_matingv_vg1 = np.maximum.accumulate(index_va1e1b1nwzida0e0b0xyg1 * dvp_is_mating) 
+    a_prev_matingv_vg1 = np.maximum.accumulate(index_va1e1b1nwzida0e0b0xyg1 * dvp_is_mating)
 
 
     # ##################################
@@ -8651,6 +8607,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     dvp_is_dist_tvdams = sfun.f1_p2v(period_is_dist_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_dist_tpdams)  #numbers not required for ffcfw
     dvp_is_dist_tvdams = sfun.f1_p2v_adj(dvp_is_dist_tvdams, a_p_va1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1)
 
+    period_is_dist_tpoffs = np.logical_or(nextperiod_is_condense_pa1e1b1nwzida0e0b0xyg3,
+        np.logical_and(nextperiod_is_startseason_pa1e1b1nwzida0e0b0xyg3, not(bool_steady_state)))
+    dvp_is_dist_tvoffs = sfun.f1_p2v(period_is_dist_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, period_is_tp=period_is_dist_tpoffs)  #numbers not required for ffcfw
+    dvp_is_dist_tvoffs = sfun.f1_p2v_adj(dvp_is_dist_tvoffs, a_p_va1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3)
+
 
     ## calc the ‘source’ weight of the animal at the end of each period in which they can be transferred
     ###dams - the period is based on period_is_transfer which points at the nextperiod_is_prejoin for the destination g1 slice
@@ -8658,15 +8619,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ebw_source_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v_adj(ebw_source_tva1e1b1nwzida0e0b0xyg1,
                                                                   a_p_va1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1)
     ###offs
-    ffcfw_source_condense_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(o_ffcfw_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3,
-                                                               period_is_tp=nextperiod_is_condense_pa1e1b1nwzida0e0b0xyg3)  #numbers not required for ffcfw
-    ffcfw_source_condense_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v_adj(ffcfw_source_condense_tva1e1b1nwzida0e0b0xyg3,
-                                                                   a_p_va1e1b1nwzida0e0b0xyg3,
-                                                                   a_v_pa1e1b1nwzida0e0b0xyg3)
-    ffcfw_source_season_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(o_ffcfw_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3,
-                                                             period_is_tp=nextperiod_is_startseason_pa1e1b1nwzida0e0b0xyg3)  #numbers not required for ffcfw
-    ffcfw_source_season_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v_adj(ffcfw_source_season_tva1e1b1nwzida0e0b0xyg3,
-                                                                 a_p_va1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3)
+    ebw_source_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(r_ebw_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, period_is_tp=period_is_dist_tpoffs)  #numbers not required for ffcfw
+    ebw_source_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v_adj(ebw_source_tva1e1b1nwzida0e0b0xyg3,
+                                                           a_p_va1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3)
 
     ## calc the ‘destination’ weight of each group of animal at the end of the period prior to the transfer (transfer is next period is prejoining for the destination animal)
     ### for dams select the ‘destination’ condensed weight for the ‘source’ slices using a_g1_tg1
@@ -8677,14 +8632,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ebw_dest_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v_adj(ebw_dest_tva1e1b1nwzida0e0b0xyg1,
                                                        a_p_va1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1)
     ###offs
-    ffcfw_dest_condense_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(o_ffcfw_lw_dist_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3,
-                                                             period_is_tp=nextperiod_is_condense_pa1e1b1nwzida0e0b0xyg3)  #numbers not required for ffcfw
-    ffcfw_dest_condense_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v_adj(ffcfw_dest_condense_tva1e1b1nwzida0e0b0xyg3,
-                                                                 a_p_va1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3)
-    ffcfw_dest_season_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(o_ffcfw_lw_dist_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3,
-                                                           period_is_tp=nextperiod_is_startseason_pa1e1b1nwzida0e0b0xyg3)  #numbers not required for ffcfw
-    ffcfw_dest_season_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v_adj(ffcfw_dest_season_tva1e1b1nwzida0e0b0xyg3,
-                                                               a_p_va1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3)
+    ebw_dest_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(o_ebw_lw_dist_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, period_is_tp=period_is_dist_tpoffs)  #numbers not required for ffcfw
+    ebw_dest_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v_adj(ebw_dest_tva1e1b1nwzida0e0b0xyg3,
+                                                       a_p_va1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3)
 
     ##distributing at condensing - all lws back to starting number of LWs and dams to different sires at prejoining
     ###t0 and t1 are distributed however this is not used because t0 and t1 don't transfer to next dvp
@@ -8692,20 +8642,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
         ebw_dest_tva1e1b1nwzida0e0b0xyg1, ebw_source_tva1e1b1nwzida0e0b0xyg1,
         mask_dest_tva1e1b1nwzida0e0b0xyg1, index_wzida0e0b0xyg1, dvp_is_dist_tvdams[..., na])
 
-    distribution_condense_tva1e1b1nw8zida0e0b0xyg3w9 = sfun.f1_lw_distribution(
-        ffcfw_dest_condense_tva1e1b1nwzida0e0b0xyg3, ffcfw_source_condense_tva1e1b1nwzida0e0b0xyg3,
-        mask_dest_va1e1b1nwzida0e0b0xyg3[na],
-        index_wzida0e0b0xyg3, dvp_type_next_va1e1b1nwzida0e0b0xyg3[..., na]==condense_vtype3)
-
-    ##redistribute at season start - all seasons back into a common season.
-    distribution_season_tva1e1b1nw8zida0e0b0xyg3w9 = sfun.f1_lw_distribution(
-        ffcfw_dest_season_tva1e1b1nwzida0e0b0xyg3, ffcfw_source_season_tva1e1b1nwzida0e0b0xyg3,
-        mask_dest_va1e1b1nwzida0e0b0xyg3[na],
-        index_wzida0e0b0xyg3, dvp_type_next_va1e1b1nwzida0e0b0xyg3[..., na]==season_start_vtype3)
-
-    ##combine distributions
-    ###for offs, if season start and condensing are the same then the season distribution already contains the condensed info
-    distribution_tva1e1b1nw8zida0e0b0xyg3w9 = distribution_season_tva1e1b1nw8zida0e0b0xyg3w9 * (distribution_condense_tva1e1b1nw8zida0e0b0xyg3w9 if season_start_vtype3 != condense_vtype3 else 1) #only multiply the two distributions if they occur in different dvps
+    distribution_tva1e1b1nw8zida0e0b0xyg3w9 = sfun.f1_lw_distribution(
+        ebw_dest_tva1e1b1nwzida0e0b0xyg3, ebw_source_tva1e1b1nwzida0e0b0xyg3,
+        mask_dest_va1e1b1nwzida0e0b0xyg3[na], index_wzida0e0b0xyg3, dvp_is_dist_tvoffs[..., na])
 
     # ##store cluster associations for use in creating the optimal feedsupply at the end of the trial
     # pkl_fs_info['distribution_condense_tva1e1b1nw8zida0e0b0xyg1w9'] = distribution_condense_tva1e1b1nw8zida0e0b0xyg1w9
@@ -8857,7 +8796,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     assetvalue_a5qtva1e1b1nwzida0e0b0xyg1[2,...] = fun.f_weighted_average(np.swapaxes(np.roll(assetvalue_a5qtva1e1b1nwzida0e0b0xyg1, shift=-1, axis=p_pos)[1,...,na], axis1=w_pos-1, axis2=-1)
            , distribution_tva1e1b1nw8zida0e0b0xyg1w9, axis=-1)
     assetvalue_a5qtva1e1b1nwzida0e0b0xyg3[2,...] = fun.f_weighted_average(np.swapaxes(np.roll(assetvalue_a5qtva1e1b1nwzida0e0b0xyg3, shift=-1, axis=p_pos)[1,...,na], axis1=w_pos-1, axis2=-1)
-           , distribution_season_tva1e1b1nw8zida0e0b0xyg3w9, axis=-1)
+           , distribution_tva1e1b1nw8zida0e0b0xyg3w9, axis=-1)
     ###cluster
     assetvalue_a5p7qtva1e1b1nwzida0e0b0xyg0 = sfun.f1_create_production_param('sire', assetvalue_a5p7qtva1e1b1nwzida0e0b0xyg0, numbers_start_vg=numbers_start_tva1e1b1nwzida0e0b0xyg0,
                                                                           mask_vg=mask_z8var_p7tva1e1b1nwzida0e0b0xyg[:,na,...])

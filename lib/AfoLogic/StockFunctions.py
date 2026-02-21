@@ -3320,7 +3320,7 @@ def f1_condensed(var, lw_idx, condense_w_mask, i_n_len, i_w_len, n_pos, w_pos, i
 
 
 def f1_collapse_pointers(p, ebw, numbers, startw_unique_next, period_is_condense, period_is_seasonstart,
-                lw_initial_a1e1b1nwzida0e0b0xyg, period_is_prejoin=False, prejoin_tup=None, inc_mask=True):
+                lw_initial_a1e1b1nwzida0e0b0xyg, period_is_prejoin=False, prejoin_tup=(), inc_mask=True):
     '''
     This function is called when axes need collapsing from one period to the next.
     The periods that require collapsing and the axes to collapse are:
@@ -3556,7 +3556,7 @@ def f1_check_all_bins_present(pointers, w_pos, group_axes, expected_w):
     return missing
 
 
-def f1_collapse(pointers, index_unique_wzida0e0b0xyg, prod, numbers, period_is_condense, period_is_seasonstart, w_pos, z_pos, period_is_prejoin=False, prejoin_tup=None):
+def f1_collapse(pointers, index_unique_wzida0e0b0xyg, prod, numbers, period_is_condense, period_is_seasonstart, w_pos, z_pos, period_is_prejoin=False, prejoin_tup=()):
     '''
     This function applies the collapse pointers to a production array and returns the production for the new animal.
 
@@ -3608,11 +3608,13 @@ def f1_collapse(pointers, index_unique_wzida0e0b0xyg, prod, numbers, period_is_c
 
         return out
 
+    condensed_prod_condense = f1_mean(w_pos, numbers, w_pos)
     condensed_prod_season = f1_mean(z_pos, numbers, w_pos)
     condensed_prod_prejoin = f1_mean(prejoin_tup, numbers, w_pos)
     condensed_prod_prejoinseason = f1_mean((z_pos,) + prejoin_tup, numbers, w_pos)
 
-    condensed_prod = fun.f_update(condensed_prod_season, condensed_prod_prejoin, period_is_prejoin)
+    condensed_prod = fun.f_update(condensed_prod_condense, condensed_prod_season, period_is_seasonstart)
+    condensed_prod = fun.f_update(condensed_prod, condensed_prod_prejoin, period_is_prejoin)
     condensed_prod = fun.f_update(condensed_prod, condensed_prod_prejoinseason,
                                   np.logical_and(period_is_prejoin, period_is_seasonstart))
 
