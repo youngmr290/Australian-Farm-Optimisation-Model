@@ -494,6 +494,12 @@ def f_divide(numerator, denominator, dtype='float64', option=0):
     if option == 1:
         mask = np.isclose(denominator, numerator)
         result[mask] = 1
+
+    ##If option is 2 then return the numerator if the denominator is 0
+    if option == 2:
+        mask = np.isclose(denominator.astype(float), 0)
+        result[mask] = numerator[mask]
+
     return result
 
 def f_bilinear_interpolate(im, x_im, y_im, x, y):

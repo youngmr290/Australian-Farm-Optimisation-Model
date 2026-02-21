@@ -3235,28 +3235,34 @@ def f1_collapse_pointers(p, ebw, numbers, startw_unique_next, period_is_condense
     ### More and larger axes means a greater number of groups of animals contributing to each start animal
     ### With more groups the end gap can be reduced and if passing 1 to 1 then the end gap is not reduced
 
-    ##Calculate the number of groups of animals that are being collapsed
-    n_groups_condense = fun.f1_unique_count(ebw, w_pos)
-    n_groups_season = fun.f1_unique_count(ebw, (w_pos,) + season_tup)
-    n_groups_prejoin = fun.f1_unique_count(ebw, (w_pos,) + prejoin_tup)
-    n_groups_prejoinseason = fun.f1_unique_count(ebw, (w_pos,) + prejoinseason_tup)
+    ##Calculate the number of groups of animals that are being collapsed based on the minimum of the unique values or the numbers != 0.00001
+    n_groups_condense = np.minimum(fun.f1_unique_count(ebw, w_pos)
+                                   , np.sum(~np.isclose(numbers, 0.00001), axis=w_pos, keepdims=True))
+    n_groups_season = np.minimum(fun.f1_unique_count(ebw, (w_pos,) + season_tup)
+                                   , np.sum(~np.isclose(numbers, 0.00001), axis=(w_pos,) + season_tup, keepdims=True))
+    n_groups_prejoin = np.minimum(fun.f1_unique_count(ebw, (w_pos,) + prejoin_tup)
+                                   , np.sum(~np.isclose(numbers, 0.00001), axis=(w_pos,) + prejoin_tup, keepdims=True))
+    n_groups_prejoinseason = np.minimum(fun.f1_unique_count(ebw, (w_pos,) + prejoinseason_tup)
+                                   , np.sum(~np.isclose(numbers, 0.00001), axis=(w_pos,) + prejoinseason_tup, keepdims=True))
 
     ##update the number of groups based on the period
-    n_groups = 1    #only 1 group unless overwritten by being another period
+    n_groups = startw_unique_next    #startw_unique_next groups unless overwritten by being another period
     n_groups = fun.f_update(n_groups, n_groups_condense, period_is_condense)
     n_groups = fun.f_update(n_groups, n_groups_season, period_is_seasonstart)
     n_groups = fun.f_update(n_groups, n_groups_prejoin, period_is_prejoin)
     n_groups = fun.f_update(n_groups, n_groups_prejoinseason, np.logical_and(period_is_prejoin, period_is_seasonstart))
-    ## calculate the ratio of the number of collapsed animals relative to the number of starting w
-    ratio = n_groups / startw_unique_next
-    ### Adjust the ratio to achieve the desire adjustment to the end gap, while ratio_adjusted = 1 when ratio == 1
-    adjuster = 25    #A lower value is a more extreme adjustment
-    ratio_adjusted = 1 + (ratio - 1) / adjuster
+    n_groups_collapsed = np.maximum(startw_unique_next, n_groups)   # to catch if all numbers are 0.00001
+
+    ## calculate the 'effective' number of groups used to calculate the end gap.
+    ### If the effective number = startw_unique_next then the end_gap & the percentile_step will be evenly spaced
+    ### The effective number is an adjustment on end_gap and tolerance, while the step is determined by startw_unique_next
+    weighting = 4   #A lower value is a more extreme adjustment
+    n_effective = startw_unique_next * (n_groups_collapsed / startw_unique_next) ** (1/weighting)
 
     ##Calculate the end gap
-    end_gap = (max - min) / (2 * startw_unique_next * ratio_adjusted)
+    end_gap = (max - min) / (2 * n_effective)
     ##Calculate the step
-    percentile_step = fun.f_divide(((max - min) - 2 * end_gap), (startw_unique_next - 1))
+    percentile_step = fun.f_divide((max - min) - 2 * end_gap, (startw_unique_next - 1), option=2)
     index_q = (index_wzida0e0b0xyg / len_w * startw_unique_next).astype(int)
     t_target_percentiles = 100 - ((100 - max) + end_gap + index_q * percentile_step)
 
@@ -3332,15 +3338,15 @@ def f1_collapse_pointers(p, ebw, numbers, startw_unique_next, period_is_condense
         pointers = fun.f_update(pointers, -1,
                                 np.logical_not(np.logical_or(np.logical_or(period_is_prejoin, period_is_seasonstart), period_is_condense)))
 
-    # step 6: overwrite the pointers if the animals are passing 1:1 because there are no axes to collapse
-    ##This needs to be done at the end and can't be done at the start of the function because only part of the array may need to be overwritten
+    # step 6: overwrite the pointers with 1:1 if there is only 1 group contributing to each start animal of the next period
+    ## this occurs when there are no axes to collapse
+    ## This needs to be done at the end of the function, it can't be done at the start of the function (and then
+    ## bypass the other calculations) because only part of the array may need to be overwritten
 
-    ##Create an array that is passing 1 to 1 for the number of unique w
+    ##Create an array that is passing 1 to 1 for the number of unique w and overwrite pointers if equal numbers of groups collapsed and starting next period
     block = (len_w // startw_unique_next)
     index_unique_wzida0e0b0xyg = ((index_wzida0e0b0xyg // block) * block).astype(int)
-
-    ##if there is only 1 group contributing to the start animal of the next period then pass 1:1 (index unique_w)
-    pointers = fun.f_update(pointers, index_unique_wzida0e0b0xyg, n_groups == startw_unique_next)
+    pointers = fun.f_update(pointers, index_unique_wzida0e0b0xyg, n_groups_collapsed == startw_unique_next)
 
     # Step 7 - Error handler: ensure that all collapse animals have a pointer
     #todo this uses w by w... can we get around this?
