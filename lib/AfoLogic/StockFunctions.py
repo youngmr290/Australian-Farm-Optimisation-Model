@@ -3270,33 +3270,67 @@ def f1_collapse_pointers(p, ebw, numbers, startw_unique_next, period_is_condense
     ebw_prejoin = np.average(ebw, axis=prejoin_tup, keepdims=True)
     ebw_prejoinseason = np.average(ebw, axis=(z_pos,) + prejoin_tup, keepdims=True)
 
-    order_season = np.argsort(-ebw_season, w_pos, )
-    order_prejoin = np.argsort(-ebw_prejoin, w_pos)
-    order_prejoinseason = np.argsort(-ebw_prejoinseason, w_pos)
-    order_condensed = np.argsort(-lw_initial_a1e1b1nwzida0e0b0xyg, w_pos)  # this needs an axis length that aligns with target_percentile(w_pos)
+    order_season = np.argsort(ebw_season, w_pos, )
+    order_prejoin = np.argsort(ebw_prejoin, w_pos)
+    order_prejoinseason = np.argsort(ebw_prejoinseason, w_pos)
+    order_condensed = np.argsort(lw_initial_a1e1b1nwzida0e0b0xyg, w_pos)  # this needs an axis length that aligns with target_percentile(w_pos)
 
     order = fun.f_update(order_season, order_prejoin, period_is_prejoin)
     order = fun.f_update(order, order_prejoinseason, np.logical_and(period_is_prejoin, period_is_seasonstart))
     order = fun.f_update(order, order_condensed, period_is_condense)
+    order_descending = np.flip(order, axis=w_pos)   #flip the array into descending order
 
     # create the target percentiles based on the required order
-    target_percentiles = np.take_along_axis(t_target_percentiles, order, w_pos)
-
+    target_percentiles = np.take_along_axis(t_target_percentiles, order_descending, w_pos)
     ##########
     # Part C #
     ##########
 
-    # Step 3: compare to target_percentile #todo this adds w by w axes... this will be very large... Make sure this code only runs in the required preiods.
-    diff = np.abs(percentile_rank[..., None] - np.swapaxes(target_percentiles[..., None], w_pos - 1, -1))
-    closest_idx = np.argmin(diff, axis=-1)
-    closest_diff = np.min(diff, axis=-1)
+    if True:    #retain both methods searchsorted (True) and w x w (False) until testing is completed
+        # Option 1
+        ##This method uses np.search_sorted on a double length w axis to identify which animals are between the upper
+        ## & lower limits of the target_percentile +/- tolerance
 
-    # Step 4: apply tolerance
-    pointers = np.where(closest_diff <= tolerance, closest_idx, -1)
+        ##create target_percentiles with a double length w axis that has the upper and lower limit for each target percentile
+        target_upper = target_percentiles + tolerance   #to convert to chunking use target_upper = np.average(target_percentile, roll(target_percentile, -1))
+        target_lower = target_percentiles - tolerance   #roll(+1). With both needing the end case handled
+        target_percentiles_2w_unsorted = np.concatenate([target_upper, target_lower], axis=w_pos)
+        sort_order = np.argsort(target_percentiles_2w_unsorted, axis=w_pos)  #required to convert the result back to
+        target_percentile_2w = np.take_along_axis(target_percentiles_2w_unsorted, sort_order, axis=w_pos)
+        ## Expand the ends of the target percentiles to pickup scenarios where the end case is a valid animal and rounding was causing randomness
+        slc = [slice(None)] * target_percentile_2w.ndim
+        slc[w_pos] = 0
+        target_percentile_2w[tuple(slc)] -= 0.0001
+        slc[w_pos] = -1
+        target_percentile_2w[tuple(slc)] += 0.0001
 
-    # step 5: if not condensing then update with -1.
-    pointers = fun.f_update(pointers, -1,
-                            np.logical_not(np.logical_or(np.logical_or(period_is_prejoin, period_is_seasonstart), period_is_condense)))
+        ## find the position in the double w axis for each element in the percentile_rank array
+        position_2w = fun.f1_searchsorted_looped(target_percentile_2w, percentile_rank, w_pos)  #look up the place of percentile rank in target percentile and retuen a value between 0 and 2w-1
+        ## remembering that the order is reversed so working up from a low percentile
+        ### 0 means that the percentile_rank is <= the lowest target_2w (lowest target - tolerance)  i.e. not within tolerance
+        ### 1 means (lowest target - tolerance) < percentile_rank <= (lowest + tolerance) i.e. within tolerance
+        ### 3 means (lowest target + tolerance) < percentile_rank <= (2nd lowest - tolerance)  i.e. not within tolerance
+        ### generalising, the odd numbers are within the tolerance and even are not
+        position_2w[position_2w % 2 == 0] = -2
+        ##calculate the position in the w length array
+        position = position_2w // 2   # unused are now -1 and the other values are 0 to len_w-1
+        ##revert the sort back to the order of the target_percentiles using the order args for the ascending order of ebw
+        pointers = np.take_along_axis(order, position, w_pos)
+        pointers[position==-1] = -1   #replace the -1 in the array (required because -1 is a valid position in take_along)
+
+    else:
+        # Option2
+        # Step 3: compare to target_percentile. This method uses a w by w to calculate the difference. searchsorted methodis preferred
+        diff = np.abs(percentile_rank[..., None] - np.swapaxes(target_percentiles[..., None], w_pos - 1, -1))
+        closest_idx = np.argmin(diff, axis=-1)
+        closest_diff = np.min(diff, axis=-1)
+
+        # Step 4: apply tolerance
+        pointers = np.where(closest_diff <= tolerance, closest_idx, -1)
+
+        # step 5: if not condensing then update with -1.
+        pointers = fun.f_update(pointers, -1,
+                                np.logical_not(np.logical_or(np.logical_or(period_is_prejoin, period_is_seasonstart), period_is_condense)))
 
     # step 6: overwrite the pointers if the animals are passing 1:1 because there are no axes to collapse
     ##This needs to be done at the end and can't be done at the start of the function because only part of the array may need to be overwritten

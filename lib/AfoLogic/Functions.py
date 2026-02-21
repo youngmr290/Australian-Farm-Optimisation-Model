@@ -95,6 +95,65 @@ def searchsort_multiple_dim(a, v, axis_a0, axis_v0, axis_a1=None, axis_v1=None, 
 
 #print(timeit.timeit(phases2,number=100)/100)
 
+def f1_searchsorted_looped(a, v, axis, side='left'):
+    """
+    Apply np.searchsorted along the given axis of multidim arrays.
+    Done by flattening the other dimensions and looping along the flattened axis.
+
+    a and v must be broadcast-compatible except along `axis`.
+    a must be sorted along 'axis'.
+
+    Parameters (See np.searchsorted)
+    ----------
+    a : ndarray  Array to be searched (must be sorted along `axis`)
+    v : ndarray  Values whose insertion points are sought
+    axis : int  Axis along which to search
+    side : {'left', 'right'}, optional
+
+    Returns
+    -------
+    ndarray of int: Same shape as v, containing insertion indices
+    """
+    if a.ndim == 0 or v.ndim == 0:
+        raise ValueError("Inputs must be at least 1-D")
+
+    # Normalize axes to handle negative indices and test dimensions
+    axis = a.ndim + axis if axis < 0 else axis
+    if not (0 <= axis < a.ndim):
+        raise ValueError(f"axis {axis} out of bounds for array of dimension {a.ndim}")
+
+    # Move the search axis to the end → much easier broadcasting & indexing
+    a_moved = np.moveaxis(a, axis, -1)  # shape:  ..., M
+    v_moved = np.moveaxis(v, axis, -1)  # shape:  ..., K   (K may differ from M)
+
+    # Make sure leading dimensions match (broadcasting)
+    if a_moved.shape[:-1] != v_moved.shape[:-1]:
+        try:
+            v_moved = np.broadcast_to(v_moved, (*a_moved.shape[:-1], v_moved.shape[-1]))
+        except ValueError:
+            raise ValueError(f"Leading dimensions of v ({v_moved.shape[:-1]}) "
+                             f"cannot be broadcast to those of a ({a_moved.shape[:-1]})")
+
+    # Now flatten all dimensions except the last one
+    a_flat = a_moved.reshape(-1, a_moved.shape[-1])  # (N_slices, M)
+    v_flat = v_moved.reshape(-1, v_moved.shape[-1])  # (N_slices, K)
+
+    # Output container
+    result_flat = np.empty(v_flat.shape, dtype=np.int64)
+
+    # Loop over all slices
+    for i in range(a_flat.shape[0]):
+        result_flat[i] = np.searchsorted(a_flat[i], v_flat[i], side=side)
+
+    # Reshape back and move axis to original position
+    result = result_flat.reshape(v_moved.shape)
+
+    if axis != -1:
+        result = np.moveaxis(result, -1, axis)
+
+    return result
+
+
 def f1_unique_count(a, axes):
     """
     Count unique values along given axes.
