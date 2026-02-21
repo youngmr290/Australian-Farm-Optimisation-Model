@@ -3452,7 +3452,7 @@ def f1_collapse_pointers(p, ebw, numbers, startw_unique_next, period_is_condense
     ##Calculate the end gap
     end_gap = (max - min) / (2 * startw_unique_next * ratio_adjusted)
     ##Calculate the step
-    percentile_step = ((max - min) - 2 * end_gap) / (startw_unique_next - 1)
+    percentile_step = fun.f_divide(((max - min) - 2 * end_gap), (startw_unique_next - 1))
     index_q = (index_wzida0e0b0xyg / len_w * startw_unique_next).astype(int)
     t_target_percentiles = 100 - ((100 - max) + end_gap + index_q * percentile_step)
 
@@ -3520,7 +3520,9 @@ def f1_collapse_pointers(p, ebw, numbers, startw_unique_next, period_is_condense
         raise ValueError(f"Period {p}: pointers must exist for each collapsed animal. "
                          f"This indicates that numbers are very low (animals died) or an edge case that is not picked up with the target percentiles and/or tolerances. ")
 
-    return pointers, index_unique_wzida0e0b0xyg[None,...]
+    # add leading axes so that arrays have same ndims
+    index_unique_wzida0e0b0xyg = index_unique_wzida0e0b0xyg.reshape((1,) * (pointers.ndim - index_unique_wzida0e0b0xyg.ndim) + index_unique_wzida0e0b0xyg.shape)
+    return pointers, index_unique_wzida0e0b0xyg
 
 
 def f1_check_all_bins_present(pointers, w_pos, group_axes, expected_w):
@@ -3700,7 +3702,7 @@ def f1_period_end_nums(numbers, mortality, mortality_yatf=0, nfoet_b1 = 0, nyatf
             ### the number in the NM slice e1[0] is a proportion of the total numbers
             ### need a minimum number to keep nm in pyomo. Want a small number relative to mortality (after allowing for multiple slices getting the small number)
             ### Scale the numbers based on expected proportion mated so that the weighted average for production reflects expected management
-            ### Note: scaling of numbers for expected management of drys occurs in f1_period_start_prod()
+            ### Note: scaling of numbers for expected management of drys occurs in f1_period_start_prod2() via the pointers and the collapse function.
             temporary[:, :, 0:1, 0:1, ...] = np.maximum(0.00001, np.sum(temporary, axis=(sinp.stock['i_e1_pos'], sinp.stock['i_b1_pos']),
                                                                      keepdims=True) * (1 - mated_propn))
             ### the numbers in the other mated slices other than NM get scaled by the proportion mated
@@ -4781,9 +4783,9 @@ def f1_cum_sum_dvp(arr,dvp_pointer,axis=0,shift=0):
 
 def f1_lw_distribution(ffcfw_dest_w8g, ffcfw_source_w8g, mask_dest_wg=1, index_w8=None, mask_update_dist=True, for_feedsupply=False): #, w_pos, i_n_len, i_n_fvp_period, dvp_type_next_tvgw=0, vtype=0):
     """Distribute animals between periods when the animals are changing on the period junction. This change can
-    be either 1. condensing at prejoining when animals are 'condensed' from the final number of LW profiles back to
+    be either 1. condensing when animals are 'condensed' from the final number of LW profiles back to
     the initial number or 2. averaging animals at season start when weights at the end of all the seasons are
-    averaged to become the start weight for the next season.
+    averaged to become the start weight for the next season. or 3. at prejoining when the b. e & a axis are collapsed.
 
     The animals are distributed to the 2 nearest neighbours, rather than a distribution across all destination LWs.
     The aim is that the average weight of the animals in the next period is equal to the average weight at the
