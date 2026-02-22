@@ -31,9 +31,9 @@ def f1_sim_periods(periods_per_year, oldest_animal, len_o):
     All calculations are based on a day of the year rather than a date and the periods are weeks of the year
     This saves managing the difficulties associated with the extra day in the year and in leap years.
 
-    :param start_year: int: year to start simulation.
     :param periods_per_year: int: number of periods per year.
     :param oldest_animal: float: age of the oldest animal to be simulated (yrs).
+    :param len_o: the structural limit of the simulation in years
 
     :return: n_sim_periods: total number of sim periods
     :return: date_start_p: array of period dates (1D periods)
@@ -652,7 +652,7 @@ def f1_feedsupply_adjust(attempts,feedsupply,itn):
     ##create empty array to put new feedsupply into, this is done so it doesn't have the itn axis (probably could just create from attempts array shape without last axis)
     feedsupply_new = np.zeros_like(feedsupply)
     ##which feedsupplies can be calculated using binary method - must have a negative and positive error
-    binary_mask = np.nanmin(attempts[...,1], axis=-1)/np.nanmax(attempts[...,1], axis=-1) < 0 #axis -1 is the itn axis ie take the min and max error from the previous iterations
+    binary_mask = fun.f_divide(np.nanmin(attempts[...,1], axis=-1), np.nanmax(attempts[...,1], axis=-1)) < 0 #axis -1 is the itn axis ie take the min and max error from the previous iterations
     if np.any(binary_mask):
         index_itn = np.arange(attempts.shape[-2])
         ##calc new feedsupply binary - take half of the two feedsupplies that have resulted in the error closest to 0. Only adds the binary result to slices that have a negative and a positive value (done using the mask created above)
@@ -986,17 +986,20 @@ def f_egraze(cm, lw, i_steepness, density, foo, confinement, intake_f, dmd):
     '''Extra energy required for eating paddock feed than an equivalent feed in a pen (walking, chewing and ruminating)
     Energy required for walking around the paddock is estimated from distance being a function of feed available
     Low quality paddock feed is likely to be longer fibre length which might increase the energy to chew and ruminate.
+
+    The Aust feeding standards have a comment: For animals given feed in pens or yards it can generally be assumed that graze = 0.
     '''
     ##Distance walked (horizontal equivalent)
     distance = (1 + np.tan(np.deg2rad(i_steepness))) * np.minimum(1, cm[17, ...] / density) / (cm[8, ...] * foo + cm[9, ...])
-    ##Set Distance walked to 0 if in confinement
-    distance = distance * np.logical_not(confinement)
     ##Energy required for movement
     emove = cm[16, ...] * distance * lw
     ##Extra energy required for chewing and ruminating
     emasticate = cm[6, ...] * lw * intake_f * (cm[7, ...] - dmd)
     ##Energy required for grazing (chewing and walking around)
     egraze = emove + emasticate
+    ##Set egraze to 0 if in confinement - For animals given feed in pens or yards it can generally be assumed that graze = 0
+    egraze = egraze * np.logical_not(confinement)
+    egraze = fun.f_sa(egraze, sen.sam['emove'])
     return egraze
 
 
@@ -1183,7 +1186,7 @@ def f1_carryforward_u1(cu1, cg, ebg, period_between_joinstartend, period_between
     return d_cf
 
 
-def f1_carryforward_u6(cu6, lw, lwc, days_period, is_join, between_joinstartend=False, between_mated90=False
+def f1_carryforward_u6(cu6, lw, lwc, days_period, is_mating, between_joinstartend=False, between_mated90=False
                        , between_d90birth=False, between_birthwean=False, between_weanjoin=False):
     ''' Function to calculate the carry forward amount for a production relationship that requires LW & LWC from
         joining through to when the production is calculated (from end of joining through to next joining).
@@ -1191,13 +1194,13 @@ def f1_carryforward_u6(cu6, lw, lwc, days_period, is_join, between_joinstartend=
 
     ##Select coefficient to increment the carry forward quantity based on the current period for lw, lw2, lwc & lwc2
     ### can only be the coefficient from one of the periods and the later period overwrites the earlier period.
-    coeff_lwj = fun.f_update(0, cu6[0,...], is_join) #note cu6 has already had the first axis (production parameter) sliced when it was passed in
+    coeff_lwj = fun.f_update(0, cu6[0,...], is_mating) #note cu6 has already had the first axis (production parameter) sliced when it was passed in
     coeff_lwc = fun.f_update(0, cu6[2,...], between_joinstartend) #note cu6 has already had the first axis (production parameter) sliced when it was passed in
     coeff_lwc = fun.f_update(coeff_lwc, cu6[4,...], between_mated90)
     coeff_lwc = fun.f_update(coeff_lwc, cu6[6,...], between_d90birth)
     coeff_lwc = fun.f_update(coeff_lwc, cu6[8,...], between_birthwean)
     coeff_lwc = fun.f_update(coeff_lwc, cu6[10,...], between_weanjoin)
-    coeff_lwj2 = fun.f_update(0, cu6[1,...], is_join) #note cu6 has already had the first axis (production parameter) sliced when it was passed in
+    coeff_lwj2 = fun.f_update(0, cu6[1,...], is_mating) #note cu6 has already had the first axis (production parameter) sliced when it was passed in
     coeff_lwc2 = fun.f_update(0, cu6[3,...], between_joinstartend) #note cu6 has already had the first axis (production parameter) sliced when it was passed in
     coeff_lwc2 = fun.f_update(coeff_lwc2, cu6[5,...], between_mated90)
     coeff_lwc2 = fun.f_update(coeff_lwc2, cu6[7,...], between_d90birth)
@@ -2353,13 +2356,16 @@ def f_conception_mu2(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, doj, d
         ##Select slice 24 (Ewe Lamb coefficients) or 25 (maiden ewe coefficients) or 26 (mature ewe coefficients) of cb1 & cu2 based on age of the dam. Note: age adds a,e,b axes onto the sliced array
         cb1_sliced = fun.f_update(cb1[26, ...], cb1[24, ...], age < 364)
         cu2_sliced = fun.f_update(cu2[26, ...], cu2[24, ...], age < 364)
-        cb1_sliced = fun.f_update(cb1_sliced, cb1[25, ...], np.logical_and(364 < age, age < 728))
-        cu2_sliced = fun.f_update(cu2_sliced, cu2[25, ...], np.logical_and(364 < age, age < 728))
+        cb1_sliced = fun.f_update(cb1_sliced, cb1[25, ...], np.logical_and(364 <= age, age < 728))
+        cu2_sliced = fun.f_update(cu2_sliced, cu2[25, ...], np.logical_and(364 <= age, age < 728))
+        ##Use the LW & LWC of the '11' (singles) slice of the b1_axis because it is the slice that contains the ewes that will be mated
+        slc_11 = [slice(None)] * len(maternallw_mating.shape)
+        slc_11[b1_pos] = slice(2, 3)
         ##Calculate the transformed estimates of proportion empty (slice cu2 allowing for active i axis)
-        cutoff0 = cb1_sliced[:,:,1:2,...] + cu2_sliced[-1, ...] + (cu2_sliced[0, ...] * maternallw_mating
-                                                                 + cu2_sliced[1, ...] * maternallw_mating ** 2
-                                                                 + cu2_sliced[2, ...] * lwc
-                                                                 + cu2_sliced[3, ...] * lwc ** 2
+        cutoff0 = cb1_sliced[:,:,1:2,...] + cu2_sliced[-1, ...] + (cu2_sliced[0, ...] * maternallw_mating[tuple(slc_11)]
+                                                                 + cu2_sliced[1, ...] * maternallw_mating[tuple(slc_11)] ** 2
+                                                                 + cu2_sliced[2, ...] * lwc[tuple(slc_11)]
+                                                                 + cu2_sliced[3, ...] * lwc[tuple(slc_11)] ** 2
                                                                  + cu2_sliced[4, ...] * age
                                                                  + cu2_sliced[5, ...] * age ** 2
                                                                  + cu2_sliced[6, ...] * nlb
@@ -2870,7 +2876,7 @@ def f_mortality_dam_mu2(cu2, ce, cb1, cf_csc, csc, cs, cv_cs, period_between_sca
     return mortalitye_mu, cf_csc
 
 
-def f_mortality_dam_EL(cu6, cb1, cf_value, lw, lwc, cv_lw, nfoet_b1, days_period, saa_mortalitye, is_join
+def f_mortality_dam_EL(cu6, cb1, cf_value, lw, lwc, cv_lw, nfoet_b1, days_period, saa_mortalitye, is_mating
                        , is_prebirth, between_mated90, between_d90birth):
     '''
     Peri natal Dam mortality of ewe lambs due to: LW at birth, LW change during pregnancy & birth type.
@@ -2880,9 +2886,9 @@ def f_mortality_dam_EL(cu6, cb1, cf_value, lw, lwc, cv_lw, nfoet_b1, days_period
     ###slice of first axis of cu6 for mortality of EL dams
     cu6_slc1 = 23
     ###slices of 2nd axis of cu6 that need incrementing with cb1 coefficients
-    cu6_slices = [0, 1, 4, 6]
+    cu6_slices = [0, 1, 4, 6, -1]
     ###slices of first axis of cb1 are to be added to cu6. Note: requires same number of entries as above and corresponding order
-    cb1_slices = [27, 28, 29, 30]
+    cb1_slices = [27, 28, 29, 30, 31]
     ###Initialise the destination array so that coefficients can be assigned, shape is determined by cu6 and cb1
     coeff_shape = np.broadcast_shapes(cu6.shape, cb1.shape[1:])
     coeff_combined = np.broadcast_to(cu6, coeff_shape).copy()
@@ -2895,12 +2901,12 @@ def f_mortality_dam_EL(cu6, cb1, cf_value, lw, lwc, cv_lw, nfoet_b1, days_period
 
     ## Carry forward EL dam mortality increment (the component of the transformed mortality linked to LW & LW change)
     ###pass other args with na for the p1 & p2 axes that have been added to LW & LWC
-    d_cf = f1_carryforward_u6(coeff_combined[cu6_slc1, ...,na,na], lw_p1p2, lwc_p1p2, days_period[...,na,na], is_join[...,na,na]
+    d_cf = f1_carryforward_u6(coeff_combined[cu6_slc1, ...,na,na], lw_p1p2, lwc_p1p2, days_period[...,na,na], is_mating[...,na,na]
                               , between_mated90 = between_mated90[...,na,na], between_d90birth = between_d90birth[...,na,na])
     ### Calculate the cumulative carried forward value
     cf_value = cf_value + d_cf
     ###calculate transformed mortality by adding the coefficients that are not in the carry forward (b1 adj & intercept)
-    t_mortalitye_p1p2 = cf_value + cb1[31, ...,na,na] + cu6[cu6_slc1, -1, ...,na,na]
+    t_mortalitye_p1p2 = cf_value + coeff_combined[cu6_slc1, -1, ...,na,na]       #cb1[31, ...,na,na] + cu6[cu6_slc1, -1, ...,na,na]
     ##Back transform the mortality (Logit)
     mortalitye_p1p2 = fun.f_back_transform(t_mortalitye_p1p2)
     ##Average across the p1 & p2 axes (range of LW & LW change within the mob) if period is birth for reproducing ewes
@@ -2977,7 +2983,7 @@ def f_mortality_progeny_mu(cu2, cb1, cx, ce, w_b, w_b_std, cv_weight, foo, chill
 
 
 def f_mortality_progeny_EL(cu6, cb1, cx, cf_value, lw, lwc, cv_lw, foo, chill_index_p1, mob_size, days_period
-                , rev_trait_value, sap_mortalityp, saa_mortalityx, is_join, is_birth, between_mated90, between_d90birth):
+                , rev_trait_value, sap_mortalityp, saa_mortalityx, is_mating, is_birth, between_mated90, between_d90birth):
     '''
     Calculate the mortality of progeny at birth due to mis-mothering and exposure
     using the equations developed in P.PSH.1180 – More lambs from ewes lambs through developing and extending best practice
@@ -2988,9 +2994,9 @@ def f_mortality_progeny_EL(cu6, cb1, cx, cf_value, lw, lwc, cv_lw, foo, chill_in
     ###slice of first axis of cu6 for mortality of EL dams
     cu6_slc1 = 8
     ###slices of 2nd axis of cu6 that need incrementing with cb1 coefficients
-    cu6_slices = [0, 1, 4, 5, 6, 7]
+    cu6_slices = [0, 1, 4, 5, 6, 7, -1]
     ###slices of first axis of cb1 are to be added to cu6. Note: requires same number of entries as above and corresponding order
-    cb1_slices = [32, 33, 34, 35, 36, 37]
+    cb1_slices = [32, 33, 34, 35, 36, 37, 38]
     ###Initialise the destination array so that coefficients can be assigned, shape is determined by cu6 and cb1
     coeff_shape = np.broadcast_shapes(cu6.shape, cb1.shape[1:])
     coeff_combined = np.broadcast_to(cu6, coeff_shape).copy()
@@ -3003,12 +3009,13 @@ def f_mortality_progeny_EL(cu6, cb1, cx, cf_value, lw, lwc, cv_lw, foo, chill_in
 
     ## Carry forward EL dam lactating increment (the component of the transformed lactation propn linked to LW & LW change)
     ###pass other args with na for the p1 & p2 axes that have been added to LW & LWC
-    d_cf = f1_carryforward_u6(coeff_combined[cu6_slc1, ...,na,na], lw_p1p2, lwc_p1p2, days_period[...,na,na], is_join[...,na,na]
+    d_cf = f1_carryforward_u6(coeff_combined[cu6_slc1, ...,na,na], lw_p1p2, lwc_p1p2, days_period[...,na,na], is_mating[...,na,na]
                               , between_mated90 = between_mated90[...,na,na], between_d90birth = between_d90birth[...,na,na])
     ##Increment the total carry forward value
     cf_value = cf_value + d_cf
     ##calculate transformed proportion lactating by adding the coefficients that are not in the carry forward
-    t_lactating_p1p2 = (cf_value + cb1[38, ...,na,na] + cu6[cu6_slc1, -1, ...,na,na]
+    #todo connect up mob size - also requires a calculation of the correct relative mob sizes when mating EL
+    t_lactating_p1p2 = (cf_value + coeff_combined[cu6_slc1, -1, ...,na,na]     # + cb1[38, ...,na,na] + cu6[cu6_slc1, -1, ...,na,na]
                       + (cu6[8, 12, ..., na,na] + cx[9, ..., na, na]) * chill_index_p1[...,na])
     #                 + cu2[8, 4, ..., na, na] * foo[..., na, na] + cu2[8, 5, ..., na, na] * foo[..., na, na] ** 2  #Could include foo,
     #                 + cu2[8, -1, ..., na, na] + cb1[8, ..., na, na] + cb1[9, ..., na, na] * mob_size[..., na, na] #mob size
@@ -3029,67 +3036,41 @@ def f_mortality_progeny_EL(cu6, cb1, cx, cf_value, lw, lwc, cv_lw, foo, chill_in
 #functions for end of loop #
 ###########################
 
-def f1_period_start_prod(numbers, var, b1_pos, p_pos, w_pos, prejoin_tup, z_pos, period_is_startseason, mask_min_lw_z
-                         , mask_min_wa_lw_w, mask_max_lw_z, mask_max_wa_lw_w, period_is_prejoin=0, group=None
-                         , scan_management=0, gbal=0, drysretained_scan=1, drysretained_birth=1
-                         , stub_lw_idx=np.array(np.nan), len_gen_t=1, a_t_g=0, period_is_startdvp=False):
+def f1_period_start_prod2(pointers, index_unique_w, var, numbers, p_pos, w_pos, z_pos, prejoin_tup, period_is_startseason,
+                          period_is_condense, period_is_prejoin=0, stub_lw_idx=np.array(np.nan),
+                          len_gen_t=1, a_t_g=0, period_is_startdvp=False):
     '''
-    Production is weighted at prejoining across e&b axes and at season start across the z axis.
+    Adjust production for next period.
 
-    Prejoining is slight more complex because there is the potential that drys would have been sold during the
-    yr if the farmers management allowed them to be identified. If the drys were sold the animal at the start
-    of the next repro cycle (prejoining) should be the weighted average of all the animals excluding drys.
-    Because we don't know the animals are actually sold (since pyomo optimises this) we need to leave the
-    main numbers variable untouched so we temporarily make the adjustment in this function. In the inputs the user
-    inputs the expected number of drys that will be retained. In this function we scale the numbers of drys
-    by that amount so that the new animal at the start of next prejoining reflects if drys were sold or retained.
-    E.g. if drys were sold the prejoining animal would be a little bit lighter (because drys tend to weigh more).
+    1. rest sale t slices
+    2. create new animal after collapsing/condensing. At prejoining the b, e, a axes are collapsed.
+       At condensing the w axis is collapsed back to the start w. At season start the z axis is collapsed back.
 
     An extra step occurs if generating for stubble. For stubble the function selects the starting animal for the
     next period based on animal liveweight compare to the stubble trial. The animals that have the closest lw
     to the paddock trial become the starting animals next period.
     '''
-    ##Set variable level = value at end of previous	
+    ##Set variable level = value at end of previous
     var_start = var
-    ##make sure numbers and var are same shape - this is required for the np.average func below
-    numbers, var_start = np.broadcast_arrays(numbers,var_start)
-
-    ##a)if generating with t axis reset the sale slices to the retained slice at the start of each dvp
-    if np.any(period_is_startdvp) and len_gen_t>1:
-        a_t_g = np.broadcast_to(a_t_g, var_start.shape)
-        temporary = np.take_along_axis(var_start, a_t_g, axis=p_pos) #t is in the p pos
-        var_start = fun.f_update(var_start, temporary, period_is_startdvp)
-
-    ##b) Calculate temporary values as if period is start of season
-    if np.any(period_is_startseason):
-        var_start = f1_season_wa(numbers, var_start, z_pos, mask_min_lw_z, mask_min_wa_lw_w, mask_max_lw_z, mask_max_wa_lw_w, period_is_startseason)
-
-    ##c) Calculated weighted average of var_start if period_is_prejoin (because the classes from the prior year are re-combined at pre-joining)
-    ### If the dams have been scanned or assessed for gbal then the number of drys is adjusted based on the estimated management
-    ### The adjustment for drys has to be done to the production levels at prejoining rather than to numbers at scan or birth
-    ###because adjusting numbers (although more intuitive) affects the apparent mortality of the drys.
-    ### Note: this is different to the approach taken for the proportion of dams mated that is done in f_end_numbers
-    ###at the beginning of the prejoin DVP which doesn't affect apparent mortality.
-    if group==1 and np.any(period_is_prejoin):
-        ###inputs
-        # b1_pos = sinp.stock['i_b1_pos']
-        nfoet_b1 = fun.f_expand(sinp.stock['a_nfoet_b1'],b1_pos)
-        nyatf_b1 = fun.f_expand(sinp.stock['a_nyatf_b1'],b1_pos)
-        ###scale numbers if drys are expected to have been sold at scanning (in the generator we don't know if drys are actually sold since pyomo optimises this, so this is just our best estimate)
-        ###can't occur at prejoining rather than at scanning & birth
-        temp = np.maximum(drysretained_scan, np.minimum(1, nfoet_b1)) * numbers
-        scaled_numbers = fun.f_update(numbers, temp, scan_management >= 1) # only scale numbers if scanning occurs
-        ###scale numbers if drys are expected to have been sold at birth (in the generator we don't know if drys are actually sold since pyomo optimises this, so this is just our best estimate)
-        temp = np.maximum(drysretained_birth, np.minimum(1, nyatf_b1)) * scaled_numbers
-        scaled_numbers = fun.f_update(scaled_numbers,temp, gbal >= 2)  # only scale numbers if differential management
-        ###weighted average of e&b axis
-        temporary = fun.f_weighted_average(var_start, scaled_numbers, prejoin_tup, keepdims=True, non_zero=True) #gets the weighted average of production in the different seasons
-        ##Set values where it is beginning of FVP
-        var_start = fun.f_update(var_start, temporary, period_is_prejoin)
 
     ##for stubble index the w axis to make the starting animal for the next period
+    #if generating for stubble then no collapse
     if np.all(np.logical_not(np.isnan(stub_lw_idx))):
         var_start[...] = np.take_along_axis(var_start, stub_lw_idx, w_pos)
+        return var_start
+
+
+    ##a)if generating with t axis reset the sale slices to the retained slice at the start of each dvp
+    if np.any(period_is_startdvp) and len_gen_t > 1:
+        a_t_g = np.broadcast_to(a_t_g, var_start.shape)
+        temporary = np.take_along_axis(var_start, a_t_g, axis=p_pos)  # t is in the p pos
+        var_start = fun.f_update(var_start, temporary, period_is_startdvp)
+
+    ##b)collapse axes for new starting animal
+    if np.any(np.logical_or(np.logical_or(period_is_startseason, period_is_prejoin), period_is_condense)):
+        var_start = f1_collapse(pointers, index_unique_w, var_start, numbers, period_is_condense, period_is_startseason,
+                          w_pos, z_pos, period_is_prejoin, prejoin_tup)
+
     return var_start
 
 
@@ -3140,127 +3121,361 @@ def f1_season_wa(numbers, var, season, mask_min_lw_wz, mask_min_wa_lw_w, mask_ma
     var = fun.f_update(var, temporary, period_is_startseason)
     return var
 
+def f1_collapse_pointers(p, ebw, numbers, startw_unique_next, period_is_condense, period_is_seasonstart,
+                lw_initial_a1e1b1nwzida0e0b0xyg, period_is_prejoin=False, prejoin_tup=(), inc_mask=True):
+    '''
+    This function is called when axes need collapsing from one period to the next.
+    The periods that require collapsing and the axes to collapse are:
 
-def f1_condensed(var, lw_idx, condense_w_mask, i_n_len, i_w_len, n_pos, w_pos, i_n_fvp_period, period_is_condense):
+        1. Prejoining of dams: a1, e1 & b1
+        2. Season start: z
+        3. Condense: w
+
+    The function handles each individually or in combination and is controlled by the axes to be collapsed.
+    I.e. Season start can occur at the same time as prejoining and condensing the w axis can occur in any dvp.
+    The axes being collapsed define a group of animals that will be distributed to the starting aniamls
+
+    This should handle any number of starting w.
+
+    The spread across the w axis and the other axes to be collapsed is used to determine the spread of animals
+    to represent in the next period. The w axis is always included even if the number of w in the next period is
+    the same as the number of w in this period.
+
+    The function returns an array of pointers that can be used to create the production characteristics of the start animal.
+    The ebw of the start animals can then be used to calculate the distribution of animals from the end of one period
+    to the beginning of the next period.
+
+    There are 3 parts to the calculations in the function
+    Part A - calculate percentile rank within each collapsed group
+    Part B - calculate the target percentiles for the starting animals that reflect the spread of ebw across
+    the start weights in the next period.
+    Part C - Create pointers for entries in ebw that are within tolerance of the target percentiles.
+    The approach is to calculate the percentile for each weight in ebw and then test if it is within the
+    tolerance of any values in the target percentile array
+    #todo this approach which requires w by w array to be replaced with a searchsorted approach with 2w. See Debugging 3:pg 10
+
+    The function is complicated by the fact that period_is_joining and period_is_condese can differ across axes.
+    Therefore the axes being colapsed in a given P can vary between animals.
+    This is the reason for all the f_updates.
+
+    params ebw: ebw array with ineligible animals (mortality > threshold) set to nan
+    params numbers: the estimated number of animals (numbers_end) used to weight the percentiles
+    params startw_unique_next: the number of unique w in the next period. Note: unique w is reduced when condensing w.
+    lw_initial_a1e1b1nwzida0e0b0xyg: the target order of the weights when condensing w.
+
+    Output:
+    pointers: an array of pointers to the position of this animal in the w axis of the target/collapsed animal.
+              value is -1 if the animal is not contributing to a target animal
+    '''
+
+    numbers = np.maximum(0.00001, numbers) #todo this wont be required once Dad finxes numbers start function
+
+    w_pos = sinp.stock['i_w_pos']
+    z_pos = sinp.stock['i_z_pos']
+    len_w = ebw.shape[w_pos]
+    index_wzida0e0b0xyg = fun.f_expand(np.arange(len_w), w_pos)
+    season_tup = (z_pos,)
+    prejoinseason_tup = season_tup + prejoin_tup
+
+    ##########
+    # Part A #
+    ##########
+    
+    # identify the eligible animals for the selection of the starting animals
+    ##criteria can be changed, currently it is mortality < 10%. Ineligible animals are nan.
+    ebw_masked = np.where(inc_mask, ebw, np.nan)
+
+    # Step 1: compute percentile rank weighted by numbers of animals in each collapsed axis (~0 to ~100).
+    percentile_rank_condense = fun.f1_percentile_weighted(ebw_masked, numbers, (w_pos,))
+    percentile_rank_season = fun.f1_percentile_weighted(ebw_masked, numbers, (w_pos,) + season_tup)
+    percentile_rank_prejoin = fun.f1_percentile_weighted(ebw_masked, numbers, (w_pos,) + prejoin_tup)
+    percentile_rank_prejoinseason = fun.f1_percentile_weighted(ebw_masked, numbers, (w_pos,) + prejoinseason_tup)
+
+    percentile_rank = fun.f_update(percentile_rank_condense, percentile_rank_season, period_is_seasonstart)
+    percentile_rank = fun.f_update(percentile_rank, percentile_rank_prejoin, period_is_prejoin)
+    percentile_rank = fun.f_update(percentile_rank, percentile_rank_prejoinseason,
+                                   np.logical_and(period_is_prejoin, period_is_seasonstart))
+
+    # Step 2: remove the nan from rank and replace with -1
+    percentile_rank[np.isnan(percentile_rank)] = -1
+    
+    ##########
+    # Part B #
+    ##########
+
+    # temporary version of percentiles in descending numerical order
+    ## range in the percentile ranks because the percentiles don't cover the full range 0 to 100.
+    ## The range expands as the number of axes being collapsed increases (and the weighting on each group reduces)
+    min_condense = np.min(np.where(percentile_rank == -1, 999, percentile_rank), axis = (w_pos,), keepdims=True)
+    min_season = np.min(np.where(percentile_rank == -1, 999, percentile_rank), axis = (w_pos,) + season_tup, keepdims=True)
+    min_prejoin = np.min(np.where(percentile_rank == -1, 999, percentile_rank), axis = (w_pos,) + prejoin_tup, keepdims=True)
+    min_prejoinseason = np.min(np.where(percentile_rank == -1, 999, percentile_rank), axis = (w_pos,) + prejoinseason_tup, keepdims=True)
+    min = fun.f_update(min_condense, min_season, period_is_seasonstart)
+    min = fun.f_update(min, min_prejoin, period_is_prejoin)
+    min = fun.f_update(min, min_prejoinseason, np.logical_and(period_is_prejoin, period_is_seasonstart))
+    min[min==999] = 0
+    max_condense = np.max(np.where(percentile_rank == -1, -999, percentile_rank), axis = (w_pos,), keepdims=True)
+    max_season = np.max(np.where(percentile_rank == -1, -999, percentile_rank), axis = (w_pos,) + season_tup, keepdims=True)
+    max_prejoin = np.max(np.where(percentile_rank == -1, -999, percentile_rank), axis = (w_pos,) + prejoin_tup, keepdims=True)
+    max_prejoinseason = np.max(np.where(percentile_rank == -1, -999, percentile_rank), axis = (w_pos,) + prejoinseason_tup, keepdims=True)
+    max = fun.f_update(max_condense, max_season, period_is_seasonstart)
+    max = fun.f_update(max, max_prejoin, period_is_prejoin)
+    max = fun.f_update(max, max_prejoinseason, np.logical_and(period_is_prejoin, period_is_seasonstart))
+    max[max==-999] = 100
+
+    ##space the percentiles across the range. Defined by an end gap and a step size
+    ### A simple calculation of the percentiles
+    ###           t_target_percentiles = (index_q + 0.5) / (startw_unique_next) * 100
+    ### spreads the targets evenly between 100 and 0, however, the aim is to increase the heavy end and reduce
+    ### the light end when there are increasing numbers of groups contributing to each start w, such as at condensing.
+    ### The number of groups contributing to each start w is represented in the ratio variable.
+    ### The calculations below calculate an end gap and a step size. The outcome would be the same as the simple
+    ### formula if the max and min were 100 and 0 and the ratio was 1.
+    ### The end gap is adjusted by the size of the axes being collapsed.
+    ### More and larger axes means a greater number of groups of animals contributing to each start animal
+    ### With more groups the end gap can be reduced and if passing 1 to 1 then the end gap is not reduced
+
+    ##Calculate the number of groups of animals that are being collapsed based on the minimum of the unique values or the numbers != 0.00001
+    n_groups_condense = fun.f1_unique_count(ebw, w_pos, numbers, threshold=0.001)
+    n_groups_season = fun.f1_unique_count(ebw, (w_pos,) + season_tup, numbers, threshold=0.001)
+    n_groups_prejoin = fun.f1_unique_count(ebw, (w_pos,) + prejoin_tup, numbers, threshold=0.001)
+    n_groups_prejoinseason = fun.f1_unique_count(ebw, (w_pos,) + prejoinseason_tup, numbers, threshold=0.001)
+
+    ##update the number of groups based on the period
+    n_groups = startw_unique_next    #startw_unique_next groups unless overwritten by being another period
+    n_groups = fun.f_update(n_groups, n_groups_condense, period_is_condense)
+    n_groups = fun.f_update(n_groups, n_groups_season, period_is_seasonstart)
+    n_groups = fun.f_update(n_groups, n_groups_prejoin, period_is_prejoin)
+    n_groups = fun.f_update(n_groups, n_groups_prejoinseason, np.logical_and(period_is_prejoin, period_is_seasonstart))
+    n_groups_collapsed = np.maximum(startw_unique_next, n_groups)   # to catch if all numbers are 0.00001
+
+    ## calculate the 'effective' number of groups used to calculate the end gap.
+    ### If the effective number = startw_unique_next then the end_gap & the percentile_step will be evenly spaced
+    ### The effective number is an adjustment on end_gap and tolerance, while the step is determined by startw_unique_next
+    weighting = 4   #A lower value is a more extreme adjustment
+    n_effective = startw_unique_next * (n_groups_collapsed / startw_unique_next) ** (1/weighting)
+
+    ##Calculate the end gap
+    end_gap = (max - min) / (2 * n_effective)
+    ##Calculate the step
+    percentile_step = fun.f_divide((max - min) - 2 * end_gap, (startw_unique_next - 1), option=2)
+    index_q = (index_wzida0e0b0xyg / len_w * startw_unique_next).astype(int)
+    t_target_percentiles = 100 - ((100 - max) + end_gap + index_q * percentile_step)
+
+    tolerance = np.minimum(end_gap, percentile_step / 2)   #taking a minimum that includes percentile_step/2 ensures that they can't overlap
+
+    ##Arrange the percentiles in the order required for the w axis
+    ##There are 2 options:
+    # 1. w has been collapsed because period_is_condense & the order is determined from inputs in Structural.xls
+    # 2. w not collapse & order determined by the existing order of ebw across the w axis
+    ebw_season = np.average(ebw, axis=z_pos, keepdims=True)
+    ebw_prejoin = np.average(ebw, axis=prejoin_tup, keepdims=True)
+    ebw_prejoinseason = np.average(ebw, axis=(z_pos,) + prejoin_tup, keepdims=True)
+
+    order_season = np.argsort(ebw_season, w_pos, )
+    order_prejoin = np.argsort(ebw_prejoin, w_pos)
+    order_prejoinseason = np.argsort(ebw_prejoinseason, w_pos)
+    order_condensed = np.argsort(lw_initial_a1e1b1nwzida0e0b0xyg, w_pos)  # this needs an axis length that aligns with target_percentile(w_pos)
+
+    order = fun.f_update(order_season, order_prejoin, period_is_prejoin)
+    order = fun.f_update(order, order_prejoinseason, np.logical_and(period_is_prejoin, period_is_seasonstart))
+    order = fun.f_update(order, order_condensed, period_is_condense)
+    order_descending = np.flip(order, axis=w_pos)   #flip the array into descending order
+
+    # create the target percentiles based on the required order
+    target_percentiles = np.take_along_axis(t_target_percentiles, order_descending, w_pos)
+    ##########
+    # Part C #
+    ##########
+
+    if True:    #retain both methods searchsorted (True) and w x w (False) until testing is completed
+        # Option 1
+        ##This method uses np.search_sorted on a double length w axis to identify which animals are between the upper
+        ## & lower limits of the target_percentile +/- tolerance
+
+        ##create target_percentiles with a double length w axis that has the upper and lower limit for each target percentile
+        target_upper = target_percentiles + tolerance   #to convert to chunking use target_upper = np.average(target_percentile, roll(target_percentile, -1))
+        target_lower = target_percentiles - tolerance   #roll(+1). With both needing the end case handled
+        target_percentiles_2w_unsorted = np.concatenate([target_upper, target_lower], axis=w_pos)
+        sort_order = np.argsort(target_percentiles_2w_unsorted, axis=w_pos)  #required to convert the result back to
+        target_percentile_2w = np.take_along_axis(target_percentiles_2w_unsorted, sort_order, axis=w_pos)
+        ## Expand the ends of the target percentiles to pickup scenarios where the end case is a valid animal and rounding was causing randomness
+        slc = [slice(None)] * target_percentile_2w.ndim
+        slc[w_pos] = 0
+        target_percentile_2w[tuple(slc)] -= 0.0001
+        slc[w_pos] = -1
+        target_percentile_2w[tuple(slc)] += 0.0001
+
+        ## find the position in the double w axis for each element in the percentile_rank array
+        position_2w = fun.f1_searchsorted_looped(target_percentile_2w, percentile_rank, w_pos)  #look up the place of percentile rank in target percentile and retuen a value between 0 and 2w-1
+        ## remembering that the order is reversed so working up from a low percentile
+        ### 0 means that the percentile_rank is <= the lowest target_2w (lowest target - tolerance)  i.e. not within tolerance
+        ### 1 means (lowest target - tolerance) < percentile_rank <= (lowest + tolerance) i.e. within tolerance
+        ### 3 means (lowest target + tolerance) < percentile_rank <= (2nd lowest - tolerance)  i.e. not within tolerance
+        ### generalising, the odd numbers are within the tolerance and even are not
+        position_2w[position_2w % 2 == 0] = -2
+        ##calculate the position in the w length array
+        position = position_2w // 2   # unused are now -1 and the other values are 0 to len_w-1
+        ##revert the sort back to the order of the target_percentiles using the order args for the ascending order of ebw
+        pointers = np.take_along_axis(order, position, w_pos)
+        pointers[position==-1] = -1   #replace the -1 in the array (required because -1 is a valid position in take_along)
+
+    else:
+        # Option2
+        # Step 3: compare to target_percentile. This method uses a w by w to calculate the difference. searchsorted methodis preferred
+        diff = np.abs(percentile_rank[..., None] - np.swapaxes(target_percentiles[..., None], w_pos - 1, -1))
+        closest_idx = np.argmin(diff, axis=-1)
+        closest_diff = np.min(diff, axis=-1)
+
+        # Step 4: apply tolerance
+        pointers = np.where(closest_diff <= tolerance, closest_idx, -1)
+
+        # step 5: if not condensing then update with -1.
+        pointers = fun.f_update(pointers, -1,
+                                np.logical_not(np.logical_or(np.logical_or(period_is_prejoin, period_is_seasonstart), period_is_condense)))
+
+    # step 6: overwrite the pointers with 1:1 if there is only 1 group contributing to each start animal of the next period
+    ## this occurs when there are no axes to collapse
+    ## This needs to be done at the end of the function, it can't be done at the start of the function (and then
+    ## bypass the other calculations) because only part of the array may need to be overwritten
+
+    ##Create an array that is passing 1 to 1 for the number of unique w and overwrite pointers if equal numbers of groups collapsed and starting next period
+    block = (len_w // startw_unique_next)
+    index_unique_wzida0e0b0xyg = ((index_wzida0e0b0xyg // block) * block).astype(int)
+    pointers = fun.f_update(pointers, index_unique_wzida0e0b0xyg, n_groups_collapsed == startw_unique_next)
+
+    # Step 7 - Error handler: ensure that all collapse animals have a pointer
+    #todo this uses w by w... can we get around this?
+    missing_condense = f1_check_all_bins_present(pointers, w_pos, (w_pos,), index_unique_wzida0e0b0xyg)
+    missing_season = f1_check_all_bins_present(pointers, w_pos, (w_pos,) + season_tup, index_unique_wzida0e0b0xyg)
+    missing_prejoin = f1_check_all_bins_present(pointers, w_pos, (w_pos,) + prejoin_tup, index_unique_wzida0e0b0xyg)
+    missing_prejoinseason = f1_check_all_bins_present(pointers, w_pos, (w_pos,) + prejoinseason_tup, index_unique_wzida0e0b0xyg)
+
+    missing = fun.f_update(missing_condense, missing_season, period_is_seasonstart)
+    missing = fun.f_update(missing, missing_prejoin, period_is_prejoin)
+    missing = fun.f_update(missing, missing_prejoinseason,
+                           np.logical_and(period_is_prejoin, period_is_seasonstart))
+
+    if np.any(missing):
+        raise ValueError(f"Period {p}: pointers must exist for each collapsed animal. "
+                         f"This indicates that numbers are very low (animals died) or an edge case that is not picked up with the target percentiles and/or tolerances. ")
+
+    # add leading axes so that arrays have same ndims
+    index_unique_wzida0e0b0xyg = index_unique_wzida0e0b0xyg.reshape((1,) * (pointers.ndim - index_unique_wzida0e0b0xyg.ndim) + index_unique_wzida0e0b0xyg.shape)
+    return pointers, index_unique_wzida0e0b0xyg
+
+
+def f1_check_all_bins_present(pointers, w_pos, group_axes, expected_w):
     """
-    Condense variable to x common points along the w axis when period_is_condense.
-    Currently this function only handle 2 or 3 initial liveweights. The order of the returned W axis is M, H, L for 3 initial lws or H, L for 2 initial lws.
+    pointers: ndarray, same shape as ebw, values in expected_w or -1
+    w_pos: int
+    group_axes: tuple of axes that define the "collapsed group" you want to check within
+               (e.g. (w_pos,) for condense, or (w_pos,z_pos) for seasonstart, etc.)
+    expected_w: 1D array of expected bin ids (e.g. np.arange(K))  #todo this could be converted from startw_unique_next if it was passed as an arg
 
-    Note: Animals in a given axis are condensed to starting weights determined by that activity. Meaning twins are
-    distributed to starting weights that were calculated from all the w slices related to the twin activity.
-    An alternative would be to distribute twins to starting weights that were calculated from all w slices across
-    the e and b axis. This would mean that prejoining and condensing would have to be the same period and it would
-    also complicate the 1n model since a twin on the std feed pattern may not pass to the std pattern in the next dvp.
-    In the current structure at prejoining the e and b axis are weighted. This means that the w[0] activity is
-    potentially created from a bigger spread of weights.
-
-    Note 2: in the start functions the sale slices are overwritten by retained at the start of a dvp. Thus the condensed
-    info is overwritten for the sale t slices (which is what we want). Distribution can occur with t axis but doesn't
-    get used because only the retained t provides in the matrix.
-
-    :param var: production variable being condensed
-    :param lw_idx: index specifying the sorted order of the w axis
-    :param condense_w_mask: mask which w slices can be used to build condensed animal e.g. w with mortality greater than 10% are excluded.
-    :param i_n_len: number of nutrition options
-    :param i_w_len: length of w axis
-    :param i_n_fvp_period: number of fvps
-    :param period_is_condense: bool array
-    :param mask_gen_condensed_used: mask that specifies which w slices get updated by pkl condensed values.
-    :return:
+    Returns
+    -------
+    missing_mask : ndarray[bool]
+        Shape = pointers.shape with group_axes removed (keepdims=False by default).
+        True where at least one expected_w is missing in that group.
     """
-    if np.any(period_is_condense):
-        array_shape = np.broadcast_shapes(var.shape, lw_idx.shape)  #required to handle cases where var has p1p2 axes and is larger than lw_idx
-        var = np.broadcast_to(var,array_shape).copy() #need to copy so array can be assigned to down below
-        condense_w_mask = np.broadcast_to(condense_w_mask,array_shape)
-        temporary = np.zeros_like(var)  #this is done to ensure that temp has the same size as var.
-        ##test if array has diagonal and calc temp variables as if start of dvp - if there is not a diagonal use the alternative system for reallocating at the end of a DVP
-        if i_n_len >= i_w_len:
-            ###this method was the way we first tried - no longer used (might be used later if we add nutrient options back in)
-            ### np.diagonal removes the n axis so it is added back in using the expand function, but that is a singleton, Therefore that is the reason that temp must be the same size as var. That will ensure that the new n axis is the same length as it used to before np diagonal
-            temporary[...] = np.expand_dims(np.rollaxis(temporary.diagonal(axis1= w_pos, axis2= n_pos),-1,w_pos), n_pos) #roll w axis back into place and add na for n (np.diagonal removes the second axis in the diagonal and moves the other axis to the end)
-        else:
-            '''
-            possible idea to handle more than 3 starting lws.
-            Note: it is good to keep the medium lw as slice 0 because that means it is held the same across all dvps 
-             and thus the user can make its pattern optimal.
-                        
-            if n_initial_lws==2:
-                #in code already. Nothing needs to be changed for this part                
-            
-            else: #need to update the code with something like this.
-                for i in n_initial_lws:
-                #use i to assign and select correct patterns
-                    if i == 0 or >2:
-                        #medium = use current code with i to select correct pattern and assign
-                        sl = [slice(None)] * temporary.ndim
-                        sl_start_med = i*int(i_n_len ** i_n_fvp_period)
-                        sl_end_med = (i+1)*int(i_n_len ** i_n_fvp_period)
-                        sl[w_pos] = slice(sl_start_med, sl_end_med)
-                        if i_n_len >= 3:
-                            temporary[tuple(sl)] = f_dynamic_slice(var, w_pos, sl_start_med, sl_start_med+1)  # the pattern that is feed supply 1 (median) for the entire year (the top w pattern)
-                        else:
-                            temporary[tuple(sl)] = np.mean(var_sorted_mort, axis=w_pos, keepdims=True) ^this line wont work if more than 3 lws, somehow need to take mean of subsection of w axis depending on number of initial w. # average of all animals with less than 10% mort
+    w_pos = w_pos % pointers.ndim
+    # Axes we reduce over to summarize each group:
+    # we want "per group" results, so reduce all axes in group_axes
+    # EXCEPT we need to keep information over expected_w, so we compare by broadcasting.
+    reduce_axes = tuple(ax % pointers.ndim for ax in group_axes)
 
-                    elif i==1:
-                        #calc high - using sorted var
-                        sl = [slice(None)] * temporary.ndim
-                        sl[w_pos] = slice(i*int(i_n_len ** i_n_fvp_period), (i+1)*int(i_n_len ** i_n_fvp_period))
-                        temporary[tuple(sl)] = np.mean(f_dynamic_slice(var_sorted, w_pos, i_w_len - int(i_w_len / 10), -1), w_pos, keepdims=True)  # average of the top lw patterns
 
-                    else: #i==2 (low w)
-                        #calc low
-                        numbers_start_sorted = np.take_along_axis(numbers_start_condense, lw_idx, axis=w_pos)
-                        numbers_sorted = np.take_along_axis(numbers, lw_idx, axis=w_pos)
-                        low_slice = np.argmax(np.sum(numbers_start_sorted, axis=prejoin_tup + (z_pos,), keepdims=True)
-                                                     / np.sum(numbers_sorted, axis=prejoin_tup + (z_pos,), keepdims=True) > 0.9
-                                                     , axis=w_pos)  # returns the index of the first w slice that has mort less the 10%.
-                        low_slice = np.expand_dims(low_slice, axis=w_pos) #add singleton w axis back
-                        sl = [slice(None)] * temporary.ndim
-                        sl[w_pos] = slice(i*int(i_n_len ** i_n_fvp_period), (i+1)*int(i_n_len ** i_n_fvp_period))
-                        temporary[tuple(sl)] = np.take_along_axis(var_sorted, low_slice, w_pos)
-                                     
-            '''
-            #todo this function assumes a certain w axis order. we could change this and make it more flexible by using inputs for sinp.structuralsa['i_adjp_lw_initial_w1'].
-            # this is how we did it for the mask_gen_condensed_values_used.
-            ###sort var based on animal lw
-            ma_var = np.ma.masked_array(var, np.logical_not(condense_w_mask))
-            ma_var_sorted = np.take_along_axis(ma_var, lw_idx, axis=w_pos) #sort into production order (base on lw) so we can select the production of the lowest lw animals with mort less than 10% - note sorts in ascending order
+    # broadcast expected_w against pointers by adding singleton axes everywhere except a new last axis
+    expected_w = np.broadcast_to(expected_w, pointers.shape)
+    exp = np.swapaxes(expected_w[..., None], w_pos, -1)
+    ptr = pointers[..., None]                                                   # pointers.shape + (1,)
 
-            ###count number of w slices which have been masked out
-            idx_min_lw = np.count_nonzero(condense_w_mask==0, axis=w_pos, keepdims=True) #index of the min lw with mort less than 10%
-            n_lw = np.min(np.count_nonzero(condense_w_mask, axis=w_pos)) #number of included w slices
+    # todo can we achieve without w by w???
+    # A method for this is to loop s in startw_unique_next and test seen[s] = np.any(pointers=w, reduce_axes, keep)
+    # w needs to be an adjusted version of s, because s is 0 to number of unique and w is 0 to 80 in the N33 model
+    # Something like w = s * len_w / startw_unique_next
+    # then same test for missing except it is axis=w_pos
+    # Early in the annual cycle this will be quick, for example in n33 there are only 9 unique weights for the first fvp
+    # so it would be a short loop, however, in the final fvp it is 81. But on balance it might still be quicker
+    # than an 81 x 81 numpy calculation for the entire year
 
-            ##to handle varying number of initial lws
-            if sinp.structuralsa['i_w_start_len1'] == 2:
-                ###add high pattern - this will not handle situations where the top 10% lw animals all have higher mortality than the threshold.
-                temporary[...] = np.mean(
-                    fun.f_dynamic_slice(ma_var_sorted,w_pos,i_w_len - int(math.ceil(n_lw / 10)), None), # ceil is used to handle cases where nutrition options is 1 (e.g. only 3 lw patterns)
-                    w_pos,keepdims=True)  # average of the top lw patterns
+    seen = np.any(ptr == exp, axis=reduce_axes, keepdims=True)                                 # reduces group axes
 
-                ###low pattern - production level of the lowest nutrition profile that has a mortality less than 10% for the year
-                sl = [slice(None)] * temporary.ndim
-                sl[w_pos] = slice(-int(i_n_len ** i_n_fvp_period), None)
-                temporary[tuple(sl)] = np.take_along_axis(ma_var_sorted, idx_min_lw, w_pos) #if you get an error here it probably means no animals had mort less than 10%
+    missing = ~np.all(seen, axis=-1)                                            # missing any expected bin?
+    return missing
 
-            else:
-                ###add high pattern - this will not handle situations where the top 10% lw animals all have higher mortality than the threshold.
-                temporary[...] = np.mean(fun.f_dynamic_slice(ma_var_sorted, w_pos, i_w_len - int(math.ceil(n_lw / 10)), None),  #ceil is used to handle cases where nutrition options is 1 (e.g. only 3 lw patterns)
-                                         w_pos, keepdims=True)  # average of the top lw patterns
 
-                ###add mid pattern (w 0 - 27) - use slice method in case w axis changes position (can't use MRYs dynamic slice function because we are assigning)
-                ###the medium condense is the average of all animals with less than 10% mort.
-                sl = [slice(None)] * temporary.ndim
-                sl[w_pos] = slice(0, int(i_n_len ** i_n_fvp_period))
-                temporary[tuple(sl)] = np.mean(ma_var_sorted, axis=w_pos, keepdims=True)  # average of all animals with less than 10% mort
+def f1_collapse(pointers, index_unique_wzida0e0b0xyg, prod, numbers, period_is_condense, period_is_seasonstart, w_pos, z_pos, period_is_prejoin=False, prejoin_tup=()):
+    '''
+    This function applies the collapse pointers to a production array and returns the production for the new animal.
 
-                ###low pattern - production level of the lowest nutrition profile that has a mortality less than 10% for the year
-                sl = [slice(None)] * temporary.ndim
-                sl[w_pos] = slice(-int(i_n_len ** i_n_fvp_period), None)
-                temporary[tuple(sl)] = np.take_along_axis(ma_var_sorted, idx_min_lw, w_pos) #if you get an error here it probably means no animals had mort less than 10%
+    The periods that require collapsing and the axes to collapse are:
 
-        ###Update if the period is condense (shearing for offs and prejoining for dams)
-        var = fun.f_update(var, temporary, period_is_condense)
-    return var
+        1. Prejoining of dams: a1, e1 & b1
+        2. Season start: z
+        3. Condense: w
+
+    The function handles each individually or in combination and is controlled by the axes to be collapsed.
+    I.e. Season start can occur at the same time as prejoining and condensing the w axis can occur in any dvp.
+
+    This function replaces the old f1_season_wa and f1_condensed.
+
+    '''
+
+    numbers = np.maximum(0.00001, numbers) #todo this wont be required once Dad finxes numbers start function
+
+    #todo can we achieve without w by w???
+    def f1_mean(mean_axes, weights, w_pos):
+        w_pos %= prod.ndim    #normalises position of w axis
+
+        if isinstance(mean_axes, int):
+            mean_axes = (mean_axes,)
+        mean_axes = tuple(ax % prod.ndim for ax in mean_axes)
+
+        # ensure original w axis is reduced (replaced by J)
+        if w_pos not in mean_axes:
+            mean_axes = mean_axes + (w_pos,)
+
+        J = prod.shape[w_pos]
+        idx = np.arange(J)
+
+        mask = (pointers[..., None] == idx)
+
+        # keepdims=True preserves dimensionality
+        sums = np.sum(np.where(mask, (prod * weights)[..., None], 0.0), axis=mean_axes, keepdims=True)
+        counts = np.sum(mask * weights[..., None], axis=mean_axes, keepdims=True)
+
+        out = fun.f_divide(sums, counts, option=0)
+        out = out.astype(float, copy=False)
+        # out[counts == 0] = 0
+
+        # drop the old w axis (it is size 1 because keepdims=True)
+        out = np.squeeze(out, axis=w_pos)
+
+        # replace the reduced w axis with the bucket axis
+        out = np.moveaxis(out, -1, w_pos)
+
+        return out
+
+    collapsed_prod_condense = f1_mean(w_pos, numbers, w_pos)
+    collapsed_prod_season = f1_mean(z_pos, numbers, w_pos)
+    collapsed_prod_prejoin = f1_mean(prejoin_tup, numbers, w_pos)
+    collapsed_prod_prejoinseason = f1_mean((z_pos,) + prejoin_tup, numbers, w_pos)
+
+    collapsed_prod = fun.f_update(collapsed_prod_condense, collapsed_prod_season, period_is_seasonstart)
+    collapsed_prod = fun.f_update(collapsed_prod, collapsed_prod_prejoin, period_is_prejoin)
+    collapsed_prod = fun.f_update(collapsed_prod, collapsed_prod_prejoinseason,
+                                  np.logical_and(period_is_prejoin, period_is_seasonstart))
+
+    # step 5: update prod if condensing/seasonstart/prejoining
+    prod = fun.f_update(prod, collapsed_prod
+        , np.logical_or(np.logical_or(period_is_prejoin, period_is_seasonstart), period_is_condense))
+
+    #expand from the active w to all the w
+    prod = np.take_along_axis(prod, index_unique_wzida0e0b0xyg, axis=w_pos)
+
+    return prod
 
 def f1_adjust_pkl_condensed_axis_len(temporary, i_w_len, i_t_len):
     ####handle when the current trial has a different number of w slices than the create trial
@@ -3335,7 +3550,7 @@ def f1_period_end_nums(numbers, mortality, mortality_yatf=0, nfoet_b1 = 0, nyatf
             ### the number in the NM slice e1[0] is a proportion of the total numbers
             ### need a minimum number to keep nm in pyomo. Want a small number relative to mortality (after allowing for multiple slices getting the small number)
             ### Scale the numbers based on expected proportion mated so that the weighted average for production reflects expected management
-            ### Note: scaling of numbers for expected management of drys occurs in f1_period_start_prod()
+            ### Note: scaling of numbers for expected management of drys occurs in f1_period_start_prod2() via the pointers and the collapse function.
             temporary[:, :, 0:1, 0:1, ...] = np.maximum(0.00001, np.sum(temporary, axis=(sinp.stock['i_e1_pos'], sinp.stock['i_b1_pos']),
                                                                      keepdims=True) * (1 - mated_propn))
             ### the numbers in the other mated slices other than NM get scaled by the proportion mated
@@ -4414,11 +4629,11 @@ def f1_cum_sum_dvp(arr,dvp_pointer,axis=0,shift=0):
     return final
 
 
-def f1_lw_distribution(ffcfw_dest_w8g, ffcfw_source_w8g, mask_dest_wg=1, index_w8=None, dvp_type_next_tvgw=0, vtype=0, for_feedsupply=False): #, w_pos, i_n_len, i_n_fvp_period, dvp_type_next_tvgw=0, vtype=0):
+def f1_lw_distribution(ffcfw_dest_w8g, ffcfw_source_w8g, mask_dest_wg=1, index_w8=None, mask_update_dist=True, for_feedsupply=False): #, w_pos, i_n_len, i_n_fvp_period, dvp_type_next_tvgw=0, vtype=0):
     """Distribute animals between periods when the animals are changing on the period junction. This change can
-    be either 1. condensing at prejoining when animals are 'condensed' from the final number of LW profiles back to
+    be either 1. condensing when animals are 'condensed' from the final number of LW profiles back to
     the initial number or 2. averaging animals at season start when weights at the end of all the seasons are
-    averaged to become the start weight for the next season.
+    averaged to become the start weight for the next season. or 3. at prejoining when the b. e & a axis are collapsed.
 
     The animals are distributed to the 2 nearest neighbours, rather than a distribution across all destination LWs.
     The aim is that the average weight of the animals in the next period is equal to the average weight at the
@@ -4428,21 +4643,6 @@ def f1_lw_distribution(ffcfw_dest_w8g, ffcfw_source_w8g, mask_dest_wg=1, index_w
     If the weight is above the highest destination weight then the weight is rounded down & the extra weight is
     effectively lost. If the weight is below the lowest weight then only a proportion of that animal is transferred
     to the next period. This retains the same total LW but some animals are effectively lost.
-
-    When the distribution is for condensing/pre-joining the destination weights are ffcfw_end for the condensed slices (w9).
-    This is the condensed values of ffcfw_end (of this DVP) rather than ffcfw_start (of the next DVP) because ffcfw_start
-    includes the averaging of LW that occurs as part of f_period_start_prod when the period is prejoin.
-    Clustering based on the condensed weights of lw_start (after averaging across the b1 & e1 axes) would mean
-    that the clustering is occurring based on the proportion of animals in the b1 & e1 axes in the generator
-    (which are based on those animals following the same nutrition profile (H, M or L for that class)), whereas
-    they may have been differentially managed in the matrix, hence the requirement to distribute based on ffcfw_end.
-    The effect if the groups are clustered (i.e. not scanned) is to keep the heavier singles with the heavier twins,
-    rather than distribute the heavy twins with the average singles (which might have a more similar weight).
-    If this didn't occur the LW distribution would allow defacto ‘scanning’ through LW distribution. Although
-    differential management based on LW can be done in practice, in reality there is a distribution of weight
-    (within each class-dry,single,twin) so the split would be imprecise, whereas in the generator all the animals
-    of a class (D,S,Tw) are all the same weight (for a given nutrition profile), so the generator could split
-    them accurately for BTRT based on LW.
 
     Note: A distribution of liveweight at the end of a period would be technically correct i.e. a given class of
     animal that are offered a given feed supply for a period of time will result in spread of final weights, even
@@ -4555,7 +4755,7 @@ def f1_lw_distribution(ffcfw_dest_w8g, ffcfw_source_w8g, mask_dest_wg=1, index_w
         t_distribution_w8gw9[..., 0] = 1
 
     ##Set defaults for DVPs that don’t require distributing to 1 (these are masked later to remove those that are not required)
-    distribution_w8gw9 = fun.f_update(t_distribution_w8gw9, np.array([1],dtype='float32'), dvp_type_next_tvgw!=vtype) #make '1' a numpy array so it can be float32 to make f_update more data efficient.
+    distribution_w8gw9 = fun.f_update(np.array([1], dtype='float32'), t_distribution_w8gw9, mask_update_dist) #make '1' a numpy array so it can be float32 to make f_update more data efficient.
     return distribution_w8gw9
 
 

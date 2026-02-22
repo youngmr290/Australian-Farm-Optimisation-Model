@@ -253,6 +253,7 @@ def create_sa():
     sav['confinement_feeding_cost_factor'] = '-'  #reduction factor for sup feeding cost when in confinement
     sav['confinement_feeding_labour_factor'] = '-'  #reduction factor for sup feeding labour when in confinement
     ##SAM
+    sam['sup_prop_consumed'] = 1.0  #propn of grain consumed when paddock feeding
     ##SAP
     ##SAA
     ##SAT
@@ -284,14 +285,21 @@ def create_sa():
     sav['include_carbon_credit'] = '-'  #control inclusion of carbon credits
     sav['include_biodiversity_credit'] = '-'  #control inclusion of bio credits
     sav['include_harvesting'] = '-'  #control inclusion of harvesting
+    sav['price_carbon_credit'] = '-'  # price of a carbon credit
+    sav['price_tree_biomass'] = '-'  # price of harvested tree biomass
     ##SAM
     sam['price_carbon_credit'] = 1.0  #price of a carbon credit
-    sam['price_biodiversity_credit'] = 1.0  #price of a biodiversity credit
     sam['price_tree_biomass'] = 1.0  #price of harvested tree biomass
     ##SAP
     ##SAA
     ##SAT
     ##SAR
+
+    for structure in range(4):
+        ##SAV
+        sav['biodiversity_value', structure] = '-'  #value of biodiversity $/ha
+        ##SAM
+        sam['biodiversity_value', structure] = 1.0  #value of biodiversity $/ha
 
     ####################
     #Salt land pasture #
@@ -388,6 +396,7 @@ def create_sa():
     ###stock feedsupply
     sav['feedsupply_adj_r2p'] = np.full_like(pinp.feedsupply['i_feedsupply_adj_options_r2p'], '-', dtype=object)  # SA value for feedsupply adjustment.
     sav['dams_confinement_P'] = np.full(len_P, '-', dtype=object)  # SA to control the gen periods dams are in confinement - this gets applied in FeedSupplyStock.py. Note, this will overwrite pkl so if using pkl to optimise confinement you most likely don’t want to use this SAV.
+    sav['offs_confinement_P'] = np.full(len_P, '-', dtype=object)  # SA to control the gen periods offs are in confinement - this gets applied in FeedSupplyStock.py. Note, this will overwrite pkl so if using pkl to optimise confinement you most likely don’t want to use this SAV.
     sav['target_ebg_dams_Pb'] = np.full((len_P, len_b1), '-', dtype=object)  # SA to set lw target
     sav['target_ebg_offs_Pb'] = np.full((len_P, len_b0), '-', dtype=object)  # SA to set lw target
     ###stock others
@@ -434,6 +443,7 @@ def create_sa():
     sav['adjp_cfw_initial_w3'] = np.full(sinp.structuralsa['i_adjp_cfw_initial_w3'].shape, '-', dtype=object)    #initial cfw adjustment offs
     sav['adjp_fd_initial_w3'] = np.full(sinp.structuralsa['i_adjp_fd_initial_w3'].shape, '-', dtype=object)      #initial fd adjustment offs
     sav['adjp_fl_initial_w3'] = np.full(sinp.structuralsa['i_adjp_fl_initial_w3'].shape, '-', dtype=object)      #initial fl adjustment offs
+    sav['firstprejoin_averaged'] = True #do the a, e & b axes get averaged at the first prejoining (ewe lambs). If the value is changed to false the mate/not mate decision is made at the previous weaning (then at prejoining nm passes to nm and mated passes to mated).
     sav['condense_at_seasonstart'] = '-'  # SA to alter if condensing occurs at season start. Default is False except in the MP model when this can be set to True so that core fvps can be masked out and just the season nodes for fvps.
     sav['user_fvp_date_dams_iu'] = np.full(sinp.structuralsa['i_dams_user_fvp_date_iu'].shape, '-', dtype=object)      #SA to control user fvp dates.
     sav['user_fvp_date_dams_yiu'] = np.full((len_y,)+sinp.structuralsa['i_dams_user_fvp_date_iu'].shape, '-', dtype=object)      #SA to control user fvp dates.
@@ -470,6 +480,7 @@ def create_sa():
     sam['pi_post_yatf'] = 1.0                        #Post loop potential intake of yatf
     sam['chill_index'] = 1.0                        #intermediate sam on chill index. Impacts lamb survival only, no effect on ME requirements.
     sam['heat_loss'] = 1.0                          #intermediate sam on heat loss - impact on energy requirements (set to 0 in REV analyses)
+    sam['emove'] = 1.0                          #intermediate sam on energy expenditure for moving
     sam['rr_og1'] = np.ones(pinp.sheep['i_scan_og1'].shape, dtype='float64')    # reproductive rate by age. Use shape that has og1
     sam['wean_redn_ol0g2'] = np.ones((len_o, len_l0, len_g2), dtype='float64')  #Adjust the number of yatf transferred at weaning - this is a high level sa, it impacts within a calculation not on an input
     ##SAP
@@ -484,6 +495,7 @@ def create_sa():
     saa['husb_cost_h2'] = np.zeros(uinp.sheep['i_husb_operations_contract_cost_h2'].shape, dtype='float64')  #SA value for contract cost of husbandry operations.
     saa['husb_labour_l2h2'] = np.zeros(uinp.sheep['i_husb_operations_labourreq_l2h2'].shape, dtype='float64')  #units of the job carried out per husbandry labour hour
     saa['eqn_date_g1_p7'] = np.zeros(pinp.sheep['i_eqn_date_g1_p7'].shape, dtype=int)   #SA to change the date when the dam eqn systems change
+    saa['eqn_date_g2_p7'] = np.zeros(pinp.sheep['i_eqn_date_g2_p7'].shape, dtype=int)   #SA to change the date when the yatf eqn systems change
     saa['r1_izg1'] = np.zeros(pinp.sheep['ia_r1_zig1'].shape, dtype=int)   #SA to change the base feed option selected for dams
     saa['r1_izg3'] = np.zeros(pinp.sheep['ia_r1_zig3'].shape, dtype=int)   #SA to change the base feed option selected for offspring
     saa['r2_isk2g1'] = np.zeros(pinp.sheep['ia_r2_isk2g1'].shape, dtype=int)   #SA to change the base feed option selected for dams
@@ -604,7 +616,6 @@ def create_sa():
     sav['bnd_sup_per_dse'] = '-'   #SA to control the supplement per dse (kg/dse)
     sav['bnd_propn_dams_mated_og1'] = np.full((len_d,) + pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #proportion of dams mated
     sav['est_propn_dams_mated_og1'] = np.full((len_d,) + pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #estimated proportion of dams mated - used when bnd_propn is default "-"
-    sav['propn_mated_w_inc'] = '-'   #Control if the constraint on proportion mated includes 'w' set
     sav['bnd_drys_sold_o'] = np.full(pinp.sheep['i_dry_sales_forced_o'].shape, '-', dtype=object)   #SA to force drys to be sold
     sav['bnd_drys_retained_o'] = np.full(pinp.sheep['i_dry_retained_forced_o'].shape, '-', dtype=object)   #SA to force drys to be retained
     sav['est_drys_retained_scan_o'] = np.full(pinp.sheep['i_drys_retained_scan_est_o'].shape, '-', dtype=object)   #Estimate of the propn of drys sold at scanning
@@ -614,7 +625,7 @@ def create_sa():
     sav['min_propn_singles_sold_og1'] = np.full((len_d,) + pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #SA to control the proportion of singles sold (used to approximate sale of dry ewes)
     sav['min_propn_twins_sold_og1'] = np.full((len_d,) + pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #SA to control the proportion of twins sold (used to approximate sale of dry ewes)
     sav['bnd_total_dams'] = '-'   #control the total number of dams at prejoining
-    sav['lobnd_across_startw'] = False   #control if dam and offs lower bound is across start w (default is False, use True in fs optimisation so each start w is forced to have numbers).
+    sav['bnd_fs_opt_inc'] = False   #control if dam and offs lower bound, propn mated and propn sold is included. Only used for FS optimisation trials.
     sav['bnd_lo_dam_inc'] = '-'   #control if dam lower bound is on.
     sav['bnd_lo_dams_tog1'] = np.full((len_t1,) + (len_d,) + (len_g1,), '-', dtype=object)   #min number of dams
     sav['bnd_lo_dams_tVg1'] = np.full((len_t1,) + (len_V,) + (len_g1,), '-', dtype=object)   #min number of dams

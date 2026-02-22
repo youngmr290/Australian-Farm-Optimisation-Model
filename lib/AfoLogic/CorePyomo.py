@@ -124,7 +124,7 @@ def coremodel_all(trial_name, model, method, nv, print_debug_output, MP_lp_vars)
     if method=="CPLEX" and not shutil.which("cplex") == None:
         ##solve with cplex if it exists
         solver = pe.SolverFactory('cplex')
-        solver_result = solver.solve(model, warmstart=True, tee=True)  # tee=True for solver output - may be useful for troubleshooting, currently warmstart doesnt do anything (could only get it to work for MIP)
+        solver_result = solver.solve(model, warmstart=True, tee=False)  # tee=True for solver output - may be useful for troubleshooting, currently warmstart doesnt do anything (could only get it to work for MIP)
     elif method=="glpk":
         ##solve with glpk to see options enter glpsol --help into command prompt.
         solver = pe.SolverFactory('glpk')
@@ -331,20 +331,19 @@ def f_con_harv_stub_nap_cons(model):
     the ability to consume crop B stubble.
 
     '''
-    def harv_stub_nap_cons(model,q,s,p6,z):
+    def harv_stub_nap_cons(model,q,s,p6,f,z):
 
         nap_exists = (model.p_nap_prop[p6, z] != 0)
         stub_exists = len(model.s_stub_k_by_p6z[p6, z]) > 0
         if (nap_exists or stub_exists) and pe.value(model.p_wyear_inc_qs[q, s]):
-            return sum(
+            return (
                 -paspy.f_pas_me(model,q,s,p6,f,z)
                 + stubpy.f1_stub_consumed_in_harvest_period(model,q,s,p6,f,z)
                 + model.p_nap_prop[p6,z] / (1 - model.p_nap_prop[p6,z]) * paspy.f_nappas_me(model,q,s,p6,f,z)
-                for f in model.s_feed_pools
             ) <= 0
         else:
             return pe.Constraint.Skip
-    model.con_harv_stub_nap_cons = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_feed_periods,model.s_season_types,rule=harv_stub_nap_cons,
+    model.con_harv_stub_nap_cons = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_feed_periods,model.s_feed_pools,model.s_season_types,rule=harv_stub_nap_cons,
                                                  doc='limit stubble and nap consumption in the period harvest occurs')
 
 

@@ -195,6 +195,7 @@ def sets(model, nv, params):
         len_t3 = pinp.sheep['i_t3_len']
     model.s_sale_offs = Set(initialize=['t%s'%i for i in range(len_t3)], doc='Sales within the year for offs')
     model.s_nut_offs = Set(initialize=np.array(['n%s'%i for i in range(sinp.structuralsa['i_n3_matrix_len'])]), doc='Nutrition levels in each feed period for offs')
+    model.s_sale_t_offs = Set(initialize=['t%s'%i for i in range(len_t3)[1:]], doc='t slices where sales occur for offs (doesnt include t0')
 
     ##prog
     model.s_sale_prog = Set(initialize=['t%s'%i for i in range(pinp.sheep['i_t2_len'])], doc='Sales and transfers options for yatf')

@@ -115,6 +115,8 @@ def f_reshape_pinp_defaults(pinp_defaults, sinp_defaults):
         ###stock
         sheep_inp = pinp_defaults[property]['sheep_inp']
         sheep_inp['i_pasture_stage_p6z'] = np.reshape(sheep_inp['i_pasture_stage_p6z'], zp6)
+        sheep_inp['i_nv_upper_p6z'] = np.reshape(sheep_inp['i_nv_upper_zp6'], zp6).T
+        sheep_inp['i_nv_lower_p6z'] = np.reshape(sheep_inp['i_nv_lower_zp6'], zp6).T
         sheep_inp['i_legume_p6z'] = np.reshape(sheep_inp['i_legume_p6z'], zp6)
         sheep_inp['i_supplement_zp6'] = np.reshape(sheep_inp['i_supplement_zp6'], zp6)
         sheep_inp['i_paststd_foo_zp6j0'] = np.reshape(sheep_inp['i_paststd_foo_zp6j0'], zp6j0)
@@ -497,6 +499,7 @@ def f_property_inp_sa(pinp_defaults):
     ###sap
     ###saa
     sheep['i_eqn_date_g1_p7'] = fun.f_sa(sheep['i_eqn_date_g1_p7'], sen.saa['eqn_date_g1_p7'], 2).astype('int')
+    sheep['i_eqn_date_g2_p7'] = fun.f_sa(sheep['i_eqn_date_g2_p7'], sen.saa['eqn_date_g2_p7'], 2).astype('int')
     sheep['ia_r1_zig1'] = fun.f_sa(sheep['ia_r1_zig1'], sen.saa['r1_izg1'], 2).astype('int')
     sheep['ia_r2_isk2g1'] = fun.f_sa(sheep['ia_r2_isk2g1'], sen.saa['r2_isk2g1'], 2).astype('int')
     sheep['ia_r1_zig3'] = fun.f_sa(sheep['ia_r1_zig3'], sen.saa['r1_izg3'], 2).astype('int')
@@ -559,6 +562,8 @@ def f1_expand_p6():
     sheep['i_mobsize_offs_zp6i'] = np.take_along_axis(sheep['i_mobsize_offs_zp6i'], a_p6std_zp6[...,na], axis=1)
     sheep['i_dse_group_dp6z'] = np.take_along_axis(sheep['i_dse_group'][:,:,na], a_p6std_p6z[na,:,:], axis=1)
     sheep['i_wg_propn_p6z'] = np.take_along_axis(sheep['i_wg_propn_p6'][:,na], a_p6std_p6z, axis=0)
+    sheep['i_nv_upper_p6z'] = np.take_along_axis(sheep['i_nv_upper_p6z'], a_p6std_p6z, axis=0)
+    sheep['i_nv_lower_p6z'] = np.take_along_axis(sheep['i_nv_lower_p6z'], a_p6std_p6z, axis=0)
 
     ####crop grazing
     cropgraze['i_cropgraze_yield_reduction_scalar_zp6'] = np.take_along_axis(cropgraze['i_cropgraze_yield_reduction_scalar_zp6'], a_p6std_zp6, axis=1)

@@ -112,8 +112,7 @@ from . import relativeFile
 na=np.newaxis
 
 
-#todo supp feeding in confinement incurs the same costs as paddock feeding. this should be changed. it should also incur some capital cost.
-# it should also have less costs and time for feeding
+
 
 def f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1nwzida0e0b0xyg,
                  period_between_weanprejoin_pa1e1b1nwzida0e0b0xyg1,
@@ -416,6 +415,8 @@ def f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1n
     ## This allows the user to adjust confinement  by p axis because the pinp input is only p6.
     sa_dams_confinement_pg1 = fun.f_expand(sen.sav['dams_confinement_P'][0:len_p],p_pos) #slice P axis and expand axes
     t_confinement_stpa1e1b1nwzida0e0b0xyg1 = fun.f_sa(t_confinement_stpa1e1b1nwzida0e0b0xyg1, sa_dams_confinement_pg1, 5)
+    sa_offs_confinement_pg3 = fun.f_expand(sen.sav['offs_confinement_P'][0:mask_p_offs_p.sum()],p_pos) #slice P axis and expand axes
+    t_confinement_stpa1e1b1nwzida0e0b0xyg3 = fun.f_sa(t_confinement_stpa1e1b1nwzida0e0b0xyg3, sa_offs_confinement_pg3, 5)
 
     ##4c) add adjustment to std pattern if it is specified (mostly won't be included if using pkl_fs)
     ## adjustment is only calculated for dams
@@ -432,16 +433,16 @@ def f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1n
     ## activate n axis for confinement control (controls if a nutrition pattern is in confinement - note
     ## if i_confinement_n? is set to True the generator periods confinement occurs is controlled by i_confinement_options_r1p6z.
     feedsupply_std_tpa1e1b1nwzida0e0b0xyg0, confinement_std_tpa1e1b1nwzida0e0b0xyg0, bool_confinement_g0_n =  \
-        f1_j2_to_n(t_feedsupply_tpa1e1b1j2wzida0e0b0xyg0, t_confinement_tpa1e1b1nwzida0e0b0xyg0, nv_p6a1e1b1j1wzida0e0b0xyg0,
+        f1_j2_to_n(t_feedsupply_tpa1e1b1j2wzida0e0b0xyg0, t_confinement_tpa1e1b1nwzida0e0b0xyg0,
                    a_p6_pa1e1b1nwzida0e0b0xyg, sinp.structuralsa['i_nut_spread_n0'], sinp.structuralsa['i_confinement_n0'],
                    n_fs_sire)
 
     feedsupply_std_stpa1e1b1nwzida0e0b0xyg1, confinement_std_stpa1e1b1nwzida0e0b0xyg1, bool_confinement_g1_n = \
-        f1_j2_to_n(t_feedsupply_stpa1e1b1j2wzida0e0b0xyg1, t_confinement_stpa1e1b1nwzida0e0b0xyg1, nv_p6a1e1b1j1wzida0e0b0xyg1,
+        f1_j2_to_n(t_feedsupply_stpa1e1b1j2wzida0e0b0xyg1, t_confinement_stpa1e1b1nwzida0e0b0xyg1,
                    a_p6_pa1e1b1nwzida0e0b0xyg, sinp.structuralsa['i_nut_spread_n1'], sinp.structuralsa['i_confinement_n1'],
                    n_fs_dams)
     feedsupply_std_stpa1e1b1nwzida0e0b0xyg3, confinement_std_stpa1e1b1nwzida0e0b0xyg3, bool_confinement_g3_n = \
-        f1_j2_to_n(t_feedsupply_stpa1e1b1j2wzida0e0b0xyg3, t_confinement_stpa1e1b1nwzida0e0b0xyg3, nv_p6a1e1b1j1wzida0e0b0xyg3,
+        f1_j2_to_n(t_feedsupply_stpa1e1b1j2wzida0e0b0xyg3, t_confinement_stpa1e1b1nwzida0e0b0xyg3,
                    a_p6_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p], sinp.structuralsa['i_nut_spread_n3'], sinp.structuralsa['i_confinement_n3'],
                    n_fs_offs)
 
@@ -461,7 +462,7 @@ def f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1n
     else:
         feedsupplyw_tpa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(feedsupply_std_stpa1e1b1nwzida0e0b0xyg1[0], a_n_pa1e1b1nwzida0e0b0xyg1[na], axis=n_pos) #slice off the singleton s axis (this also handles cases where pkl fs has more starting weights than the current run)
         confinementw_tpa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(confinement_std_stpa1e1b1nwzida0e0b0xyg1[0], a_n_pa1e1b1nwzida0e0b0xyg1[na], axis=n_pos) #slice off the singleton s axis (this also handles cases where pkl fs has more starting weights than the current run)
-    if sinp.structuralsa['i_fs_use_pkl'] and (sinp.structuralsa['i_w_start_len3']==feedsupply_std_stpa1e1b1nwzida0e0b0xyg3.shape[w_pos]):
+    if sinp.structuralsa['i_fs_use_pkl'] and (sinp.structuralsa['i_w_start_len3']==feedsupply_std_stpa1e1b1nwzida0e0b0xyg3.shape[0]):
         ###offs
         len_w3 = a_n_pa1e1b1nwzida0e0b0xyg3.shape[w_pos]
         l_nut3 = int(len_w3/sinp.structuralsa['i_w_start_len3'])#number of nutrition patterns
@@ -499,9 +500,11 @@ def f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1n
 
 
 
-def f1_j2_to_n(t_feedsupply_stpa1e1b1j2wzida0e0b0xyg, t_confinement_pa1e1b1nwzida0e0b0xyg, nv_p6a1e1b1j1wzida0e0b0xyg,
+def f1_j2_to_n(t_feedsupply_stpa1e1b1j2wzida0e0b0xyg, t_confinement_pa1e1b1nwzida0e0b0xyg,
                a_p6_pa1e1b1nwzida0e0b0xyg, i_nut_spread_n, i_confinement_n, n_fs):
     n_pos = sinp.stock['i_n_pos']
+    p_pos = sinp.stock['i_p_pos']
+    z_pos = sinp.stock['i_z_pos']
     ### the nut_spread inputs are the proportion of std and min or max feed supply.
     ### Unless nut_spread is greater than 3 in which case the value becomes the actual feed supply
     #todo nutspread >3 doesn't overwrite the value any more.
@@ -532,10 +535,12 @@ def f1_j2_to_n(t_feedsupply_stpa1e1b1j2wzida0e0b0xyg, t_confinement_pa1e1b1nwzid
     ###c activate n axis on confinement control
     confinement_std_pa1e1b1nwzida0e0b0xyg = t_confinement_pa1e1b1nwzida0e0b0xyg * fun.f_expand(bool_confinement_n, n_pos)
 
-    ##7)Ensure that no feed supplies are outside the possible range - j1[0] is the lowest NV as determined by the poorest feed specified in the j0 inputs. j1[-1] is ad lib supplement so will equate to i_md_supp
-    nv_min_p6a1e1b1j1wzida0e0b0xyg = fun.f_dynamic_slice(nv_p6a1e1b1j1wzida0e0b0xyg, axis=n_pos, start=0, stop=1)
+    ##7)Ensure that no feed supplies are outside the possible range
+    nv_min_p6a1e1b1j1wzida0e0b0xyg = fun.f_expand(pinp.sheep['i_nv_lower_p6z'], left_pos=z_pos, left_pos2=p_pos, right_pos2=z_pos)
+    nv_min_p6a1e1b1j1wzida0e0b0xyg = zfun.f_seasonal_inp(nv_min_p6a1e1b1j1wzida0e0b0xyg, numpy=True, axis=z_pos)
     nv_min_pa1e1b1j1wzida0e0b0xyg = np.take_along_axis(nv_min_p6a1e1b1j1wzida0e0b0xyg,a_p6_pa1e1b1nwzida0e0b0xyg,0)
-    nv_max_p6a1e1b1j1wzida0e0b0xyg = fun.f_dynamic_slice(nv_p6a1e1b1j1wzida0e0b0xyg, axis=n_pos, start=-1, stop=None)
+    nv_max_p6a1e1b1j1wzida0e0b0xyg = fun.f_expand(pinp.sheep['i_nv_upper_p6z'], left_pos=z_pos, left_pos2=p_pos, right_pos2=z_pos)
+    nv_max_p6a1e1b1j1wzida0e0b0xyg = zfun.f_seasonal_inp(nv_max_p6a1e1b1j1wzida0e0b0xyg, numpy=True, axis=z_pos)
     nv_max_pa1e1b1j1wzida0e0b0xyg = np.take_along_axis(nv_max_p6a1e1b1j1wzida0e0b0xyg,a_p6_pa1e1b1nwzida0e0b0xyg,0)
     feedsupply_std_stpa1e1b1nwzida0e0b0xyg = np.clip(feedsupply_std_stpa1e1b1nwzida0e0b0xyg, nv_min_pa1e1b1j1wzida0e0b0xyg, nv_max_pa1e1b1j1wzida0e0b0xyg)
 
