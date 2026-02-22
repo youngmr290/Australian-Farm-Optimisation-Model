@@ -49,6 +49,7 @@ def f1_sim_periods(periods_per_year, oldest_animal, len_o):
     step = 364/periods_per_year
     index_p = np.arange(n_sim_periods)
     date_start_p = index_p * step
+    # include P to handle cases where look-up date is after the end of the generator (for arrays with o, s & d axes)
     date_start_P = np.arange(len_o * periods_per_year) * step
     date_end_p = index_p * step + step-1 #end date is the day before the next period start date
     date_end_P = np.arange(len_o * periods_per_year) * step + step-1 #end date is the day before the next start date
@@ -2122,21 +2123,23 @@ def f_wbe_mu(cg, fat, muscle, viscera=0):
 def f_conception_cs(cf, cb1, relsize_mating, rc_mating, cpg_doy, nfoet_b1any, nyatf_b1any, period_is_mating
                     , rev_trait_value, saa_rr, sam_rr):
     ''''
-    Calculation of dam conception using CSIRO equation system
+    Calculation of dam conception using CSIRO equation system. Conception in AFO is defined as the outcome at scanning
+    which is slightly earlier than the CSIRO definition which is outcome at the third trimester of pregnancy.
 
-    Conception is the change in the numbers of animals in each slice of e & b as a proportion of the numbers
-    in the NM slice (e[0]b[0]). The adjustment of the actual numbers occurs in f1_period_end_nums().
-    This function calculates the change in the proportions (the total should add to 0)
+    Conception is represented in the code as a change in the numbers of animals in each slice of e & b as a proportion
+    of the numbers available for mating. This function calculates the proportions across the b1 axis.
+    The numbers available for mating are updated in f1_period_numbers_end().
 
-    The general approach is to calculate the probability of conception greater than or equal to 1,2,3 foetuses
+    The approach is to calculate the probability of conception greater than or equal to 1,2,3 foetuses
     Probability is calculated from a sigmoid relationship based on relative size * relative condition at joining
-    The estimation of cumulative probability is scaled by a factor that varies with day of year that changes with
-    litter size & latitude.
-    The probability is an estimate of the number of dams carrying that number in the third trimester (or birth).
-    Some dams conceive (and don't return to service) but don't carry to the third trimester
-    due to abortion, this is taken into account.
+    The estimation of cumulative probability is scaled by a factor that varies with day of year and the factor changes
+    with litter size & latitude.
+    The probability is an estimate of the number of dams carrying that number to scanning (CSIRO reports say
+    third trimester). Some dams conceive (and don't return to service) but don't carry to scanning due to embryo and
+    foetal loss, this is taken into account.
     The values are altered by a sensitivity analysis on scanning percentage
-    Conception (proportion of dams that are dry) and litter size (number of foetuses per pregnant dam) can be controlled for relative economic values
+    Conception (proportion of dams that are dry) and litter size (number of foetuses per pregnant dam) can be
+    adjusted for relative economic values
 
     :param cf:
     :param cb1: GrazPlan parameter stating the probability of conception with different number of foetuses.
@@ -2216,13 +2219,12 @@ def f_conception_cs(cf, cb1, relsize_mating, rc_mating, cpg_doy, nfoet_b1any, ny
         ###calculate cp from the REV adjusted litter size. cp will only change from the original value if litter_size REV is active
         cp[:,:,:,mask,...] = litter_propn * np.sum(cp_masked, b1_pos, keepdims=True)
 
-        ##Dams that implant (i.e. do not return to service) but don't retain to 3rd trimester/birth
-        ## are added to 00 slice (b1[1:2]) so that they are removed from the NM slice.
-        ###Number is based on a proportion (cf[5]) of the ewes that implant that lose their foetuses/embryos
-        ###The number can't be more than the number of ewes that are not pregnant in the 3rd trimester (1 - propn_preg).
-        propn_pregnant = np.sum(fun.f_dynamic_slice(cp, b1_pos, 2, None), axis=b1_pos, keepdims=True)
+        ## Some dams implant (and therefore don't return to service) but don't retain to scanning.
+        ###These dams are added to 00 slice (b1[1:2]) so that they are removed from 'available for mating'.
+        ###The number is based on a proportion (cf[5]) of the empty ewes that don't return to service
+        ###The remainder return to service and therefore aren't included in the 'empty' slice.
         slc[b1_pos] = slice(1,2)
-        cp[tuple(slc)] = np.minimum((cf[5, ...] / (1 - cf[5, ...])) * propn_pregnant, 1 - propn_pregnant)
+        cp[tuple(slc)] = cf[5, ...] * cp[tuple(slc)]
 
         ##If the period is mating then set conception = temporary probability array
         conception = cp * period_is_mating
@@ -2238,9 +2240,9 @@ def f_conception_cs(cf, cb1, relsize_mating, rc_mating, cpg_doy, nfoet_b1any, ny
 def f_conception_ltw(cf, cu0, relsize_mating, cs_mating, scan_std, doy_p, rr_doy, nfoet_b1any, nyatf_b1any
                      , period_is_mating, rev_trait_value):
     '''
-    Conception is the change in the numbers of animals in each slice of e & b as a proportion of the numbers
-    in the NM slice (e[0]b[0]). The adjustment of the actual numbers occurs in f1_period_end_nums()
-    This function calculates the change in the proportions (the total should add to 0)
+    Conception is represented in the code as a change in the numbers of animals in each slice of e & b as a proportion
+    of the numbers available for mating. This function calculates the proportions across the b1 axis.
+    The numbers available for mating are updated in f1_period_numbers_end().
 
     LTW system: The general calculation is scanning percentage is defined by a linear function of CS
     The standard value (CS 3) is determined by the genotype, relative size and adjusted based on day of the year.
@@ -2278,13 +2280,14 @@ def f_conception_ltw(cf, cu0, relsize_mating, cs_mating, scan_std, doy_p, rr_doy
         cp = np.moveaxis(f1_DSTw(repro_rate, cycles = 1)[...,sinp.stock['a_nfoet_b1']], -1, b1_pos)
         ##Set proportions to 0 for dams that gave birth and lost - this is required so that numbers in pp behave correctly
         cp *= (nfoet_b1any == nyatf_b1any)
-        ##Dams that implant (i.e. do not return to service) but don't retain to 3rd trimester are added to 00 slice rather than staying in NM slice
-        ###Number is based on a proportion (cf[5]) of the ewes that implant (propn_preg) losing their foetuses/embryos
-        ###The number can't be more than the number of ewes that are not pregnant in the 3rd trimester (1 - propn_preg).
-        propn_pregnant = np.sum(fun.f_dynamic_slice(cp, b1_pos, 2, None), axis=b1_pos, keepdims=True)
-        slc = [slice(None)] * len(cp.shape)
+
+        ## Some dams implant (and therefore don't return to service) but don't retain to scanning.
+        ###These dams are added to 00 slice (b1[1:2]) so that they are removed from 'available for mating'.
+        ###The number is based on a proportion (cf[5]) of the empty ewes that don't return to service
+        ###The remainder return to service and therefore aren't included in the 'empty' slice.
         slc[b1_pos] = slice(1,2)
-        cp[tuple(slc)] = np.minimum((cf[5, ...] / (1 - cf[5, ...])) * propn_pregnant, 1 - propn_pregnant)
+        cp[tuple(slc)] = cf[5, ...] * cp[tuple(slc)]
+
         ##If the period is mating then set conception = temporary probability array
         conception = cp * period_is_mating
         ##Subtract conception of 00, 11, 22 & 33 from the NM slice (in e1[0])
@@ -2305,22 +2308,29 @@ def f_conception_mu2(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, doj, d
     Murdoch University trials that mated for 2 cycles.
 
     Conception is represented in the code as a change in the numbers of animals in each slice of e & b as a proportion
-    of the numbers in the NM slice (e[0]b[0]). The adjustment of the actual numbers occurs in f1_period_end_nums()
-    This function calculates the change in the proportions (the total should add to 0)
+    of the numbers available for mating. This function calculates the proportions across the b1 axis.
+    The numbers available for mating are updated in f1_period_numbers_end().
 
-    The general approach is to calculate the probability of conception less than or equal to 1,2,3 foetuses
-    similar to f_conception_cs() except LMAT is "less than" and probability is calculated from a back transformed
-    calculation with linear and quadratic terms.
+    Conception in AFO is defined as the outcome at scanning
+
+    The approach is to calculate the probability of conception less than or equal to 1,2,3 foetuses
+    similar to f_conception_cs() except the MU equations use "less than" and the probability is calculated
+    from a back transformed calculation with linear and quadratic terms, and a cut-off for each litter size.
     The calculation includes terms for LW at joining, Age at joining and LW change during joining.
-    The estimation of cumulative probability as fitted in the LMAT trial is scaled by a day of joining factor.
-    The probability is an estimate of the number of dams carrying that number of young to birth if mated for the
+    The estimation of cumulative probability as fitted in the MU trials is scaled by a day of joining factor.
+
+    The probability is an estimate of the number of dams carrying that number to scanning (CSIRO reports say
+    third trimester). Some dams conceive (and don't return to service) but don't carry to scanning due to embryo and
+    foetal loss, this is taken into account.
+
+    The probability is an estimate of the number of dams carrying that number of young to scanning if mated for the
     number of cycles assessed in the trial. The parameters could be altered to represent a single cycle however
-    this correction hasn't been made (as of Apr 2022) and the adjustment is made in this function.
-    Some dams conceive (and don't return to service) but don't carry to birth (the third trimester)
-    due to abortion during pregnancy, this is taken into account.
+    this correction hasn't been made (as of Apr 2022) and the adjustment is made in this function. Some dams conceive
+    (and don't return to service) but don't carry to scanning due to embryo and foetal loss, this is taken into account.
     #todo The conversion of the prediction from 2 cycles back to one cycle doesn't include this loss
-    # which then increases the proportion of empty ewes and reduces the expected RR.
-    # The correction has been removed for now.
+    #which then increases the proportion of empty ewes and reduces the expected RR.
+    #The correction has been removed for now with a value of 0 in uinp.
+
     The values are altered by a sensitivity analysis on scanning percentage, litter size and conception
     Conception (proportion of dams that are dry) and litter size (number of foetuses per pregnant dam) can
     be controlled for relative economic values
@@ -2346,14 +2356,17 @@ def f_conception_mu2(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, doj, d
     :param saa_con: SA on the proportion empty
     :param saa_ls: SA on litter size
     :param saa_preg_increment:
-    :return: Dam conception. Proportion of dams that conceive 0,1,2 or 3 for this oestrus cycle. Conceiving 0 means falls pregnant but loses the embryo after the joining period has ended (so can't be remated)
+
+    :return: Dam conception. Proportion of dams that conceive 0,1,2 or 3 for this oestrus cycle. Conceiving 0 means
+             falls pregnant but loses the embryo after the joining period has ended (so not available for remating)
     '''
     if ~np.any(period_is_mating):
         conception = np.zeros_like(maternallw_mating)
     else:
         b1_pos = sinp.stock['i_b1_pos']  #because used in many places in the function
         e1_pos = sinp.stock['i_e1_pos']
-        ##Select slice 24 (Ewe Lamb coefficients) or 25 (maiden ewe coefficients) or 26 (mature ewe coefficients) of cb1 & cu2 based on age of the dam. Note: age adds a,e,b axes onto the sliced array
+        ## Select slice 24 (Ewe Lamb coefficients) or 25 (maiden ewe coefficients) or 26 (mature ewe coefficients)
+        ###of cb1 & cu2 based on age of the dam. Note: age adds a,e,b axes onto the sliced array
         cb1_sliced = fun.f_update(cb1[26, ...], cb1[24, ...], age < 364)
         cu2_sliced = fun.f_update(cu2[26, ...], cu2[24, ...], age < 364)
         cb1_sliced = fun.f_update(cb1_sliced, cb1[25, ...], np.logical_and(364 <= age, age < 728))
@@ -2457,18 +2470,16 @@ def f_conception_mu2(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, doj, d
         ###calculate cp from the REV adjusted litter size. cp will only change from the original value if litter_size REV is active
         cp[:,:,:,mask,...] = litter_propn * np.sum(cp_masked, b1_pos, keepdims=True)
 
-        ##Dams that implant (i.e. do not return to service) but don't retain to 3rd trimester/birth
-        ## are added to 00 slice (b1[1:2]) so that they are removed from the NM slice.
-        ###Number is based on a proportion (cf[5]) of the ewes that implant (propn_preg) losing their foetuses/embryos
-        ###The number can't be more than the number of ewes that are not pregnant in the 3rd trimester (1 - propn_preg).
+        ## Some dams implant (and therefore don't return to service) but don't retain to scanning.
+        ###These dams are added to 00 slice (b1[1:2]) so that they are removed from 'available for mating'.
+        ###The number is based on a proportion (cf[5]) of the empty ewes that don't return to service
+        ###The remainder return to service and therefore aren't included in the 'empty' slice.
         ### This has been disabled because the prediction of 2 cycles back to one cycle is
         ### not representing this source of dry ewes.
         ### Disabled by setting the value of propn_pregnant to 0 rather remove the code because the proportion
         ###of empty needs to be set to 0 anyway (and the problem may be fixable)
-        propn_pregnant = np.sum(fun.f_dynamic_slice(cp, b1_pos, 2, None), axis=b1_pos, keepdims=True) * 0
-        # slc_empty = [slice(None)] * len(propn_pregnant.shape)
-        # slc_empty[b1_pos] = slice(1,2)
-        cp[tuple(slc_empty)] = np.minimum((cf[5, ...] / (1 - cf[5, ...])) * propn_pregnant, 1 - propn_pregnant)
+        slc_empty[b1_pos] = slice(1,2)
+        cp[tuple(slc_empty)] = cf[5, ...] * cp[tuple(slc_empty)]
 
         ##If the period is mating then set conception = temporary probability array
         conception = cp * period_is_mating
