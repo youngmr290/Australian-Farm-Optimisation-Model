@@ -431,9 +431,10 @@ def f_update(existing_value, new_value, mask_for_new):
     except AttributeError:
         if new_value=='-':
             new_value = 0
-    #todo using a masked array may allow f_update to handle situation that have a nan value that is masked - MRY addition: i couldn't get this method to actually work
-    # updated = np.ma.masked_array(existing_value, mask_for_new) + np.ma.maskedarray(new_value, np.logical_not(mask_for_new))  #used 'not' rather than '~' because ~False == -1 rather than True (not the case for np.arrays only if bool is single - as it is for sire in some situations)
-    updated = existing_value * np.logical_not(mask_for_new) + new_value * mask_for_new #used not rather than ~ because ~False == -1 not True (not the case for np.arrays only if bool is single - as it is for sire in some situations)
+    updated = np.where(mask_for_new, new_value, existing_value)
+    # if result is a 0-D array, return a Python scalar
+    if isinstance(updated, np.ndarray) and updated.shape == ():
+        updated = updated.item()
 
     ##convert back to original dtype because adding float32 and int32 returns float64. And sometimes we don't want this e.g. postprocessing
     ###use try except because sometimes a single int is update e.g. in the first iteration on generator. this causes error because only numpy arrays have .dtype.
