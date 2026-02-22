@@ -6294,7 +6294,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     pointers_offs = np.array([np.nan]) #empty array so f_start_prod still works in the early periods.
                     index_unique_w_offs = np.array([np.nan]) #empty array so f_start_prod still works in the early periods.
 
-            ##start production - this requires condensed end numbers
+            ##start production
             ###sire
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
                 ###EBW (start - empty body weight)
@@ -6730,13 +6730,13 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     ###update the fs startw allocation - at period_is_condense
                     if np.any(period_is_condense_pa1e1b1nwzida0e0b0xyg3[p + 1]):
                         ###slice the w axis just for the starting w slices.
-                        pkl_ebw_condensed_offs = pkl_condensed_values['offs'][p]['ebw_offs']
+                        pkl_ebw_offs = pkl_condensed_values['offs'][p]['ebw_offs']
                         if not sinp.structuralsa['i_generate_with_t']:
-                            pkl_ebw_condensed_offs=pkl_ebw_condensed_offs[0:1,...]
-                        pkl_ebw_condensed_offs = fun.f_dynamic_slice(pkl_ebw_condensed_offs, w_pos, start=0, stop=None,
-                                                                     step=int(pkl_ebw_condensed_offs.shape[w_pos] / w_start_len3))
-                        t_fs_w_reallocation_ta1e1b1nw8zida0e0b0xyg3s9 = sfun.f1_lw_distribution(pkl_ebw_condensed_offs,
-                                                                                                ebw_condensed_offs,
+                            pkl_ebw_offs=pkl_ebw_offs[0:1,...]
+                        pkl_ebw_offs = fun.f_dynamic_slice(pkl_ebw_offs, w_pos, start=0, stop=None,
+                                                                     step=int(pkl_ebw_offs.shape[w_pos] / w_start_len3))
+                        t_fs_w_reallocation_ta1e1b1nw8zida0e0b0xyg3s9 = sfun.f1_lw_distribution(pkl_ebw_offs,
+                                                                                                ebw_offs,
                                                                                                 for_feedsupply=True)
                         fs_w_reallocation_ta1e1b1nw8zida0e0b0xyg3s9 = fun.f_update(fs_w_reallocation_ta1e1b1nw8zida0e0b0xyg3s9,
                                                                                    t_fs_w_reallocation_ta1e1b1nw8zida0e0b0xyg3s9,
@@ -6750,7 +6750,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     temp_feedsupplyw_ta1e1b1nwzida0e0b0xyg3 = fun.f_merge_axis(temp_feedsupplyw_s8ta1e1b1nwzida0e0b0xyg3, 0, w_pos)
                     feedsupplyw_tpa1e1b1nwzida0e0b0xyg3[:, p + 1, ...] = temp_feedsupplyw_ta1e1b1nwzida0e0b0xyg3
                 if np.any(period_is_condense_pa1e1b1nwzida0e0b0xyg3[p + 1]) and sinp.structuralsa['i_fs_create_pkl']:
-                    pkl_condensed_values['offs'][p]['ebw_offs'] = ebw_condensed_offs
+                    pkl_condensed_values['offs'][p]['ebw_offs'] = ebw_offs
 
             ##This is the end of the p loop
 
@@ -8503,10 +8503,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     to a common season. It also happens when lw is condensed back to the starting number for the livestock year.
     For dams lw distributing is also required when dams can be transferred to different sires (at prejoining).  
 
-    Note: 1. For dams condensing for the livestock year is carried out at prejoining or season start which coincides with when
-          distribution is required. The generator can handle dam condensing at any time however the 
-          distribution code below requires condensing to occur at prejoining or season start (although it may be possible 
-          to change the distribution code to handle condensing and prejoining in different dvps). Generally, it is
+    Note: 1. Condensing can occur whenever however, for dams generally, it is
           best to condense at prejoining to avoid loss of information about different sheep because at prejoining
           the e and b axes get averaged so best to also average w axis here too.
 
@@ -8514,10 +8511,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
           errors associated with difference in wool production that are not 100% correlated with LW will be
           minimised if condensing and distributing are occurring soon after shearing.
           
-          3. For offs, condensing can occur whenever however if condensing and season start occur at the same time there 
-          only needs to be one lw distribution. This is handled with an if statement below.
-
-
     What this section does:
     Calc the ffcfw being distributed from and to.
     Calc the proportion of the source weight allocated to each destination weight.

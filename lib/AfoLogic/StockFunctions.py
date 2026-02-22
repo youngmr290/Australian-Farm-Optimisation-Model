@@ -3462,18 +3462,18 @@ def f1_collapse(pointers, index_unique_wzida0e0b0xyg, prod, numbers, period_is_c
 
         return out
 
-    condensed_prod_condense = f1_mean(w_pos, numbers, w_pos)
-    condensed_prod_season = f1_mean(z_pos, numbers, w_pos)
-    condensed_prod_prejoin = f1_mean(prejoin_tup, numbers, w_pos)
-    condensed_prod_prejoinseason = f1_mean((z_pos,) + prejoin_tup, numbers, w_pos)
+    collapsed_prod_condense = f1_mean(w_pos, numbers, w_pos)
+    collapsed_prod_season = f1_mean(z_pos, numbers, w_pos)
+    collapsed_prod_prejoin = f1_mean(prejoin_tup, numbers, w_pos)
+    collapsed_prod_prejoinseason = f1_mean((z_pos,) + prejoin_tup, numbers, w_pos)
 
-    condensed_prod = fun.f_update(condensed_prod_condense, condensed_prod_season, period_is_seasonstart)
-    condensed_prod = fun.f_update(condensed_prod, condensed_prod_prejoin, period_is_prejoin)
-    condensed_prod = fun.f_update(condensed_prod, condensed_prod_prejoinseason,
+    collapsed_prod = fun.f_update(collapsed_prod_condense, collapsed_prod_season, period_is_seasonstart)
+    collapsed_prod = fun.f_update(collapsed_prod, collapsed_prod_prejoin, period_is_prejoin)
+    collapsed_prod = fun.f_update(collapsed_prod, collapsed_prod_prejoinseason,
                                   np.logical_and(period_is_prejoin, period_is_seasonstart))
 
     # step 5: update prod if condensing/seasonstart/prejoining
-    prod = fun.f_update(prod, condensed_prod
+    prod = fun.f_update(prod, collapsed_prod
         , np.logical_or(np.logical_or(period_is_prejoin, period_is_seasonstart), period_is_condense))
 
     #expand from the active w to all the w
