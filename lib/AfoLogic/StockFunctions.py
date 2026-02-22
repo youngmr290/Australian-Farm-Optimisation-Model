@@ -3236,14 +3236,10 @@ def f1_collapse_pointers(p, ebw, numbers, startw_unique_next, period_is_condense
     ### With more groups the end gap can be reduced and if passing 1 to 1 then the end gap is not reduced
 
     ##Calculate the number of groups of animals that are being collapsed based on the minimum of the unique values or the numbers != 0.00001
-    n_groups_condense = np.minimum(fun.f1_unique_count(ebw, w_pos)
-                                   , np.sum(~np.isclose(numbers, 0.00001), axis=w_pos, keepdims=True))
-    n_groups_season = np.minimum(fun.f1_unique_count(ebw, (w_pos,) + season_tup)
-                                   , np.sum(~np.isclose(numbers, 0.00001), axis=(w_pos,) + season_tup, keepdims=True))
-    n_groups_prejoin = np.minimum(fun.f1_unique_count(ebw, (w_pos,) + prejoin_tup)
-                                   , np.sum(~np.isclose(numbers, 0.00001), axis=(w_pos,) + prejoin_tup, keepdims=True))
-    n_groups_prejoinseason = np.minimum(fun.f1_unique_count(ebw, (w_pos,) + prejoinseason_tup)
-                                   , np.sum(~np.isclose(numbers, 0.00001), axis=(w_pos,) + prejoinseason_tup, keepdims=True))
+    n_groups_condense = fun.f1_unique_count(ebw, w_pos, numbers, threshold=0.001)
+    n_groups_season = fun.f1_unique_count(ebw, (w_pos,) + season_tup, numbers, threshold=0.001)
+    n_groups_prejoin = fun.f1_unique_count(ebw, (w_pos,) + prejoin_tup, numbers, threshold=0.001)
+    n_groups_prejoinseason = fun.f1_unique_count(ebw, (w_pos,) + prejoinseason_tup, numbers, threshold=0.001)
 
     ##update the number of groups based on the period
     n_groups = startw_unique_next    #startw_unique_next groups unless overwritten by being another period

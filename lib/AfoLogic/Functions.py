@@ -154,42 +154,64 @@ def f1_searchsorted_looped(a, v, axis, side='left'):
     return result
 
 
-def f1_unique_count(a, axes):
+def f1_unique_count(a, axes, weights=None, threshold=0.0):
     """
     Count unique values along given axes.
+    Values whose relative weight < threshold are excluded.
 
     Parameters
     ----------
-    a : ndarray
+    a : ndarray (float)
     axes : int or tuple of int
+        Axes to collapse (result size becomes 1).
+    weights : ndarray or None
+        Broadcastable to a. If None, equal weights assumed.
+    threshold : float
+        Mask out entries with relative weight < threshold.
 
     Returns
     -------
     counts : ndarray
-        Same shape as a but with the specified axes size = 1
+        Same shape as a but with collapsed axes size = 1.
     """
-    a = np.asarray(a)
+    a = np.asarray(a, dtype=float)
 
     if isinstance(axes, int):
         axes = (axes,)
     axes = tuple(ax % a.ndim for ax in axes)
 
-    # Move target axes to front
+    if weights is None:
+        weights = np.ones_like(a, dtype=float)
+    else:
+        weights = np.asarray(weights, dtype=float)
+
+    # relative weights along reduction axes
+    denom = np.sum(weights, axis=axes, keepdims=True)
+
+    with np.errstate(divide="ignore", invalid="ignore"):
+        rel_w = np.where(denom != 0, weights / denom, 0.0)
+
+    # mask low-weight values
+    a = np.where(rel_w < threshold, np.nan, a)
+
+    # move axes to front
     moved = np.moveaxis(a, axes, range(len(axes)))
 
-    front_shape = moved.shape[:len(axes)]
+    front = np.prod(moved.shape[:len(axes)])
     rest_shape = moved.shape[len(axes):]
 
-    flat = moved.reshape(np.prod(front_shape), -1)
+    flat = moved.reshape(front, -1)
 
     counts = np.empty(flat.shape[1], dtype=int)
 
     for i in range(flat.shape[1]):
-        counts[i] = np.unique(flat[:, i]).size
+        col = flat[:, i]
+        col = col[~np.isnan(col)]  # ignore masked values
+        counts[i] = np.unique(col).size
 
     counts = counts.reshape(rest_shape)
 
-    # expand axes back with size 1
+    # expand reduced axes back
     for ax in sorted(axes):
         counts = np.expand_dims(counts, axis=ax)
 
