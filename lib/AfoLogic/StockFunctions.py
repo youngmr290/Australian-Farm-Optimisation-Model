@@ -3503,7 +3503,8 @@ def f1_adjust_pkl_condensed_axis_len(temporary, i_w_len, i_t_len):
         temporary = np.concatenate([temporary]*i_t_len, axis=t_pos) #won't work if pkl trial had t axis but current trial doesn't - to handle this would require passing in the a_t_g association.
     return temporary
 
-def f1_period_start_nums(numbers, prejoin_tup, z_pos, period_is_startseason, season_propn_z, group=None, nyatf_b1 = 0
+def f1_period_start_nums(numbers, prejoin_tup, z_pos, period_is_startseason, season_propn_z, group=None
+                        , numbers_available=0, nyatf_b1 = 0
                         , numbers_initial_repro=0, gender_propn_x=1, period_is_prejoin=0, period_is_birth=False, prevperiod_is_wean=False
                         ,len_gen_t=1, a_t_g=0, period_is_startdvp=False):
 
@@ -3527,16 +3528,21 @@ def f1_period_start_nums(numbers, prejoin_tup, z_pos, period_is_startseason, sea
         temp = nyatf_b1 * gender_propn_x   # nyatf is accounting for peri-natal mortality. But doesn't include the differential mortality of female and male offspring at birth
         numbers=fun.f_update(numbers, temp, period_is_birth)
         numbers=fun.f_update(numbers, 0, prevperiod_is_wean) #set numbers to 0 after weaning
-    return numbers
+    return numbers, numbers_available
 
 
-def f1_period_end_nums(numbers, mortality, mortality_yatf=0, nfoet_b1 = 0, nyatf_b1 = 0, group=None
+def f1_period_end_nums(numbers, mortality, numbers_available=0, mortality_yatf=0, nfoet_b1 = 0, nyatf_b1 = 0, group=None
                       , conception = 0, gender_propn_x=1, period_is_mating = False
                       , period_is_matingend = False, period_is_birth=False, period_isbetween_prejoinmatingend=False
                       , propn_dams_mated=1):
     '''
     This adjusts numbers for things like conception and mortality that happen during a given period
+    Numbers available for mating is tracked in a separate variable (singleton e1 & b1 axes).
+    The numbers available and the mortality are based on the singles b1 slice because the ewes expected to be
+    mated were transferred to the singles slice at prejoining
+    It reflects the proportion of the dams that are expected to be mated but are yet to be pregnant.
     '''
+
     ##a) mortality (include np.maximum on mortality so that numbers can't become negative)
     ###For dams temporarily update the nm mort with mated mort between prejoining and end of mating. So that conception is calculated
     ### reflect the mated numbers. This is required because nm and mated might have a different feedsupply and conception needs to be based on the mated fs and hence mort.
@@ -3574,7 +3580,7 @@ def f1_period_end_nums(numbers, mortality, mortality_yatf=0, nfoet_b1 = 0, nyatf
             ##have to average x axis so that it is not active for dams - times by gender propn to give approx weighting (ie because offs are not usually entire males so they will get low weighting)
             temp = np.sum(dam_propn_birth_b1 * gender_propn_x, axis=sinp.stock['i_x_pos'], keepdims=True) * numbers[:,:,:,sinp.stock['ia_prepost_b1'],...]
             numbers = fun.f_update(numbers, temp, period_is_birth)  # calculated in the period after birth when progeny mortality due to exposure is calculated
-    return numbers
+    return numbers, numbers_available
 
 
 #################

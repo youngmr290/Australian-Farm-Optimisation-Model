@@ -2903,6 +2903,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
         nw_start_dams = np.array([0.0])
         temp_lc_dams = np.array([0.0]) #this is calculated in the chill function, but it is required for the intake function so it is set to 0 for the first period.
         numbers_start_dams = numbers_initial_a1e1b1nwzida0e0b0xyg1
+        numbers_available_mating_dams = 0  #need an initial value to pass to the function the first time
         numbers_at_condense_dams = numbers_initial_a1e1b1nwzida0e0b0xyg1 #just need a default because this is processed using update function.
         scanning = 0 #variable is used only for reporting
         md_solid_dams = np.array([12.0])  # need a start value to convert ebw_initial to ffcfw
@@ -5599,19 +5600,20 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
 
             ##end numbers - accounts for mortality and other activity during the period - this is the number in the different classes as at the end of the period
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
-                numbers_end_sire = sfun.f1_period_end_nums(numbers_start_sire, mortality_sire, group=0)
+                numbers_end_sire, temp1 = sfun.f1_period_end_nums(numbers_start_sire, mortality_sire, group=0)
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                numbers_end_dams = sfun.f1_period_end_nums(numbers_start_dams, mortality_dams, mortality_yatf=mortality_birth_yatf,
-                             nfoet_b1=nfoet_b1nwzida0e0b0xyg, nyatf_b1=nyatf_b1nwzida0e0b0xyg, group=1, conception=conception_dams,
-                             gender_propn_x=gender_propn_xyg, period_is_mating = period_is_mating_pa1e1b1nwzida0e0b0xyg1[p],
-                             period_is_matingend=period_is_matingend_pa1e1b1nwzida0e0b0xyg1[p], period_is_birth = period_is_birth_pa1e1b1nwzida0e0b0xyg1[p],
-                             period_isbetween_prejoinmatingend=period_isbetween_prejoinmatingend_pa1e1b1nwzida0e0b0xyg1[p],
-                             propn_dams_mated=est_prop_dams_mated_pa1e1b1nwzida0e0b0xyg1[p])
+                numbers_end_dams, numbers_available_mating_dams = sfun.f1_period_end_nums(numbers_start_dams,
+                            mortality_dams, numbers_available_mating_dams, mortality_yatf=mortality_birth_yatf,
+                            nfoet_b1=nfoet_b1nwzida0e0b0xyg, nyatf_b1=nyatf_b1nwzida0e0b0xyg, group=1, conception=conception_dams,
+                            gender_propn_x=gender_propn_xyg, period_is_mating = period_is_mating_pa1e1b1nwzida0e0b0xyg1[p],
+                            period_is_matingend=period_is_matingend_pa1e1b1nwzida0e0b0xyg1[p], period_is_birth = period_is_birth_pa1e1b1nwzida0e0b0xyg1[p],
+                            period_isbetween_prejoinmatingend=period_isbetween_prejoinmatingend_pa1e1b1nwzida0e0b0xyg1[p],
+                            propn_dams_mated=est_prop_dams_mated_pa1e1b1nwzida0e0b0xyg1[p])
 
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
-                numbers_end_yatf = sfun.f1_period_end_nums(numbers_start_yatf, mortality_yatf, group=2)
+                numbers_end_yatf, temp1 = sfun.f1_period_end_nums(numbers_start_yatf, mortality_yatf, group=2)
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
-                numbers_end_offs = sfun.f1_period_end_nums(numbers_start_offs, mortality_offs, group=3)
+                numbers_end_offs, temp1 = sfun.f1_period_end_nums(numbers_start_offs, mortality_offs, group=3)
 
             ##################################################
             #post calculation sensitivity for intake & energy#
@@ -6021,7 +6023,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     t_scaled_start_numbers = numbers_end_dams[:, na] / cum_mortality_dams
                     t_scaled_end_numbers = numbers_end_dams[:, na] / np.roll(cum_mortality_dams, shift=-1, axis=p_pos)
 
-                    ###if period is mating back date the end number after mating to all the periods since prejoining
+                    ###if period is matingend back date the end number after mating to all the periods since prejoining
                     o_numbers_end_tpdams = fun.f_update(o_numbers_end_tpdams, t_scaled_end_numbers.astype(dtype)
                                                         , (period_is_matingend_pa1e1b1nwzida0e0b0xyg1[p] * between_prejoinnow))
                     o_numbers_start_tpdams = fun.f_update(o_numbers_start_tpdams, t_scaled_start_numbers.astype(dtype)
@@ -6029,7 +6031,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 o_ffcfw_tpdams[:,p] = ffcfw_dams
                 o_nw_start_tpdams[:,p] = nw_start_dams
                 numbers_join_dams = fun.f_update(numbers_join_dams, numbers_start_dams, period_is_join_pa1e1b1nwzida0e0b0xyg1[p])
-                o_numbers_join_tpdams[:,p] = numbers_join_dams #store the numbers at joining until next
+                o_numbers_join_tpdams[:,p] = numbers_join_dams #store the numbers at joining for this reproduction opportunity
                 o_lw_tpdams[:,p] = lw_dams
                 o_pi_tpdams[:,p] = pi_dams
                 o_mei_solid_tpdams[:,p] = mei_solid_dams
@@ -6656,14 +6658,14 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
             ##start numbers - has to be after production because the numbers are being calced for the current period and are used in the start production function
             ## doesn't have to use condensed numbers because we are only interested in the start vs end numbers of a dvp (using condensed numbers would still work).
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
-                numbers_start_sire = sfun.f1_period_start_nums(numbers_end_sire, prejoin_tup, z_pos
+                numbers_start_sire, temp1 = sfun.f1_period_start_nums(numbers_end_sire, prejoin_tup, z_pos
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], season_propn_zida0e0b0xyg, group=0)
                 ###numbers at the beginning of fvp 0 (used to calc mort for the lw patterns to determine the lowest feasible level - used in the start prod func)
                 numbers_at_condense_sire = fun.f_update(numbers_at_condense_sire, numbers_start_sire, False) #currently sire don't have any fvp
 
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                numbers_start_dams = sfun.f1_period_start_nums(numbers_end_dams, prejoin_tup, z_pos
-                                        , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], season_propn_zida0e0b0xyg, group=1
+                numbers_start_dams, numbers_available_mating_dams = sfun.f1_period_start_nums(numbers_end_dams
+                                        , prejoin_tup, z_pos , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], season_propn_zida0e0b0xyg, group=1
                                         , numbers_initial_repro=numbers_initial_propn_repro_a1e1b1nwzida0e0b0xyg1
                                         , period_is_prejoin=period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1]
                                         , len_gen_t=len_gen_t1, a_t_g=a_t_g1
@@ -6673,7 +6675,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                                            , period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
 
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p-1:p+2,...] >0): #use p+2 so that initial numbers get set when birth is next period, p-1 so that numbers get set to 0 after weaning.
-                numbers_start_yatf = sfun.f1_period_start_nums(numbers_end_yatf, prejoin_tup, z_pos
+                numbers_start_yatf, temp1 = sfun.f1_period_start_nums(numbers_end_yatf, prejoin_tup, z_pos
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], season_propn_zida0e0b0xyg
                                         , nyatf_b1=nyatf_b1nwzida0e0b0xyg, gender_propn_x=gender_propn_xyg
                                         , period_is_birth=period_is_birth_pa1e1b1nwzida0e0b0xyg1[p+1]
@@ -6685,7 +6687,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                                            , period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
 
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
-                numbers_start_offs = sfun.f1_period_start_nums(numbers_end_offs, prejoin_tup, z_pos
+                numbers_start_offs, temp1 = sfun.f1_period_start_nums(numbers_end_offs, prejoin_tup, z_pos
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], season_propn_zida0e0b0xyg, group=3
                                         , len_gen_t=len_gen_t3, a_t_g=a_t_g3, period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3[p + 1])
                 ###numbers at the beginning of fvp 0 (used to calc mort for the lw patterns to determine the lowest feasible level - used in the start prod func)
