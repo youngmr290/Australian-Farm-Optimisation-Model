@@ -94,6 +94,200 @@ def searchsort_multiple_dim(a, v, axis_a0, axis_v0, axis_a1=None, axis_v1=None, 
     return final
 
 #print(timeit.timeit(phases2,number=100)/100)
+
+def f1_searchsorted_looped(a, v, axis, side='left'):
+    """
+    Apply np.searchsorted along the given axis of multidim arrays.
+    Done by flattening the other dimensions and looping along the flattened axis.
+
+    a and v must be broadcast-compatible except along `axis`.
+    a must be sorted along 'axis'.
+
+    Parameters (See np.searchsorted)
+    ----------
+    a : ndarray  Array to be searched (must be sorted along `axis`)
+    v : ndarray  Values whose insertion points are sought
+    axis : int  Axis along which to search
+    side : {'left', 'right'}, optional
+
+    Returns
+    -------
+    ndarray of int: Same shape as v, containing insertion indices
+    """
+    if a.ndim == 0 or v.ndim == 0:
+        raise ValueError("Inputs must be at least 1-D")
+
+    # Normalize axes to handle negative indices and test dimensions
+    axis = a.ndim + axis if axis < 0 else axis
+    if not (0 <= axis < a.ndim):
+        raise ValueError(f"axis {axis} out of bounds for array of dimension {a.ndim}")
+
+    # Move the search axis to the end → much easier broadcasting & indexing
+    a_moved = np.moveaxis(a, axis, -1)  # shape:  ..., M
+    v_moved = np.moveaxis(v, axis, -1)  # shape:  ..., K   (K may differ from M)
+
+    # Make sure leading dimensions match (broadcasting)
+    if a_moved.shape[:-1] != v_moved.shape[:-1]:
+        try:
+            v_moved = np.broadcast_to(v_moved, (*a_moved.shape[:-1], v_moved.shape[-1]))
+        except ValueError:
+            raise ValueError(f"Leading dimensions of v ({v_moved.shape[:-1]}) "
+                             f"cannot be broadcast to those of a ({a_moved.shape[:-1]})")
+
+    # Now flatten all dimensions except the last one
+    a_flat = a_moved.reshape(-1, a_moved.shape[-1])  # (N_slices, M)
+    v_flat = v_moved.reshape(-1, v_moved.shape[-1])  # (N_slices, K)
+
+    # Output container
+    result_flat = np.empty(v_flat.shape, dtype=np.int64)
+
+    # Loop over all slices
+    for i in range(a_flat.shape[0]):
+        result_flat[i] = np.searchsorted(a_flat[i], v_flat[i], side=side)
+
+    # Reshape back and move axis to original position
+    result = result_flat.reshape(v_moved.shape)
+
+    if axis != -1:
+        result = np.moveaxis(result, -1, axis)
+
+    return result
+
+
+def f1_unique_count(a, axes, weights=None, threshold=0.0):
+    """
+    Count unique values along given axes.
+    Values whose relative weight < threshold are excluded.
+
+    Parameters
+    ----------
+    a : ndarray (float)
+    axes : int or tuple of int
+        Axes to collapse (result size becomes 1).
+    weights : ndarray or None
+        Broadcastable to a. If None, equal weights assumed.
+    threshold : float
+        Mask out entries with relative weight < threshold.
+
+    Returns
+    -------
+    counts : ndarray
+        Same shape as a but with collapsed axes size = 1.
+    """
+    a = np.asarray(a, dtype=float)
+
+    if isinstance(axes, int):
+        axes = (axes,)
+    axes = tuple(ax % a.ndim for ax in axes)
+
+    if weights is None:
+        weights = np.ones_like(a, dtype=float)
+    else:
+        weights = np.asarray(weights, dtype=float)
+
+    # relative weights along reduction axes
+    denom = np.sum(weights, axis=axes, keepdims=True)
+
+    with np.errstate(divide="ignore", invalid="ignore"):
+        rel_w = np.where(denom != 0, weights / denom, 0.0)
+
+    # mask low-weight values
+    a = np.where(rel_w < threshold, np.nan, a)
+
+    # move axes to front
+    moved = np.moveaxis(a, axes, range(len(axes)))
+
+    front = np.prod(moved.shape[:len(axes)])
+    rest_shape = moved.shape[len(axes):]
+
+    flat = moved.reshape(front, -1)
+
+    counts = np.empty(flat.shape[1], dtype=int)
+
+    for i in range(flat.shape[1]):
+        col = flat[:, i]
+        col = col[~np.isnan(col)]  # ignore masked values
+        counts[i] = np.unique(col).size
+
+    counts = counts.reshape(rest_shape)
+
+    # expand reduced axes back
+    for ax in sorted(axes):
+        counts = np.expand_dims(counts, axis=ax)
+
+    return counts
+
+
+def f1_percentile_weighted(values, weights, axes):
+    """
+    Compute weighted percentile rank within slices defined by the `axes` tuple.
+    Weighted percentile rank definition:
+        (cumulative of sorted weights - individual weight) / total of weights * 100
+
+    Parameters
+    ----------
+    values : array_like: Input array to rank
+    weights : array_like: Weights corresponding to each value (same shape as values)
+    axes : int or tuple of ints: Axis or axes along which to compute percentile ranks. These are the axes being collapsed plus w
+
+    Returns
+    -------
+    percentile : ndarray[float]
+        Same shape as values.
+        ~100 is the highest value and ~0 is the lowest value in the packed axes, based on average weighted position.
+        Percentile is the centre of the weighting for the animal, therefore not 0 to 100.
+    """
+    # Normalize axes to handle negative indices
+    axes = tuple(a % values.ndim for a in np.atleast_1d(axes))
+    k = len(axes)
+
+    # Move packed axes to end
+    values_moved = np.moveaxis(values, axes, range(values.ndim - k, values.ndim))
+    weights_moved = np.moveaxis(weights, axes, range(weights.ndim - k, weights.ndim))
+
+    rest_shape = values_moved.shape[:-k]
+    packed_shape = values_moved.shape[-k:]
+    n = int(np.prod(packed_shape))
+
+    # Flatten packed dimensions
+    values_flat = values_moved.reshape(*rest_shape, n)
+    weights_flat = weights_moved.reshape(*rest_shape, n)
+
+    # # argsort values along packed axis
+    # order = np.argsort(values_flat, axis=-1)
+
+    #lexsort on both criteria, values (weight of the animals) ascending and separate ties based on weights (number of animals)
+    ##The tie breaker is largest groups first for lighter animals (< median weight) and largest groups last for the heavier animals
+    ##This means that the largest groups will be at the lower and higher end of the sort on values
+    median_v = np.median(values_flat)    #note: this is the median over all the groups, not just within the tuple of axes
+    direction = np.where(values_flat < median_v, -1, 1)
+    tie_breaker = direction * weights_flat
+
+    # Now sort by (weight ascending, tie_breaker ascending)
+    order = np.lexsort((tie_breaker, values_flat))
+
+    # reorder weights
+    weights_sorted = np.take_along_axis(weights_flat, order, axis=-1)
+
+    # cumulative weights
+    weights_cum = np.cumsum(weights_sorted, axis=-1)
+
+    # total weights (with keepdims for broadcasting). Note: same as np.sum(weights, axis=-1, keepdims) but more efficient
+    weights_total = weights_cum[..., -1:]
+
+    # compute percentile in sorted order
+    # Handles edge case where only one valid entry exists and returns 50
+    percentile_sorted = (weights_cum - weights_sorted/2) / weights_total * 100.0
+
+    # unsort back to original order
+    inverse_order = np.argsort(order, axis=-1)
+    percentile_flat = np.take_along_axis(percentile_sorted, inverse_order, axis=-1)
+
+    # Reshape and Move axes back to original positions
+    percentile = percentile_flat.reshape(*rest_shape, *packed_shape)
+    percentile = np.moveaxis(percentile, range(values.ndim - k, values.ndim), axes)
+
+    return percentile
 #
 def f_expand(array, left_pos=0, swap=False, ax1=0, ax2=1, right_pos=0, left_pos2=0, right_pos2=0
                      , left_pos3=0, right_pos3=0, condition = None, axis = 0, swap2=False, ax1_2=1, ax2_2=2,
@@ -247,9 +441,10 @@ def f_update(existing_value, new_value, mask_for_new):
     except AttributeError:
         if new_value=='-':
             new_value = 0
-    #todo using a masked array may allow f_update to handle situation that have a nan value that is masked - MRY addition: i couldn't get this method to actually work
-    # updated = np.ma.masked_array(existing_value, mask_for_new) + np.ma.maskedarray(new_value, np.logical_not(mask_for_new))  #used 'not' rather than '~' because ~False == -1 rather than True (not the case for np.arrays only if bool is single - as it is for sire in some situations)
-    updated = existing_value * np.logical_not(mask_for_new) + new_value * mask_for_new #used not rather than ~ because ~False == -1 not True (not the case for np.arrays only if bool is single - as it is for sire in some situations)
+    updated = np.where(mask_for_new, new_value, existing_value)
+    # if result is a 0-D array, return a Python scalar
+    if isinstance(updated, np.ndarray) and updated.shape == ():
+        updated = updated.item()
 
     ##convert back to original dtype because adding float32 and int32 returns float64. And sometimes we don't want this e.g. postprocessing
     ###use try except because sometimes a single int is update e.g. in the first iteration on generator. this causes error because only numpy arrays have .dtype.
@@ -332,6 +527,12 @@ def f_divide(numerator, denominator, dtype='float64', option=0):
     if option == 1:
         mask = np.isclose(denominator, numerator)
         result[mask] = 1
+
+    ##If option is 2 then return the numerator if the denominator is 0
+    if option == 2:
+        mask = np.isclose(denominator.astype(float), 0)
+        result[mask] = numerator[mask]
+
     return result
 
 def f_bilinear_interpolate(im, x_im, y_im, x, y):

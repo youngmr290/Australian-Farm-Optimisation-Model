@@ -109,6 +109,7 @@ def f_buy_grain_price(r_vals):
     fun.f1_make_r_val(r_vals, r_buy_grain_price_k3s2g_qp7z, 'buy_grain_price', mask_season_p7z, z_pos=-1)
     return buy_grain_price_k3s2gc1_qp7z.unstack([2,0,1,3]).sort_index(), buy_grain_price_wc_k3s2g_qc0p7z.unstack([2,0,1]).sort_index(), buy_grain_prov_p7z
 
+#todo supp feeding in confinement should incur some capital cost.
 def f_sup_feeding_cost(r_vals, nv):
     '''
 

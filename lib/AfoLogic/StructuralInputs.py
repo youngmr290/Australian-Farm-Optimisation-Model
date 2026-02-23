@@ -74,7 +74,8 @@ def f_structural_inp_sa(sinp_defaults):
     ##have to import it here since sen.py imports this module
     from . import Sensitivity as sen
 
-    ##SAV
+    ##StructuralSA
+    ###SAV
     structuralsa['steady_state'] = fun.f_sa(structuralsa['steady_state'], sen.sav['steady_state'], 5)
     structuralsa['i_inc_node_periods'] = fun.f_sa(structuralsa['i_inc_node_periods'], sen.sav['inc_node_periods'], 5)
     structuralsa['i_len_q'] = fun.f_sa(structuralsa['i_len_q'], sen.sav['seq_len'], 5)
@@ -112,7 +113,7 @@ def f_structural_inp_sa(sinp_defaults):
     structuralsa['i_fs_use_number'] = fun.f_sa(structuralsa['i_fs_use_number'], sen.sav['fs_use_number'],5)
     structuralsa['i_r2adjust_inc'] = fun.f_sa(structuralsa['i_r2adjust_inc'], sen.sav['r2adjust_inc'],5)
     structuralsa['i_differentiate_wet_dry_seeding'] = fun.f_sa(structuralsa['i_differentiate_wet_dry_seeding'], sen.sav['differentiate_wet_dry_seeding'], 5)
-    ##report controls
+    ##Report Settings
     ###SAV
     rep['i_store_nv_rep'] = fun.f_sa(rep['i_store_nv_rep'], sen.sav['nv_inc'], 5)
     rep['i_store_cs_rep'] = fun.f_sa(rep['i_store_cs_rep'], sen.sav['cs_inc'], 5)

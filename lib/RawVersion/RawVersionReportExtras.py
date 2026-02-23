@@ -20,6 +20,7 @@ def f_create_report_dfs(non_exist_trials):
     reports["stacked_numbers_qsz"] = pd.DataFrame()  # total dse by qsz
     reports["stacked_croparea_qsz"] = pd.DataFrame()  # total crop by qsz
     reports["stacked_pnl"] = pd.DataFrame()  # profit and loss statement
+    reports["stacked_trees"] = pd.DataFrame()  # profit and loss statement
     reports["stacked_mach"] = pd.DataFrame()  # machiney summary
     reports["stacked_wc"] = pd.DataFrame()  # max bank overdraw
     reports["stacked_penalty"] = pd.DataFrame()  # biomass penalty from seeding timeliness and crop grazing
@@ -169,6 +170,10 @@ def f_concat_reports(stacked_reports, reports, report_run, trial_name):
     if report_run.loc['run_pnl', 'Run']:
         pnl = pd.concat([reports["pnl"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
         stacked_reports["stacked_pnl"] = rfun.f_append_dfs(stacked_reports["stacked_pnl"], pnl)
+
+    if report_run.loc['run_trees', 'Run']:
+        trees = pd.concat([reports["trees"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
+        stacked_reports["stacked_trees"] = rfun.f_append_dfs(stacked_reports["stacked_trees"], trees)
 
     if report_run.loc['run_mach', 'Run']:
         pnl = pd.concat([reports["mach"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
@@ -687,6 +692,8 @@ def f_save_reports(report_run, reports, processor):
         df_settings = rfun.f_df2xl(writer, reports["stacked_croparea_qsz"], 'croparea_qsz', df_settings, option=xl_display_mode)
     if report_run.loc['run_pnl', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_pnl"], 'pnl', df_settings, option=xl_display_mode)
+    if report_run.loc['run_trees', 'Run']:
+        df_settings = rfun.f_df2xl(writer, reports["stacked_trees"], 'trees', df_settings, option=xl_display_mode)
     if report_run.loc['run_mach', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_mach"], 'mach_summary', df_settings, option=xl_display_mode)
     if report_run.loc['run_wc', 'Run']:

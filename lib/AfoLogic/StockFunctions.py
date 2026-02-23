@@ -31,9 +31,9 @@ def f1_sim_periods(periods_per_year, oldest_animal, len_o):
     All calculations are based on a day of the year rather than a date and the periods are weeks of the year
     This saves managing the difficulties associated with the extra day in the year and in leap years.
 
-    :param start_year: int: year to start simulation.
     :param periods_per_year: int: number of periods per year.
     :param oldest_animal: float: age of the oldest animal to be simulated (yrs).
+    :param len_o: the structural limit of the simulation in years
 
     :return: n_sim_periods: total number of sim periods
     :return: date_start_p: array of period dates (1D periods)
@@ -49,6 +49,7 @@ def f1_sim_periods(periods_per_year, oldest_animal, len_o):
     step = 364/periods_per_year
     index_p = np.arange(n_sim_periods)
     date_start_p = index_p * step
+    # include P to handle cases where look-up date is after the end of the generator (for arrays with o, s & d axes)
     date_start_P = np.arange(len_o * periods_per_year) * step
     date_end_p = index_p * step + step-1 #end date is the day before the next period start date
     date_end_P = np.arange(len_o * periods_per_year) * step + step-1 #end date is the day before the next start date
@@ -986,18 +987,20 @@ def f_egraze(cm, lw, i_steepness, density, foo, confinement, intake_f, dmd):
     '''Extra energy required for eating paddock feed than an equivalent feed in a pen (walking, chewing and ruminating)
     Energy required for walking around the paddock is estimated from distance being a function of feed available
     Low quality paddock feed is likely to be longer fibre length which might increase the energy to chew and ruminate.
+
+    The Aust feeding standards have a comment: For animals given feed in pens or yards it can generally be assumed that graze = 0.
     '''
     ##Distance walked (horizontal equivalent)
     distance = (1 + np.tan(np.deg2rad(i_steepness))) * np.minimum(1, cm[17, ...] / density) / (cm[8, ...] * foo + cm[9, ...])
-    ##Set Distance walked to 0 if in confinement
-    distance = distance * np.logical_not(confinement)
     ##Energy required for movement
     emove = cm[16, ...] * distance * lw
-    emove = fun.f_sa(emove, sen.sam['emove'])
     ##Extra energy required for chewing and ruminating
     emasticate = cm[6, ...] * lw * intake_f * (cm[7, ...] - dmd)
     ##Energy required for grazing (chewing and walking around)
     egraze = emove + emasticate
+    ##Set egraze to 0 if in confinement - For animals given feed in pens or yards it can generally be assumed that graze = 0
+    egraze = egraze * np.logical_not(confinement)
+    egraze = fun.f_sa(egraze, sen.sam['emove'])
     return egraze
 
 
@@ -2120,21 +2123,23 @@ def f_wbe_mu(cg, fat, muscle, viscera=0):
 def f_conception_cs(cf, cb1, relsize_mating, rc_mating, cpg_doy, nfoet_b1any, nyatf_b1any, period_is_mating
                     , rev_trait_value, saa_rr, sam_rr):
     ''''
-    Calculation of dam conception using CSIRO equation system
+    Calculation of dam conception using CSIRO equation system. Conception in AFO is defined as the outcome at scanning
+    which is slightly earlier than the CSIRO definition which is outcome at the third trimester of pregnancy.
 
-    Conception is the change in the numbers of animals in each slice of e & b as a proportion of the numbers
-    in the NM slice (e[0]b[0]). The adjustment of the actual numbers occurs in f1_period_end_nums().
-    This function calculates the change in the proportions (the total should add to 0)
+    Conception is represented in the code as a change in the numbers of animals in each slice of e & b as a proportion
+    of the numbers available for mating. This function calculates the proportions across the b1 axis.
+    The numbers available for mating are updated in f1_period_numbers_end().
 
-    The general approach is to calculate the probability of conception greater than or equal to 1,2,3 foetuses
+    The approach is to calculate the probability of conception greater than or equal to 1,2,3 foetuses
     Probability is calculated from a sigmoid relationship based on relative size * relative condition at joining
-    The estimation of cumulative probability is scaled by a factor that varies with day of year that changes with
-    litter size & latitude.
-    The probability is an estimate of the number of dams carrying that number in the third trimester (or birth).
-    Some dams conceive (and don't return to service) but don't carry to the third trimester
-    due to abortion, this is taken into account.
+    The estimation of cumulative probability is scaled by a factor that varies with day of year and the factor changes
+    with litter size & latitude.
+    The probability is an estimate of the number of dams carrying that number to scanning (CSIRO reports say
+    third trimester). Some dams conceive (and don't return to service) but don't carry to scanning due to embryo and
+    foetal loss, this is taken into account.
     The values are altered by a sensitivity analysis on scanning percentage
-    Conception (proportion of dams that are dry) and litter size (number of foetuses per pregnant dam) can be controlled for relative economic values
+    Conception (proportion of dams that are dry) and litter size (number of foetuses per pregnant dam) can be
+    adjusted for relative economic values
 
     :param cf:
     :param cb1: GrazPlan parameter stating the probability of conception with different number of foetuses.
@@ -2214,31 +2219,24 @@ def f_conception_cs(cf, cb1, relsize_mating, rc_mating, cpg_doy, nfoet_b1any, ny
         ###calculate cp from the REV adjusted litter size. cp will only change from the original value if litter_size REV is active
         cp[:,:,:,mask,...] = litter_propn * np.sum(cp_masked, b1_pos, keepdims=True)
 
-        ##Dams that implant (i.e. do not return to service) but don't retain to 3rd trimester/birth
-        ## are added to 00 slice (b1[1:2]) so that they are removed from the NM slice.
-        ###Number is based on a proportion (cf[5]) of the ewes that implant that lose their foetuses/embryos
-        ###The number can't be more than the number of ewes that are not pregnant in the 3rd trimester (1 - propn_preg).
-        propn_pregnant = np.sum(fun.f_dynamic_slice(cp, b1_pos, 2, None), axis=b1_pos, keepdims=True)
+        ## Some dams implant (and therefore don't return to service) but don't retain to scanning.
+        ###These dams are added to 00 slice (b1[1:2]) so that they are removed from 'available for mating'.
+        ###The number is based on a proportion (cf[5]) of the empty ewes that don't return to service
+        ###The remainder return to service and therefore aren't included in the 'empty' slice.
         slc[b1_pos] = slice(1,2)
-        cp[tuple(slc)] = np.minimum((cf[5, ...] / (1 - cf[5, ...])) * propn_pregnant, 1 - propn_pregnant)
+        cp[tuple(slc)] = cf[5, ...] * cp[tuple(slc)]
 
         ##If the period is mating then set conception = temporary probability array
         conception = cp * period_is_mating
-
-        ##Subtract conception of 00, 11, 22 & 33 from the NM slice (in e1[0])
-        slc = [slice(None)] * len(conception.shape)
-        slc[e1_pos] = slice(0, 1)
-        slc[b1_pos] = slice(0, 1)
-        conception[tuple(slc)] = -np.sum(fun.f_dynamic_slice(conception, b1_pos, 1, None), axis=(e1_pos, b1_pos), keepdims=True)
     return conception
 
 
-def f_conception_ltw(cf, cu0, relsize_mating, cs_mating, scan_std, doy_p, rr_doy, nfoet_b1any, nyatf_b1any
+def f_conception_ltw(cf, cu0, relsize_mating, cs_mating, scan_std, doy_p, rr_doy, prejoin_tup, nfoet_b1any, nyatf_b1any
                      , period_is_mating, rev_trait_value):
     '''
-    Conception is the change in the numbers of animals in each slice of e & b as a proportion of the numbers
-    in the NM slice (e[0]b[0]). The adjustment of the actual numbers occurs in f1_period_end_nums()
-    This function calculates the change in the proportions (the total should add to 0)
+    Conception is represented in the code as a change in the numbers of animals in each slice of e & b as a proportion
+    of the numbers available for mating. This function calculates the proportions across the b1 axis.
+    The numbers available for mating are updated in f1_period_numbers_end().
 
     LTW system: The general calculation is scanning percentage is defined by a linear function of CS
     The standard value (CS 3) is determined by the genotype, relative size and adjusted based on day of the year.
@@ -2257,8 +2255,7 @@ def f_conception_ltw(cf, cu0, relsize_mating, cs_mating, scan_std, doy_p, rr_doy
         #todo this function is not working because the b1 axis is not singleton prior to trying to squeeze, so bypassed
         conception = np.zeros_like(relsize_mating)
     else:
-        b1_pos = sinp.stock['i_b1_pos']  #because used in many places in the function
-        e1_pos = sinp.stock['i_e1_pos']  #because used in many places in the function
+        a1_pos, e1_pos, b1_pos = prejoin_tup  #because used in many places in the function
 
         ##Adjust standard scanning percentage based on relative size (to reduce scanning percentage of younger animals)
         scan_std = scan_std * relsize_mating * rr_doy
@@ -2276,23 +2273,22 @@ def f_conception_ltw(cf, cu0, relsize_mating, cs_mating, scan_std, doy_p, rr_doy
         cp = np.moveaxis(f1_DSTw(repro_rate, cycles = 1)[...,sinp.stock['a_nfoet_b1']], -1, b1_pos)
         ##Set proportions to 0 for dams that gave birth and lost - this is required so that numbers in pp behave correctly
         cp *= (nfoet_b1any == nyatf_b1any)
-        ##Dams that implant (i.e. do not return to service) but don't retain to 3rd trimester are added to 00 slice rather than staying in NM slice
-        ###Number is based on a proportion (cf[5]) of the ewes that implant (propn_preg) losing their foetuses/embryos
-        ###The number can't be more than the number of ewes that are not pregnant in the 3rd trimester (1 - propn_preg).
-        propn_pregnant = np.sum(fun.f_dynamic_slice(cp, b1_pos, 2, None), axis=b1_pos, keepdims=True)
-        slc = [slice(None)] * len(cp.shape)
+
+        ## Some dams implant (and therefore don't return to service) but don't retain to scanning.
+        ###These dams are added to 00 slice (b1[1:2]) so that they are removed from 'available for mating'.
+        ###The number is based on a proportion (cf[5]) of the empty ewes that don't return to service
+        ###The remainder return to service and therefore aren't included in the 'empty' slice.
+        slc = [slice(None)] * len(conception.shape)
         slc[b1_pos] = slice(1,2)
-        cp[tuple(slc)] = np.minimum((cf[5, ...] / (1 - cf[5, ...])) * propn_pregnant, 1 - propn_pregnant)
+        cp[tuple(slc)] = cf[5, ...] * cp[tuple(slc)]
+
         ##If the period is mating then set conception = temporary probability array
         conception = cp * period_is_mating
-        ##Subtract conception of 00, 11, 22 & 33 from the NM slice (in e1[0])
-        slc = [slice(None)] * len(conception.shape)
-        slc[e1_pos] = slice(0, 1)
-        slc[b1_pos] = slice(0, 1)
-        conception[tuple(slc)] = -np.sum(fun.f_dynamic_slice(conception, b1_pos, 1, None), axis=(e1_pos, b1_pos), keepdims=True)
         ##Process the Conception & Litter size REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
-        conception[:, :, 1, ...] = f1_rev_update('conception', conception[:, :, 1, ...], rev_trait_value)
-        conception[:, :, 2:, ...] = f1_rev_update('litter_size', conception[:, :, 2:, ...], rev_trait_value)
+        slc[b1_pos] = slice(1, 2)
+        conception[tuple(slc)] = f1_rev_update('conception', conception[tuple(slc)], rev_trait_value)
+        slc[b1_pos] = slice(2, None)
+        conception[tuple(slc)] = f1_rev_update('litter_size', conception[tuple(slc)], rev_trait_value)
     return conception
 
 
@@ -2303,22 +2299,29 @@ def f_conception_mu2(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, doj, d
     Murdoch University trials that mated for 2 cycles.
 
     Conception is represented in the code as a change in the numbers of animals in each slice of e & b as a proportion
-    of the numbers in the NM slice (e[0]b[0]). The adjustment of the actual numbers occurs in f1_period_end_nums()
-    This function calculates the change in the proportions (the total should add to 0)
+    of the numbers available for mating. This function calculates the proportions across the b1 axis.
+    The numbers available for mating are updated in f1_period_numbers_end().
 
-    The general approach is to calculate the probability of conception less than or equal to 1,2,3 foetuses
-    similar to f_conception_cs() except LMAT is "less than" and probability is calculated from a back transformed
-    calculation with linear and quadratic terms.
+    Conception in AFO is defined as the outcome at scanning
+
+    The approach is to calculate the probability of conception less than or equal to 1,2,3 foetuses
+    similar to f_conception_cs() except the MU equations use "less than" and the probability is calculated
+    from a back transformed calculation with linear and quadratic terms, and a cut-off for each litter size.
     The calculation includes terms for LW at joining, Age at joining and LW change during joining.
-    The estimation of cumulative probability as fitted in the LMAT trial is scaled by a day of joining factor.
-    The probability is an estimate of the number of dams carrying that number of young to birth if mated for the
+    The estimation of cumulative probability as fitted in the MU trials is scaled by a day of joining factor.
+
+    The probability is an estimate of the number of dams carrying that number to scanning (CSIRO reports say
+    third trimester). Some dams conceive (and don't return to service) but don't carry to scanning due to embryo and
+    foetal loss, this is taken into account.
+
+    The probability is an estimate of the number of dams carrying that number of young to scanning if mated for the
     number of cycles assessed in the trial. The parameters could be altered to represent a single cycle however
-    this correction hasn't been made (as of Apr 2022) and the adjustment is made in this function.
-    Some dams conceive (and don't return to service) but don't carry to birth (the third trimester)
-    due to abortion during pregnancy, this is taken into account.
+    this correction hasn't been made (as of Apr 2022) and the adjustment is made in this function. Some dams conceive
+    (and don't return to service) but don't carry to scanning due to embryo and foetal loss, this is taken into account.
     #todo The conversion of the prediction from 2 cycles back to one cycle doesn't include this loss
-    # which then increases the proportion of empty ewes and reduces the expected RR.
-    # The correction has been removed for now.
+    #which then increases the proportion of empty ewes and reduces the expected RR.
+    #The correction has been removed for now with a value of 0 in uinp.
+
     The values are altered by a sensitivity analysis on scanning percentage, litter size and conception
     Conception (proportion of dams that are dry) and litter size (number of foetuses per pregnant dam) can
     be controlled for relative economic values
@@ -2344,14 +2347,16 @@ def f_conception_mu2(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, doj, d
     :param saa_con: SA on the proportion empty
     :param saa_ls: SA on litter size
     :param saa_preg_increment:
-    :return: Dam conception. Proportion of dams that conceive 0,1,2 or 3 for this oestrus cycle. Conceiving 0 means falls pregnant but loses the embryo after the joining period has ended (so can't be remated)
+
+    :return: Dam conception. Proportion of dams that conceive 0,1,2 or 3 for this oestrus cycle. Conceiving 0 means
+             falls pregnant but loses the embryo after the joining period has ended (so not available for remating)
     '''
     if ~np.any(period_is_mating):
         conception = np.zeros_like(maternallw_mating)
     else:
         b1_pos = sinp.stock['i_b1_pos']  #because used in many places in the function
-        e1_pos = sinp.stock['i_e1_pos']
-        ##Select slice 24 (Ewe Lamb coefficients) or 25 (maiden ewe coefficients) or 26 (mature ewe coefficients) of cb1 & cu2 based on age of the dam. Note: age adds a,e,b axes onto the sliced array
+        ## Select slice 24 (Ewe Lamb coefficients) or 25 (maiden ewe coefficients) or 26 (mature ewe coefficients)
+        ###of cb1 & cu2 based on age of the dam. Note: age adds a,e,b axes onto the sliced array
         cb1_sliced = fun.f_update(cb1[26, ...], cb1[24, ...], age < 364)
         cu2_sliced = fun.f_update(cu2[26, ...], cu2[24, ...], age < 364)
         cb1_sliced = fun.f_update(cb1_sliced, cb1[25, ...], np.logical_and(364 <= age, age < 728))
@@ -2455,27 +2460,19 @@ def f_conception_mu2(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, doj, d
         ###calculate cp from the REV adjusted litter size. cp will only change from the original value if litter_size REV is active
         cp[:,:,:,mask,...] = litter_propn * np.sum(cp_masked, b1_pos, keepdims=True)
 
-        ##Dams that implant (i.e. do not return to service) but don't retain to 3rd trimester/birth
-        ## are added to 00 slice (b1[1:2]) so that they are removed from the NM slice.
-        ###Number is based on a proportion (cf[5]) of the ewes that implant (propn_preg) losing their foetuses/embryos
-        ###The number can't be more than the number of ewes that are not pregnant in the 3rd trimester (1 - propn_preg).
+        ## Some dams implant (and therefore don't return to service) but don't retain to scanning.
+        ###These dams are added to 00 slice (b1[1:2]) so that they are removed from 'available for mating'.
+        ###The number is based on a proportion (cf[5]) of the empty ewes that don't return to service
+        ###The remainder return to service and therefore aren't included in the 'empty' slice.
         ### This has been disabled because the prediction of 2 cycles back to one cycle is
         ### not representing this source of dry ewes.
         ### Disabled by setting the value of propn_pregnant to 0 rather remove the code because the proportion
         ###of empty needs to be set to 0 anyway (and the problem may be fixable)
-        propn_pregnant = np.sum(fun.f_dynamic_slice(cp, b1_pos, 2, None), axis=b1_pos, keepdims=True) * 0
-        # slc_empty = [slice(None)] * len(propn_pregnant.shape)
-        # slc_empty[b1_pos] = slice(1,2)
-        cp[tuple(slc_empty)] = np.minimum((cf[5, ...] / (1 - cf[5, ...])) * propn_pregnant, 1 - propn_pregnant)
+        slc_empty[b1_pos] = slice(1,2)
+        cp[tuple(slc_empty)] = cf[5, ...] * cp[tuple(slc_empty)]
 
         ##If the period is mating then set conception = temporary probability array
         conception = cp * period_is_mating
-
-        ##Subtract conception of 00, 11, 22 & 33 from the NM slice (in e1[0])
-        slc_nm = [slice(None)] * len(conception.shape)
-        slc_nm[e1_pos] = slice(0, 1)
-        slc_nm[b1_pos] = slice(0, 1)
-        conception[tuple(slc_nm)] = -np.sum(fun.f_dynamic_slice(conception, b1_pos, 1, None), axis=(e1_pos, b1_pos), keepdims=True)
     return conception
 
 
@@ -3034,78 +3031,41 @@ def f_mortality_progeny_EL(cu6, cb1, cx, cf_value, lw, lwc, cv_lw, foo, chill_in
 #functions for end of loop #
 ###########################
 
-def f1_period_start_prod(numbers, var, b1_pos, p_pos, w_pos, prejoin_tup, z_pos, period_is_startseason, mask_min_lw_z
-                         , mask_min_wa_lw_w, mask_max_lw_z, mask_max_wa_lw_w, period_is_prejoin=0, group=None
-                         , scan_management=0, gbal=0, drysretained_scan=1, drysretained_birth=1
-                         , stub_lw_idx=np.array(np.nan), len_gen_t=1, a_t_g=0, period_is_startdvp=False):
+def f1_period_start_prod2(pointers, index_unique_w, var, numbers, p_pos, w_pos, z_pos, prejoin_tup, period_is_startseason,
+                          period_is_condense, period_is_prejoin=0, stub_lw_idx=np.array(np.nan),
+                          len_gen_t=1, a_t_g=0, period_is_startdvp=False):
     '''
-    Production is weighted at prejoining across e&b axes and at season start across the z axis.
+    Adjust production for next period.
 
-    Prejoining is slight more complex because there is the potential that drys would have been sold during the
-    yr if the farmers management allowed them to be identified. If the drys were sold the animal at the start
-    of the next repro cycle (prejoining) should be the weighted average of all the animals excluding drys.
-    Because we don't know the animals are actually sold (since pyomo optimises this) we need to leave the
-    main numbers variable untouched so we temporarily make the adjustment in this function. In the inputs the user
-    inputs the expected number of drys that will be retained. In this function we scale the numbers of drys
-    by that amount so that the new animal at the start of next prejoining reflects if drys were sold or retained.
-    E.g. if drys were sold the prejoining animal would be a little bit lighter (because drys tend to weigh more).
+    1. rest sale t slices
+    2. create new animal after collapsing/condensing. At prejoining the b, e, a axes are collapsed.
+       At condensing the w axis is collapsed back to the start w. At season start the z axis is collapsed back.
 
     An extra step occurs if generating for stubble. For stubble the function selects the starting animal for the
     next period based on animal liveweight compare to the stubble trial. The animals that have the closest lw
     to the paddock trial become the starting animals next period.
     '''
-    ##Set variable level = value at end of previous	
+    ##Set variable level = value at end of previous
     var_start = var
-    ##make sure numbers and var are same shape - this is required for the np.average func below
-    numbers, var_start = np.broadcast_arrays(numbers,var_start)
-
-    ##a)if generating with t axis reset the sale slices to the retained slice at the start of each dvp
-    if np.any(period_is_startdvp) and len_gen_t>1:
-        a_t_g = np.broadcast_to(a_t_g, var_start.shape)
-        temporary = np.take_along_axis(var_start, a_t_g, axis=p_pos) #t is in the p pos
-        var_start = fun.f_update(var_start, temporary, period_is_startdvp)
-
-    ##b) Calculate temporary values as if period is start of season
-    if np.any(period_is_startseason):
-        var_start = f1_season_wa(numbers, var_start, z_pos, mask_min_lw_z, mask_min_wa_lw_w, mask_max_lw_z, mask_max_wa_lw_w, period_is_startseason)
-
-    ##c) Calculated weighted average of var_start if period_is_prejoin (because the classes from the prior year are re-combined at pre-joining)
-    ### If the dams have been scanned or assessed for gbal then the number of drys is adjusted based on the estimated management
-    ### The adjustment for drys has to be done to the production levels at prejoining rather than to numbers at scan or birth
-    ###because adjusting numbers (although more intuitive) affects the apparent mortality of the drys.
-    ### Note: this is different to the approach taken for the proportion of dams mated that is done in f_end_numbers
-    ###at the beginning of the prejoin DVP which doesn't affect apparent mortality.
-    if group==1 and np.any(period_is_prejoin):
-        ###inputs
-        # b1_pos = sinp.stock['i_b1_pos']
-        nfoet_b1 = fun.f_expand(sinp.stock['a_nfoet_b1'],b1_pos)
-        nyatf_b1 = fun.f_expand(sinp.stock['a_nyatf_b1'],b1_pos)
-        ewe_mated_b1 = fun.f_expand(sinp.stock['i_mated_b1'], b1_pos) * 1
-        ###scale numbers if empty ewes are expected to have been sold at scanning (in the generator we don't know if drys are actually sold since pyomo optimises this, so this is just our best estimate)
-        ###can't occur at prejoining rather than at scanning & birth
-        ###The numbers in the dry slice are scaled by drysretained_scan other slices including NM are unchanged
-        ###Build the scalar in steps
-        ewe_is_pregnant = np.minimum(1, nfoet_b1)    #0 not pregnant, 1 pregnant
-        ewe_is_not_empty = np.minimum(ewe_is_pregnant, (1-ewe_mated_b1))   #0 empty, 1 not mated or pregnant
-        scalar = np.maximum(drysretained_scan, ewe_is_not_empty)
-        temp = scalar * numbers
-        scaled_numbers = fun.f_update(numbers, temp, scan_management >= 1) # only scale numbers if scanning occurs
-        ###scale numbers if drys are expected to have been sold at birth (in the generator we don't know if drys are actually sold since pyomo optimises this, so this is just our best estimate)
-        ###The numbers in the dry slice are scaled by drysretained_scan other slices including NM are unchanged
-        ###Build the scalar in steps
-        ewe_is_lactating = np.minimum(1, nyatf_b1)    #0 not lactating, 1 lactating
-        ewe_is_not_dry = np.minimum(ewe_is_lactating, (1-ewe_mated_b1))   #0 dry, 1 not mated or lactating
-        scalar = np.maximum(drysretained_birth, ewe_is_not_dry)
-        temp = scalar * scaled_numbers
-        scaled_numbers = fun.f_update(scaled_numbers,temp, gbal >= 2)  # only scale numbers if differential management
-        ###weighted average of e&b axis
-        temporary = fun.f_weighted_average(var_start, scaled_numbers, prejoin_tup, keepdims=True, non_zero=True) #gets the weighted average of production in the different seasons
-        ##Set values where it is beginning of FVP
-        var_start = fun.f_update(var_start, temporary, period_is_prejoin)
 
     ##for stubble index the w axis to make the starting animal for the next period
+    #if generating for stubble then no collapse
     if np.all(np.logical_not(np.isnan(stub_lw_idx))):
         var_start[...] = np.take_along_axis(var_start, stub_lw_idx, w_pos)
+        return var_start
+
+
+    ##a)if generating with t axis reset the sale slices to the retained slice at the start of each dvp
+    if np.any(period_is_startdvp) and len_gen_t > 1:
+        a_t_g = np.broadcast_to(a_t_g, var_start.shape)
+        temporary = np.take_along_axis(var_start, a_t_g, axis=p_pos)  # t is in the p pos
+        var_start = fun.f_update(var_start, temporary, period_is_startdvp)
+
+    ##b)collapse axes for new starting animal
+    if np.any(np.logical_or(np.logical_or(period_is_startseason, period_is_prejoin), period_is_condense)):
+        var_start = f1_collapse(pointers, index_unique_w, var_start, numbers, period_is_condense, period_is_startseason,
+                          w_pos, z_pos, period_is_prejoin, prejoin_tup)
+
     return var_start
 
 
@@ -3156,127 +3116,360 @@ def f1_season_wa(numbers, var, season, mask_min_lw_wz, mask_min_wa_lw_w, mask_ma
     var = fun.f_update(var, temporary, period_is_startseason)
     return var
 
+def f1_collapse_pointers(p, ebw, numbers, startw_unique_next, period_is_condense, period_is_seasonstart,
+                lw_initial_a1e1b1nwzida0e0b0xyg, period_is_prejoin=False, prejoin_tup=(), inc_mask=True):
+    '''
+    This function is called when axes need collapsing from one period to the next.
+    The periods that require collapsing and the axes to collapse are:
 
-def f1_condensed(var, lw_idx, condense_w_mask, i_n_len, i_w_len, n_pos, w_pos, i_n_fvp_period, period_is_condense):
+        1. Prejoining of dams: a1, e1 & b1
+        2. Season start: z
+        3. Condense: w
+
+    The function handles each individually or in combination and is controlled by the axes to be collapsed.
+    I.e. Season start can occur at the same time as prejoining and condensing the w axis can occur in any dvp.
+    The axes being collapsed define a group of animals that will be distributed to the starting aniamls
+
+    This should handle any number of starting w.
+
+    The spread across the w axis and the other axes to be collapsed is used to determine the spread of animals
+    to represent in the next period. The w axis is always included even if the number of w in the next period is
+    the same as the number of w in this period.
+
+    The function returns an array of pointers that can be used to create the production characteristics of the start animal.
+    The ebw of the start animals can then be used to calculate the distribution of animals from the end of one period
+    to the beginning of the next period.
+
+    There are 3 parts to the calculations in the function
+    Part A - calculate percentile rank within each collapsed group
+    Part B - calculate the target percentiles for the starting animals that reflect the spread of ebw across
+    the start weights in the next period.
+    Part C - Create pointers for entries in ebw that are within tolerance of the target percentiles.
+    The approach is to calculate the percentile for each weight in ebw and then test if it is within the
+    tolerance of any values in the target percentile array
+    #todo this approach which requires w by w array to be replaced with a searchsorted approach with 2w. See Debugging 3:pg 10
+
+    The function is complicated by the fact that period_is_joining and period_is_condese can differ across axes.
+    Therefore the axes being colapsed in a given P can vary between animals.
+    This is the reason for all the f_updates.
+
+    params ebw: ebw array with ineligible animals (mortality > threshold) set to nan
+    params numbers: the estimated number of animals (numbers_end) used to weight the percentiles
+    params startw_unique_next: the number of unique w in the next period. Note: unique w is reduced when condensing w.
+    lw_initial_a1e1b1nwzida0e0b0xyg: the target order of the weights when condensing w.
+
+    Output:
+    pointers: an array of pointers to the position of this animal in the w axis of the target/collapsed animal.
+              value is -1 if the animal is not contributing to a target animal
+    '''
+
+    w_pos = sinp.stock['i_w_pos']
+    z_pos = sinp.stock['i_z_pos']
+    len_w = ebw.shape[w_pos]
+    index_wzida0e0b0xyg = fun.f_expand(np.arange(len_w), w_pos)
+    season_tup = (z_pos,)
+    prejoinseason_tup = season_tup + prejoin_tup
+
+    ##########
+    # Part A #
+    ##########
+
+    # identify the eligible animals for the selection of the starting animals
+    ##criteria can be changed, currently it is mortality < 10%. Ineligible animals are nan.
+    ebw_masked = np.where(inc_mask, ebw, np.nan)
+
+    # Step 1: compute percentile rank weighted by numbers of animals in each collapsed axis (~0 to ~100).
+    percentile_rank_condense = fun.f1_percentile_weighted(ebw_masked, numbers, (w_pos,))
+    percentile_rank_season = fun.f1_percentile_weighted(ebw_masked, numbers, (w_pos,) + season_tup)
+    percentile_rank_prejoin = fun.f1_percentile_weighted(ebw_masked, numbers, (w_pos,) + prejoin_tup)
+    percentile_rank_prejoinseason = fun.f1_percentile_weighted(ebw_masked, numbers, (w_pos,) + prejoinseason_tup)
+
+    percentile_rank = fun.f_update(percentile_rank_condense, percentile_rank_season, period_is_seasonstart)
+    percentile_rank = fun.f_update(percentile_rank, percentile_rank_prejoin, period_is_prejoin)
+    percentile_rank = fun.f_update(percentile_rank, percentile_rank_prejoinseason,
+                                   np.logical_and(period_is_prejoin, period_is_seasonstart))
+
+    # Step 2: remove the nan from rank and replace with -1
+    percentile_rank[np.isnan(percentile_rank)] = -1
+
+    ##########
+    # Part B #
+    ##########
+
+    # temporary version of percentiles in descending numerical order
+    ## range in the percentile ranks because the percentiles don't cover the full range 0 to 100.
+    ## The range expands as the number of axes being collapsed increases (and the weighting on each group reduces)
+    min_condense = np.min(np.where(percentile_rank == -1, 999, percentile_rank), axis = (w_pos,), keepdims=True)
+    min_season = np.min(np.where(percentile_rank == -1, 999, percentile_rank), axis = (w_pos,) + season_tup, keepdims=True)
+    min_prejoin = np.min(np.where(percentile_rank == -1, 999, percentile_rank), axis = (w_pos,) + prejoin_tup, keepdims=True)
+    min_prejoinseason = np.min(np.where(percentile_rank == -1, 999, percentile_rank), axis = (w_pos,) + prejoinseason_tup, keepdims=True)
+    min = fun.f_update(min_condense, min_season, period_is_seasonstart)
+    min = fun.f_update(min, min_prejoin, period_is_prejoin)
+    min = fun.f_update(min, min_prejoinseason, np.logical_and(period_is_prejoin, period_is_seasonstart))
+    min[min==999] = 0
+    max_condense = np.max(np.where(percentile_rank == -1, -999, percentile_rank), axis = (w_pos,), keepdims=True)
+    max_season = np.max(np.where(percentile_rank == -1, -999, percentile_rank), axis = (w_pos,) + season_tup, keepdims=True)
+    max_prejoin = np.max(np.where(percentile_rank == -1, -999, percentile_rank), axis = (w_pos,) + prejoin_tup, keepdims=True)
+    max_prejoinseason = np.max(np.where(percentile_rank == -1, -999, percentile_rank), axis = (w_pos,) + prejoinseason_tup, keepdims=True)
+    max = fun.f_update(max_condense, max_season, period_is_seasonstart)
+    max = fun.f_update(max, max_prejoin, period_is_prejoin)
+    max = fun.f_update(max, max_prejoinseason, np.logical_and(period_is_prejoin, period_is_seasonstart))
+    max[max==-999] = 100
+
+    ##space the percentiles across the range. Defined by an end gap and a step size
+    ### A simple calculation of the percentiles
+    ###           t_target_percentiles = (index_q + 0.5) / (startw_unique_next) * 100
+    ### spreads the targets evenly between 100 and 0, however, the aim is to increase the heavy end and reduce
+    ### the light end when there are increasing numbers of groups contributing to each start w, such as at condensing.
+    ### The number of groups contributing to each start w is represented in the ratio variable.
+    ### The calculations below calculate an end gap and a step size. The outcome would be the same as the simple
+    ### formula if the max and min were 100 and 0 and the ratio was 1.
+    ### The end gap is adjusted by the size of the axes being collapsed.
+    ### More and larger axes means a greater number of groups of animals contributing to each start animal
+    ### With more groups the end gap can be reduced and if passing 1 to 1 then the end gap is not reduced
+
+    ##Calculate the number of groups of animals that are being collapsed based on the minimum of the unique values or the numbers != 0.00001
+    n_groups_condense = fun.f1_unique_count(ebw, w_pos, numbers, threshold=0.001)
+    n_groups_season = fun.f1_unique_count(ebw, (w_pos,) + season_tup, numbers, threshold=0.001)
+    n_groups_prejoin = fun.f1_unique_count(ebw, (w_pos,) + prejoin_tup, numbers, threshold=0.001)
+    n_groups_prejoinseason = fun.f1_unique_count(ebw, (w_pos,) + prejoinseason_tup, numbers, threshold=0.001)
+
+    ##update the number of groups based on the period
+    n_groups = startw_unique_next    #startw_unique_next groups unless overwritten by being another period
+    n_groups = fun.f_update(n_groups, n_groups_condense, period_is_condense)
+    n_groups = fun.f_update(n_groups, n_groups_season, period_is_seasonstart)
+    n_groups = fun.f_update(n_groups, n_groups_prejoin, period_is_prejoin)
+    n_groups = fun.f_update(n_groups, n_groups_prejoinseason, np.logical_and(period_is_prejoin, period_is_seasonstart))
+    n_groups_collapsed = np.maximum(startw_unique_next, n_groups)   # to catch if all numbers are 0.00001
+
+    ## calculate the 'effective' number of groups used to calculate the end gap.
+    ### If the effective number = startw_unique_next then the end_gap & the percentile_step will be evenly spaced
+    ### The effective number is an adjustment on end_gap and tolerance, while the step is determined by startw_unique_next
+    weighting_tolerance = 4   #A lower value is a more extreme adjustment
+    weighting_end = 1   #A lower value is a more extreme adjustment. This can be lower than the tolerance
+    n_effective_tolerance = startw_unique_next * (n_groups_collapsed / startw_unique_next) ** (1/weighting_tolerance)
+    n_effective_end = startw_unique_next * (n_groups_collapsed / startw_unique_next) ** (1/weighting_end)
+
+    ##Calculate the end gap
+    end_gap = (max - min) / (2 * n_effective_end)
+    ##Calculate the step
+    percentile_step = fun.f_divide((max - min) - 2 * end_gap, (startw_unique_next - 1), option=2)
+    index_q = (index_wzida0e0b0xyg / len_w * startw_unique_next).astype(int)
+    t_target_percentiles = 100 - ((100 - max) + end_gap + index_q * percentile_step)
+    ##Calculate the tolerance
+    tolerance = (max - min) / (2 * n_effective_tolerance)
+    tolerance = np.minimum(tolerance, percentile_step / 2)   #taking a minimum that includes percentile_step/2 ensures that they can't overlap
+
+    ##Arrange the percentiles in the order required for the w axis
+    ##There are 2 options:
+    # 1. w has been collapsed because period_is_condense & the order is determined from inputs in Structural.xls
+    # 2. w not collapse & order determined by the existing order of ebw across the w axis
+    ebw_season = np.average(ebw, axis=z_pos, keepdims=True)
+    ebw_prejoin = np.average(ebw, axis=prejoin_tup, keepdims=True)
+    ebw_prejoinseason = np.average(ebw, axis=(z_pos,) + prejoin_tup, keepdims=True)
+
+    order_season = np.argsort(ebw_season, w_pos, )
+    order_prejoin = np.argsort(ebw_prejoin, w_pos)
+    order_prejoinseason = np.argsort(ebw_prejoinseason, w_pos)
+    order_condensed = np.argsort(lw_initial_a1e1b1nwzida0e0b0xyg, w_pos)  # this needs an axis length that aligns with target_percentile(w_pos)
+
+    order = fun.f_update(order_season, order_prejoin, period_is_prejoin)
+    order = fun.f_update(order, order_prejoinseason, np.logical_and(period_is_prejoin, period_is_seasonstart))
+    order = fun.f_update(order, order_condensed, period_is_condense)
+    order_descending = np.flip(order, axis=w_pos)   #flip the array into descending order
+
+    # create the target percentiles based on the required order
+    target_percentiles = np.take_along_axis(t_target_percentiles, order_descending, w_pos)
+    ##########
+    # Part C #
+    ##########
+
+    if True:    #retain both methods searchsorted (True) and w x w (False) until testing is completed
+        # Option 1
+        ##This method uses np.search_sorted on a double length w axis to identify which animals are between the upper
+        ## & lower limits of the target_percentile +/- tolerance
+
+        ##create target_percentiles with a double length w axis that has the upper and lower limit for each target percentile
+        target_upper = target_percentiles + tolerance   #to convert to chunking use target_upper = np.average(target_percentile, roll(target_percentile, -1))
+        target_lower = target_percentiles - tolerance   #roll(+1). With both needing the end case handled
+        target_percentiles_2w_unsorted = np.concatenate([target_upper, target_lower], axis=w_pos)
+        sort_order = np.argsort(target_percentiles_2w_unsorted, axis=w_pos)  #required to convert the result back to
+        target_percentile_2w = np.take_along_axis(target_percentiles_2w_unsorted, sort_order, axis=w_pos)
+        ## Expand the ends of the target percentiles to pickup scenarios where the end case is a valid animal and rounding was causing randomness
+        slc = [slice(None)] * target_percentile_2w.ndim
+        slc[w_pos] = 0
+        target_percentile_2w[tuple(slc)] -= 0.0001
+        slc[w_pos] = -1
+        target_percentile_2w[tuple(slc)] += 0.0001
+
+        ## find the position in the double w axis for each element in the percentile_rank array
+        position_2w = fun.f1_searchsorted_looped(target_percentile_2w, percentile_rank, w_pos)  #look up the place of percentile rank in target percentile and retuen a value between 0 and 2w-1
+        ## remembering that the order is reversed so working up from a low percentile
+        ### 0 means that the percentile_rank is <= the lowest target_2w (lowest target - tolerance)  i.e. not within tolerance
+        ### 1 means (lowest target - tolerance) < percentile_rank <= (lowest + tolerance) i.e. within tolerance
+        ### 3 means (lowest target + tolerance) < percentile_rank <= (2nd lowest - tolerance)  i.e. not within tolerance
+        ### generalising, the odd numbers are within the tolerance and even are not
+        position_2w[position_2w % 2 == 0] = -2
+        ##calculate the position in the w length array
+        position = position_2w // 2   # unused are now -1 and the other values are 0 to len_w-1
+        ##revert the sort back to the order of the target_percentiles using the order args for the ascending order of ebw
+        pointers = np.take_along_axis(order, position, w_pos)
+        pointers[position==-1] = -1   #replace the -1 in the array (required because -1 is a valid position in take_along)
+
+    else:
+        # Option2
+        # Step 3: compare to target_percentile. This method uses a w by w to calculate the difference. searchsorted methodis preferred
+        diff = np.abs(percentile_rank[..., None] - np.swapaxes(target_percentiles[..., None], w_pos - 1, -1))
+        closest_idx = np.argmin(diff, axis=-1)
+        closest_diff = np.min(diff, axis=-1)
+
+        # Step 4: apply tolerance
+        pointers = np.where(closest_diff <= tolerance, closest_idx, -1)
+
+        # step 5: if not condensing then update with -1.
+        pointers = fun.f_update(pointers, -1,
+                                np.logical_not(np.logical_or(np.logical_or(period_is_prejoin, period_is_seasonstart), period_is_condense)))
+
+    # step 6: overwrite the pointers with 1:1 if there is only 1 group contributing to each start animal of the next period
+    ## this occurs when there are no axes to collapse
+    ## This needs to be done at the end of the function, it can't be done at the start of the function (and then
+    ## bypass the other calculations) because only part of the array may need to be overwritten
+
+    ##Create an array that is passing 1 to 1 for the number of unique w and overwrite pointers if equal numbers of groups collapsed and starting next period
+    block = (len_w // startw_unique_next)
+    index_unique_wzida0e0b0xyg = ((index_wzida0e0b0xyg // block) * block).astype(int)
+    pointers = fun.f_update(pointers, index_unique_wzida0e0b0xyg, n_groups_collapsed == startw_unique_next)
+
+    # Step 7 - Error handler: ensure that all collapse animals have a pointer
+    #todo this uses w by w... can we get around this?
+    missing_condense = f1_check_all_bins_present(pointers, w_pos, (w_pos,), index_unique_wzida0e0b0xyg)
+    missing_season = f1_check_all_bins_present(pointers, w_pos, (w_pos,) + season_tup, index_unique_wzida0e0b0xyg)
+    missing_prejoin = f1_check_all_bins_present(pointers, w_pos, (w_pos,) + prejoin_tup, index_unique_wzida0e0b0xyg)
+    missing_prejoinseason = f1_check_all_bins_present(pointers, w_pos, (w_pos,) + prejoinseason_tup, index_unique_wzida0e0b0xyg)
+
+    missing = fun.f_update(missing_condense, missing_season, period_is_seasonstart)
+    missing = fun.f_update(missing, missing_prejoin, period_is_prejoin)
+    missing = fun.f_update(missing, missing_prejoinseason,
+                           np.logical_and(period_is_prejoin, period_is_seasonstart))
+
+    if np.any(missing):
+        raise ValueError(f"Period {p}: pointers must exist for each collapsed animal. "
+                         f"This indicates that numbers are very low (animals died) or an edge case that is not picked up with the target percentiles and/or tolerances. ")
+
+    # add leading axes so that arrays have same ndims
+    index_unique_wzida0e0b0xyg = index_unique_wzida0e0b0xyg.reshape((1,) * (pointers.ndim - index_unique_wzida0e0b0xyg.ndim) + index_unique_wzida0e0b0xyg.shape)
+    return pointers, index_unique_wzida0e0b0xyg
+
+
+def f1_check_all_bins_present(pointers, w_pos, group_axes, expected_w):
     """
-    Condense variable to x common points along the w axis when period_is_condense.
-    Currently this function only handle 2 or 3 initial liveweights. The order of the returned W axis is M, H, L for 3 initial lws or H, L for 2 initial lws.
+    pointers: ndarray, same shape as ebw, values in expected_w or -1
+    w_pos: int
+    group_axes: tuple of axes that define the "collapsed group" you want to check within
+               (e.g. (w_pos,) for condense, or (w_pos,z_pos) for seasonstart, etc.)
+    expected_w: 1D array of expected bin ids (e.g. np.arange(K))  #todo this could be converted from startw_unique_next if it was passed as an arg
 
-    Note: Animals in a given axis are condensed to starting weights determined by that activity. Meaning twins are
-    distributed to starting weights that were calculated from all the w slices related to the twin activity.
-    An alternative would be to distribute twins to starting weights that were calculated from all w slices across
-    the e and b axis. This would mean that prejoining and condensing would have to be the same period and it would
-    also complicate the 1n model since a twin on the std feed pattern may not pass to the std pattern in the next dvp.
-    In the current structure at prejoining the e and b axis are weighted. This means that the w[0] activity is
-    potentially created from a bigger spread of weights.
-
-    Note 2: in the start functions the sale slices are overwritten by retained at the start of a dvp. Thus the condensed
-    info is overwritten for the sale t slices (which is what we want). Distribution can occur with t axis but doesn't
-    get used because only the retained t provides in the matrix.
-
-    :param var: production variable being condensed
-    :param lw_idx: index specifying the sorted order of the w axis
-    :param condense_w_mask: mask which w slices can be used to build condensed animal e.g. w with mortality greater than 10% are excluded.
-    :param i_n_len: number of nutrition options
-    :param i_w_len: length of w axis
-    :param i_n_fvp_period: number of fvps
-    :param period_is_condense: bool array
-    :param mask_gen_condensed_used: mask that specifies which w slices get updated by pkl condensed values.
-    :return:
+    Returns
+    -------
+    missing_mask : ndarray[bool]
+        Shape = pointers.shape with group_axes removed (keepdims=False by default).
+        True where at least one expected_w is missing in that group.
     """
-    if np.any(period_is_condense):
-        array_shape = np.broadcast_shapes(var.shape, lw_idx.shape)  #required to handle cases where var has p1p2 axes and is larger than lw_idx
-        var = np.broadcast_to(var,array_shape).copy() #need to copy so array can be assigned to down below
-        condense_w_mask = np.broadcast_to(condense_w_mask,array_shape)
-        temporary = np.zeros_like(var)  #this is done to ensure that temp has the same size as var.
-        ##test if array has diagonal and calc temp variables as if start of dvp - if there is not a diagonal use the alternative system for reallocating at the end of a DVP
-        if i_n_len >= i_w_len:
-            ###this method was the way we first tried - no longer used (might be used later if we add nutrient options back in)
-            ### np.diagonal removes the n axis so it is added back in using the expand function, but that is a singleton, Therefore that is the reason that temp must be the same size as var. That will ensure that the new n axis is the same length as it used to before np diagonal
-            temporary[...] = np.expand_dims(np.rollaxis(temporary.diagonal(axis1= w_pos, axis2= n_pos),-1,w_pos), n_pos) #roll w axis back into place and add na for n (np.diagonal removes the second axis in the diagonal and moves the other axis to the end)
-        else:
-            '''
-            possible idea to handle more than 3 starting lws.
-            Note: it is good to keep the medium lw as slice 0 because that means it is held the same across all dvps 
-             and thus the user can make its pattern optimal.
-                        
-            if n_initial_lws==2:
-                #in code already. Nothing needs to be changed for this part                
-            
-            else: #need to update the code with something like this.
-                for i in n_initial_lws:
-                #use i to assign and select correct patterns
-                    if i == 0 or >2:
-                        #medium = use current code with i to select correct pattern and assign
-                        sl = [slice(None)] * temporary.ndim
-                        sl_start_med = i*int(i_n_len ** i_n_fvp_period)
-                        sl_end_med = (i+1)*int(i_n_len ** i_n_fvp_period)
-                        sl[w_pos] = slice(sl_start_med, sl_end_med)
-                        if i_n_len >= 3:
-                            temporary[tuple(sl)] = f_dynamic_slice(var, w_pos, sl_start_med, sl_start_med+1)  # the pattern that is feed supply 1 (median) for the entire year (the top w pattern)
-                        else:
-                            temporary[tuple(sl)] = np.mean(var_sorted_mort, axis=w_pos, keepdims=True) ^this line wont work if more than 3 lws, somehow need to take mean of subsection of w axis depending on number of initial w. # average of all animals with less than 10% mort
+    w_pos = w_pos % pointers.ndim
+    # Axes we reduce over to summarize each group:
+    # we want "per group" results, so reduce all axes in group_axes
+    # EXCEPT we need to keep information over expected_w, so we compare by broadcasting.
+    reduce_axes = tuple(ax % pointers.ndim for ax in group_axes)
 
-                    elif i==1:
-                        #calc high - using sorted var
-                        sl = [slice(None)] * temporary.ndim
-                        sl[w_pos] = slice(i*int(i_n_len ** i_n_fvp_period), (i+1)*int(i_n_len ** i_n_fvp_period))
-                        temporary[tuple(sl)] = np.mean(f_dynamic_slice(var_sorted, w_pos, i_w_len - int(i_w_len / 10), -1), w_pos, keepdims=True)  # average of the top lw patterns
 
-                    else: #i==2 (low w)
-                        #calc low
-                        numbers_start_sorted = np.take_along_axis(numbers_start_condense, lw_idx, axis=w_pos)
-                        numbers_sorted = np.take_along_axis(numbers, lw_idx, axis=w_pos)
-                        low_slice = np.argmax(np.sum(numbers_start_sorted, axis=prejoin_tup + (z_pos,), keepdims=True)
-                                                     / np.sum(numbers_sorted, axis=prejoin_tup + (z_pos,), keepdims=True) > 0.9
-                                                     , axis=w_pos)  # returns the index of the first w slice that has mort less the 10%.
-                        low_slice = np.expand_dims(low_slice, axis=w_pos) #add singleton w axis back
-                        sl = [slice(None)] * temporary.ndim
-                        sl[w_pos] = slice(i*int(i_n_len ** i_n_fvp_period), (i+1)*int(i_n_len ** i_n_fvp_period))
-                        temporary[tuple(sl)] = np.take_along_axis(var_sorted, low_slice, w_pos)
-                                     
-            '''
-            #todo this function assumes a certain w axis order. we could change this and make it more flexible by using inputs for sinp.structuralsa['i_adjp_lw_initial_w1'].
-            # this is how we did it for the mask_gen_condensed_values_used.
-            ###sort var based on animal lw
-            ma_var = np.ma.masked_array(var, np.logical_not(condense_w_mask))
-            ma_var_sorted = np.take_along_axis(ma_var, lw_idx, axis=w_pos) #sort into production order (base on lw) so we can select the production of the lowest lw animals with mort less than 10% - note sorts in ascending order
+    # broadcast expected_w against pointers by adding singleton axes everywhere except a new last axis
+    expected_w = np.broadcast_to(expected_w, pointers.shape)
+    exp = np.swapaxes(expected_w[..., None], w_pos, -1)
+    ptr = pointers[..., None]                                                   # pointers.shape + (1,)
 
-            ###count number of w slices which have been masked out
-            idx_min_lw = np.count_nonzero(condense_w_mask==0, axis=w_pos, keepdims=True) #index of the min lw with mort less than 10%
-            n_lw = np.min(np.count_nonzero(condense_w_mask, axis=w_pos)) #number of included w slices
+    # todo can we achieve without w by w???
+    # A method for this is to loop s in startw_unique_next and test seen[s] = np.any(pointers=w, reduce_axes, keep)
+    # w needs to be an adjusted version of s, because s is 0 to number of unique and w is 0 to 80 in the N33 model
+    # Something like w = s * len_w / startw_unique_next
+    # then same test for missing except it is axis=w_pos
+    # Early in the annual cycle this will be quick, for example in n33 there are only 9 unique weights for the first fvp
+    # so it would be a short loop, however, in the final fvp it is 81. But on balance it might still be quicker
+    # than an 81 x 81 numpy calculation for the entire year
 
-            ##to handle varying number of initial lws
-            if sinp.structuralsa['i_w_start_len1'] == 2:
-                ###add high pattern - this will not handle situations where the top 10% lw animals all have higher mortality than the threshold.
-                temporary[...] = np.mean(
-                    fun.f_dynamic_slice(ma_var_sorted,w_pos,i_w_len - int(math.ceil(n_lw / 10)), None), # ceil is used to handle cases where nutrition options is 1 (e.g. only 3 lw patterns)
-                    w_pos,keepdims=True)  # average of the top lw patterns
+    seen = np.any(ptr == exp, axis=reduce_axes, keepdims=True)                                 # reduces group axes
 
-                ###low pattern - production level of the lowest nutrition profile that has a mortality less than 10% for the year
-                sl = [slice(None)] * temporary.ndim
-                sl[w_pos] = slice(-int(i_n_len ** i_n_fvp_period), None)
-                temporary[tuple(sl)] = np.take_along_axis(ma_var_sorted, idx_min_lw, w_pos) #if you get an error here it probably means no animals had mort less than 10%
+    missing = ~np.all(seen, axis=-1)                                            # missing any expected bin?
+    return missing
 
-            else:
-                ###add high pattern - this will not handle situations where the top 10% lw animals all have higher mortality than the threshold.
-                temporary[...] = np.mean(fun.f_dynamic_slice(ma_var_sorted, w_pos, i_w_len - int(math.ceil(n_lw / 10)), None),  #ceil is used to handle cases where nutrition options is 1 (e.g. only 3 lw patterns)
-                                         w_pos, keepdims=True)  # average of the top lw patterns
 
-                ###add mid pattern (w 0 - 27) - use slice method in case w axis changes position (can't use MRYs dynamic slice function because we are assigning)
-                ###the medium condense is the average of all animals with less than 10% mort.
-                sl = [slice(None)] * temporary.ndim
-                sl[w_pos] = slice(0, int(i_n_len ** i_n_fvp_period))
-                temporary[tuple(sl)] = np.mean(ma_var_sorted, axis=w_pos, keepdims=True)  # average of all animals with less than 10% mort
+def f1_collapse(pointers, index_unique_wzida0e0b0xyg, prod, numbers, period_is_condense, period_is_seasonstart, w_pos, z_pos, period_is_prejoin=False, prejoin_tup=()):
+    '''
+    This function applies the collapse pointers to a production array and returns the production for the new animal.
 
-                ###low pattern - production level of the lowest nutrition profile that has a mortality less than 10% for the year
-                sl = [slice(None)] * temporary.ndim
-                sl[w_pos] = slice(-int(i_n_len ** i_n_fvp_period), None)
-                temporary[tuple(sl)] = np.take_along_axis(ma_var_sorted, idx_min_lw, w_pos) #if you get an error here it probably means no animals had mort less than 10%
+    The periods that require collapsing and the axes to collapse are:
 
-        ###Update if the period is condense (shearing for offs and prejoining for dams)
-        var = fun.f_update(var, temporary, period_is_condense)
-    return var
+        1. Prejoining of dams: a1, e1 & b1
+        2. Season start: z
+        3. Condense: w
+
+    The function handles each individually or in combination and is controlled by the axes to be collapsed.
+    I.e. Season start can occur at the same time as prejoining and condensing the w axis can occur in any dvp.
+
+    This function replaces the old f1_season_wa and f1_condensed.
+
+    '''
+
+    #todo can we achieve without w by w???
+    def f1_mean(mean_axes, weights, w_pos):
+        w_pos %= prod.ndim    #normalises position of w axis
+
+        if isinstance(mean_axes, int):
+            mean_axes = (mean_axes,)
+        mean_axes = tuple(ax % prod.ndim for ax in mean_axes)
+
+        # ensure original w axis is reduced (replaced by J)
+        if w_pos not in mean_axes:
+            mean_axes = mean_axes + (w_pos,)
+
+        J = prod.shape[w_pos]
+        idx = np.arange(J)
+
+        mask = (pointers[..., None] == idx)
+
+        # keepdims=True preserves dimensionality
+        sums = np.sum(np.where(mask, (prod * weights)[..., None], 0.0), axis=mean_axes, keepdims=True)
+        counts = np.sum(mask * weights[..., None], axis=mean_axes, keepdims=True)
+
+        out = fun.f_divide(sums, counts, option=0)
+        out = out.astype(float, copy=False)
+        # out[counts == 0] = 0
+
+        # drop the old w axis (it is size 1 because keepdims=True)
+        out = np.squeeze(out, axis=w_pos)
+
+        # replace the reduced w axis with the bucket axis
+        out = np.moveaxis(out, -1, w_pos)
+
+        return out
+
+    collapsed_prod_condense = f1_mean(w_pos, numbers, w_pos)
+    collapsed_prod_season = f1_mean(z_pos, numbers, w_pos)
+    collapsed_prod_prejoin = f1_mean(prejoin_tup, numbers, w_pos)
+    collapsed_prod_prejoinseason = f1_mean((z_pos,) + prejoin_tup, numbers, w_pos)
+
+    collapsed_prod = fun.f_update(collapsed_prod_condense, collapsed_prod_season, period_is_seasonstart)
+    collapsed_prod = fun.f_update(collapsed_prod, collapsed_prod_prejoin, period_is_prejoin)
+    collapsed_prod = fun.f_update(collapsed_prod, collapsed_prod_prejoinseason,
+                                  np.logical_and(period_is_prejoin, period_is_seasonstart))
+
+    # step 5: update prod if condensing/seasonstart/prejoining
+    prod = fun.f_update(prod, collapsed_prod
+        , np.logical_or(np.logical_or(period_is_prejoin, period_is_seasonstart), period_is_condense))
+
+    #expand from the active w to all the w
+    prod = np.take_along_axis(prod, index_unique_wzida0e0b0xyg, axis=w_pos)
+
+    return prod
 
 def f1_adjust_pkl_condensed_axis_len(temporary, i_w_len, i_t_len):
     ####handle when the current trial has a different number of w slices than the create trial
@@ -3293,9 +3486,10 @@ def f1_adjust_pkl_condensed_axis_len(temporary, i_w_len, i_t_len):
         temporary = np.concatenate([temporary]*i_t_len, axis=t_pos) #won't work if pkl trial had t axis but current trial doesn't - to handle this would require passing in the a_t_g association.
     return temporary
 
-def f1_period_start_nums(numbers, prejoin_tup, z_pos, period_is_startseason, season_propn_z, group=None, nyatf_b1 = 0
-                        , numbers_initial_repro=0, gender_propn_x=1, period_is_prejoin=0, period_is_birth=False, prevperiod_is_wean=False
-                        ,len_gen_t=1, a_t_g=0, period_is_startdvp=False):
+def f1_period_start_nums(numbers, prejoin_tup, z_pos, period_is_startseason, season_propn_z, group=None
+                , numbers_available=0, nyatf_b1=0, gender_propn_x=1, period_is_prejoin=0
+                , period_is_birth=False, prevperiod_is_wean=False,len_gen_t=1, a_t_g=0, period_is_startdvp=False
+                , propn_dams_mated=1, animal_mated_b1g1=True):
 
     #a)if generating with t axis reset the sale slices to the retained slice at the start of each dvp
     if np.any(period_is_startdvp) and len_gen_t>1:
@@ -3309,53 +3503,83 @@ def f1_period_start_nums(numbers, prejoin_tup, z_pos, period_is_startseason, sea
         numbers = fun.f_update(numbers, temporary, period_is_startseason)  #Set values where it is beginning of season
     ##c)things for dams - prejoining and moving between classes
     if group==1 and np.any(period_is_prejoin):
+        #Setup some variable that are used for group 1 (dams)
+        a1_pos, e1_pos, b1_pos = prejoin_tup
+        mated_propn = np.minimum(1, propn_dams_mated)  #maximum value of 1 because default is inf.
+        ##define the e1 index
+        index_e = np.arange(np.max(pinp.sheep['i_join_cycles_ig1']))
+        index_e1b1nwzida0e0b0xyg = fun.f_expand(index_e, e1_pos)
+
         ###new repro cycle (prejoining)
-        temporary = np.sum(numbers, axis = prejoin_tup, keepdims=True) * numbers_initial_repro #Calculate temporary values as if period_is_prejoin
-        numbers = fun.f_update(numbers, temporary, period_is_prejoin)  #Set values where it is beginning of FVP
+        total_mated = np.sum(numbers, axis=prejoin_tup, keepdims=True) * mated_propn
+        total_notmated = np.sum(numbers, axis=prejoin_tup, keepdims=True) * (1 - mated_propn)
+        # add e1 axis, assign to e1[0] with a minimum number
+        total_notmated = np.maximum(0.00001, fun.f_update(0.0, total_notmated, index_e1b1nwzida0e0b0xyg == 0))
+        ###Assign the not mated total to the NM slice (not animal_mated) if prejoining
+        numbers = fun.f_update(numbers, total_notmated, np.logical_and(period_is_prejoin, ~animal_mated_b1g1))
+        ###Assign the total number to be mated to numbers_available & set the mated numbers to 0.00001 if prejoining
+        numbers_available = fun.f_update(numbers_available, total_mated, period_is_prejoin)  #Set numbers_available for groups at prejoining
+        numbers = fun.f_update(numbers, 0.00001, np.logical_and(period_is_prejoin, animal_mated_b1g1))  #Set numbers of mated ewes to 0 for groups at prejoining, without affecting NM
     ##d)things just for yatf
     if group==2:
         temp = nyatf_b1 * gender_propn_x   # nyatf is accounting for peri-natal mortality. But doesn't include the differential mortality of female and male offspring at birth
         numbers=fun.f_update(numbers, temp, period_is_birth)
         numbers=fun.f_update(numbers, 0, prevperiod_is_wean) #set numbers to 0 after weaning
-    return numbers
+    return numbers, numbers_available
 
 
-def f1_period_end_nums(numbers, mortality, mortality_yatf=0, nfoet_b1 = 0, nyatf_b1 = 0, group=None
-                      , conception = 0, gender_propn_x=1, period_is_mating = False
-                      , period_is_matingend = False, period_is_birth=False, period_isbetween_prejoinmatingend=False
+def f1_period_end_nums(numbers, mortality, numbers_available=0, mortality_yatf=0, nfoet_b1=0, nyatf_b1=0, group=None
+                      , prejoin_tup=(), conception=0, gender_propn_x=1, period_is_join=False, period_is_mating=False
+                      , period_is_matingend=False, period_is_birth=False, period_isbetween_prejoinmatingend=False
                       , propn_dams_mated=1):
     '''
     This adjusts numbers for things like conception and mortality that happen during a given period
+    Numbers available for mating is tracked in a separate variable (singleton e1 & b1 axes).
+    The numbers available and the mortality are based on the singles b1 slice because the ewes expected to be
+    mated were transferred to the singles slice at prejoining
+    It reflects the proportion of the dams that are expected to be mated but are yet to be pregnant.
     '''
+
     ##a) mortality (include np.maximum on mortality so that numbers can't become negative)
-    ###For dams temporarily update the nm mort with mated mort between prejoining and end of mating. So that conception is calculated
-    ### reflect the mated numbers. This is required because nm and mated might have a different feedsupply and conception needs to be based on the mated fs and hence mort.
-    ### The back dating of the numbers scales the mortality correctly.
-    if group==1:
-        mortality = fun.f_update(mortality, mortality[:, :, :, 2:3, ...], period_isbetween_prejoinmatingend)
     numbers = numbers * np.maximum(0, 1-mortality)
-    ##things for dams - prejoining and moving between classes
+
+    ##calculations for dams - prejoining and moving between classes
     if group==1:
-        ###b) conception - conception is the change in numbers +ve for animals getting pregnancy and -ve in the NM e-0 slice (note the conception for e slice 1 and higher puts the negative numbers in the e-0 nm slice)
+        #Setup some variable that are used for group 1 (dams)
+        a1_pos, e1_pos, b1_pos = prejoin_tup
+        #identify the LSLN 1-1 slice of b1 used to represent the ewes available for mating. Note: Using 11 rather than 00 slice
+
+        ##make sure numbers and mortality are same shape - this is required for the indexing below. Mortality can include a t axis
+        numbers, mortality = np.broadcast_arrays(numbers, mortality)  #creating a view of the original arrays
+
+        ##define some slices and indexes
+        b1_idx = np.nonzero(nyatf_b1)[0][0]  # returns the position of the first non-zero value in nyatf_b1 which is the slice for dams available for mating
+        # available is a1[0] e1[0] and b1[for singles]
+        slc_available = [slice(None)] * numbers.ndim
+        slc_available[a1_pos] = slice(0, 1)
+        slc_available[e1_pos] = slice(0, 1)
+        slc_available[b1_pos] = slice(b1_idx, b1_idx + 1)
+        # empty is a1[0] e1[0] and b1[for 00]
+        slc_empty = [slice(None)] * numbers.ndim
+        slc_empty[a1_pos] = slice(0, 1)
+        slc_empty[e1_pos] = slice(0, 1)
+        slc_empty[b1_pos] = slice(b1_idx - 1, b1_idx)
+
+        ##a) Mortality for the 'available' b1 slice and the first e1 slice
+        mortality_available = mortality[tuple(slc_available)]
+        numbers_available = numbers_available * np.maximum(0, 1 - mortality_available)
+
+        ###b) conception - conception is the change in numbers for animals getting pregnant
         if np.any(period_is_mating):
-            temporary = numbers + conception * numbers[:, :, 0:1, 0:1, ...]  # numbers_dams[:,0,0,...] is the NM slice of cycle 0 ie the number of animals yet to be mated (conception will have negative value in nm slice)
-            numbers = fun.f_update(numbers, temporary, np.any(period_is_mating, axis=sinp.stock['i_e1_pos'])) #needs to be previous period else conception is not calculated because numbers happens at beginning of p loop
-        ###at the end of mating move any remaining numbers from nm to 00 slice (note only the nm slice for e-0 has numbers - this is handled in the conception function)
-        ###Set temporary to copy of current numbers
+            pregnant = fun.f_update(0, conception * numbers_available, np.any(period_is_mating, axis=e1_pos)) #needs to be previous period else conception is not calculated because numbers happens at beginning of p loop
+            numbers = numbers + pregnant
+            numbers_available = numbers_available - np.sum(pregnant, axis=prejoin_tup, keepdims=True)
+
+        ###at the end of mating move any remaining numbers from numbers_available to 00 slice (note only the nm slice for e-0 has numbers - this is handled in the conception function)
         if np.any(period_is_matingend):
             temporary  = np.copy(numbers)
-            temporary[:, :, 0:1, 1:2, ...] += numbers[:, :, 0:1, 0:1, ...]   # add the number remaining unmated to the dry slice in e1[0]
-            temporary[:, :, :, 0:1, ...] = 0 #set the NM slice to 0 (because they have just been added to drys)
-            ##handle the proportion mated. Note: if the inputs are set to optimise the proportion (np.inf) then it is treated as 100% mated
-            mated_propn = np.minimum(1, propn_dams_mated) #maximum value of 1 because default is inf, otherwise propn to be mated.
-            ### the number in the NM slice e1[0] is a proportion of the total numbers
-            ### need a minimum number to keep nm in pyomo. Want a small number relative to mortality (after allowing for multiple slices getting the small number)
-            ### Scale the numbers based on expected proportion mated so that the weighted average for production reflects expected management
-            ### Note: scaling of numbers for expected management of drys occurs in f1_period_start_prod()
-            temporary[:, :, 0:1, 0:1, ...] = np.maximum(0.00001, np.sum(temporary, axis=(sinp.stock['i_e1_pos'], sinp.stock['i_b1_pos']),
-                                                                     keepdims=True) * (1 - mated_propn))
-            ### the numbers in the other mated slices other than NM get scaled by the proportion mated
-            temporary[:, :, :, 1:, ...] = np.maximum(0.00001, temporary[:, :, :, 1:, ...] * mated_propn)
+            # add the number remaining unmated to the dry slice in e1[0]
+            temporary[tuple(slc_empty)] += numbers_available
             ###update numbers with the temporary calculations if it is the end of mating
             numbers = fun.f_update(numbers, temporary, period_is_matingend)
         ###d) birth (account for birth status and if drys are retained)
@@ -3364,7 +3588,7 @@ def f1_period_end_nums(numbers, mortality, mortality_yatf=0, nfoet_b1 = 0, nyatf
             ##have to average x axis so that it is not active for dams - times by gender propn to give approx weighting (ie because offs are not usually entire males so they will get low weighting)
             temp = np.sum(dam_propn_birth_b1 * gender_propn_x, axis=sinp.stock['i_x_pos'], keepdims=True) * numbers[:,:,:,sinp.stock['ia_prepost_b1'],...]
             numbers = fun.f_update(numbers, temp, period_is_birth)  # calculated in the period after birth when progeny mortality due to exposure is calculated
-    return numbers
+    return numbers, numbers_available
 
 
 #################
@@ -4430,11 +4654,11 @@ def f1_cum_sum_dvp(arr,dvp_pointer,axis=0,shift=0):
     return final
 
 
-def f1_lw_distribution(ffcfw_dest_w8g, ffcfw_source_w8g, mask_dest_wg=1, index_w8=None, dvp_type_next_tvgw=0, vtype=0, for_feedsupply=False): #, w_pos, i_n_len, i_n_fvp_period, dvp_type_next_tvgw=0, vtype=0):
+def f1_lw_distribution(ffcfw_dest_w8g, ffcfw_source_w8g, mask_dest_wg=1, index_w8=None, mask_update_dist=True, for_feedsupply=False): #, w_pos, i_n_len, i_n_fvp_period, dvp_type_next_tvgw=0, vtype=0):
     """Distribute animals between periods when the animals are changing on the period junction. This change can
-    be either 1. condensing at prejoining when animals are 'condensed' from the final number of LW profiles back to
+    be either 1. condensing when animals are 'condensed' from the final number of LW profiles back to
     the initial number or 2. averaging animals at season start when weights at the end of all the seasons are
-    averaged to become the start weight for the next season.
+    averaged to become the start weight for the next season. or 3. at prejoining when the b. e & a axis are collapsed.
 
     The animals are distributed to the 2 nearest neighbours, rather than a distribution across all destination LWs.
     The aim is that the average weight of the animals in the next period is equal to the average weight at the
@@ -4444,21 +4668,6 @@ def f1_lw_distribution(ffcfw_dest_w8g, ffcfw_source_w8g, mask_dest_wg=1, index_w
     If the weight is above the highest destination weight then the weight is rounded down & the extra weight is
     effectively lost. If the weight is below the lowest weight then only a proportion of that animal is transferred
     to the next period. This retains the same total LW but some animals are effectively lost.
-
-    When the distribution is for condensing/pre-joining the destination weights are ffcfw_end for the condensed slices (w9).
-    This is the condensed values of ffcfw_end (of this DVP) rather than ffcfw_start (of the next DVP) because ffcfw_start
-    includes the averaging of LW that occurs as part of f_period_start_prod when the period is prejoin.
-    Clustering based on the condensed weights of lw_start (after averaging across the b1 & e1 axes) would mean
-    that the clustering is occurring based on the proportion of animals in the b1 & e1 axes in the generator
-    (which are based on those animals following the same nutrition profile (H, M or L for that class)), whereas
-    they may have been differentially managed in the matrix, hence the requirement to distribute based on ffcfw_end.
-    The effect if the groups are clustered (i.e. not scanned) is to keep the heavier singles with the heavier twins,
-    rather than distribute the heavy twins with the average singles (which might have a more similar weight).
-    If this didn't occur the LW distribution would allow defacto ‘scanning’ through LW distribution. Although
-    differential management based on LW can be done in practice, in reality there is a distribution of weight
-    (within each class-dry,single,twin) so the split would be imprecise, whereas in the generator all the animals
-    of a class (D,S,Tw) are all the same weight (for a given nutrition profile), so the generator could split
-    them accurately for BTRT based on LW.
 
     Note: A distribution of liveweight at the end of a period would be technically correct i.e. a given class of
     animal that are offered a given feed supply for a period of time will result in spread of final weights, even
@@ -4571,7 +4780,7 @@ def f1_lw_distribution(ffcfw_dest_w8g, ffcfw_source_w8g, mask_dest_wg=1, index_w
         t_distribution_w8gw9[..., 0] = 1
 
     ##Set defaults for DVPs that don’t require distributing to 1 (these are masked later to remove those that are not required)
-    distribution_w8gw9 = fun.f_update(t_distribution_w8gw9, np.array([1],dtype='float32'), dvp_type_next_tvgw!=vtype) #make '1' a numpy array so it can be float32 to make f_update more data efficient.
+    distribution_w8gw9 = fun.f_update(np.array([1], dtype='float32'), t_distribution_w8gw9, mask_update_dist) #make '1' a numpy array so it can be float32 to make f_update more data efficient.
     return distribution_w8gw9
 
 

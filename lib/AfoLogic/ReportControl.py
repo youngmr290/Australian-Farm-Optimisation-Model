@@ -106,6 +106,8 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
     if report_run.loc['run_pnl', 'Run']:
         option = f_update_default_controls(user_controls, 'pnl', 'option', 2) #1 = report q, s, & z. 2 = weighted average of q, s, & z
         reports["pnl"] = rfun.f_profitloss_table(lp_vars, r_vals, option=option)
+    if report_run.loc['run_trees', 'Run']:
+        reports["trees"] = rfun.f_tree_summary(r_vals, totals=False)
     if report_run.loc['run_mach', 'Run']:
         option = f_update_default_controls(user_controls, 'mach_summary', 'option', 4)
         reports["mach"] = rfun.f_mach_summary(lp_vars, r_vals, option=option)

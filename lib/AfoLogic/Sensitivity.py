@@ -285,14 +285,21 @@ def create_sa():
     sav['include_carbon_credit'] = '-'  #control inclusion of carbon credits
     sav['include_biodiversity_credit'] = '-'  #control inclusion of bio credits
     sav['include_harvesting'] = '-'  #control inclusion of harvesting
+    sav['price_carbon_credit'] = '-'  # price of a carbon credit
+    sav['price_tree_biomass'] = '-'  # price of harvested tree biomass
     ##SAM
     sam['price_carbon_credit'] = 1.0  #price of a carbon credit
-    sam['price_biodiversity_credit'] = 1.0  #price of a biodiversity credit
     sam['price_tree_biomass'] = 1.0  #price of harvested tree biomass
     ##SAP
     ##SAA
     ##SAT
     ##SAR
+
+    for structure in range(4):
+        ##SAV
+        sav['biodiversity_value', structure] = '-'  #value of biodiversity $/ha
+        ##SAM
+        sam['biodiversity_value', structure] = 1.0  #value of biodiversity $/ha
 
     ####################
     #Salt land pasture #
@@ -436,6 +443,7 @@ def create_sa():
     sav['adjp_cfw_initial_w3'] = np.full(sinp.structuralsa['i_adjp_cfw_initial_w3'].shape, '-', dtype=object)    #initial cfw adjustment offs
     sav['adjp_fd_initial_w3'] = np.full(sinp.structuralsa['i_adjp_fd_initial_w3'].shape, '-', dtype=object)      #initial fd adjustment offs
     sav['adjp_fl_initial_w3'] = np.full(sinp.structuralsa['i_adjp_fl_initial_w3'].shape, '-', dtype=object)      #initial fl adjustment offs
+    sav['firstprejoin_averaged'] = True #do the a, e & b axes get averaged at the first prejoining (ewe lambs). If the value is changed to false the mate/not mate decision is made at the previous weaning (then at prejoining nm passes to nm and mated passes to mated).
     sav['condense_at_seasonstart'] = '-'  # SA to alter if condensing occurs at season start. Default is False except in the MP model when this can be set to True so that core fvps can be masked out and just the season nodes for fvps.
     sav['user_fvp_date_dams_iu'] = np.full(sinp.structuralsa['i_dams_user_fvp_date_iu'].shape, '-', dtype=object)      #SA to control user fvp dates.
     sav['user_fvp_date_dams_yiu'] = np.full((len_y,)+sinp.structuralsa['i_dams_user_fvp_date_iu'].shape, '-', dtype=object)      #SA to control user fvp dates.
