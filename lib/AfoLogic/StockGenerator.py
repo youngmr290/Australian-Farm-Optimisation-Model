@@ -323,7 +323,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     index_tva1e1b1nw8zida0e0b0xyg3w9 = index_tva1e1b1nw8zida0e0b0xyg3[...,na]
     index_xyg = fun.f_expand(np.arange(len_x), x_pos)
 
-    prejoin_tup = (a1_pos, b1_pos, e1_pos)
+    prejoin_tup = (a1_pos, e1_pos, b1_pos)
     season_tup = (z_pos,)
 
     ############################
@@ -786,6 +786,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     nfoet_b1nwzida0e0b0xyg = fun.f_expand(sinp.stock['a_nfoet_b1'],b1_pos)
     ##nyatf expanded to b1 & b0
     nyatf_b1nwzida0e0b0xyg = fun.f_expand(sinp.stock['a_nyatf_b1'],b1_pos)
+    ##the mated b1 groups expanded to b1
+    animal_mated_b1nwzida0e0b0xyg1 = fun.f_expand(sinp.stock['i_mated_b1'], b1_pos)
     ##legume proportion in each period
     legume_p6a1e1b1nwzida0e0b0xyg = fun.f_expand(pinp.sheep['i_legume_p6z'], z_pos, move=True, source=0, dest=-1,
                                                  left_pos2=p_pos, right_pos2=z_pos)
@@ -1984,7 +1986,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     initial_a1e1b1nwzida0e0b0xyg = fun.f_expand(initial_a1, a1_pos)
     ###Distribution of initial numbers across the b1 axis
     initial_b1nwzida0e0b0xyg = fun.f_expand(sinp.stock['i_initial_b1'], b1_pos)
-    prejoin_initial_repro_b1nwzida0e0b0xyg = fun.f_expand(sinp.stock['i_prejoin_initial_repro_b1'], b1_pos)
     ###Distribution of initial numbers across the y-axis
     initial_yg0 = fun.f_expand(uinp.parameters['i_initial_y0'], y_pos, condition = uinp.parameters['i_mask_y0'], axis = y_pos)
     initial_yg1 = fun.f_expand(uinp.parameters['i_initial_y1'], y_pos, condition = uinp.parameters['i_mask_y1'], axis = y_pos)
@@ -2006,7 +2007,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ###sire
     numbers_initial_zida0e0b0xyg0 = initial_yg0
     ###dams
-    numbers_initial_propn_repro_a1e1b1nwzida0e0b0xyg1 = initial_a1e1b1nwzida0e0b0xyg * initial_e1b1nwzida0e0b0xyg * prejoin_initial_repro_b1nwzida0e0b0xyg
     numbers_initial_a1e1b1nwzida0e0b0xyg1 = initial_a1e1b1nwzida0e0b0xyg * initial_e1b1nwzida0e0b0xyg * initial_b1nwzida0e0b0xyg * initial_yg1
     ###offs
     ####Initial proportion of offspring if clustered.
@@ -5256,10 +5256,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                     temp0 = sfun.f_conception_ltw(cf_dams, cu0_dams, relsize_mating_dams, cs_mating_dams
-                                                  , scan_std_pa1e1b1nwzida0e0b0xyg1[p], doy_pa1e1b1nwzida0e0b0xyg[p]
-                                                  , rr_doy_ltw_pa1e1b1nwzida0e0b0xyg1[p], nfoet_b1nwzida0e0b0xyg
-                                                  , nyatf_b1nwzida0e0b0xyg, period_is_mating_pa1e1b1nwzida0e0b0xyg1[p]
-                                                  , rev_trait_values['dams'][p])
+                                                , scan_std_pa1e1b1nwzida0e0b0xyg1[p], doy_pa1e1b1nwzida0e0b0xyg[p]
+                                                , rr_doy_ltw_pa1e1b1nwzida0e0b0xyg1[p], prejoin_tup
+                                                , nfoet_b1nwzida0e0b0xyg, nyatf_b1nwzida0e0b0xyg
+                                                , period_is_mating_pa1e1b1nwzida0e0b0xyg1[p], rev_trait_values['dams'][p])
                     if eqn_used:
                         conception_dams = temp0
                     ## these variables need to be stored even if the equation system is not used so that the equations can be compared
@@ -5604,8 +5604,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                 numbers_end_dams, numbers_available_mating_dams = sfun.f1_period_end_nums(numbers_start_dams,
                             mortality_dams, numbers_available_mating_dams, mortality_yatf=mortality_birth_yatf,
-                            nfoet_b1=nfoet_b1nwzida0e0b0xyg, nyatf_b1=nyatf_b1nwzida0e0b0xyg, group=1, conception=conception_dams,
-                            gender_propn_x=gender_propn_xyg, period_is_mating = period_is_mating_pa1e1b1nwzida0e0b0xyg1[p],
+                            nfoet_b1=nfoet_b1nwzida0e0b0xyg, nyatf_b1=nyatf_b1nwzida0e0b0xyg, group=1,
+                            prejoin_tup=prejoin_tup, conception=conception_dams, gender_propn_x=gender_propn_xyg,
+                            period_is_join = period_is_join_pa1e1b1nwzida0e0b0xyg1[p],
+                            period_is_mating = period_is_mating_pa1e1b1nwzida0e0b0xyg1[p],
                             period_is_matingend=period_is_matingend_pa1e1b1nwzida0e0b0xyg1[p], period_is_birth = period_is_birth_pa1e1b1nwzida0e0b0xyg1[p],
                             period_isbetween_prejoinmatingend=period_isbetween_prejoinmatingend_pa1e1b1nwzida0e0b0xyg1[p],
                             propn_dams_mated=est_prop_dams_mated_pa1e1b1nwzida0e0b0xyg1[p])
@@ -6665,11 +6667,14 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
 
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                 numbers_start_dams, numbers_available_mating_dams = sfun.f1_period_start_nums(numbers_end_dams
-                                        , prejoin_tup, z_pos , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], season_propn_zida0e0b0xyg, group=1
-                                        , numbers_initial_repro=numbers_initial_propn_repro_a1e1b1nwzida0e0b0xyg1
-                                        , period_is_prejoin=period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , len_gen_t=len_gen_t1, a_t_g=a_t_g1
-                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1])
+                        , prejoin_tup, z_pos, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1]
+                        , season_propn_zida0e0b0xyg, group=1, numbers_available=numbers_available_mating_dams
+                        , period_is_prejoin=period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1]
+                           * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1]
+                        , len_gen_t=len_gen_t1, a_t_g=a_t_g1
+                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1]
+                        , propn_dams_mated=est_prop_dams_mated_pa1e1b1nwzida0e0b0xyg1[p+1]
+                        , animal_mated_b1g1=animal_mated_b1nwzida0e0b0xyg1)
                 ###numbers at the beginning of fvp 0 (used to calc mort for the lw patterns to determine the lowest feasible level - used in the start prod func)
                 numbers_at_condense_dams = fun.f_update(numbers_at_condense_dams, numbers_start_dams
                                                            , period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
@@ -6984,7 +6989,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     dresspercent_adj_yg0, dresspercent_adj_yg1, dresspercent_adj_yg2, dresspercent_adj_yg3 = sfun.f1_c2g(uinp.parameters['i_dressp_adj_c2'],uinp.parameters['i_dressp_adj_y'], a_c2_c0, i_g3_inc, dtype=dtype)
     ##husbandry
     wool_genes_yg0, wool_genes_yg1, wool_genes_yg2, wool_genes_yg3 = sfun.f1_c2g(uinp.parameters['i_wool_genes_c2'],uinp.parameters['i_wool_genes_y'], a_c2_c0, i_g3_inc, dtype=dtype)
-    animal_mated_b1g1 = fun.f_expand(sinp.stock['i_mated_b1'], b1_pos)
     operations_triggerlevels_h5h7h2tpg = fun.f_convert_to_inf(fun.f_expand(pinp.sheep['i_husb_operations_triggerlevels_h5h7h2'], p_pos-2,
                                                                                   swap=True, swap2=True)).astype(dtype)  # convert -- and ++ to inf
     husb_operations_muster_propn_h2tpg = fun.f_expand(uinp.sheep['i_husb_operations_muster_propn_h2'], p_pos-2).astype(dtype)
@@ -7584,7 +7588,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
         husb_requisite_cost_h6tpg, husb_operations_requisites_prob_h6h2tpg, operations_per_hour_l2h2tpg,
         husb_operations_infrastructurereq_h1h2tpg, husb_operations_contract_cost_h2tpg, husb_muster_requisites_prob_h6h4tpg,
         musters_per_hour_l2h4tpg, husb_muster_infrastructurereq_h1h4tpg, a_t_g1, nyatf_b1nwzida0e0b0xyg, period_is_join_pa1e1b1nwzida0e0b0xyg1,
-        animal_mated_b1g1, scan_option_pa1e1b1nwzida0e0b0xyg1, period_is_matingend_pa1e1b1nwzida0e0b0xyg1, dtype=dtype)
+        animal_mated_b1nwzida0e0b0xyg1, scan_option_pa1e1b1nwzida0e0b0xyg1, period_is_matingend_pa1e1b1nwzida0e0b0xyg1, dtype=dtype)
     ###offs: cost, labour and infrastructure requirements
     husbandry_cost_tpg3, husbandry_labour_l2tpg3, husbandry_infrastructure_h1tpg3, fuel_cost_tpg3 = sfun.f_husbandry(
         uinp.sheep['i_head_adjust_offs'], mobsize_pa1e1b1nwzida0e0b0xyg3, o_ffcfw_tpoffs, o_cfw_tpoffs, operations_triggerlevels_h5h7h2tpg,
@@ -8108,7 +8112,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                 on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_scan_pa1e1b1nwzida0e0b0xyg1)
 
     ##number of mated animals
-    n_mated_tpg1 = animal_mated_b1g1 * o_numbers_end_tpdams
+    n_mated_tpg1 = animal_mated_b1nwzida0e0b0xyg1 * o_numbers_end_tpdams
     r_n_mated_tvg1 = sfun.f1_p2v(n_mated_tpg1, a_v_pa1e1b1nwzida0e0b0xyg1, 1,
                                 on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_matingend_pa1e1b1nwzida0e0b0xyg1)
 

@@ -2228,16 +2228,10 @@ def f_conception_cs(cf, cb1, relsize_mating, rc_mating, cpg_doy, nfoet_b1any, ny
 
         ##If the period is mating then set conception = temporary probability array
         conception = cp * period_is_mating
-
-        ##Subtract conception of 00, 11, 22 & 33 from the NM slice (in e1[0])
-        slc = [slice(None)] * len(conception.shape)
-        slc[e1_pos] = slice(0, 1)
-        slc[b1_pos] = slice(0, 1)
-        conception[tuple(slc)] = -np.sum(fun.f_dynamic_slice(conception, b1_pos, 1, None), axis=(e1_pos, b1_pos), keepdims=True)
     return conception
 
 
-def f_conception_ltw(cf, cu0, relsize_mating, cs_mating, scan_std, doy_p, rr_doy, nfoet_b1any, nyatf_b1any
+def f_conception_ltw(cf, cu0, relsize_mating, cs_mating, scan_std, doy_p, rr_doy, prejoin_tup, nfoet_b1any, nyatf_b1any
                      , period_is_mating, rev_trait_value):
     '''
     Conception is represented in the code as a change in the numbers of animals in each slice of e & b as a proportion
@@ -2261,8 +2255,7 @@ def f_conception_ltw(cf, cu0, relsize_mating, cs_mating, scan_std, doy_p, rr_doy
         #todo this function is not working because the b1 axis is not singleton prior to trying to squeeze, so bypassed
         conception = np.zeros_like(relsize_mating)
     else:
-        b1_pos = sinp.stock['i_b1_pos']  #because used in many places in the function
-        e1_pos = sinp.stock['i_e1_pos']  #because used in many places in the function
+        a1_pos, e1_pos, b1_pos = prejoin_tup  #because used in many places in the function
 
         ##Adjust standard scanning percentage based on relative size (to reduce scanning percentage of younger animals)
         scan_std = scan_std * relsize_mating * rr_doy
@@ -2285,19 +2278,17 @@ def f_conception_ltw(cf, cu0, relsize_mating, cs_mating, scan_std, doy_p, rr_doy
         ###These dams are added to 00 slice (b1[1:2]) so that they are removed from 'available for mating'.
         ###The number is based on a proportion (cf[5]) of the empty ewes that don't return to service
         ###The remainder return to service and therefore aren't included in the 'empty' slice.
+        slc = [slice(None)] * len(conception.shape)
         slc[b1_pos] = slice(1,2)
         cp[tuple(slc)] = cf[5, ...] * cp[tuple(slc)]
 
         ##If the period is mating then set conception = temporary probability array
         conception = cp * period_is_mating
-        ##Subtract conception of 00, 11, 22 & 33 from the NM slice (in e1[0])
-        slc = [slice(None)] * len(conception.shape)
-        slc[e1_pos] = slice(0, 1)
-        slc[b1_pos] = slice(0, 1)
-        conception[tuple(slc)] = -np.sum(fun.f_dynamic_slice(conception, b1_pos, 1, None), axis=(e1_pos, b1_pos), keepdims=True)
         ##Process the Conception & Litter size REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
-        conception[:, :, 1, ...] = f1_rev_update('conception', conception[:, :, 1, ...], rev_trait_value)
-        conception[:, :, 2:, ...] = f1_rev_update('litter_size', conception[:, :, 2:, ...], rev_trait_value)
+        slc[b1_pos] = slice(1, 2)
+        conception[tuple(slc)] = f1_rev_update('conception', conception[tuple(slc)], rev_trait_value)
+        slc[b1_pos] = slice(2, None)
+        conception[tuple(slc)] = f1_rev_update('litter_size', conception[tuple(slc)], rev_trait_value)
     return conception
 
 
@@ -2364,7 +2355,6 @@ def f_conception_mu2(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, doj, d
         conception = np.zeros_like(maternallw_mating)
     else:
         b1_pos = sinp.stock['i_b1_pos']  #because used in many places in the function
-        e1_pos = sinp.stock['i_e1_pos']
         ## Select slice 24 (Ewe Lamb coefficients) or 25 (maiden ewe coefficients) or 26 (mature ewe coefficients)
         ###of cb1 & cu2 based on age of the dam. Note: age adds a,e,b axes onto the sliced array
         cb1_sliced = fun.f_update(cb1[26, ...], cb1[24, ...], age < 364)
@@ -2483,12 +2473,6 @@ def f_conception_mu2(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, doj, d
 
         ##If the period is mating then set conception = temporary probability array
         conception = cp * period_is_mating
-
-        ##Subtract conception of 00, 11, 22 & 33 from the NM slice (in e1[0])
-        slc_nm = [slice(None)] * len(conception.shape)
-        slc_nm[e1_pos] = slice(0, 1)
-        slc_nm[b1_pos] = slice(0, 1)
-        conception[tuple(slc_nm)] = -np.sum(fun.f_dynamic_slice(conception, b1_pos, 1, None), axis=(e1_pos, b1_pos), keepdims=True)
     return conception
 
 
@@ -3504,9 +3488,9 @@ def f1_adjust_pkl_condensed_axis_len(temporary, i_w_len, i_t_len):
     return temporary
 
 def f1_period_start_nums(numbers, prejoin_tup, z_pos, period_is_startseason, season_propn_z, group=None
-                        , numbers_available=0, nyatf_b1 = 0
-                        , numbers_initial_repro=0, gender_propn_x=1, period_is_prejoin=0, period_is_birth=False, prevperiod_is_wean=False
-                        ,len_gen_t=1, a_t_g=0, period_is_startdvp=False):
+                , numbers_available=0, nyatf_b1=0, gender_propn_x=1, period_is_prejoin=0
+                , period_is_birth=False, prevperiod_is_wean=False,len_gen_t=1, a_t_g=0, period_is_startdvp=False
+                , propn_dams_mated=1, animal_mated_b1g1=True):
 
     #a)if generating with t axis reset the sale slices to the retained slice at the start of each dvp
     if np.any(period_is_startdvp) and len_gen_t>1:
@@ -3520,9 +3504,23 @@ def f1_period_start_nums(numbers, prejoin_tup, z_pos, period_is_startseason, sea
         numbers = fun.f_update(numbers, temporary, period_is_startseason)  #Set values where it is beginning of season
     ##c)things for dams - prejoining and moving between classes
     if group==1 and np.any(period_is_prejoin):
+        #Setup some variable that are used for group 1 (dams)
+        a1_pos, e1_pos, b1_pos = prejoin_tup
+        mated_propn = np.minimum(1, propn_dams_mated)  #maximum value of 1 because default is inf.
+        ##define the e1 index
+        index_e = np.arange(np.max(pinp.sheep['i_join_cycles_ig1']))
+        index_e1b1nwzida0e0b0xyg = fun.f_expand(index_e, e1_pos)
+
         ###new repro cycle (prejoining)
-        temporary = np.sum(numbers, axis = prejoin_tup, keepdims=True) * numbers_initial_repro #Calculate temporary values as if period_is_prejoin
-        numbers = fun.f_update(numbers, temporary, period_is_prejoin)  #Set values where it is beginning of FVP
+        total_mated = np.sum(numbers, axis=prejoin_tup, keepdims=True) * mated_propn
+        total_notmated = np.sum(numbers, axis=prejoin_tup, keepdims=True) * (1 - mated_propn)
+        # add e1 axis, assign to e1[0] with a minimum number
+        total_notmated = np.maximum(0.00001, fun.f_update(0.0, total_notmated, index_e1b1nwzida0e0b0xyg == 0))
+        ###Assign the not mated total to the NM slice (not animal_mated) if prejoining
+        numbers = fun.f_update(numbers, total_notmated, np.logical_and(period_is_prejoin, ~animal_mated_b1g1))
+        ###Assign the total number to be mated to numbers_available & set the mated numbers to 0.00001 if prejoining
+        numbers_available = fun.f_update(numbers_available, total_mated, period_is_prejoin)  #Set numbers_available for groups at prejoining
+        numbers = fun.f_update(numbers, 0.00001, np.logical_and(period_is_prejoin, animal_mated_b1g1))  #Set numbers of mated ewes to 0 for groups at prejoining, without affecting NM
     ##d)things just for yatf
     if group==2:
         temp = nyatf_b1 * gender_propn_x   # nyatf is accounting for peri-natal mortality. But doesn't include the differential mortality of female and male offspring at birth
@@ -3531,9 +3529,9 @@ def f1_period_start_nums(numbers, prejoin_tup, z_pos, period_is_startseason, sea
     return numbers, numbers_available
 
 
-def f1_period_end_nums(numbers, mortality, numbers_available=0, mortality_yatf=0, nfoet_b1 = 0, nyatf_b1 = 0, group=None
-                      , conception = 0, gender_propn_x=1, period_is_mating = False
-                      , period_is_matingend = False, period_is_birth=False, period_isbetween_prejoinmatingend=False
+def f1_period_end_nums(numbers, mortality, numbers_available=0, mortality_yatf=0, nfoet_b1=0, nyatf_b1=0, group=None
+                      , prejoin_tup=(), conception=0, gender_propn_x=1, period_is_join=False, period_is_mating=False
+                      , period_is_matingend=False, period_is_birth=False, period_isbetween_prejoinmatingend=False
                       , propn_dams_mated=1):
     '''
     This adjusts numbers for things like conception and mortality that happen during a given period
@@ -3544,34 +3542,45 @@ def f1_period_end_nums(numbers, mortality, numbers_available=0, mortality_yatf=0
     '''
 
     ##a) mortality (include np.maximum on mortality so that numbers can't become negative)
-    ###For dams temporarily update the nm mort with mated mort between prejoining and end of mating. So that conception is calculated
-    ### reflect the mated numbers. This is required because nm and mated might have a different feedsupply and conception needs to be based on the mated fs and hence mort.
-    ### The back dating of the numbers scales the mortality correctly.
-    if group==1:
-        mortality = fun.f_update(mortality, mortality[:, :, :, 2:3, ...], period_isbetween_prejoinmatingend)
     numbers = numbers * np.maximum(0, 1-mortality)
-    ##things for dams - prejoining and moving between classes
+
+    ##calculations for dams - prejoining and moving between classes
     if group==1:
-        ###b) conception - conception is the change in numbers +ve for animals getting pregnancy and -ve in the NM e-0 slice (note the conception for e slice 1 and higher puts the negative numbers in the e-0 nm slice)
+        #Setup some variable that are used for group 1 (dams)
+        a1_pos, e1_pos, b1_pos = prejoin_tup
+        #identify the LSLN 1-1 slice of b1 used to represent the ewes available for mating. Note: Using 11 rather than 00 slice
+
+        ##make sure numbers and mortality are same shape - this is required for the indexing below. Mortality can include a t axis
+        numbers, mortality = np.broadcast_arrays(numbers, mortality)  #creating a view of the original arrays
+
+        ##define some slices and indexes
+        b1_idx = np.nonzero(nyatf_b1)[0][0]  # returns the position of the first non-zero value in nyatf_b1 which is the slice for dams available for mating
+        # available is a1[0] e1[0] and b1[for singles]
+        slc_available = [slice(None)] * numbers.ndim
+        slc_available[a1_pos] = slice(0, 1)
+        slc_available[e1_pos] = slice(0, 1)
+        slc_available[b1_pos] = slice(b1_idx, b1_idx + 1)
+        # empty is a1[0] e1[0] and b1[for 00]
+        slc_empty = [slice(None)] * numbers.ndim
+        slc_empty[a1_pos] = slice(0, 1)
+        slc_empty[e1_pos] = slice(0, 1)
+        slc_empty[b1_pos] = slice(b1_idx - 1, b1_idx)
+
+        ##a) Mortality for the 'available' b1 slice and the first e1 slice
+        mortality_available = mortality[tuple(slc_available)]
+        numbers_available = numbers_available * np.maximum(0, 1 - mortality_available)
+
+        ###b) conception - conception is the change in numbers for animals getting pregnant
         if np.any(period_is_mating):
-            temporary = numbers + conception * numbers[:, :, 0:1, 0:1, ...]  # numbers_dams[:,0,0,...] is the NM slice of cycle 0 ie the number of animals yet to be mated (conception will have negative value in nm slice)
-            numbers = fun.f_update(numbers, temporary, np.any(period_is_mating, axis=sinp.stock['i_e1_pos'])) #needs to be previous period else conception is not calculated because numbers happens at beginning of p loop
-        ###at the end of mating move any remaining numbers from nm to 00 slice (note only the nm slice for e-0 has numbers - this is handled in the conception function)
-        ###Set temporary to copy of current numbers
+            pregnant = fun.f_update(0, conception * numbers_available, np.any(period_is_mating, axis=e1_pos)) #needs to be previous period else conception is not calculated because numbers happens at beginning of p loop
+            numbers = numbers + pregnant
+            numbers_available = numbers_available - np.sum(pregnant, axis=prejoin_tup, keepdims=True)
+
+        ###at the end of mating move any remaining numbers from numbers_available to 00 slice (note only the nm slice for e-0 has numbers - this is handled in the conception function)
         if np.any(period_is_matingend):
             temporary  = np.copy(numbers)
-            temporary[:, :, 0:1, 1:2, ...] += numbers[:, :, 0:1, 0:1, ...]   # add the number remaining unmated to the dry slice in e1[0]
-            temporary[:, :, :, 0:1, ...] = 0 #set the NM slice to 0 (because they have just been added to drys)
-            ##handle the proportion mated. Note: if the inputs are set to optimise the proportion (np.inf) then it is treated as 100% mated
-            mated_propn = np.minimum(1, propn_dams_mated) #maximum value of 1 because default is inf, otherwise propn to be mated.
-            ### the number in the NM slice e1[0] is a proportion of the total numbers
-            ### need a minimum number to keep nm in pyomo. Want a small number relative to mortality (after allowing for multiple slices getting the small number)
-            ### Scale the numbers based on expected proportion mated so that the weighted average for production reflects expected management
-            ### Note: scaling of numbers for expected management of drys occurs in f1_period_start_prod2() via the pointers and the collapse function.
-            temporary[:, :, 0:1, 0:1, ...] = np.maximum(0.00001, np.sum(temporary, axis=(sinp.stock['i_e1_pos'], sinp.stock['i_b1_pos']),
-                                                                     keepdims=True) * (1 - mated_propn))
-            ### the numbers in the other mated slices other than NM get scaled by the proportion mated
-            temporary[:, :, :, 1:, ...] = np.maximum(0.00001, temporary[:, :, :, 1:, ...] * mated_propn)
+            # add the number remaining unmated to the dry slice in e1[0]
+            temporary[tuple(slc_empty)] += numbers_available
             ###update numbers with the temporary calculations if it is the end of mating
             numbers = fun.f_update(numbers, temporary, period_is_matingend)
         ###d) birth (account for birth status and if drys are retained)
