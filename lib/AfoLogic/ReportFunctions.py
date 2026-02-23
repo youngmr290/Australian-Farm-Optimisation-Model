@@ -1528,7 +1528,7 @@ def f_deepflow_summary(r_vals):
 
     return ave_recharge_qsz
 
-def f_tree_summary(r_vals):
+def f_tree_summary(r_vals, totals=True):
     ##fixed costs
     keys_p7 = r_vals['zgen']['keys_p7']
     keys_z = r_vals['zgen']['keys_z']
@@ -1567,8 +1567,66 @@ def f_tree_summary(r_vals):
 
     total_income_z_p7 = tree_sequestration_income_z_p7 + tree_biodiversity_income_z_p7 + tree_biomass_income_z_p7
 
-    return total_cost_z_p7, total_income_z_p7
+    if totals:
+        return total_cost_z_p7, total_income_z_p7
 
+    ###create tree cost & benefits table - averaged across z because tree are fixed long term.
+    z_prob_z = r_vals['zgen']['z_prob_qsz'].sum(axis=(0, 1))
+    z_prob_z = pd.Series(z_prob_z, index=keys_z)
+
+    def f_tree_expected_total(df_z_p7):
+        '''Sum p7 and probability-weight z to one scalar.'''
+        p7_total_z = df_z_p7.sum(axis=1)
+        return p7_total_z.mul(z_prob_z.reindex(p7_total_z.index).fillna(0)).sum()
+
+    exp_estab_maint = f_tree_expected_total(tree_estab_cost_z_p7)
+    exp_seq_var = f_tree_expected_total(tree_sequestration_variable_cost_z_p7)
+    exp_seq_fix = f_tree_expected_total(f_numpy2df(sequestration_fixed_cost_p7z, [keys_p7, keys_z], [1], [0]))
+    exp_bio_var = f_tree_expected_total(tree_biodiversity_variable_cost_z_p7)
+    exp_bio_fix = f_tree_expected_total(f_numpy2df(biodiversity_fixed_cost_p7z, [keys_p7, keys_z], [1], [0]))
+    exp_harvest = f_tree_expected_total(tree_biomass_cost_z_p7)
+
+    rev_seq = f_tree_expected_total(tree_sequestration_income_z_p7)
+    rev_bio = f_tree_expected_total(tree_biodiversity_income_z_p7)
+    rev_biomass = f_tree_expected_total(tree_biomass_income_z_p7)
+    tree_area_ha = np.sum(d_vars['base']['v_tree_area_l'])
+
+    total_expenses = exp_estab_maint + exp_seq_var + exp_seq_fix + exp_bio_var + exp_bio_fix + exp_harvest
+    total_revenue = rev_seq + rev_bio + rev_biomass
+    net_benefit = total_revenue - total_expenses
+
+    idx = pd.MultiIndex.from_tuples([
+        ('Total', 'Tree area (ha)'),
+        ('Total', 'Net benefit'),
+        ('Expense', 'Total expenses'),
+        ('Expense', 'Establishment and maintenance costs'),
+        ('Expense', 'Sequestration cost (variable)'),
+        ('Expense', 'Sequestration cost (fixed)'),
+        ('Expense', 'Biodiversity cost (variable)'),
+        ('Expense', 'Biodiversity cost (fixed)'),
+        ('Expense', 'Harvesting costs'),
+        ('Revenue', 'Total Revenue (net of selling costs and freight)'),
+        ('Revenue', 'sequestration_income'),
+        ('Revenue', 'biodiversity_income'),
+        ('Revenue', 'biomass_income'),
+    ], names=['Section', 'Item'])
+
+    tree_summary = pd.DataFrame(index=idx, columns=['Total'], dtype=float)
+    tree_summary.loc[('Total', 'Tree area (ha)'), 'Total'] = tree_area_ha
+    tree_summary.loc[('Total', 'Net benefit'), 'Total'] = net_benefit
+    tree_summary.loc[('Expense', 'Total expenses'), 'Total'] = total_expenses
+    tree_summary.loc[('Expense', 'Establishment and maintenance costs'), 'Total'] = exp_estab_maint
+    tree_summary.loc[('Expense', 'Sequestration cost (variable)'), 'Total'] = exp_seq_var
+    tree_summary.loc[('Expense', 'Sequestration cost (fixed)'), 'Total'] = exp_seq_fix
+    tree_summary.loc[('Expense', 'Biodiversity cost (variable)'), 'Total'] = exp_bio_var
+    tree_summary.loc[('Expense', 'Biodiversity cost (fixed)'), 'Total'] = exp_bio_fix
+    tree_summary.loc[('Expense', 'Harvesting costs'), 'Total'] = exp_harvest
+    tree_summary.loc[('Revenue', 'Total Revenue (net of selling costs and freight)'), 'Total'] = total_revenue
+    tree_summary.loc[('Revenue', 'sequestration_income'), 'Total'] = rev_seq
+    tree_summary.loc[('Revenue', 'biodiversity_income'), 'Total'] = rev_bio
+    tree_summary.loc[('Revenue', 'biomass_income'), 'Total'] = rev_biomass
+
+    return tree_summary
 def f_dse(lp_vars, r_vals, method, per_ha, summary1=False, summary2=False, summary3=False):
     '''
     DSE calculation.
