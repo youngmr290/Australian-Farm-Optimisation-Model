@@ -233,7 +233,7 @@ def f_universal_inp_sa(uinp_defaults):
 
     for structure in range(4):
         ###sav
-        tree[f"plantation_structure_{structure}"]['biodiversity_value'] = fun.f_sa(tree[f"plantation_structure_{structure}"]['biodiversity_value'], sen.sam['biodiversity_value', structure], 5)
+        tree[f"plantation_structure_{structure}"]['biodiversity_value'] = fun.f_sa(tree[f"plantation_structure_{structure}"]['biodiversity_value'], sen.sav['biodiversity_value', structure], 5)
         ###sam
         tree[f"plantation_structure_{structure}"]['biodiversity_value'] = fun.f_sa(tree[f"plantation_structure_{structure}"]['biodiversity_value'], sen.sam['biodiversity_value', structure])
         ###sap
