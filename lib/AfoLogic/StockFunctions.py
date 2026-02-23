@@ -3163,8 +3163,6 @@ def f1_collapse_pointers(p, ebw, numbers, startw_unique_next, period_is_condense
               value is -1 if the animal is not contributing to a target animal
     '''
 
-    numbers = np.maximum(0.00001, numbers) #todo this wont be required once Dad finxes numbers start function
-
     w_pos = sinp.stock['i_w_pos']
     z_pos = sinp.stock['i_z_pos']
     len_w = ebw.shape[w_pos]
@@ -3420,8 +3418,6 @@ def f1_collapse(pointers, index_unique_wzida0e0b0xyg, prod, numbers, period_is_c
     This function replaces the old f1_season_wa and f1_condensed.
 
     '''
-
-    numbers = np.maximum(0.00001, numbers) #todo this wont be required once Dad finxes numbers start function
 
     #todo can we achieve without w by w???
     def f1_mean(mean_axes, weights, w_pos):
