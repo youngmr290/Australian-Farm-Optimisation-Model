@@ -3240,7 +3240,7 @@ def f1_collapse_pointers(p, ebw, numbers, startw_unique_next, period_is_condense
     n_groups = fun.f_update(n_groups, n_groups_season, period_is_seasonstart)
     n_groups = fun.f_update(n_groups, n_groups_prejoin, period_is_prejoin)
     n_groups = fun.f_update(n_groups, n_groups_prejoinseason, np.logical_and(period_is_prejoin, period_is_seasonstart))
-    n_groups_collapsed = np.maximum(startw_unique_next, n_groups)   # to catch if all numbers are 0.00001
+    n_groups_collapsed = np.maximum(startw_unique_next, n_groups)   # number of groups collapsed can't be less than the number groups next period
 
     ## calculate the 'effective' number of groups used to calculate the end gap.
     ### If the effective number = startw_unique_next then the end_gap & the percentile_step will be evenly spaced
@@ -3564,6 +3564,9 @@ def f1_period_end_nums(numbers, mortality, numbers_available=0, mortality_yatf=0
         slc_empty[a1_pos] = slice(0, 1)
         slc_empty[e1_pos] = slice(0, 1)
         slc_empty[b1_pos] = slice(b1_idx - 1, b1_idx)
+        # survival is b1[ia_prepost_b1] for use in calculating ewe numbers after lambing
+        slc_survival = [slice(None)] * numbers.ndim
+        slc_survival[b1_pos] = sinp.stock['ia_prepost_b1']
 
         ##a) Mortality for the 'available' b1 slice and the first e1 slice
         mortality_available = mortality[tuple(slc_available)]
@@ -3586,7 +3589,7 @@ def f1_period_end_nums(numbers, mortality, numbers_available=0, mortality_yatf=0
         if np.any(period_is_birth):
             dam_propn_birth_b1 = fun.f_comb(nfoet_b1, nyatf_b1) * (1 - mortality_yatf) ** nyatf_b1 * mortality_yatf ** (nfoet_b1 - nyatf_b1) # the proportion of dams of each LSLN based on (progeny) mortality
             ##have to average x axis so that it is not active for dams - times by gender propn to give approx weighting (ie because offs are not usually entire males so they will get low weighting)
-            temp = np.sum(dam_propn_birth_b1 * gender_propn_x, axis=sinp.stock['i_x_pos'], keepdims=True) * numbers[:,:,:,sinp.stock['ia_prepost_b1'],...]
+            temp = np.sum(dam_propn_birth_b1 * gender_propn_x, axis=sinp.stock['i_x_pos'], keepdims=True) * numbers[tuple(slc_survival)]
             numbers = fun.f_update(numbers, temp, period_is_birth)  # calculated in the period after birth when progeny mortality due to exposure is calculated
     return numbers, numbers_available
 

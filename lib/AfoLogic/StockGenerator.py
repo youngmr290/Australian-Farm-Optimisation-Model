@@ -2008,15 +2008,16 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     #propn of the off born in each cycle (propn of dams conceived in each cycle / total number conceiving during the mating period)
     e0_propn_ida0e0b0xyg = e0_propn_ida0e0b0xyg / np.sum(e0_propn_ida0e0b0xyg, axis = e0_pos, keepdims=True)
     ###sire
-    numbers_initial_zida0e0b0xyg0 = initial_yg0
+    numbers_initial_zida0e0b0xyg0 = np.maximum(0.00001, initial_yg0)
     ###dams
-    numbers_initial_a1e1b1nwzida0e0b0xyg1 = initial_a1e1b1nwzida0e0b0xyg * initial_e1b1nwzida0e0b0xyg * initial_b1nwzida0e0b0xyg * initial_yg1
+    numbers_initial_a1e1b1nwzida0e0b0xyg1 = np.maximum(0.00001
+            , initial_a1e1b1nwzida0e0b0xyg * initial_e1b1nwzida0e0b0xyg * initial_b1nwzida0e0b0xyg * initial_yg1)
     ###offs
     ####Initial proportion of offspring if clustered.
     ####These proportions are used if the offspring are clustered
     numbers_initial_cluster_ida0e0b0xyg3 = btrt_propn_b0xyg3 * e0_propn_ida0e0b0xyg
     ####initial offs numbers
-    numbers_initial_ida0e0b0xyg3 = initial_yg3 * numbers_initial_cluster_ida0e0b0xyg3
+    numbers_initial_ida0e0b0xyg3 = np.maximum(0.00001, initial_yg3 * numbers_initial_cluster_ida0e0b0xyg3)
 
     ##set default numbers to initial numbers. So that p0 (dvp0) has numbers_start
     o_numbers_start_tpsire[...] = numbers_initial_zida0e0b0xyg0
