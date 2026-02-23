@@ -3247,17 +3247,20 @@ def f1_collapse_pointers(p, ebw, numbers, startw_unique_next, period_is_condense
     ## calculate the 'effective' number of groups used to calculate the end gap.
     ### If the effective number = startw_unique_next then the end_gap & the percentile_step will be evenly spaced
     ### The effective number is an adjustment on end_gap and tolerance, while the step is determined by startw_unique_next
-    weighting = 4   #A lower value is a more extreme adjustment
-    n_effective = startw_unique_next * (n_groups_collapsed / startw_unique_next) ** (1/weighting)
+    weighting_tolerance = 4   #A lower value is a more extreme adjustment
+    weighting_end = 1   #A lower value is a more extreme adjustment. This can be lower than the tolerance
+    n_effective_tolerance = startw_unique_next * (n_groups_collapsed / startw_unique_next) ** (1/weighting_tolerance)
+    n_effective_end = startw_unique_next * (n_groups_collapsed / startw_unique_next) ** (1/weighting_end)
 
     ##Calculate the end gap
-    end_gap = (max - min) / (2 * n_effective)
+    end_gap = (max - min) / (2 * n_effective_end)
     ##Calculate the step
     percentile_step = fun.f_divide((max - min) - 2 * end_gap, (startw_unique_next - 1), option=2)
     index_q = (index_wzida0e0b0xyg / len_w * startw_unique_next).astype(int)
     t_target_percentiles = 100 - ((100 - max) + end_gap + index_q * percentile_step)
-
-    tolerance = np.minimum(end_gap, percentile_step / 2)   #taking a minimum that includes percentile_step/2 ensures that they can't overlap
+    ##Calculate the tolerance
+    tolerance = (max - min) / (2 * n_effective_tolerance)
+    tolerance = np.minimum(tolerance, percentile_step / 2)   #taking a minimum that includes percentile_step/2 ensures that they can't overlap
 
     ##Arrange the percentiles in the order required for the w axis
     ##There are 2 options:

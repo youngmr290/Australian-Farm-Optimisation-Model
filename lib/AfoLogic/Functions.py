@@ -253,8 +253,18 @@ def f1_percentile_weighted(values, weights, axes):
     values_flat = values_moved.reshape(*rest_shape, n)
     weights_flat = weights_moved.reshape(*rest_shape, n)
 
-    # argsort values along packed axis
-    order = np.argsort(values_flat, axis=-1)
+    # # argsort values along packed axis
+    # order = np.argsort(values_flat, axis=-1)
+
+    #lexsort on both criteria, values (weight of the animals) ascending and separate ties based on weights (number of animals)
+    ##The tie breaker is largest groups first for lighter animals (< median weight) and largest groups last for the heavier animals
+    ##This means that the largest groups will be at the lower and higher end of the sort on values
+    median_v = np.median(values_flat)    #note: this is the median over all the groups, not just within the tuple of axes
+    direction = np.where(values_flat < median_v, -1, 1)
+    tie_breaker = direction * weights_flat
+
+    # Now sort by (weight ascending, tie_breaker ascending)
+    order = np.lexsort((tie_breaker, values_flat))
 
     # reorder weights
     weights_sorted = np.take_along_axis(weights_flat, order, axis=-1)
