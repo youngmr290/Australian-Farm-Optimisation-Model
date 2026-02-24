@@ -3136,9 +3136,13 @@ def f1_collapse_pointers(p, ebw, numbers, startw_unique_next, period_is_condense
     to represent in the next period. The w axis is always included even if the number of w in the next period is
     the same as the number of w in this period.
 
-    The function returns an array of pointers that can be used to create the production characteristics of the start animal.
-    The ebw of the start animals can then be used to calculate the distribution of animals from the end of one period
-    to the beginning of the next period.
+    Collapsing of the axes at prejoin selects the destination animal from across the w and a1, e1 & b1 axes. So,
+    if not scanning, the higher litter sizes will contribute to the lighter animals and drys and singles will
+    contribute to the heavier animals. A model with a y-axis that is active for reproduction could 'defacto scan',
+    culling on LW (w axis). Although differential management based on LW can be done in practice, in reality there
+    is a distribution of weight (within each class-dry,single,twin) so the split would be imprecise, whereas
+    in the generator of a N11 model all the animals of a given class are the same weight, so the generator could split
+    them accurately for LSLN based on LW and then get the benefit of the reproduction change across the y-axis.
 
     There are 3 parts to the calculations in the function
     Part A - calculate percentile rank within each collapsed group
@@ -3147,12 +3151,16 @@ def f1_collapse_pointers(p, ebw, numbers, startw_unique_next, period_is_condense
     Part C - Create pointers for entries in ebw that are within tolerance of the target percentiles.
     The approach is to calculate the percentile for each weight in ebw and then test if it is within the
     tolerance of any values in the target percentile array
-    #todo this approach which requires w by w array to be replaced with a searchsorted approach with 2w. See Debugging 3:pg 10
 
-    The function is complicated by the fact that period_is_joining and period_is_condese can differ across axes.
-    Therefore the axes being colapsed in a given P can vary between animals.
+    The function is complicated by the fact that period_is_joining and period_is_condense can differ across axes.
+    Therefore the axes being collapsed in a given P can vary between animals.
     This is the reason for all the f_updates.
 
+    The function returns an array of pointers that is used to create the production characteristics of the start animal.
+    The ebw of the start animals is used to calculate the distribution of animals from the end of one period
+    to the beginning of the next period.
+
+    Parameters:
     params ebw: ebw array with ineligible animals (mortality > threshold) set to nan
     params numbers: the estimated number of animals (numbers_end) used to weight the percentiles
     params startw_unique_next: the number of unique w in the next period. Note: unique w is reduced when condensing w.
