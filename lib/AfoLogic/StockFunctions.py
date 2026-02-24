@@ -3062,6 +3062,40 @@ def f1_period_start_prod2(pointers, index_unique_w, var, numbers, p_pos, w_pos, 
         var_start = fun.f_update(var_start, temporary, period_is_startdvp)
 
     ##b)collapse axes for new starting animal
+
+    #todo This representation doesn't adjust the starting animal based on the expected management of dry and empty dams
+    #review code below and connect up the extra args if deemed useful, or calculate the adjusted numbers in sgan and pass the adjusted numbers
+
+    # ### If the dams have been scanned or assessed for gbal then the number of drys is adjusted based on the estimated management
+    # ### The adjustment for drys has to be done to the production levels at prejoining rather than to numbers at scan or birth
+    # ###because adjusting numbers (although more intuitive) affects the apparent mortality of the drys.
+    # ### Note: this is different to the approach taken for the proportion of dams mated that is done in f_end_numbers
+    # ###at the beginning of the prejoin DVP which doesn't affect apparent mortality.
+    # if group==1 and np.any(period_is_prejoin):
+    #     ###inputs
+    #     # b1_pos = sinp.stock['i_b1_pos']
+    #     nfoet_b1 = fun.f_expand(sinp.stock['a_nfoet_b1'], b1_pos)
+    #     nyatf_b1 = fun.f_expand(sinp.stock['a_nyatf_b1'], b1_pos)
+    #     ewe_mated_b1 = fun.f_expand(sinp.stock['i_mated_b1'], b1_pos) * 1
+    #     ###scale numbers if empty ewes are expected to have been sold at scanning (in the generator we don't know if
+    #     ###drys are actually sold since pyomo optimises this, so this is just our best estimate)
+    #     ###The numbers in the dry slice are scaled by drysretained_scan, other slices, including NM, are unchanged
+    #     ###Build the scalar in steps
+    #     ewe_is_pregnant = nfoet_b1 > 0
+    #     ewe_is_not_empty = np.logical_or(ewe_is_pregnant, ~ewe_mated_b1)   #0 empty, 1 not mated or pregnant
+    #     scalar = np.logical_or(drysretained_scan, ewe_is_not_empty) * 1
+    #     temp = scalar * numbers
+    #     scaled_numbers = fun.f_update(numbers, temp, scan_management >= 1) # only scale numbers if scanning occurs
+    #     ###scale numbers if drys are expected to have been sold at birth (in the generator we don't know if
+    #     ###drys are actually sold since pyomo optimises this, so this is just our best estimate)
+    #     ###The numbers in the dry slice are scaled by drysretained_birth other slices including NM are unchanged
+    #     ###Build the scalar in steps
+    #     ewe_is_lactating = nyatf_b1 > 0
+    #     ewe_is_not_dry = np.logical_or(ewe_is_lactating, ~ewe_mated_b1)
+    #     scalar = np.logical_or(drysretained_birth, ewe_is_not_dry) * 1
+    #     temp = scalar * scaled_numbers
+    #     numbers = fun.f_update(scaled_numbers, temp, gbal >= 2)  # only scale numbers if differential management
+
     if np.any(np.logical_or(np.logical_or(period_is_startseason, period_is_prejoin), period_is_condense)):
         var_start = f1_collapse(pointers, index_unique_w, var_start, numbers, period_is_condense, period_is_startseason,
                           w_pos, z_pos, period_is_prejoin, prejoin_tup)
@@ -3136,9 +3170,13 @@ def f1_collapse_pointers(p, ebw, numbers, startw_unique_next, period_is_condense
     to represent in the next period. The w axis is always included even if the number of w in the next period is
     the same as the number of w in this period.
 
-    The function returns an array of pointers that can be used to create the production characteristics of the start animal.
-    The ebw of the start animals can then be used to calculate the distribution of animals from the end of one period
-    to the beginning of the next period.
+    Collapsing of the axes at prejoin selects the destination animal from across the w and a1, e1 & b1 axes. So,
+    if not scanning, the higher litter sizes will contribute to the lighter animals and drys and singles will
+    contribute to the heavier animals. A model with a y-axis that is active for reproduction could 'defacto scan',
+    culling on LW (w axis). Although differential management based on LW can be done in practice, in reality there
+    is a distribution of weight (within each class-dry,single,twin) so the split would be imprecise, whereas
+    in the generator of a N11 model all the animals of a given class are the same weight, so the generator could split
+    them accurately for LSLN based on LW and then get the benefit of the reproduction change across the y-axis.
 
     There are 3 parts to the calculations in the function
     Part A - calculate percentile rank within each collapsed group
@@ -3147,12 +3185,16 @@ def f1_collapse_pointers(p, ebw, numbers, startw_unique_next, period_is_condense
     Part C - Create pointers for entries in ebw that are within tolerance of the target percentiles.
     The approach is to calculate the percentile for each weight in ebw and then test if it is within the
     tolerance of any values in the target percentile array
-    #todo this approach which requires w by w array to be replaced with a searchsorted approach with 2w. See Debugging 3:pg 10
 
-    The function is complicated by the fact that period_is_joining and period_is_condese can differ across axes.
-    Therefore the axes being colapsed in a given P can vary between animals.
+    The function is complicated by the fact that period_is_joining and period_is_condense can differ across axes.
+    Therefore the axes being collapsed in a given P can vary between animals.
     This is the reason for all the f_updates.
 
+    The function returns an array of pointers that is used to create the production characteristics of the start animal.
+    The ebw of the start animals is used to calculate the distribution of animals from the end of one period
+    to the beginning of the next period.
+
+    Parameters:
     params ebw: ebw array with ineligible animals (mortality > threshold) set to nan
     params numbers: the estimated number of animals (numbers_end) used to weight the percentiles
     params startw_unique_next: the number of unique w in the next period. Note: unique w is reduced when condensing w.
@@ -3240,7 +3282,7 @@ def f1_collapse_pointers(p, ebw, numbers, startw_unique_next, period_is_condense
     n_groups = fun.f_update(n_groups, n_groups_season, period_is_seasonstart)
     n_groups = fun.f_update(n_groups, n_groups_prejoin, period_is_prejoin)
     n_groups = fun.f_update(n_groups, n_groups_prejoinseason, np.logical_and(period_is_prejoin, period_is_seasonstart))
-    n_groups_collapsed = np.maximum(startw_unique_next, n_groups)   # to catch if all numbers are 0.00001
+    n_groups_collapsed = np.maximum(startw_unique_next, n_groups)   # number of groups collapsed can't be less than the number groups next period
 
     ## calculate the 'effective' number of groups used to calculate the end gap.
     ### If the effective number = startw_unique_next then the end_gap & the percentile_step will be evenly spaced
@@ -3564,6 +3606,9 @@ def f1_period_end_nums(numbers, mortality, numbers_available=0, mortality_yatf=0
         slc_empty[a1_pos] = slice(0, 1)
         slc_empty[e1_pos] = slice(0, 1)
         slc_empty[b1_pos] = slice(b1_idx - 1, b1_idx)
+        # survival is b1[ia_prepost_b1] for use in calculating ewe numbers after lambing
+        slc_survival = [slice(None)] * numbers.ndim
+        slc_survival[b1_pos] = sinp.stock['ia_prepost_b1']
 
         ##a) Mortality for the 'available' b1 slice and the first e1 slice
         mortality_available = mortality[tuple(slc_available)]
@@ -3586,7 +3631,7 @@ def f1_period_end_nums(numbers, mortality, numbers_available=0, mortality_yatf=0
         if np.any(period_is_birth):
             dam_propn_birth_b1 = fun.f_comb(nfoet_b1, nyatf_b1) * (1 - mortality_yatf) ** nyatf_b1 * mortality_yatf ** (nfoet_b1 - nyatf_b1) # the proportion of dams of each LSLN based on (progeny) mortality
             ##have to average x axis so that it is not active for dams - times by gender propn to give approx weighting (ie because offs are not usually entire males so they will get low weighting)
-            temp = np.sum(dam_propn_birth_b1 * gender_propn_x, axis=sinp.stock['i_x_pos'], keepdims=True) * numbers[:,:,:,sinp.stock['ia_prepost_b1'],...]
+            temp = np.sum(dam_propn_birth_b1 * gender_propn_x, axis=sinp.stock['i_x_pos'], keepdims=True) * numbers[tuple(slc_survival)]
             numbers = fun.f_update(numbers, temp, period_is_birth)  # calculated in the period after birth when progeny mortality due to exposure is calculated
     return numbers, numbers_available
 
