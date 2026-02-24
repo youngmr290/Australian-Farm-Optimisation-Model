@@ -6346,6 +6346,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p + 1]
                     , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1]
                     , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1, period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1])
+                #todo 3 lines of temporary code for the Ewe Lamb project
+                ####Set the EBW in the random REV and reset the weight at birth
+                t_ebw_start_dams = ebw_start_dams.copy()
+                t_ebw_start_dams = sfun.f1_rev_update('random', t_ebw_start_dams, rev_trait_values['dams'][p])
+                ebw_start_dams = fun.f_update(ebw_start_dams, t_ebw_start_dams, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p])
                 ###normal weight	- yes this is meant to be updated from nw_start
                 nw_start_dams = sfun.f1_period_start_prod2(pointers_dams, index_unique_w_dams, nw_start_dams, numbers_end_dams, p_pos, w_pos, z_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p + 1]
