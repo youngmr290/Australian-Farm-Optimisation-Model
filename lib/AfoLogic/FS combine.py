@@ -50,10 +50,35 @@ import numpy as np
 import relativeFile
 
 
-##setup
-source_axis_slice = {}
-dest_axis_slice = {}
+def slices_to_str(array_name, slices):
+    """Convert a list of slice objects into a nice indexing string like arr1[2:5,1:4,:]"""
 
+    def fmt(s):
+        if s == slice(None):  # the most common case
+            return ':'
+
+        start = s.start if s.start is not None else ''
+        stop = s.stop if s.stop is not None else ''
+        step = s.step if s.step is not None else 1
+
+        if step == 1:  # step=1 is the default → omit it
+            if start == 0 and stop == '':
+                return ':'
+            elif start == 0:
+                return f':{stop}'
+            elif stop == '':
+                return f'{start}:'
+            else:
+                return f'{start}:{stop}'
+        else:  # explicit step
+            start_str = str(start) if start != 0 else ''
+            return f'{start_str}:{stop}:{step}'.strip(':') or ':'
+
+    parts = [fmt(sl) for sl in slices]
+    return f"{array_name}[{','.join(parts)}]"
+
+
+##setup
 s_pos = -17
 t_pos = -16
 p_pos = -15
@@ -77,16 +102,13 @@ g_pos = -1
 ## User inputs  #
 #################
 
-#Read the group (dams or offs) as an arg (read in as a string).
-group = sys.argv[1]  #the script path is the first value (0) hence take the second (1)
-
 ## define the levels for the destination of each of the 11 characteristics that define the feed supply.
 ### Note: the source is 'hardwired' in the loop below and can be any of the 11 characteristics
 ### alter these to suit the pkl_fs to be changed. Use lists because levels are looped
 ### arguments can be passed when the module is called if this is useful. variable = sys.argv[x]
 equations = [1]
 off_sales = [4]
-region = ast.literal_eval(sys.argv[2])   #the region(s) arg needs to be a list, literal_eval converts it from string to a list
+region = ast.literal_eval(sys.argv[1])   #the region(s) arg needs to be a list, literal_eval converts it from string to a list
 breed = [1, 2, 4]
 wbe = [0]  #note this is converted to a 2 digit string later
 tol = [1, 2, 3]
@@ -96,90 +118,143 @@ crop_grazing = [2]
 past_area = [0]
 age_joined = [1, 2, 3, 4, 5, 6]
 
-## Define the slices of the feedsupply that are to be copied
-### Note: Only one axis can be changed per run of the module, but multiple slices of that axis can be copied
-### The slices to copy are specified as tuples [start, stop, step].
-### There needs to be the same number of tuples for source and destination
+# ─────────────────────────────────────────────────────────────
+#   Configuration per group, defines the slices of the feedsupply that are to be copied.
+#   Blocks to be copied can be defined by multiple axes and multiple slices of the axes can be copied
+#   Multiple collections of axes and slices can be specified by appending numbers to the group name in GROUP_CONFIG
+#   Multiple collections are required if the axes to copy differ
+#   The slices of each axis to copy are specified as tuples (start, stop, step).
+#   Can provide a list of tuples, but there needs to be the same number of tuples for source and destination
+#   The slices can be defined to vary depending on the feedsupply eg vary with region and tol. This is controlled using lambda
+#   The number of slices specified for the source and destination need to be broadcastable.
+# ─────────────────────────────────────────────────────────────
 
-# ## the code below overwrites the triplet fs in the destination with the twin feedsupply from the source
-# ###the new feed supply is if scanned for triplets but didn't change triplet nutrition.
-# ###source is twins b1[3] and destination is LSLN 33 b1[4], 32 b1[6], 31 b1[7] and 30 b1[10]
-# axis = b1_pos
-# dest_axis_slice[axis]   = [(4, 5, 1), (6, 8, 1), (10, 11, 1)]  # must be unique slices.
-# source_axis_slice[axis] = [(3, 4, 1), (3, 4, 1), (3, 4, 1)]  # same number of slices as destination (a slice can be repeated and copied to multiple destination slices).
+# the config below copies from source to destination:
+# 1. the not mated fs of ewe lamb dams b[0:1] in all p[0:]
+# 2. mated dams b[1:] in periods after 100ish, with the period varying with region & tol based on p_slices.
+# 3. offspring for 2 tooths and adults d[1:] without specifying p.
+#
+# The date of 2 tooth joining and hence the slices for the p axis (second axis) varies with region and tol.
+#Note: The pointer to the array is region and TOL value, not the position in the list. i.e. Region 4 is the 4th slice
 
-# the code below overwrites the mated fs of ewe lambs in the destination with mated fs from the source
-## the source is the fs for mated ewe lambs and the destination is the fs when ewe lambs are not mated (age_join==6)
-###source & destination is mated b1[1:] for the periods up to 2 tooth joining (0 to 100ish)
-copy_axis1 = b1_pos
-copy_axis2 = p_pos
-dest_axis_slice[copy_axis1]   = [(1, None, 1)]  # If not unique the later of the matching source slice will prevail. Can add more tuples to the list
-source_axis_slice[copy_axis1] = [(1, None, 1)]  # same number of slices as destination (a slice can be repeated and copied to multiple destination slices).
+GROUP_CONFIG = {
+    "dams1": {
+        "axes": [b1_pos, p_pos],
+        "slice_defs": {
+            b1_pos: {
+                "dest": [(0, 1, 1), (1, None, 1)],
+                "source": [(0, 1, 1), (1, None, 1)],
+            },
+            p_pos: {
+                "dest": lambda region, tol: [(0, None, 1), (p_slices[region-1][tol-1], None, 1)],
+                "source": lambda region, tol: [(0, None, 1), (p_slices[region-1][tol-1], None, 1)],
+            }
+        },
+        "p_slices": [[100, 108, 114], [102, 107, 112], [100, 105, 110], [100, 105, 110]],
+    },
+    "offs1": {
+        "axes": [d_pos],
+        "slice_defs": {
+            d_pos: {
+                "dest": [(1, None, 1)],
+                "source": [(1, None, 1)],
+            }
+        },
+        # no p_slices needed
+    }
+}
 
-# The date of 2 tooth joining and hence the slices for the p axis (copy_axis_2) vary with region and tol.
-p_slices = [[100,108,114],[102,107,112],[100,105,110]]
+# ─────────────────────────────────────────────────────────────────────────
+#   Main logic – one loop for both groups & only one read/write per pkl_fs
+# ─────────────────────────────────────────────────────────────────────────
+
+if not GROUP_CONFIG:
+    print(f"No groups defined in GROUP_CONFIG.")
+    sys.exit(1)
 
 count = 0
 
-#Loop through the 11 characteristics (defined above) to define the source, destination and new feedsupply
 param_lists = [equations, off_sales, region, breed, wbe, tol, scan, meat_price, crop_grazing, past_area, age_joined]
-for n_eqn, n_os, n_region, n_breed, n_wbe, n_tol, n_scan, n_mp, n_cg, n_past, n_age in itertools.product(*param_lists):
-    p_slice = p_slices[n_region-1][n_tol-1]
-    dest_axis_slice[copy_axis2] = [(0, p_slice, 1)]
-    source_axis_slice[copy_axis2] = [(0, p_slice, 1)]
 
-    ## 'Hard wire' the difference for the name of the destination feedsupply in this code.
-    ## the code below uses age_joined 6 as the destination
+for params in itertools.product(*param_lists):
+    n_eqn, n_os, n_region, n_breed, n_wbe, n_tol, n_scan, n_mp, n_cg, n_past, n_age = params
+
+    ## Build pkl_fs numbers. Change destination and/or source
+    ### 'Hard wire' the difference for the name of the destination feedsupply in this code.
+    ### the code below uses age_joined 6 as the source and appends '2' to create the new name
     fs_dest_number = (str(n_eqn) + str(n_os) + str(n_region) + str(n_breed)
                       + f'{n_wbe:02d}' + str(n_tol) + str(n_scan) + str(n_mp)
-                      + str(n_cg) + str(n_past) + str(6))
+                      + str(n_cg) + str(n_past) + str(n_age))
     fs_source_number = (str(n_eqn) + str(n_os) + str(n_region) + str(n_breed)
                         + f'{n_wbe:02d}' + str(n_tol) + str(n_scan) + str(n_mp)
-                        + str(n_cg) + str(n_past) + str(n_age))
-    ## The new name is similar to the source name with '2' appended
-    fs_new_number = (str(n_eqn) + str(n_os) + str(n_region) + str(n_breed)
-                     + f'{n_wbe:02d}' + str(n_tol) + str(n_scan) + str(n_mp)
-                     + str(n_cg) + str(n_past) + str(n_age)) + str(2)
+                        + str(n_cg) + str(n_past) + str(6))
+    fs_new_number = fs_dest_number + str(2)
 
-    #################
-    ## calcs        #
-    #################
+    # ── Load files ─────────────────────────────────────────────────────────────────────────────────────
+    src_path = relativeFile.find(__file__, "../../pkl", f"pkl_fs{fs_source_number}.pkl")
+    with open(src_path, "rb") as f:
+        full_source = pkl.load(f)
 
-    ##read in both fs and retain the feedsupply for the target group
-    pkl_fs_path = relativeFile.find(__file__, "../../pkl", f"pkl_fs{fs_source_number}.pkl")
-    with open(pkl_fs_path, "rb") as f:
-        fs_source = pkl.load(f)['fs'][group]
-    pkl_fs_path = relativeFile.find(__file__, "../../pkl", f"pkl_fs{fs_dest_number}.pkl")
-    with open(pkl_fs_path, "rb") as f:
+    dest_path = relativeFile.find(__file__, "../../pkl", f"pkl_fs{fs_dest_number}.pkl")
+    with open(dest_path, "rb") as f:
         full_dest = pkl.load(f)
-        fs_dest = full_dest['fs'][group]
-        # create a shallow copy of the full dictionary, then deep copy only the target array
-        fs_new = copy.copy(full_dest)
-        fs_new['fs'] = copy.copy(full_dest['fs'])
-        fs_dest = np.copy(fs_dest)  # work on a copy of the array to modify
 
-    ##manipulate fs to create new fs
-    axes = list(source_axis_slice.keys())
-    if axes:
-        num_copies = len(source_axis_slice[axes[0]])
-        # All axes must have the same number of slice tuples otherwise this will throw and error
-        for i in range(num_copies):
-            sl_dest = [slice(None)] * fs_dest.ndim
+    #create a copy to work on
+    full_new = copy.deepcopy(full_dest)
+
+    # ── Process each group using the loaded data ────────────────────────
+    for group_name, config in GROUP_CONFIG.items():
+        group = group_name[:4]   #remove any identifier from end of the name. The identifier allows multiple collections of axes per group
+        fs_new = full_new['fs'][group]
+        fs_source = full_source['fs'][group]
+        axes_to_copy = config["axes"]
+        slice_defs = config["slice_defs"]
+        p_slices = config.get("p_slices")  # may be None for some groups
+
+        num_operations = None
+        axis_slices_dest = {}
+        axis_slices_src  = {}
+
+        for axis in axes_to_copy:
+            spec = slice_defs[axis]
+
+            if callable(spec["dest"]):  # dynamic (e.g. p_pos in dams)
+                dest_list = spec["dest"](n_region, n_tol)
+                src_list  = spec["source"](n_region, n_tol)
+            else:
+                dest_list = spec["dest"]
+                src_list  = spec["source"]
+
+            axis_slices_dest[axis] = dest_list
+            axis_slices_src[axis]  = src_list
+
+        if num_operations is None:
+            num_operations = len(dest_list)
+        if len(dest_list) != num_operations or len(src_list) != num_operations:
+            raise ValueError(f"Inconsistent number of slices for axis {axis} in {group_name}")
+
+        # ── Apply all copy operations ─────────────────────────────────────────────
+        for i in range(num_operations):
+            sl_dest = [slice(None)] * fs_new.ndim
             sl_source = [slice(None)] * fs_source.ndim
-            for axis in axes:
-                start, stop, step = dest_axis_slice[axis][i]
-                sl_dest[axis] = slice(start, stop, step)
-                start, stop, step = source_axis_slice[axis][i]
-                sl_source[axis] = slice(start, stop, step)
-            ###update
-            fs_dest[tuple(sl_dest)] = fs_source[tuple(sl_source)]
-    fs_new['fs'][group] = fs_dest
 
-    ##save new fs
-    pkl_fs_path = relativeFile.find(__file__, "../../pkl", 'pkl_fs{0}.pkl'.format(fs_new_number))
-    with open(pkl_fs_path, "wb") as f:
-        pkl.dump(fs_new, f)
-    count = count + 1
+            for axis in axes_to_copy:
+                sl_dest[axis] = slice(*axis_slices_dest[axis][i])
+                sl_source[axis] = slice(*axis_slices_src[axis][i])
 
-print(f'{count} new pkl_fs created.')
+            fs_new[tuple(sl_dest)] = fs_source[tuple(sl_source)]
+
+            # Optional progress update
+            print(f"{count} {group_name.upper()} Copied  pkl_fs{fs_source_number} "
+                  f"{slices_to_str('fs_source', sl_source)}  →  "
+                  f"pkl_fs{fs_dest_number} {slices_to_str('fs_dest', sl_dest)}")
+
+    # ── Save ─────────────────────────────────────────────────────────────────────────────────────────
+    new_path = relativeFile.find(__file__, "../../pkl", f"pkl_fs{fs_new_number}.pkl")
+    with open(new_path, "wb") as f:
+        pkl.dump(full_new, f)
+
+    count += 1
+
+print(f"{count} new pkl_fs created.")
 
