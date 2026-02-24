@@ -3062,6 +3062,40 @@ def f1_period_start_prod2(pointers, index_unique_w, var, numbers, p_pos, w_pos, 
         var_start = fun.f_update(var_start, temporary, period_is_startdvp)
 
     ##b)collapse axes for new starting animal
+
+    #todo This representation doesn't adjust the starting animal based on the expected management of dry and empty dams
+    #review code below and connect up the extra args if deemed useful, or calculate the adjusted numbers in sgan and pass the adjusted numbers
+
+    # ### If the dams have been scanned or assessed for gbal then the number of drys is adjusted based on the estimated management
+    # ### The adjustment for drys has to be done to the production levels at prejoining rather than to numbers at scan or birth
+    # ###because adjusting numbers (although more intuitive) affects the apparent mortality of the drys.
+    # ### Note: this is different to the approach taken for the proportion of dams mated that is done in f_end_numbers
+    # ###at the beginning of the prejoin DVP which doesn't affect apparent mortality.
+    # if group==1 and np.any(period_is_prejoin):
+    #     ###inputs
+    #     # b1_pos = sinp.stock['i_b1_pos']
+    #     nfoet_b1 = fun.f_expand(sinp.stock['a_nfoet_b1'], b1_pos)
+    #     nyatf_b1 = fun.f_expand(sinp.stock['a_nyatf_b1'], b1_pos)
+    #     ewe_mated_b1 = fun.f_expand(sinp.stock['i_mated_b1'], b1_pos) * 1
+    #     ###scale numbers if empty ewes are expected to have been sold at scanning (in the generator we don't know if
+    #     ###drys are actually sold since pyomo optimises this, so this is just our best estimate)
+    #     ###The numbers in the dry slice are scaled by drysretained_scan, other slices, including NM, are unchanged
+    #     ###Build the scalar in steps
+    #     ewe_is_pregnant = nfoet_b1 > 0
+    #     ewe_is_not_empty = np.logical_or(ewe_is_pregnant, ~ewe_mated_b1)   #0 empty, 1 not mated or pregnant
+    #     scalar = np.logical_or(drysretained_scan, ewe_is_not_empty) * 1
+    #     temp = scalar * numbers
+    #     scaled_numbers = fun.f_update(numbers, temp, scan_management >= 1) # only scale numbers if scanning occurs
+    #     ###scale numbers if drys are expected to have been sold at birth (in the generator we don't know if
+    #     ###drys are actually sold since pyomo optimises this, so this is just our best estimate)
+    #     ###The numbers in the dry slice are scaled by drysretained_birth other slices including NM are unchanged
+    #     ###Build the scalar in steps
+    #     ewe_is_lactating = nyatf_b1 > 0
+    #     ewe_is_not_dry = np.logical_or(ewe_is_lactating, ~ewe_mated_b1)
+    #     scalar = np.logical_or(drysretained_birth, ewe_is_not_dry) * 1
+    #     temp = scalar * scaled_numbers
+    #     numbers = fun.f_update(scaled_numbers, temp, gbal >= 2)  # only scale numbers if differential management
+
     if np.any(np.logical_or(np.logical_or(period_is_startseason, period_is_prejoin), period_is_condense)):
         var_start = f1_collapse(pointers, index_unique_w, var_start, numbers, period_is_condense, period_is_startseason,
                           w_pos, z_pos, period_is_prejoin, prejoin_tup)
