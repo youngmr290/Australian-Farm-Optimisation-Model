@@ -626,6 +626,7 @@ def create_sa():
     sav['min_propn_twins_sold_og1'] = np.full((len_d,) + pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #SA to control the proportion of twins sold (used to approximate sale of dry ewes)
     sav['bnd_total_dams'] = '-'   #control the total number of dams at prejoining
     sav['bnd_fs_opt_inc'] = False   #control if dam and offs lower bound, propn mated and propn sold is included. Only used for FS optimisation trials.
+    sav['partial_n11'] = False   #control if the fs_opt is adjusted to be N11 for some classes and periods.
     sav['bnd_lo_dam_inc'] = '-'   #control if dam lower bound is on.
     sav['bnd_lo_dams_tog1'] = np.full((len_t1,) + (len_d,) + (len_g1,), '-', dtype=object)   #min number of dams
     sav['bnd_lo_dams_tVg1'] = np.full((len_t1,) + (len_V,) + (len_g1,), '-', dtype=object)   #min number of dams
