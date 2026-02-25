@@ -46,36 +46,10 @@ import copy
 import ast
 import itertools
 import numpy as np
+import Functions as fun
 
 import relativeFile
 
-
-def slices_to_str(array_name, slices):
-    """Convert a list of slice objects into a nice indexing string like arr1[2:5,1:4,:]"""
-
-    def fmt(s):
-        if s == slice(None):  # the most common case
-            return ':'
-
-        start = s.start if s.start is not None else ''
-        stop = s.stop if s.stop is not None else ''
-        step = s.step if s.step is not None else 1
-
-        if step == 1:  # step=1 is the default → omit it
-            if start == 0 and stop == '':
-                return ':'
-            elif start == 0:
-                return f':{stop}'
-            elif stop == '':
-                return f'{start}:'
-            else:
-                return f'{start}:{stop}'
-        else:  # explicit step
-            start_str = str(start) if start != 0 else ''
-            return f'{start_str}:{stop}:{step}'.strip(':') or ':'
-
-    parts = [fmt(sl) for sl in slices]
-    return f"{array_name}[{','.join(parts)}]"
 
 
 ##setup
@@ -85,7 +59,7 @@ p_pos = -15
 a1_pos = -14
 e1_pos = -13
 b1_pos = -12
-n_pos = -11
+n_pos = -11    #Note: in the fs_pkl it is the n axis rather than w axis that has the options
 w_pos = -10
 z_pos = -9
 i_pos = -8
@@ -246,8 +220,8 @@ for params in itertools.product(*param_lists):
 
             # Optional progress update
             print(f"{count} {group_name.upper()} Copied  pkl_fs{fs_source_number} "
-                  f"{slices_to_str('fs_source', sl_source)}  →  "
-                  f"pkl_fs{fs_dest_number} {slices_to_str('fs_dest', sl_dest)}")
+                  f"{fun.f1_slices_to_str('fs_source', sl_source)}  →  "
+                  f"pkl_fs{fs_dest_number} {fun.f1_slices_to_str('fs_dest', sl_dest)}")
 
     # ── Save ─────────────────────────────────────────────────────────────────────────────────────────
     new_path = relativeFile.find(__file__, "../../pkl", f"pkl_fs{fs_new_number}.pkl")
