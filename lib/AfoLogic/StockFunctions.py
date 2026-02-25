@@ -3582,8 +3582,9 @@ def f1_period_end_nums(numbers, mortality, numbers_available=0, mortality_yatf=0
     It reflects the proportion of the dams that are expected to be mated but are yet to be pregnant.
     '''
 
-    ##a) mortality (include np.maximum on mortality so that numbers can't become negative)
-    numbers = numbers * np.maximum(0, 1-mortality)
+    ##a) mortality (include np.maximum to ensure always some animals surviving, so that numbers can't become zero)
+    survival = np.maximum(0.01, 1-mortality)
+    numbers = numbers * survival    #NOte: can't do the maximum(0.00001) her because that would affect the mort_mask
 
     ##calculations for dams - prejoining and moving between classes
     if group==1:

@@ -5610,7 +5610,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             mortality_dams, numbers_available_mating_dams, mortality_yatf=mortality_birth_yatf,
                             nfoet_b1=nfoet_b1nwzida0e0b0xyg, nyatf_b1=nyatf_b1nwzida0e0b0xyg, group=1,
                             prejoin_tup=prejoin_tup, conception=conception_dams, gender_propn_x=gender_propn_xyg,
-                            period_is_join = period_is_join_pa1e1b1nwzida0e0b0xyg1[p],
+                            period_is_join = period_is_join_pa1e1b1nwzida0e0b0xyg1[p]
+                               * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p],
                             period_is_mating = period_is_mating_pa1e1b1nwzida0e0b0xyg1[p],
                             period_is_matingend=period_is_matingend_pa1e1b1nwzida0e0b0xyg1[p], period_is_birth = period_is_birth_pa1e1b1nwzida0e0b0xyg1[p],
                             period_isbetween_prejoinmatingend=period_isbetween_prejoinmatingend_pa1e1b1nwzida0e0b0xyg1[p],
@@ -8813,7 +8814,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ####Only different from the total because it excludes those providing to the same period
     numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 = (numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9
                                                             - numbers_provthis_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9)
-    ###at prejoining make all k28 animals provide k29[nm] - except the first prejoining (ewe lamb) when the selection of NM/mating can occur in the prog2dams constraint.
+    ###at prejoining make all k28 animals provide k29[nm] - except the first prejoining (ewe lambs)
+    ###when the selection of NM/mating can occur in the prog2dams constraint.
     ### Early selection ensure the feedsupply for b[2] (b11) in dvp[0] represents an animal that is mated.
     ### This is also represented in the generator.
     ### However, it is optional because in the DSP including flexibility would allow the mating decision to be delayed until after a summer node (if included).
