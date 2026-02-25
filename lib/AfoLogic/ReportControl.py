@@ -723,7 +723,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         keys = 'dams_keys_qsk2tvanwziy1g1'
         arith = f_update_default_controls(user_controls, 'nv_dams', 'arith', 1)
         index = f_update_default_controls(user_controls, 'nv_dams', 'index', [4])      #DVP
-        cols = f_update_default_controls(user_controls, 'nv_dams', 'cols', [2]) #k2
+        cols = f_update_default_controls(user_controls, 'nv_dams', 'cols', [2,3]) #k2 & t Temporary change for EL
         axis_slice = f_update_default_controls(user_controls, 'nv_dams', 'axis_slice', {})
         reports["nv_dams"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
