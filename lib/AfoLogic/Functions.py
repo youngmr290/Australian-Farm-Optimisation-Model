@@ -1700,3 +1700,33 @@ def f1_lmuregion_to_lmufarmer(dict, key1, a_lmuregion_lmufarmer, lmu_axis, lmu_f
     else:
         dict[key1] = np.take_along_axis(dict[key1], a_lmuregion_lmufarmer, lmu_axis)
 
+def f1_slices_to_str(array_name, slices):
+    """
+    Convert a list of slice objects into an indexing string like arr1[2:5,1:4,:]
+    Useful for reporting action carried out on blocks within multi-dimensional arrays
+    """
+
+    def fmt(s):
+        if s == slice(None):  # the most common case
+            return ':'
+
+        start = s.start if s.start is not None else ''
+        stop = s.stop if s.stop is not None else ''
+        step = s.step if s.step is not None else 1
+
+        if step == 1:  # step=1 is the default → omit it
+            if start == 0 and stop == '':
+                return ':'
+            elif start == 0:
+                return f':{stop}'
+            elif stop == '':
+                return f'{start}:'
+            else:
+                return f'{start}:{stop}'
+        else:  # explicit step
+            start_str = str(start) if start != 0 else ''
+            return f'{start_str}:{stop}:{step}'.strip(':') or ':'
+
+    parts = [fmt(sl) for sl in slices]
+    return f"{array_name}[{','.join(parts)}]"
+
