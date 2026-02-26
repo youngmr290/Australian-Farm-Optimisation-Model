@@ -1568,14 +1568,14 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     a_n_pa1e1b1nwzida0e0b0xyg3 = (np.trunc(index_wzida0e0b0xyg3 / (n_fs_offs ** ((n_fvps_percondense_offs-1) - n_prior_fvps_pa1e1b1nwzida0e0b0xyg3))) % n_fs_offs).astype(int) #needs to be int so it can be an indice
 
     ##Temporary code for ewe lamb feed supply optimisation to convert N33 to N11 for some classes of animals in some periods.
-    if sav['partial_n11']:   #limit some slices of the fe_opt to only have N11 so the fs doesn't change for these classes and periods.
+    if sen.sav['partial_n11']:   #limit some slices of the fe_opt to only have N11 so the fs doesn't change for these classes and periods.
         ### Create an array that is the period of prejoining for 2-tooth ewes because after prejoining all dams are N11
         period_pj_2tooth = prejoining_oa1e1b1nwzida0e0b0xyg1[1]/7
         ###Set association for dams to zero for NM (index_b==0) in all p and all dams in periods after 2 tooth prejoining
         a_n_pa1e1b1nwzida0e0b0xyg1 = fun.f_update(a_n_pa1e1b1nwzida0e0b0xyg1, 0
                         , np.logical_or(index_b1nwzida0e0b0xyg == 0, p_index_pa1e1b1nwzida0e0b0xyg >= period_pj_2tooth))
         ###Set association for offs to zero for offspring of 2tooths and adults (index_d > 0)
-        a_n_pa1e1b1nwzida0e0b0xyg3 = fun.f_update(a_n_pa1e1b1nwzida0e0b0xyg1, 0, index_da0e0b0xyg > 0)
+        a_n_pa1e1b1nwzida0e0b0xyg3 = fun.f_update(a_n_pa1e1b1nwzida0e0b0xyg3, 0, index_da0e0b0xyg > 0)
 
     #######################
     ##Age, date, timing 1 #
