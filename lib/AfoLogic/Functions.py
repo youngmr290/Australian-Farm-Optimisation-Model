@@ -154,9 +154,9 @@ def f1_searchsorted_looped(a, v, axis, side='left'):
     return result
 
 
-def f1_unique_count(a, axes, weights=None, threshold=0.0):
+def f1_unique_count(a, axes, weights=None, threshold=0.0, atol=0.0):
     """
-    Count unique values along given axes.
+    Count unique values along given axes with the unique values calculated with a tolerance.
     Values whose relative weight < threshold are excluded.
 
     Parameters
@@ -168,6 +168,9 @@ def f1_unique_count(a, axes, weights=None, threshold=0.0):
         Broadcastable to a. If None, equal weights assumed.
     threshold : float
         Mask out entries with relative weight < threshold.
+    atol : float
+        Absolute tolerance for the differences.
+        Note: values that are close together can still be counted as unique if they fall either side of the integer comparison
 
     Returns
     -------
@@ -207,7 +210,11 @@ def f1_unique_count(a, axes, weights=None, threshold=0.0):
     for i in range(flat.shape[1]):
         col = flat[:, i]
         col = col[~np.isnan(col)]  # ignore masked values
-        counts[i] = np.unique(col).size
+        #implement the tolerance by dividing by atol and converting to an int (int is quicker for unique than a rounded float)
+        if atol == 0:
+            counts[i] = np.unique(col).size
+        else:
+            counts[i] = np.unique((col // atol).astype(int)).size
 
     counts = counts.reshape(rest_shape)
 
