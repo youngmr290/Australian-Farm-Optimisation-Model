@@ -6243,9 +6243,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 if np.any(period_is_startseason_pa1e1b1nwzida0e0b0xyg[p + 1]):
                     #add 1 if not first period of fvp because the start animals branch out.
                     exp = 0
-                    startw_unique_next = w_start_len0 * (n_fs_sire ** exp)
+                    n_startw_unique_next = w_start_len0 * (n_fs_sire ** exp)
                     
-                    pointers_sire, index_unique_w_sire = sfun.f1_collapse_pointers(p, ebw_sire, numbers_end_sire, startw_unique_next,
+                    pointers_sire, index_unique_w_sire = sfun.f1_collapse_pointers(p, ebw_sire, numbers_end_sire, n_startw_unique_next,
                                                               False, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p + 1],
                                                               lw_initial_a1e1b1nwzida0e0b0xyg0)
 
@@ -6262,9 +6262,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                         period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p + 1])):
                     #add 1 if not first period of fvp because the start animals branch out.
                     exp = n_prior_fvps_pa1e1b1nwzida0e0b0xyg1[p+1] + np.where(period_is_startfvp_pa1e1b1nwzida0e0b0xyg1[p+1], 0, 1)
-                    startw_unique_next = w_start_len1 * (n_fs_dams ** exp)
+                    n_startw_unique_next = w_start_len1 * (n_fs_dams ** exp)
                     
-                    pointers_dams, index_unique_w_dams = sfun.f1_collapse_pointers(p, ebw_dams, numbers_end_dams, startw_unique_next,
+                    pointers_dams, index_unique_w_dams = sfun.f1_collapse_pointers(p, ebw_dams, numbers_end_dams, n_startw_unique_next,
                                                               period_is_condense_pa1e1b1nwzida0e0b0xyg1[p + 1],
                                                               period_is_startseason_pa1e1b1nwzida0e0b0xyg[p + 1],
                                                               lw_initial_a1e1b1nwzida0e0b0xyg1, period_is_prejoin=
@@ -6288,9 +6288,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 if np.any(np.logical_or(period_is_condense_pa1e1b1nwzida0e0b0xyg3[p + 1], period_is_startseason_pa1e1b1nwzida0e0b0xyg[p + 1])):
                     #add 1 if not first period of fvp because the start animals branch out.
                     exp = n_prior_fvps_pa1e1b1nwzida0e0b0xyg3[p+1] + np.where(period_is_startfvp_pa1e1b1nwzida0e0b0xyg3[p+1], 0, 1)
-                    startw_unique_next_offs = w_start_len3 * (n_fs_offs ** exp)
+                    n_startw_unique_next_offs = w_start_len3 * (n_fs_offs ** exp)
 
-                    pointers_offs, index_unique_w_offs = sfun.f1_collapse_pointers(p, ebw_offs, numbers_end_offs, startw_unique_next_offs,
+                    pointers_offs, index_unique_w_offs = sfun.f1_collapse_pointers(p, ebw_offs, numbers_end_offs, n_startw_unique_next_offs,
                           period_is_condense_pa1e1b1nwzida0e0b0xyg3[p + 1], period_is_startseason_pa1e1b1nwzida0e0b0xyg[p + 1],
                           lw_initial_a1e1b1nwzida0e0b0xyg3)
 
