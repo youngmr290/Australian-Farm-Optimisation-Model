@@ -2867,7 +2867,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
         muscle_start_sire = muscle_initial_wzida0e0b0xyg0
         viscera_start_sire = viscera_initial_wzida0e0b0xyg0
         nw_start_sire = 0 #no dimensions to start
-        temp_lc_sire = np.array([0.0]) #this is calculated in the chill function, but it is required for the intake function so it is set to 0 for the first period.
+        temp_lc_start_sire = np.array([15.0]) #this is calculated in the chill function, but it is required for the intake function so it is set to 0 for the first period.
         numbers_start_sire = numbers_initial_zida0e0b0xyg0
         numbers_at_condense_sire = numbers_initial_zida0e0b0xyg0 #just need a default because this is processed using update function.
         md_solid_sire = np.array([12.0])  # need a start value to convert ebw_initial to ffcfw
@@ -2914,7 +2914,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
         muscle_start_dams = muscle_initial_wzida0e0b0xyg1
         viscera_start_dams = viscera_initial_wzida0e0b0xyg1
         nw_start_dams = np.array([0.0])
-        temp_lc_dams = np.array([0.0]) #this is calculated in the chill function, but it is required for the intake function so it is set to 0 for the first period.
+        temp_lc_start_dams = np.array([15.0]) #this is calculated in the chill function, but it is required for the intake function so it is set to 0 for the first period.
         numbers_start_dams = numbers_initial_a1e1b1nwzida0e0b0xyg1
         numbers_available_mating_dams = 0  #need an initial value to pass to the function the first time
         numbers_at_condense_dams = numbers_initial_a1e1b1nwzida0e0b0xyg1 #just need a default because this is processed using update function.
@@ -2935,7 +2935,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
         ffcfw_max_start_yatf = ffcfw_start_yatf
         mortality_birth_yatf=0.0 #required for dam numbers before progeny born
         cfw_start_yatf = 0.0
-        temp_lc_yatf = np.array([0.0]) #this is calculated in the chill function, but it is required for the intake function so it is set to 0 for the first period.
+        temp_lc_start_yatf = np.array([15.0]) #this is calculated in the chill function, but it is required for the intake function so it is set to 0 for the first period.
         numbers_start_yatf = nyatf_b1nwzida0e0b0xyg * gender_propn_xyg   # nyatf is accounting for peri-natal mortality. But doesn't include the differential mortality of female and male offspring at birth
         numbers_at_condense_yatf = numbers_start_yatf #just need a default because this is processed using update function.
         numbers_end_yatf = 0.0 #need a default because this is required in f_start[p+1] prior to being assigned.
@@ -2966,7 +2966,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
         muscle_start_offs = muscle_initial_wzida0e0b0xyg3
         viscera_start_offs = viscera_initial_wzida0e0b0xyg3
         nw_start_offs = 0.0
-        temp_lc_offs = np.array([0.0]) #this is calculated in the chill function, but it is required for the intake function so it is set to 0 for the first period.
+        temp_lc_start_offs = np.array([15.0]) #this is calculated in the chill function, but it is required for the intake function so it is set to 0 for the first period.
         numbers_start_offs = numbers_initial_ida0e0b0xyg3
         numbers_at_condense_offs = numbers_initial_ida0e0b0xyg3 #just need a default because this is processed using update function.
         md_solid_offs = np.array([12.0])  # need a start value to convert ebw_initial to ffcfw
@@ -2995,10 +2995,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
             fat_start_yatf = ffcfw_start_yatf * stubble['i_fat_yatf']
             muscle_start_yatf = ffcfw_start_yatf * stubble['i_muscle_yatf']
             viscera_start_yatf = ffcfw_start_yatf * stubble['i_viscera_yatf']
-
-            ##offs
-            nw_start_offs = 0.0
-            temp_lc_offs = np.array([0.0])  # this is calculated in the chill function, but it is required for the intake function so it is set to 0 for the first period.
 
         ##Calculate the beginning ebw for yatf for either main model or stubble - use p[0] (p axis can be active due to rev)
         ebw_start_yatf = sfun.f1_ffcfw2ebw(cg_yatf, cn_yatf, ffcfw_start_yatf, srw_pa1e1b1nwzida0e0b0xyg2[0], md_solid_yatf
@@ -3331,7 +3327,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     ###sire
                     eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
-                        temp0 = sfun.f_potential_intake_cs(ci_sire, srw_pa1e1b1nwzida0e0b0xyg0[p_srw], relsize_start_sire, rc_start_sire, temp_lc_sire
+                        temp0 = sfun.f_potential_intake_cs(ci_sire, srw_pa1e1b1nwzida0e0b0xyg0[p_srw], relsize_start_sire, rc_start_sire, temp_lc_start_sire
                                                            , temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
                                                            , temp_min_pa1e1b1nwzida0e0b0xyg[p], rain_intake_pa1e1b1nwzida0e0b0xyg0[p]
                                                            , rev_trait_values['sire'][p], sam_pi = sam_pi_sire)
@@ -3342,7 +3338,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     ###dams
                     eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                        temp0 = sfun.f_potential_intake_cs(ci_dams, srw_pa1e1b1nwzida0e0b0xyg1[p_srw], relsize_start_dams, rc_start_dams, temp_lc_dams
+                        temp0 = sfun.f_potential_intake_cs(ci_dams, srw_pa1e1b1nwzida0e0b0xyg1[p_srw], relsize_start_dams, rc_start_dams, temp_lc_start_dams
                                                            , temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
                                                            , temp_min_pa1e1b1nwzida0e0b0xyg[p], rain_intake_pa1e1b1nwzida0e0b0xyg1[p]
                                                            , rev_trait_values['dams'][p], rc_birth_start = rc_birth_dams
@@ -3355,7 +3351,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     ###offs
                     eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
-                        temp0 = sfun.f_potential_intake_cs(ci_offs, srw_pa1e1b1nwzida0e0b0xyg3[p_srw], relsize_start_offs, rc_start_offs, temp_lc_offs
+                        temp0 = sfun.f_potential_intake_cs(ci_offs, srw_pa1e1b1nwzida0e0b0xyg3[p_srw], relsize_start_offs, rc_start_offs, temp_lc_start_offs
                                                            , temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
                                                            , temp_min_pa1e1b1nwzida0e0b0xyg[p], rain_intake_pa1e1b1nwzida0e0b0xyg3[p]
                                                            , rev_trait_values['offs'][p], sam_pi = sam_pi_offs)
@@ -4728,7 +4724,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
-                    temp0 = sfun.f_potential_intake_cs(ci_yatf, srw_pa1e1b1nwzida0e0b0xyg2[p_srw], relsize_start_yatf, rc_start_yatf, temp_lc_yatf
+                    temp0 = sfun.f_potential_intake_cs(ci_yatf, srw_pa1e1b1nwzida0e0b0xyg2[p_srw], relsize_start_yatf, rc_start_yatf, temp_lc_start_yatf
                                         , temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
                                         , temp_min_pa1e1b1nwzida0e0b0xyg[p], rain_intake_pa1e1b1nwzida0e0b0xyg2[p]
                                         , rev_trait_values['yatf'][p], piyf = piyf_pa1e1b1nwzida0e0b0xyg2[p]
@@ -6252,9 +6248,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 if np.any(period_is_startseason_pa1e1b1nwzida0e0b0xyg[p + 1]):
                     #add 1 if not first period of fvp because the start animals branch out.
                     exp = 0
-                    startw_unique_next = w_start_len0 * (n_fs_sire ** exp)
+                    n_startw_unique_next = w_start_len0 * (n_fs_sire ** exp)
 
-                    pointers_sire, index_unique_w_sire = sfun.f1_collapse_pointers(p, ebw_sire, numbers_end_sire, startw_unique_next,
+                    pointers_sire, index_unique_w_sire = sfun.f1_collapse_pointers(p, ebw_sire, numbers_end_sire, n_startw_unique_next,
                                                               False, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p + 1],
                                                               lw_initial_a1e1b1nwzida0e0b0xyg0)
 
@@ -6271,9 +6267,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                         period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p + 1])):
                     #add 1 if not first period of fvp because the start animals branch out.
                     exp = n_prior_fvps_pa1e1b1nwzida0e0b0xyg1[p+1] + np.where(period_is_startfvp_pa1e1b1nwzida0e0b0xyg1[p+1], 0, 1)
-                    startw_unique_next = w_start_len1 * (n_fs_dams ** exp)
+                    n_startw_unique_next = w_start_len1 * (n_fs_dams ** exp)
 
-                    pointers_dams, index_unique_w_dams = sfun.f1_collapse_pointers(p, ebw_dams, numbers_end_dams, startw_unique_next,
+                    pointers_dams, index_unique_w_dams = sfun.f1_collapse_pointers(p, ebw_dams, numbers_end_dams, n_startw_unique_next,
                                                               period_is_condense_pa1e1b1nwzida0e0b0xyg1[p + 1],
                                                               period_is_startseason_pa1e1b1nwzida0e0b0xyg[p + 1],
                                                               lw_initial_a1e1b1nwzida0e0b0xyg1, period_is_prejoin=
@@ -6297,9 +6293,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 if np.any(np.logical_or(period_is_condense_pa1e1b1nwzida0e0b0xyg3[p + 1], period_is_startseason_pa1e1b1nwzida0e0b0xyg[p + 1])):
                     #add 1 if not first period of fvp because the start animals branch out.
                     exp = n_prior_fvps_pa1e1b1nwzida0e0b0xyg3[p+1] + np.where(period_is_startfvp_pa1e1b1nwzida0e0b0xyg3[p+1], 0, 1)
-                    startw_unique_next_offs = w_start_len3 * (n_fs_offs ** exp)
+                    n_startw_unique_next_offs = w_start_len3 * (n_fs_offs ** exp)
 
-                    pointers_offs, index_unique_w_offs = sfun.f1_collapse_pointers(p, ebw_offs, numbers_end_offs, startw_unique_next_offs,
+                    pointers_offs, index_unique_w_offs = sfun.f1_collapse_pointers(p, ebw_offs, numbers_end_offs, n_startw_unique_next_offs,
                           period_is_condense_pa1e1b1nwzida0e0b0xyg3[p + 1], period_is_startseason_pa1e1b1nwzida0e0b0xyg[p + 1],
                           lw_initial_a1e1b1nwzida0e0b0xyg3)
 
@@ -6347,6 +6343,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                         p_pos, w_pos, z_pos, prejoin_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], False)
                 ###Minimum FD since shearing (start)
                 fd_min_start_sire = sfun.f1_period_start_prod2(pointers_sire, index_unique_w_sire, fd_min_sire, numbers_end_sire,
+                                        p_pos, w_pos, z_pos, prejoin_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], False)
+                ###lower critical temp (start)
+                temp_lc_start_sire = sfun.f1_period_start_prod2(pointers_sire, index_unique_w_sire, temp_lc_sire, numbers_end_sire,
                                         p_pos, w_pos, z_pos, prejoin_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], False)
 
             ###dams
@@ -6535,6 +6534,12 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
                                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1])
+                ######lower critical temp (start)
+                temp_lc_start_dams = sfun.f1_period_start_prod2(pointers_dams, index_unique_w_dams, temp_lc_dams, numbers_end_dams, p_pos, w_pos, z_pos, prejoin_tup
+                                        , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p + 1]
+                                        , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1]
+                                        , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
+                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1])
 
             ###yatf
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
@@ -6617,6 +6622,12 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
                                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1])
+                ###lower critical temp (start)
+                temp_lc_start_yatf = sfun.f1_period_start_prod2(pointers_dams, index_unique_w_dams, temp_lc_yatf, numbers_end_yatf, p_pos, w_pos, z_pos, prejoin_tup
+                                        , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p + 1]
+                                        , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1]
+                                        , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
+                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1])
             ###offs
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
                 ###EBW (start - empty body weight)
@@ -6676,6 +6687,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3[p+1])
                 ###Minimum FD since shearing (start)
                 fd_min_start_offs = sfun.f1_period_start_prod2(pointers_offs, index_unique_w_offs, fd_min_offs, numbers_end_offs, p_pos, w_pos, z_pos, prejoin_tup
+                                        , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], period_is_condense_pa1e1b1nwzida0e0b0xyg3[p + 1]
+                                        , stub_lw_idx=stub_lw_idx_offs, len_gen_t=len_gen_t3, a_t_g=a_t_g3
+                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3[p+1])
+                ###lower critical temp (start)
+                temp_lc_start_offs = sfun.f1_period_start_prod2(pointers_offs, index_unique_w_offs, temp_lc_offs, numbers_end_offs, p_pos, w_pos, z_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], period_is_condense_pa1e1b1nwzida0e0b0xyg3[p + 1]
                                         , stub_lw_idx=stub_lw_idx_offs, len_gen_t=len_gen_t3, a_t_g=a_t_g3
                                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3[p+1])
@@ -6862,6 +6878,12 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
         if mask_dams_inc_g1[3:4]:
             sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1[..., -1] = t_sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1[..., 1]
             sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1[..., -1] = t_sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1[..., 1]
+        ### adjust for active w (in the lp we can differentate between unclustered w so in the generator the ltw adj must be the same). Wool growth can be tracked but then we would miss other things like change in feed requirement.
+        n_startw1 = w_start_len1 * (n_fs_dams ** (n_prior_fvps_pa1e1b1nwzida0e0b0xyg1+1))
+        block = (len_w1 // n_startw1)
+        a_activew_pa1e1b1nwzida0e0b0xyg1 = (index_wzida0e0b0xyg1 // block) * block
+        sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1, a_activew_pa1e1b1nwzida0e0b0xyg1, axis=w_pos)
+        sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1, a_activew_pa1e1b1nwzida0e0b0xyg1, axis=w_pos)
 
         ## the offspring lifetime adjustment is based on dam LW pattern 0. An estimated dam pattern is required
         ### because there is not a link in the matrix between dam profile and the offspring DVs.
@@ -6883,25 +6905,27 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
         temporary = np.sum(temporary * (a_b0_b1nwzida0e0b0xyg == index_b0xyg) * (nyatf_b1nwzida0e0b0xyg > 0)
                            , axis=b1_pos, keepdims=True)  #0 for dams with no yatf because for those b1 slices there is no corresponding slice in b0
         t_season_propn_pg = np.broadcast_to(season_propn_zida0e0b0xyg, temporary.shape)
-        t3_sfw_ltwadj_tpa1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(temporary, t_season_propn_pg, axis=z_pos, keepdims=True)
+        t3_sfw_ltwadj_t1pa1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(temporary, t_season_propn_pg, axis=z_pos, keepdims=True)
 
         ## repeat for FD
         temporary = np.sum(fun.f_dynamic_slice(o_fd_ltwadj_tpdams,w_pos,0,1)
                            * (a_prevjoining_o_pa1e1b1nwzida0e0b0xyg1 == index_da0e0b0xyg)
                            * period_is_birth_pa1e1b1nwzida0e0b0xyg1, axis=p_pos, keepdims = True)
         temporary = np.swapaxes(temporary, e1_pos, e0_pos)
+        temporary = np.swapaxes(temporary, a1_pos, a0_pos)
         temporary = np.sum(temporary * (a_b0_b1nwzida0e0b0xyg == index_b0xyg) * (nyatf_b1nwzida0e0b0xyg > 0)
                            , axis=b1_pos, keepdims=True)  #0 for dams with no yatf because for those b1 slices there is no corresponding slice in b0
         t_season_propn_pg = np.broadcast_to(season_propn_zida0e0b0xyg, temporary.shape)
-        t3_sfd_ltwadj_tpa1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(temporary, t_season_propn_pg, axis=z_pos, keepdims=True)
+        t3_sfd_ltwadj_t1pa1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(temporary, t_season_propn_pg, axis=z_pos, keepdims=True)
 
-        #### If generating with a t axis then take the t slice that corresponds with the animals being retained.
+        #### If generating with a t axis then take the t slice that corresponds with the dams being retained.
         if len_gen_t1 > 1:
-            t3_sfw_ltwadj_tpa1e1b1nwzida0e0b0xyg3 = np.take_along_axis(t3_sfw_ltwadj_tpa1e1b1nwzida0e0b0xyg3, a_t_tpg1, axis=0)
-            t3_sfd_ltwadj_tpa1e1b1nwzida0e0b0xyg3 = np.take_along_axis(t3_sfd_ltwadj_tpa1e1b1nwzida0e0b0xyg3, a_t_tpg1, axis=0)
+            t3_sfw_ltwadj_t1pa1e1b1nwzida0e0b0xyg3 = np.take_along_axis(t3_sfw_ltwadj_t1pa1e1b1nwzida0e0b0xyg3, a_t_tpg1, axis=0) #correct to use a_t_tpg1 because array is t1
+            t3_sfd_ltwadj_t1pa1e1b1nwzida0e0b0xyg3 = np.take_along_axis(t3_sfd_ltwadj_t1pa1e1b1nwzida0e0b0xyg3, a_t_tpg1, axis=0) #correct to use a_t_tpg1 because array is t1
         ### Index the now singleton t axis to remove
-        sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3 = t3_sfw_ltwadj_tpa1e1b1nwzida0e0b0xyg3[0]
-        sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3 = t3_sfd_ltwadj_tpa1e1b1nwzida0e0b0xyg3[0]
+        sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3 = t3_sfw_ltwadj_t1pa1e1b1nwzida0e0b0xyg3[0]
+        sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3 = t3_sfd_ltwadj_t1pa1e1b1nwzida0e0b0xyg3[0]
+        ### no active w so dont need to adjust like for dams above.
 
         ##store ltw adjustments so they can be pickled
         ## store on the second last ltw loop to remove randomness when pkl (so that the ltw adj that is pkl is the same as the ltw adj used in final iteration)

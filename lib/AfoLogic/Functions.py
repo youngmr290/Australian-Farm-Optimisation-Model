@@ -263,8 +263,9 @@ def f1_percentile_weighted(values, weights, axes):
     direction = np.where(values_flat < median_v, -1, 1)
     tie_breaker = direction * weights_flat
 
-    # Now sort by (weight ascending, tie_breaker ascending)
-    order = np.lexsort((tie_breaker, values_flat))
+    # Now sort values ascending
+    order = np.lexsort((tie_breaker, values_flat), axis=-1)  # with a tie breaker (ascending)
+    # order = np.argsort(values_flat, axis=-1)    # sort without a tie breaker
 
     # reorder weights
     weights_sorted = np.take_along_axis(weights_flat, order, axis=-1)
