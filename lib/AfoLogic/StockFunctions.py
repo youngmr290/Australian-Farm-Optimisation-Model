@@ -3235,13 +3235,6 @@ def f1_collapse_pointers(p, ebw, numbers, n_startw_unique_next, period_is_conden
         # identify the eligible animals for the selection of the starting animals
         ##criteria can be changed, currently it is mortality < 10%. Ineligible animals are nan.
         ebw_masked = np.where(inc_mask, ebw, np.nan)
-    ##########
-    # Part A #
-    ##########
-
-    # identify the eligible animals for the selection of the starting animals
-    ##criteria can be changed, currently it is mortality < 10%. Ineligible animals are nan.
-    ebw_masked = np.where(inc_mask, ebw, np.nan)
 
         # Step 1: compute percentile rank weighted by numbers of animals in each collapsed axis (~0 to ~100).
         percentile_rank_condense = fun.f1_percentile_weighted(ebw_masked, numbers, (w_pos,))
