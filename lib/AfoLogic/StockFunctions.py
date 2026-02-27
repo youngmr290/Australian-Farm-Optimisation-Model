@@ -3051,6 +3051,7 @@ def f1_period_start_prod2(pointers, index_unique_w, var, numbers, p_pos, w_pos, 
     ##for stubble index the w axis to make the starting animal for the next period
     #if generating for stubble then no collapse
     if np.all(np.logical_not(np.isnan(stub_lw_idx))):
+        stub_lw_idx, var_start = np.broadcast_arrays(stub_lw_idx, var_start)
         var_start[...] = np.take_along_axis(var_start, stub_lw_idx, w_pos)
         return var_start
 

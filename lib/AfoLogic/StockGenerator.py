@@ -112,8 +112,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     # if we want flexibility to adjust periods per year (to save model size) then this needs attention.
     ## define the periods - default (dams and sires)
     sim_years = sinp.stock['i_age_max']
-    # sim_years = 4
     sim_years_offs = min(sinp.stock['i_age_max_offs'], sim_years)
+    if stubble: #if stubble then generate offs for the full time.
+        sim_years_offs = sim_years
     n_sim_periods, date_start_p, date_start_P, date_end_p, date_end_P, p_index_p, step \
         = sfun.f1_sim_periods(sinp.stock['i_sim_periods_year'], sim_years, pinp.sheep['i_o_len'])
     date_start_pa1e1b1nwzida0e0b0xyg = np.expand_dims(date_start_p, axis = tuple(range(p_pos+1, 0)))
@@ -969,16 +970,12 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     birth_vtype1 = core_dvp_types_f1[2]
     season_start_vtype1 = max(core_dvp_types_f1) + 1
     other_vtype1 = max(core_dvp_types_f1) + 2
-    ###condense can occur at prejoining or season start (default is at prejoining but for MP model it happens at season start so that we can run 2 fvps at node periods)
+    ###condense can occur anytime but most common is at prejoining or season start (default is at prejoining but for MP model it happens at season start so that we can run 2 fvps at node periods)
     condense_at_seasonstart = fun.f_sa(False, sen.sav['condense_at_seasonstart'], 5)
     if condense_at_seasonstart:
         condense_vtype1 = season_start_vtype1 #this can only happen if nodes are included as fvps
     else:
         condense_vtype1 = prejoin_vtype1
-
-    ##if stubble we don't want it to condense so change condense type to something that is not triggered
-    if stubble:
-        condense_vtype1 = other_vtype1+1
 
     ##beginning - first day of generator
     fvp_begin_start_ba1e1b1nwzida0e0b0xyg1 = date_start_pa1e1b1nwzida0e0b0xyg[0:1]
@@ -1117,15 +1114,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     shear_vtype3 = 0
     other_vtype3 = shear_vtype3 + 1
     season_start_vtype3 = other_vtype3 + 1
-    ###condense can occur at shearing or season start (default is at shearing but for MP model it happens at season start so that we can run 2 fvps at node periods)
+    ###condense can occur anytime but most common at shearing or season start (default is at shearing but for MP model it happens at season start so that we can run 2 fvps at node periods)
     if condense_at_seasonstart:
         condense_vtype3 = season_start_vtype3 #this can only happen if nodes are included as fvps
     else:
         condense_vtype3 = shear_vtype3 #for offs, condensing can occur at any dvp. Currently it occurs at shearing.
-
-    ##if stubble we don't want it to condense so change condense type
-    if stubble:
-        condense_vtype3 = other_vtype3 + 1
 
     ##scale factor for fvps between shearing. This is required because if shearing occurs more frequently than once a yr the fvps that are determined from shearing date must be closer together.
     shear_offset_adj_factor_sa1e1b1nwzida0e0b0xyg3 = (np.roll(date_shear_sa1e1b1nwzida0e0b0xyg3, -1, axis=0) - date_shear_sa1e1b1nwzida0e0b0xyg3).astype(float) / 364
@@ -2468,9 +2461,13 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                           date_start_pa1e1b1nwzida0e0b0xyg, date_prebirth_pa1e1b1nwzida0e0b0xyg1, date_end_pa1e1b1nwzida0e0b0xyg)
 
     ##dvp
-    if stubble: #if generating for stubble then dvps dont matter
-            period_is_startdvp_pa1e1b1nwzida0e0b0xyg1 = np.full_like(date_start_pa1e1b1nwzida0e0b0xyg, False)
-            period_is_startdvp_pa1e1b1nwzida0e0b0xyg3 = np.full_like(date_start_pa1e1b1nwzida0e0b0xyg, False)[mask_p_offs_p]
+    if stubble: #if generating for stubble then dvps dont matter and we dont want to trigger condensing/collapsing axes
+        period_is_startdvp_pa1e1b1nwzida0e0b0xyg1 = np.full_like(date_start_pa1e1b1nwzida0e0b0xyg, False)
+        period_is_startdvp_pa1e1b1nwzida0e0b0xyg3 = np.full_like(date_start_pa1e1b1nwzida0e0b0xyg, False)[mask_p_offs_p]
+        period_is_condense_pa1e1b1nwzida0e0b0xyg1[...] = False
+        period_is_condense_pa1e1b1nwzida0e0b0xyg3[...] = False
+        period_is_startseason_pa1e1b1nwzida0e0b0xyg[...] = False
+        period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[...] = False
     else:
         period_is_startdvp_pa1e1b1nwzida0e0b0xyg1 = np.any(sfun.f1_period_is_('period_is', dvp_start_va1e1b1nwzida0e0b0xyg1[:,na,...]
                                             , date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg), axis=0)
@@ -2580,9 +2577,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
         foo_yatf = stubble['i_foo']
         foo_offs = stubble['i_foo']
         dmd_pwg = fun.f_expand(stubble['dmd_pw'],w_pos, left_pos2=p_pos, right_pos2=w_pos)
-        intake_s_dams = stubble['i_sup_intake']
-        intake_s_yatf = stubble['i_sup_intake']
-        intake_s_offs = stubble['i_sup_intake']
+        intake_s_pdams = stubble['i_sup_intake']
+        intake_s_pyatf = stubble['i_sup_intake']
+        intake_s_poffs = stubble['i_sup_intake']
         confinementw_tpa1e1b1nwzida0e0b0xyg1[...] = False
         confinementw_tpa1e1b1nwzida0e0b0xyg3[...] = False
 
@@ -3064,6 +3061,16 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 p_srw = 0
             else:
                 p_srw = p
+
+
+            ##Slice the current period for the stubble supplement
+            ###Will throw an error if the inputs don't cover enough periods
+            if stubble:
+                sup_period = p - p_start
+                intake_s_dams = intake_s_pdams[sup_period]
+                intake_s_yatf = intake_s_pyatf[sup_period]
+                intake_s_offs = intake_s_poffs[sup_period]
+
             ###################################################################################
             #reset variables if period is beginning of a reproduction cycle or shearing cycle #
             ###################################################################################
