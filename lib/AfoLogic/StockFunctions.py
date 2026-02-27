@@ -3571,8 +3571,8 @@ def f1_period_end_nums(numbers, mortality, numbers_available=0, mortality_yatf=0
     '''
 
     ##a) mortality (include np.maximum to ensure always some animals surviving, so that numbers can't become zero)
-    survival = np.maximum(0.01, 1-mortality)
-    numbers = numbers * survival    #NOte: can't do the maximum(0.00001) her because that would affect the mort_mask
+    survival = np.maximum(0.1, 1-mortality)   # this allows 90% mortality each period, so it won't cause unusual optimisation related to skewing mortality estimates
+    numbers = numbers * survival    #Note: can't do the maximum(0.00001) here because that would affect the mort_mask
 
     ##calculations for dams - prejoining and moving between classes
     if group==1:
