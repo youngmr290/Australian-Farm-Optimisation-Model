@@ -842,13 +842,12 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     lat_deg = pinp.sheep['i_latitude']
     lat_rad = np.radians(pinp.sheep['i_latitude'])
 
-    '''if running the gen for stubble generation then the weather info above gets overwritten with stubble trial info
-    '''
+    ##if running the gen for stubble generation then the weather info above gets overwritten with stubble trial info
     if stubble:
         legume_p6a1e1b1nwzida0e0b0xyg[...] = uinp.stubble['clover_propn_in_sward_stubble']
         density_p6a1e1b1nwzida0e0b0xyg[...] = stubble['i_sr']
         ws_p4a1e1b1nwzida0e0b0xyg[...] = stubble['i_ws']
-        rain_p4a1e1b1nwzida0e0b0xygp0[...] = stubble['i_rain']
+        rain_p4a1e1b1nwzida0e0b0xygp0[...] = fun.f_expand(stubble['i_rain'][...,na] * pinp.sheep['i_rain_distribution_p4p1'] * (7 / 30.4),p_pos - 1, right_pos=-1)  # -1 because p is -16 when p1 axis is included
         temp_ave_p4a1e1b1nwzida0e0b0xyg[...] = stubble['i_temp_ave']
         temp_max_p4a1e1b1nwzida0e0b0xyg[...] = stubble['i_temp_max']
         temp_min_p4a1e1b1nwzida0e0b0xyg[...] = stubble['i_temp_min']
