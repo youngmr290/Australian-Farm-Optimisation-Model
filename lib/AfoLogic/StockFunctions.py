@@ -3214,10 +3214,10 @@ def f1_collapse_pointers(p, ebw, numbers, n_startw_unique_next, period_is_conden
     prejoinseason_tup = season_tup + prejoin_tup
     block = (len_w // n_startw_unique_next)  #The size of the length of blocks created along the w axis
     ##Calculate the number of groups of animals that are being collapsed based on the minimum of the unique values or the numbers != 0.00001
-    n_groups_condense = fun.f1_unique_count(ebw, w_pos, numbers, threshold=0.001)
-    n_groups_season = fun.f1_unique_count(ebw, (w_pos,) + season_tup, numbers, threshold=0.001)
-    n_groups_prejoin = fun.f1_unique_count(ebw, (w_pos,) + prejoin_tup, numbers, threshold=0.001)
-    n_groups_prejoinseason = fun.f1_unique_count(ebw, (w_pos,) + prejoinseason_tup, numbers, threshold=0.001)
+    n_groups_condense = fun.f1_unique_count(ebw, w_pos, numbers, threshold=0.001, atol=0.00001)
+    n_groups_season = fun.f1_unique_count(ebw, (w_pos,) + season_tup, numbers, threshold=0.001, atol=0.00001)
+    n_groups_prejoin = fun.f1_unique_count(ebw, (w_pos,) + prejoin_tup, numbers, threshold=0.001, atol=0.00001)
+    n_groups_prejoinseason = fun.f1_unique_count(ebw, (w_pos,) + prejoinseason_tup, numbers, threshold=0.001, atol=0.00001)
     ##update the number of groups based on the period
     n_groups = n_startw_unique_next  #n_startw_unique_next groups unless overwritten by being another period
     n_groups = fun.f_update(n_groups, n_groups_condense, period_is_condense)
@@ -3571,8 +3571,8 @@ def f1_period_end_nums(numbers, mortality, numbers_available=0, mortality_yatf=0
     '''
 
     ##a) mortality (include np.maximum to ensure always some animals surviving, so that numbers can't become zero)
-    survival = np.maximum(0.01, 1-mortality)
-    numbers = numbers * survival    #NOte: can't do the maximum(0.00001) her because that would affect the mort_mask
+    survival = np.maximum(0.1, 1-mortality)   # this allows 90% mortality each period, so it won't cause unusual optimisation related to skewing mortality estimates
+    numbers = numbers * survival    #Note: can't do the maximum(0.00001) here because that would affect the mort_mask
 
     ##calculations for dams - prejoining and moving between classes
     if group==1:
