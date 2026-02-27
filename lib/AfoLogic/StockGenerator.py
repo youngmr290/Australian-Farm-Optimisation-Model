@@ -6729,14 +6729,14 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     ###update the fs startw allocation - at period_is_condense
                     if np.any(period_is_condense_pa1e1b1nwzida0e0b0xyg1[p + 1]): #using p+1 because this is being calculated at the end of the loop for next period.
                         ###slice the w axis just for the starting w slices.
-                        pkl_ebw_dams = pkl_condensed_values['dams'][p]['ebw_dams']
+                        pkl_ebw_condensed_dams = pkl_condensed_values['dams'][p]['ebw_dams']
                         if not sinp.structuralsa['i_generate_with_t']:
-                            pkl_ebw_dams = np.take_along_axis(pkl_ebw_dams, a_t_tpg1[:,0,...], axis=p_pos)
+                            pkl_ebw_condensed_dams = np.take_along_axis(pkl_ebw_condensed_dams, a_t_tpg1[:,0,...], axis=p_pos)
 
-                        pkl_ebw_dams = fun.f_dynamic_slice(pkl_ebw_dams, w_pos, start=0, stop=None,
-                                                                     step=int(pkl_ebw_dams.shape[w_pos] / w_start_len1))
-                        t_fs_w_reallocation_ta1e1b1nw8zida0e0b0xyg1s9 = sfun.f1_lw_distribution(pkl_ebw_dams,
-                                                                                                ebw_dams,
+                        pkl_ebw_condensed_dams = fun.f_dynamic_slice(pkl_ebw_condensed_dams, w_pos, start=0, stop=None,
+                                                                     step=int(pkl_ebw_condensed_dams.shape[w_pos] / w_start_len1))
+                        t_fs_w_reallocation_ta1e1b1nw8zida0e0b0xyg1s9 = sfun.f1_lw_distribution(pkl_ebw_condensed_dams,
+                                                                                                ebw_start_dams, #start of next period ie this is condensed ebw
                                                                                                 for_feedsupply=True)
                         fs_w_reallocation_ta1e1b1nw8zida0e0b0xyg1s9 = fun.f_update(fs_w_reallocation_ta1e1b1nw8zida0e0b0xyg1s9,
                                                                                    t_fs_w_reallocation_ta1e1b1nw8zida0e0b0xyg1s9,
@@ -6751,20 +6751,20 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     feedsupplyw_tpa1e1b1nwzida0e0b0xyg1[:, p + 1, ...] = temp_feedsupplyw_ta1e1b1nwzida0e0b0xyg1
                 ###save the condensed ebw for the next trial
                 if np.any(period_is_condense_pa1e1b1nwzida0e0b0xyg1[p + 1]) and sinp.structuralsa['i_fs_create_pkl']:
-                    pkl_condensed_values['dams'][p]['ebw_dams'] = ebw_dams
+                    pkl_condensed_values['dams'][p]['ebw_dams'] = ebw_start_dams #start of next period ie this is condensed ebw
 
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p, ...] > 0):
                 if sinp.structuralsa['i_fs_use_pkl']:
                     ###update the fs startw allocation - at period_is_condense
                     if np.any(period_is_condense_pa1e1b1nwzida0e0b0xyg3[p + 1]):
                         ###slice the w axis just for the starting w slices.
-                        pkl_ebw_offs = pkl_condensed_values['offs'][p]['ebw_offs']
+                        pkl_ebw_condensed_offs = pkl_condensed_values['offs'][p]['ebw_offs']
                         if not sinp.structuralsa['i_generate_with_t']:
-                            pkl_ebw_offs=pkl_ebw_offs[0:1,...]
-                        pkl_ebw_offs = fun.f_dynamic_slice(pkl_ebw_offs, w_pos, start=0, stop=None,
-                                                                     step=int(pkl_ebw_offs.shape[w_pos] / w_start_len3))
-                        t_fs_w_reallocation_ta1e1b1nw8zida0e0b0xyg3s9 = sfun.f1_lw_distribution(pkl_ebw_offs,
-                                                                                                ebw_offs,
+                            pkl_ebw_condensed_offs=pkl_ebw_condensed_offs[0:1,...]
+                        pkl_ebw_condensed_offs = fun.f_dynamic_slice(pkl_ebw_condensed_offs, w_pos, start=0, stop=None,
+                                                                     step=int(pkl_ebw_condensed_offs.shape[w_pos] / w_start_len3))
+                        t_fs_w_reallocation_ta1e1b1nw8zida0e0b0xyg3s9 = sfun.f1_lw_distribution(pkl_ebw_condensed_offs,
+                                                                                                ebw_start_offs, #start of next period ie this is condensed ebw
                                                                                                 for_feedsupply=True)
                         fs_w_reallocation_ta1e1b1nw8zida0e0b0xyg3s9 = fun.f_update(fs_w_reallocation_ta1e1b1nw8zida0e0b0xyg3s9,
                                                                                    t_fs_w_reallocation_ta1e1b1nw8zida0e0b0xyg3s9,
@@ -6778,7 +6778,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     temp_feedsupplyw_ta1e1b1nwzida0e0b0xyg3 = fun.f_merge_axis(temp_feedsupplyw_s8ta1e1b1nwzida0e0b0xyg3, 0, w_pos)
                     feedsupplyw_tpa1e1b1nwzida0e0b0xyg3[:, p + 1, ...] = temp_feedsupplyw_ta1e1b1nwzida0e0b0xyg3
                 if np.any(period_is_condense_pa1e1b1nwzida0e0b0xyg3[p + 1]) and sinp.structuralsa['i_fs_create_pkl']:
-                    pkl_condensed_values['offs'][p]['ebw_offs'] = ebw_offs
+                    pkl_condensed_values['offs'][p]['ebw_offs'] = ebw_start_offs #start of next period ie this is condensed ebw
 
             ##This is the end of the p loop
 
