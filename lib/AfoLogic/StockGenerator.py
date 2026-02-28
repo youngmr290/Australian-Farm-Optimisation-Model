@@ -6768,9 +6768,15 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     ####remove start w axis
                     temp_feedsupplyw_ta1e1b1nwzida0e0b0xyg1 = fun.f_merge_axis(temp_feedsupplyw_s8ta1e1b1nwzida0e0b0xyg1, 0, w_pos)
                     feedsupplyw_tpa1e1b1nwzida0e0b0xyg1[:, p + 1, ...] = temp_feedsupplyw_ta1e1b1nwzida0e0b0xyg1
-                ###save the condensed ebw for the next trial
-                if np.any(period_is_condense_pa1e1b1nwzida0e0b0xyg1[p + 1]) and sinp.structuralsa['i_fs_create_pkl']:
-                    pkl_condensed_values['dams'][p]['ebw_dams'] = ebw_start_dams #start of next period ie this is condensed ebw
+                ###save the condensed ebw for the next trial.
+                ###Ewe lambs for use with sen.sav[partial_n11] save the ebw_start_dams to the pkl condense in period <p75
+                ### so the pkl_fs works for different age joining ELs
+                if np.any(period_is_condense_pa1e1b1nwzida0e0b0xyg1[p + 1]) and sinp.structuralsa['i_fs_create_pkl'] or p<75:
+                    block = len_w1 / w_start_len1
+                    index_condensedw_dams = ((index_wzida0e0b0xyg1 // block) * block).astype(int)
+                    index_condensedw_dams = np.broadcast_to(index_condensedw_dams, ebw_start_dams.shape)
+                    ebw_condensed_dams = np.take_along_axis(ebw_start_dams, index_condensedw_dams, axis=w_pos)
+                    pkl_condensed_values['dams'][p]['ebw_dams'] = ebw_condensed_dams #start of next period ie this is condensed ebw
 
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p, ...] > 0):
                 if sinp.structuralsa['i_fs_use_pkl']:
