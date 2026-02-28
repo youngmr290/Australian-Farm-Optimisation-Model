@@ -3518,7 +3518,7 @@ def f1_adjust_pkl_condensed_axis_len(temporary, i_w_len, i_t_len):
     return temporary
 
 def f1_period_start_nums(numbers, prejoin_tup, z_pos, period_is_startseason, season_propn_z, group=None
-                , numbers_available=0, nyatf_b1=0, gender_propn_x=1, period_is_prejoin=0
+                , numbers_available=0, nyatf_b1=0, gender_propn_x=1, period_is_prejoin=0, period_is_prejoinaverage=True
                 , period_is_birth=False, prevperiod_is_wean=False,len_gen_t=1, a_t_g=0, period_is_startdvp=False
                 , propn_dams_mated=1, animal_mated_b1g1=True):
 
@@ -3542,14 +3542,16 @@ def f1_period_start_nums(numbers, prejoin_tup, z_pos, period_is_startseason, sea
         index_e1b1nwzida0e0b0xyg = fun.f_expand(index_e, e1_pos)
 
         ###new repro cycle (prejoining)
-        total_mated = np.sum(numbers, axis=prejoin_tup, keepdims=True) * mated_propn
-        total_notmated = np.sum(numbers, axis=prejoin_tup, keepdims=True) * (1 - mated_propn)
+        total_mated_prejoinavetrue = np.sum(numbers, axis=prejoin_tup, keepdims=True) * mated_propn
+        total_mated_prejoinavefalse = np.sum(numbers * animal_mated_b1g1, axis=prejoin_tup, keepdims=True)
+        total_mated = fun.f_update(total_mated_prejoinavefalse, total_mated_prejoinavetrue, period_is_prejoinaverage)
+        total_notmated = np.sum(numbers, axis=prejoin_tup, keepdims=True) - total_mated
         # add e1 axis, assign to e1[0] with a minimum number
         total_notmated = np.maximum(0.00001, fun.f_update(0.0, total_notmated, index_e1b1nwzida0e0b0xyg == 0))
         ###Assign the not mated total to the NM slice (not animal_mated) if prejoining
         numbers = fun.f_update(numbers, total_notmated, np.logical_and(period_is_prejoin, ~animal_mated_b1g1))
         ###Assign the total number to be mated to numbers_available & set the mated numbers to 0.00001 if prejoining
-        numbers_available = fun.f_update(numbers_available, total_mated, period_is_prejoin)  #Set numbers_available for groups at prejoining
+        numbers_available = fun.f_update(numbers_available, total_mated, period_is_prejoin)  #Set numbers_available for groups at prejoining (this needs to happeneven if preionaverge==False)
         numbers = fun.f_update(numbers, 0.00001, np.logical_and(period_is_prejoin, animal_mated_b1g1))  #Set numbers of mated ewes to 0 for groups at prejoining, without affecting NM
     ##d)things just for yatf
     if group==2:

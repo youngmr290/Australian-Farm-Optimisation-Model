@@ -6697,7 +6697,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                         , prejoin_tup, z_pos, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1]
                         , season_propn_zida0e0b0xyg, group=1, numbers_available=numbers_available_mating_dams
                         , period_is_prejoin=period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1]
-                           * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1]
+                        , period_is_prejoinaverage=include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1] #passed in seperately because needs special treatment
                         , len_gen_t=len_gen_t1, a_t_g=a_t_g1
                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1]
                         , propn_dams_mated=est_prop_dams_mated_pa1e1b1nwzida0e0b0xyg1[p+1]
