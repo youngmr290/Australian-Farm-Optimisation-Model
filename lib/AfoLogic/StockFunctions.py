@@ -3055,13 +3055,7 @@ def f1_period_start_prod2(pointers, index_unique_w, var, numbers, p_pos, w_pos, 
         return var_start
 
 
-    ##a)if generating with t axis reset the sale slices to the retained slice at the start of each dvp
-    if np.any(period_is_startdvp) and len_gen_t > 1:
-        a_t_g = np.broadcast_to(a_t_g, var_start.shape)
-        temporary = np.take_along_axis(var_start, a_t_g, axis=p_pos)  # t is in the p pos
-        var_start = fun.f_update(var_start, temporary, period_is_startdvp)
-
-    ##b)collapse axes for new starting animal
+    ##a)collapse axes for new starting animal
 
     #todo This representation doesn't adjust the starting animal based on the expected management of dry and empty dams
     #review code below and connect up the extra args if deemed useful, or calculate the adjusted numbers in sgan and pass the adjusted numbers
@@ -3099,6 +3093,13 @@ def f1_period_start_prod2(pointers, index_unique_w, var, numbers, p_pos, w_pos, 
     if np.any(np.logical_or(np.logical_or(period_is_startseason, period_is_prejoin), period_is_condense)):
         var_start = f1_collapse(pointers, index_unique_w, var_start, numbers, period_is_condense, period_is_startseason,
                           w_pos, z_pos, period_is_prejoin, prejoin_tup)
+
+    ##b)if generating with t axis reset the sale slices to the retained slice at the start of each dvp
+    if np.any(period_is_startdvp) and len_gen_t > 1:
+        a_t_g = np.broadcast_to(a_t_g, var_start.shape)
+        temporary = np.take_along_axis(var_start, a_t_g, axis=p_pos)  # t is in the p pos
+        var_start = fun.f_update(var_start, temporary, period_is_startdvp)
+
 
     return var_start
 
