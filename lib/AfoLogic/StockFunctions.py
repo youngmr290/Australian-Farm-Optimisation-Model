@@ -3390,6 +3390,8 @@ def f1_collapse_pointers(p, ebw, numbers, n_startw_unique_next, period_is_conden
                                    np.logical_and(period_is_prejoin, period_is_seasonstart))
 
             if ~np.any(missing):
+                if tol != 0.25:
+                    print(f"tolerance {tol}")
                 break   #no missing values exit the for loop
         else:    #got to end of tolerance options without breaking out of the loop (i.e. missing values even with tol==0)
             raise ValueError(f"Period {p}: pointers must exist for each collapsed animal. "
