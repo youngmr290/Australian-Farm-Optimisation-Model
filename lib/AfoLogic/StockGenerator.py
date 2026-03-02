@@ -649,7 +649,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
         date_shear_sida0e0b0xyg1[...] = stubble['shear_date']
         date_shear_sida0e0b0xyg3[...] = stubble['shear_date']
         ###birth control
-        date_born1st_oa1e1b1nwzida0e0b0xyg2[...] = stubble['lambing_date']
+        date_born1st_oa1e1b1nwzida0e0b0xyg2[...] = stubble['lambing_date_yatf']
+        date_born1st_ida0e0b0xyg1[...] = stubble['lambing_date']
+        date_born1st_ida0e0b0xyg3[...] = stubble['lambing_date']
 
     ###association between start w and full w
     a_wstart_w1 = np.floor(index_w1 / len_nut_dams).astype(int) #identify the start w slice (nut 0) for each w
@@ -663,6 +665,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ##if generating for stubble then overwrite genotype selection
     if stubble:
         a_c2_c0 = stubble['a_c2_c0']
+        uinp.parameters['i_srw_c2'][...] = stubble['i_srw']
 
     ##association for the retained t of each g slice
     a_t_g1 = np.arange(pinp.sheep['i_n_dam_sales'], pinp.sheep['i_n_dam_sales']+len_g1)
@@ -4785,7 +4788,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
                     ri_yatf = fsfun.f_rel_intake(1, rq_yatf, legume_pa1e1b1nwzida0e0b0xyg[p], cr_yatf) #use ra=1 for stubble
                     mei_yatf, mei_solid_yatf, intake_f_yatf, md_solid_yatf, mei_propn_milk_yatf, mei_propn_herb_yatf, mei_propn_supp_yatf \
-                                = sfun.f_intake(pi_yatf, ri_yatf, md_herb_yatf, feedsupplyw_tpa1e1b1nwzida0e0b0xyg1[p]
+                                = sfun.f_intake(pi_yatf, ri_yatf, md_herb_yatf, False
                                                 , intake_s_yatf, pinp.sheep['i_md_supp'], mp2_yatf)   #same feedsupply as dams
 
             ##energy - yatf
