@@ -3227,15 +3227,20 @@ def f1_collapse_pointers(p, ebw, numbers, n_startw_unique_next, period_is_conden
     n_groups = fun.f_update(n_groups, n_groups_prejoin, period_is_prejoin)
     n_groups = fun.f_update(n_groups, n_groups_prejoinseason, np.logical_and(period_is_prejoin, period_is_seasonstart))
     n_groups_collapsed = np.maximum(n_startw_unique_next, n_groups)  # number of groups collapsed can't be less than the number groups next period
-    pointers = -1   #set a value in case calculations are bypassed and first assignment is with f_update
+
+    # The pointers are 1:1 if there is only 1 group contributing to each start animal of the next period
+    ## this occurs when there are equal numbers of groups collapsed and starting next period i.e. only singletons in collapse axes
+    ##Create an array that is passing 1 to 1 for the number of unique w.
+    index_unique_wzida0e0b0xyg = ((index_wzida0e0b0xyg // block) * block).astype(int)
+    pointers = index_unique_wzida0e0b0xyg   #initialise pointers for cases that the calculations are bypassed
 
     if np.any(n_groups_collapsed != n_startw_unique_next):   #do the percentile calculations only if required
 
         # Part A
         ## calculate the percentile rank for each of the animals within the group being collapsed
-    
-        # identify the eligible animals for the selection of the starting animals
-        ##criteria can be changed, currently it is mortality < 10%. Ineligible animals are nan.
+
+        ## identify the eligible animals for the selection of the starting animals
+        ###criteria can be changed, currently it is mortality < 10%. Ineligible animals are nan.
         ebw_masked = np.where(inc_mask, ebw, np.nan)
 
         # Step 1: compute percentile rank weighted by numbers of animals in each collapsed axis (~0 to ~100).
@@ -3251,7 +3256,7 @@ def f1_collapse_pointers(p, ebw, numbers, n_startw_unique_next, period_is_conden
 
         # Step 2: remove the nan from rank and replace with -1
         percentile_rank[np.isnan(percentile_rank)] = -1
-    
+
         # Part B
         ##Calculate target percentiles & tolerances for n_startw_unique_next groups of animals
 
@@ -3275,39 +3280,34 @@ def f1_collapse_pointers(p, ebw, numbers, n_startw_unique_next, period_is_conden
         max = fun.f_update(max, max_prejoinseason, np.logical_and(period_is_prejoin, period_is_seasonstart))
         max[max==-999] = 100
 
-        ##space the percentiles across the range. Defined by an end gap and a step size
-        ### A simple calculation of the percentiles
+        ## Space the percentiles across the range. Defined by an end gap, a step size and a tolerance around the step
+        ###Note: the fitting of the tolerance is within a loop that loosens the tolerance if there are missing pointers.
+        ### A simple calculation of the target percentiles
         ###           t_target_percentiles = (index_q + 0.5) / (n_startw_unique_next) * 100
-        ### spreads the targets evenly between 100 and 0, however, the aim is to increase the heavy end and reduce
-        ### the light end when there are increasing numbers of groups contributing to each start w, such as at condensing.
-        ### The number of groups contributing to each start w is represented in the ratio variable.
+        ### This spreads the targets evenly between 100 and 0, however, profit can be increased if the end gap
+        ### is reduced. This can be done when extra groups are contributing to each start w, such as at condensing.
+        ### Profit increases with a tighter tolerance because there are fewer animals that are more extreme
+        ### than the start animals next period, so either less weight or fewer animals are 'lost' in the distribution.
         ### The calculations below calculate an end gap and a step size. The outcome would be the same as the simple
-        ### formula if the max and min were 100 and 0 and the ratio was 1.
-        ### The end gap is adjusted by the size of the axes being collapsed.
+        ### formula if the max and min were 100 and 0 and n_effective_end & n_effective_tolerance was n_startw_unique_next.
+        ### The end gap & tolerance are adjusted by the size of the axes being collapsed.
         ### More and larger axes means a greater number of groups of animals contributing to each start animal
-        ### With more groups the end gap can be reduced and if passing 1 to 1 then the end gap is not reduced
+        ### With more groups the end gap and tolerance can be reduced and if passing 1 to 1 then the end gap is not reduced
 
         ## calculate the 'effective' number of groups used to calculate the end gap.
-        ### If the effective number = n_startw_unique_next then the end_gap & the percentile_step will be evenly spaced
-        ### The effective number is an adjustment on end_gap and tolerance, while the step is determined by n_startw_unique_next
-        weighting_tolerance = 0.25   #0 weighting is use n_startw (total overlap), 1 is use n_groups_collapsed (most extreme)
-        weighting_end = 1   #0 weighting is use n_startw (total overlap), 1 is use n_groups_collapsed (most extreme)
-        n_effective_tolerance = n_startw_unique_next * ((n_groups_collapsed / n_startw_unique_next) ** weighting_tolerance)
+        weighting_end = 1  #0 weighting is use n_startw (total overlap), 1 is use n_groups_collapsed (most extreme)
         n_effective_end = n_startw_unique_next * ((n_groups_collapsed / n_startw_unique_next) ** weighting_end)
 
         ##Calculate the end gap
         end_gap = (max - min) / (2 * n_effective_end)
-        ##Calculate the step
+        ##Calculate the step between the target percentiles
         percentile_step = fun.f_divide((max - min) - 2 * end_gap, (n_startw_unique_next - 1), option=2)
         index_q = (index_wzida0e0b0xyg / len_w * n_startw_unique_next).astype(int)
         t_target_percentiles = 100 - ((100 - max) + end_gap + index_q * percentile_step)
-        ##Calculate the tolerance
-        tolerance = (max - min) / (2 * n_effective_tolerance)
-        tolerance = np.minimum(tolerance, percentile_step / 2)   #taking a minimum that includes percentile_step/2 ensures that they can't overlap
 
         ##Arrange the percentiles in the order required for the w axis
         ##There are 2 options:
-        # 1. w has been collapsed because period_is_condense & the order is determined from inputs in Structural.xls
+        # 1. w has been collapsed because period_is_condense & order is determined by lw_initial from Structural.xls
         # 2. w not collapse & order determined by the existing order of ebw across the w axis
         ebw_season = np.average(ebw, axis=z_pos, keepdims=True)
         ebw_prejoin = np.average(ebw, axis=prejoin_tup, keepdims=True)
@@ -3326,70 +3326,78 @@ def f1_collapse_pointers(p, ebw, numbers, n_startw_unique_next, period_is_conden
         # create the target percentiles based on the required order
         target_percentiles = np.take_along_axis(t_target_percentiles, order_descending, w_pos)
 
-        # Part C #
-        ##For each animal calculate a pointer to a start group based on the percentile_rank, the target percentiles
-        ###and the tolerances.
+        ## Loop through tolerances for the percentile step.
+        ###Test a range of tolerances starting tight and reducing until a viable tolerance is found.
+        tolerances = [0.25, 0.20, 0.15, 0.10, 0.05, 0.00]  #0 weighting is use n_startw (total overlap), 1 is use n_groups_collapsed (most extreme)
+        for tol in tolerances:
+            ## calculate the 'effective' number of groups used to calculate the tolerance around target_percentile.
+            weighting_tolerance = tol
+            n_effective_tolerance = n_startw_unique_next * (
+                    (n_groups_collapsed / n_startw_unique_next) ** weighting_tolerance)
+            ##Calculate the tolerance
+            tolerance = (max - min) / (2 * n_effective_tolerance)
+            tolerance = np.minimum(tolerance, percentile_step / 2)   #taking a minimum that includes percentile_step/2 ensures that they can't overlap
 
-        ##create target_percentiles with a double length w axis that has the upper and lower limit for each target percentile
-        ##This method uses np.search_sorted on a double length w axis to identify which animals are between the upper
-        ## & lower limits of the target_percentile +/- tolerance
-        target_upper = target_percentiles + tolerance   #to convert to chunking use target_upper = np.average(target_percentile, roll(target_percentile, -1))
-        target_lower = target_percentiles - tolerance   #roll(+1). With both needing the end case handled
-        target_percentiles_2w_unsorted = np.concatenate([target_upper, target_lower], axis=w_pos)
-        sort_order = np.argsort(target_percentiles_2w_unsorted, axis=w_pos)  #required to convert the result back to
-        target_percentiles_2w = np.take_along_axis(target_percentiles_2w_unsorted, sort_order, axis=w_pos)
-        ## Expand the ends of the target percentiles to pickup scenarios where the end case is a valid animal and rounding was causing randomness
-        slc = [slice(None)] * target_percentiles_2w.ndim
-        slc[w_pos] = 0
-        target_percentiles_2w[tuple(slc)] -= 0.0001
-        slc[w_pos] = -1
-        target_percentiles_2w[tuple(slc)] += 0.0001
+            # Part C #
+            ##For each animal calculate a pointer to a start group based on the percentile_rank, the target percentiles
+            ###and the tolerances.
 
-        ## find the position in the double w axis for each element in the percentile_rank array
-        position_2w = fun.f1_searchsorted_looped(target_percentiles_2w, percentile_rank, w_pos)  #look up the place of percentile rank in target percentile and retuen a value between 0 and 2w-1
-        ## remembering that the order is reversed so working up from a low percentile
-        ### 0 means that the percentile_rank is <= the lowest target_2w (lowest target - tolerance)  i.e. not within tolerance
-        ### 1 means (lowest target - tolerance) < percentile_rank <= (lowest + tolerance) i.e. within tolerance
-        ### 3 means (lowest target + tolerance) < percentile_rank <= (2nd lowest - tolerance)  i.e. not within tolerance
-        ### generalising, the odd numbers are within the tolerance and even are not
-        position_2w[position_2w % 2 == 0] = -2
-        ##calculate the position in the w length array
-        position = position_2w // 2   # unused are now -1 and the other values are 0 to len_w-1
-        ##revert the sort back to the order of the target_percentiles using the order args for the ascending order of ebw
-        pointers = np.take_along_axis(order, position, w_pos)
-        ##adjust the pointer to point to the first slice of each block along the w axis
-        ###this is necessary because the first slice of the block is referenced in f1_collapse()
-        pointers = ((pointers // block) * block).astype(int)
-        ##replace the -1 in the array (required because -1 is used as a valid position in take_along)
-        pointers[position==-1] = -1
+            ##create target_percentiles with a double length w axis that has the upper and lower limit for each target percentile
+            ##This method uses np.search_sorted on a double length w axis to identify which animals are between the upper
+            ## & lower limits of the target_percentile +/- tolerance
+            target_upper = target_percentiles + tolerance   #to convert to chunking use target_upper = np.average(target_percentile, roll(target_percentile, -1))
+            target_lower = target_percentiles - tolerance   #roll(+1). With both needing the end case handled
+            target_percentiles_2w_unsorted = np.concatenate([target_upper, target_lower], axis=w_pos)
+            sort_order = np.argsort(target_percentiles_2w_unsorted, axis=w_pos)  #required to convert the result back to
+            target_percentiles_2w = np.take_along_axis(target_percentiles_2w_unsorted, sort_order, axis=w_pos)
+            ## Expand the ends of the target percentiles to pickup scenarios where the end case is a valid animal and rounding was causing randomness
+            slc = [slice(None)] * target_percentiles_2w.ndim
+            slc[w_pos] = 0
+            target_percentiles_2w[tuple(slc)] -= 0.0001
+            slc[w_pos] = -1
+            target_percentiles_2w[tuple(slc)] += 0.0001
 
-    # Overwrite the pointers with 1:1 if there is only 1 group contributing to each start animal of the next period
-    ## this occurs when there are no axes to collapse
-    ## This needs to be done at the end of the function, it can't be done at the start of the function (and then
-    ## bypass the other calculations) because only part of the array may need to be overwritten
+            ## find the position in the double w axis for each element in the percentile_rank array
+            position_2w = fun.f1_searchsorted_looped(target_percentiles_2w, percentile_rank, w_pos)  #look up the place of percentile rank in target percentile and retuen a value between 0 and 2w-1
+            ## remembering that the order is reversed so working up from a low percentile
+            ### 0 means that the percentile_rank is <= the lowest target_2w (lowest target - tolerance)  i.e. not within tolerance
+            ### 1 means (lowest target - tolerance) < percentile_rank <= (lowest + tolerance) i.e. within tolerance
+            ### 3 means (lowest target + tolerance) < percentile_rank <= (2nd lowest - tolerance)  i.e. not within tolerance
+            ### generalising, the odd numbers are within the tolerance and even are not
+            position_2w[position_2w % 2 == 0] = -2
+            ##calculate the position in the w length array
+            position = position_2w // 2   # unused are now -1 and the other values are 0 to len_w-1
+            ##revert the sort back to the order of the target_percentiles using the order args for the ascending order of ebw
+            pointers = np.take_along_axis(order, position, w_pos)
+            ##adjust the pointer to point to the first slice of each block along the w axis
+            ###this is necessary because the first slice of the block is referenced in f1_collapse()
+            pointers = ((pointers // block) * block).astype(int)
+            ##replace the -1 in the array (required because -1 is used as a valid position in take_along)
+            pointers[position==-1] = -1
+            ## Overwrite index_unique_w with pointer for the slices where axes are being collapsed
+            pointers = fun.f_update(index_unique_wzida0e0b0xyg, pointers, n_groups_collapsed > n_startw_unique_next)
 
-    ##Create an array that is passing 1 to 1 for the number of unique w and overwrite pointers if equal numbers of groups collapsed and starting next period
-    index_unique_wzida0e0b0xyg = ((index_wzida0e0b0xyg // block) * block).astype(int)
-    pointers = fun.f_update(pointers, index_unique_wzida0e0b0xyg, n_groups_collapsed == n_startw_unique_next)
+            # Step 7 - Error handler: ensure that all collapse animals have a pointer
+            #todo this uses w by w... can we get around this?
+            missing_condense = f1_check_all_bins_present(pointers, w_pos, (w_pos,), index_unique_wzida0e0b0xyg)
+            missing_season = f1_check_all_bins_present(pointers, w_pos, (w_pos,) + season_tup, index_unique_wzida0e0b0xyg)
+            missing_prejoin = f1_check_all_bins_present(pointers, w_pos, (w_pos,) + prejoin_tup, index_unique_wzida0e0b0xyg)
+            missing_prejoinseason = f1_check_all_bins_present(pointers, w_pos, (w_pos,) + prejoinseason_tup, index_unique_wzida0e0b0xyg)
 
-    # Step 7 - Error handler: ensure that all collapse animals have a pointer
-    #todo this uses w by w... can we get around this?
-    missing_condense = f1_check_all_bins_present(pointers, w_pos, (w_pos,), index_unique_wzida0e0b0xyg)
-    missing_season = f1_check_all_bins_present(pointers, w_pos, (w_pos,) + season_tup, index_unique_wzida0e0b0xyg)
-    missing_prejoin = f1_check_all_bins_present(pointers, w_pos, (w_pos,) + prejoin_tup, index_unique_wzida0e0b0xyg)
-    missing_prejoinseason = f1_check_all_bins_present(pointers, w_pos, (w_pos,) + prejoinseason_tup, index_unique_wzida0e0b0xyg)
+            missing = fun.f_update(missing_condense, missing_season, period_is_seasonstart)
+            missing = fun.f_update(missing, missing_prejoin, period_is_prejoin)
+            missing = fun.f_update(missing, missing_prejoinseason,
+                                   np.logical_and(period_is_prejoin, period_is_seasonstart))
 
-    missing = fun.f_update(missing_condense, missing_season, period_is_seasonstart)
-    missing = fun.f_update(missing, missing_prejoin, period_is_prejoin)
-    missing = fun.f_update(missing, missing_prejoinseason,
-                           np.logical_and(period_is_prejoin, period_is_seasonstart))
+            if ~np.any(missing):
+                break   #no missing values exit the for loop
+        else:    #got to end of tolerance options without breaking out of the loop (i.e. missing values even with tol==0)
+            raise ValueError(f"Period {p}: pointers must exist for each collapsed animal. "
+                                 f"This indicates that numbers are very low (animals died) or an edge case that is not picked up with the target percentiles and/or tolerances. ")
 
-    if np.any(missing):
-        raise ValueError(f"Period {p}: pointers must exist for each collapsed animal. "
-                         f"This indicates that numbers are very low (animals died) or an edge case that is not picked up with the target percentiles and/or tolerances. ")
-
-    # add leading axes so that arrays have same ndims
-    index_unique_wzida0e0b0xyg = index_unique_wzida0e0b0xyg.reshape((1,) * (pointers.ndim - index_unique_wzida0e0b0xyg.ndim) + index_unique_wzida0e0b0xyg.shape)
+    # add leading axes so that arrays have same ndims as ebw
+    pointers = pointers.reshape((1,) * (ebw.ndim - pointers.ndim) + pointers.shape)
+    index_unique_wzida0e0b0xyg = index_unique_wzida0e0b0xyg.reshape((1,) * (ebw.ndim - index_unique_wzida0e0b0xyg.ndim) + index_unique_wzida0e0b0xyg.shape)
     return pointers, index_unique_wzida0e0b0xyg
 
 
