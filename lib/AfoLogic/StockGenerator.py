@@ -1586,10 +1586,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     date_weaned_pa1e1b1nwzida0e0b0xyg2 = date_born1st_pa1e1b1nwzida0e0b0xyg2 + age_wean1st_pa1e1b1nwzida0e0b0xyg2 #use offs wean age input and has the same birth day (offset by a yr) therefore it will automatically align with a period start
 
     ##age start open (not capped at weaning or before birth) used to calc p1 stuff
-    age_start_open_pa1e1b1nwzida0e0b0xyg0 = date_start_pa1e1b1nwzida0e0b0xyg - date_born_ida0e0b0xyg0
-    age_start_open_pa1e1b1nwzida0e0b0xyg1 = date_start_pa1e1b1nwzida0e0b0xyg - date_born_ida0e0b0xyg1
-    age_start_open_pa1e1b1nwzida0e0b0xyg3 = date_start_pa1e1b1nwzida0e0b0xyg3 - date_born_ida0e0b0xyg3
-    age_start_open_pa1e1b1nwzida0e0b0xyg2 = date_start_pa1e1b1nwzida0e0b0xyg - date_born_pa1e1b1nwzida0e0b0xyg2
+    age_start_open_pa1e1b1nwzida0e0b0xyg0 = np.maximum(0,date_start_pa1e1b1nwzida0e0b0xyg - date_born_ida0e0b0xyg0)
+    age_start_open_pa1e1b1nwzida0e0b0xyg1 = np.maximum(0,date_start_pa1e1b1nwzida0e0b0xyg - date_born_ida0e0b0xyg1)
+    age_start_open_pa1e1b1nwzida0e0b0xyg3 = np.maximum(0,date_start_pa1e1b1nwzida0e0b0xyg3 - date_born_ida0e0b0xyg3)
+    age_start_open_pa1e1b1nwzida0e0b0xyg2 = np.maximum(0,date_start_pa1e1b1nwzida0e0b0xyg - date_born_pa1e1b1nwzida0e0b0xyg2)
     ##age start
     age_start_pa1e1b1nwzida0e0b0xyg0 = (np.maximum(date_start_pa1e1b1nwzida0e0b0xyg, date_weaned_ida0e0b0xyg0) - date_born_ida0e0b0xyg0).astype(int) #use date weaned because the simulation for these animals is starting at weaning.
     age_start_pa1e1b1nwzida0e0b0xyg1 = (np.maximum(date_start_pa1e1b1nwzida0e0b0xyg, date_weaned_ida0e0b0xyg1) - date_born_ida0e0b0xyg1).astype(int) #use date weaned because the simulation for these animals is starting at weaning.
