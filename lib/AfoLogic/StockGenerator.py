@@ -2616,7 +2616,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
 
     ##If using feedsupply from pkl, read in LTW adjustment from pkl.
     fs_use_number = sinp.structuralsa['i_fs_use_number']
-    if sinp.structuralsa['i_fs_use_pkl']:
+    if False:     #sinp.structuralsa['i_fs_use_pkl']:
         ###update ltwadj with ltwadj from pkl
         pkl_sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1 = pkl_fs['ltw_adj']['sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1']
         pkl_sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1 = pkl_fs['ltw_adj']['sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1']
