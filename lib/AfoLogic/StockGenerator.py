@@ -2602,29 +2602,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3 = np.zeros(pg3)[0:1, ...]  # slice the p axis to convert to singleton
     sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3 = np.zeros(pg3)[0:1, ...]  # slice the p axis to convert to singleton
 
-    ## 2 LTW loops unless either:
-    ###     a. the feedsupply comes from pickle and pkl_ltwadj can be broadcast (loop_ltw_len=1).
-    ###     b. the LTW adjustment for dams & offs are both set to 0 (loop_ltw_len=1)
+    ## 2 LTW loops unless:
+    ###     a. the LTW adjustment for dams & offs are both set to 0 (loop_ltw_len=1)
     ### Note: The resulting number determined from the above steps can be increased by SAV if extra precision is required.
     loop_ltw_len = 2
-
-    ##If using feedsupply from pkl, read in LTW adjustment from pkl.
-    fs_use_number = sinp.structuralsa['i_fs_use_number']
-    if sinp.structuralsa['i_fs_use_pkl']:
-        ###update ltwadj with ltwadj from pkl
-        pkl_sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1 = pkl_fs['ltw_adj']['sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1']
-        pkl_sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1 = pkl_fs['ltw_adj']['sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1']
-        pkl_sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3 = pkl_fs['ltw_adj']['sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3']
-        pkl_sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3 = pkl_fs['ltw_adj']['sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3']
-        try:   #broadcast the ltwadj from pkl to the current feedsupply shape
-            sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1[...] = pkl_sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1
-            sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1[...] = pkl_sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1
-            sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3[...] = pkl_sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3
-            sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3[...] = pkl_sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3
-            loop_ltw_len = 1   #set number of loops to 1 if the feedsupply comes from pickle and the ltwadj could be broadcast
-        except ValueError: #could not broadcast the ltwadj array from shape x into shape y so carry out default ltw loops
-            pass
-            # loop_ltw_len = max(loop_ltw_len, 2)
 
     ##Turn off ltw loop if:
         ## When both dams & offs are not used (i.e. LTW_? == 0) then don't loop.
@@ -6916,14 +6897,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
         sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3 = t3_sfw_ltwadj_t1pa1e1b1nwzida0e0b0xyg3[0]
         sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3 = t3_sfd_ltwadj_t1pa1e1b1nwzida0e0b0xyg3[0]
         ### no active w so dont need to adjust like for dams above.
-
-        ##store ltw adjustments so they can be pickled
-        ## store on the second last ltw loop to remove randomness when pkl (so that the ltw adj that is pkl is the same as the ltw adj used in final iteration)
-        if loop_ltw == loop_ltw_len-2 or loop_ltw_len==1:
-            pkl_fs_info['sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1'] = sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1
-            pkl_fs_info['sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1'] = sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1
-            pkl_fs_info['sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3'] = sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3
-            pkl_fs_info['sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3'] = sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3
 
         ##This is the end of the LTW loop
 
