@@ -20,6 +20,7 @@ def f_create_report_dfs(non_exist_trials):
     reports["stacked_numbers_qsz"] = pd.DataFrame()  # total dse by qsz
     reports["stacked_croparea_qsz"] = pd.DataFrame()  # total crop by qsz
     reports["stacked_pnl"] = pd.DataFrame()  # profit and loss statement
+    reports["stacked_trees"] = pd.DataFrame()  # profit and loss statement
     reports["stacked_mach"] = pd.DataFrame()  # machiney summary
     reports["stacked_wc"] = pd.DataFrame()  # max bank overdraw
     reports["stacked_penalty"] = pd.DataFrame()  # biomass penalty from seeding timeliness and crop grazing
@@ -36,6 +37,7 @@ def f_create_report_dfs(non_exist_trials):
     reports["stacked_dam_dvp_dates"] = pd.DataFrame()  # dam dvp dates
     reports["stacked_repro_dates"] = pd.DataFrame()  # dam repro dates
     reports["stacked_offs_dvp_dates"] = pd.DataFrame()  # offs dvp dates
+    reports["stacked_deepflow"] = pd.DataFrame()  # sale price
     reports["stacked_saleprice"] = pd.DataFrame()  # sale price
     reports["stacked_salegrid_dams"] = pd.DataFrame()  # sale grid
     reports["stacked_salegrid_yatf"] = pd.DataFrame()  # sale grid
@@ -47,6 +49,7 @@ def f_create_report_dfs(non_exist_trials):
     reports["stacked_woolvalue_dams"] = pd.DataFrame()  # average wool value dams
     reports["stacked_woolvalue_offs"] = pd.DataFrame()  # average wool value offs
     reports["stacked_saledate_offs"] = pd.DataFrame()  # offs sale date
+    reports["stacked_saledateEL_offs"] = pd.DataFrame()  # offs sale date  #todo remove after ewe lambs analysis
     reports["stacked_cfw_dams"] = pd.DataFrame()  # clean fleece weight dams
     reports["stacked_fd_dams"] = pd.DataFrame()  # fibre diameter dams
     reports["stacked_cfw_offs"] = pd.DataFrame()  # clean fleece weight dams
@@ -114,6 +117,7 @@ def f_create_report_dfs(non_exist_trials):
     reports["stacked_napcon"] = pd.DataFrame()  # non-arable pasture feed consumed
     reports["stacked_poccon"] = pd.DataFrame()  # pasture on crop paddocks feed consumed
     reports["stacked_supcon"] = pd.DataFrame()  # supplement feed consumed
+    reports["stacked_supdsecon"] = pd.DataFrame()  # supplement feed consumed
     reports["stacked_stubcon"] = pd.DataFrame()  # stubble feed consumed
     reports["stacked_cropcon"] = pd.DataFrame()  # crop consumed from early season crop grazing
     reports["stacked_cropcon_available"] = pd.DataFrame()  # crop consumed from early season crop grazing
@@ -166,6 +170,10 @@ def f_concat_reports(stacked_reports, reports, report_run, trial_name):
     if report_run.loc['run_pnl', 'Run']:
         pnl = pd.concat([reports["pnl"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
         stacked_reports["stacked_pnl"] = rfun.f_append_dfs(stacked_reports["stacked_pnl"], pnl)
+
+    if report_run.loc['run_trees', 'Run']:
+        trees = pd.concat([reports["trees"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
+        stacked_reports["stacked_trees"] = rfun.f_append_dfs(stacked_reports["stacked_trees"], trees)
 
     if report_run.loc['run_mach', 'Run']:
         pnl = pd.concat([reports["mach"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
@@ -230,6 +238,10 @@ def f_concat_reports(stacked_reports, reports, report_run, trial_name):
                                    names=['Trial'])  # add trial name as index level
         stacked_reports["stacked_offs_dvp_dates"] = rfun.f_append_dfs(stacked_reports["stacked_offs_dvp_dates"], offs_dvp_dates)
 
+    if report_run.loc['run_deepflow', 'Run']:
+        deepflow = pd.concat([reports["deepflow"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
+        stacked_reports["stacked_deepflow"] = rfun.f_append_dfs(stacked_reports["stacked_deepflow"], deepflow)
+
     if report_run.loc['run_saleprice', 'Run']:
         saleprice = pd.concat([reports["saleprice"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
         stacked_reports["stacked_saleprice"] = rfun.f_append_dfs(stacked_reports["stacked_saleprice"], saleprice)
@@ -278,6 +290,10 @@ def f_concat_reports(stacked_reports, reports, report_run, trial_name):
     if report_run.loc['run_saledate_offs', 'Run']:
         saledate_offs = pd.concat([reports["saledate_offs"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
         stacked_reports["stacked_saledate_offs"] = rfun.f_append_dfs(stacked_reports["stacked_saledate_offs"], saledate_offs)
+
+    if report_run.loc['run_saledateEL_offs', 'Run']:  #todo remove after ewe lambs analysis
+        saledateEL_offs = pd.concat([reports["saledateEL_offs"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
+        stacked_reports["stacked_saledateEL_offs"] = rfun.f_append_dfs(stacked_reports["stacked_saledateEL_offs"], saledateEL_offs)
 
     if report_run.loc['run_cfw_dams', 'Run']:
         cfw_dams = pd.concat([reports["cfw_dams"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
@@ -564,6 +580,10 @@ def f_concat_reports(stacked_reports, reports, report_run, trial_name):
         supcon = pd.concat([reports["supcon"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
         stacked_reports["stacked_supcon"] = rfun.f_append_dfs(stacked_reports["stacked_supcon"], supcon)
 
+    if report_run.loc['run_supdsecon', 'Run']:
+        supdsecon = pd.concat([reports["supdsecon"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
+        stacked_reports["stacked_supdsecon"] = rfun.f_append_dfs(stacked_reports["stacked_supdsecon"], supdsecon)
+
     if report_run.loc['run_stubcon', 'Run']:
         stubcon = pd.concat([reports["stubcon"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
         stacked_reports["stacked_stubcon"] = rfun.f_append_dfs(stacked_reports["stacked_stubcon"], stubcon)
@@ -630,7 +650,13 @@ def f_save_reports(report_run, reports, processor):
     ####################################
     print("Writing to Excel")
     ##first check that Excel is not open (Microsoft puts a lock on files, so they can't be updated from elsewhere while open)
-    report_file_path = relativeFile.find(__file__, "../../Output", "Report{0}.xlsx".format(processor))
+    ##set the group of trials being run. If no argument is passed in then all trials are run. To pass in argument need to run via terminal.
+    try:
+        exp_group = int(sys.argv[1]) #reads in as string so need to convert to int, the script path is the first value hence take the second.
+    except (IndexError, ValueError) as e: #in case no arg passed to python
+        exp_group = None
+
+    report_file_path = relativeFile.find(__file__, "../../Output", f"Report{processor}_{exp_group}.xlsx")
     if os.path.isfile(report_file_path): #to check if report.xl exists
         while True:   # repeat until the try statement succeeds
             try:
@@ -672,6 +698,8 @@ def f_save_reports(report_run, reports, processor):
         df_settings = rfun.f_df2xl(writer, reports["stacked_croparea_qsz"], 'croparea_qsz', df_settings, option=xl_display_mode)
     if report_run.loc['run_pnl', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_pnl"], 'pnl', df_settings, option=xl_display_mode)
+    if report_run.loc['run_trees', 'Run']:
+        df_settings = rfun.f_df2xl(writer, reports["stacked_trees"], 'trees', df_settings, option=xl_display_mode)
     if report_run.loc['run_mach', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_mach"], 'mach_summary', df_settings, option=xl_display_mode)
     if report_run.loc['run_wc', 'Run']:
@@ -702,6 +730,8 @@ def f_save_reports(report_run, reports, processor):
         df_settings = rfun.f_df2xl(writer, reports["stacked_wethers_n_crossys_numbers_summary"], 'wethers_n_xb_numbers_summary', df_settings, option=xl_display_mode)
     if report_run.loc['run_emissions', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_emissions"], 'emissions', df_settings, option=xl_display_mode)
+    if report_run.loc['run_deepflow', 'Run']:
+        df_settings = rfun.f_df2xl(writer, reports["stacked_deepflow"], 'deepflow', df_settings, option=xl_display_mode)
     if report_run.loc['run_saleprice', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_saleprice"], 'saleprice', df_settings, option=xl_display_mode)
     if report_run.loc['run_salegrid_dams', 'Run']:
@@ -716,6 +746,10 @@ def f_save_reports(report_run, reports, processor):
         reports["stacked_saledate_offs"] = reports["stacked_saledate_offs"].astype(object)
         reports["stacked_saledate_offs"][reports["stacked_saledate_offs"]==np.datetime64('1970-01-01')] = 0
         df_settings = rfun.f_df2xl(writer, reports["stacked_saledate_offs"], 'saledate_offs', df_settings, option=xl_display_mode)
+    if report_run.loc['run_saledateEL_offs', 'Run']:  #todo remove after ewe lambs analysis
+        reports["stacked_saledateEL_offs"] = reports["stacked_saledateEL_offs"].astype(object)
+        reports["stacked_saledateEL_offs"][reports["stacked_saledateEL_offs"]==np.datetime64('1970-01-01')] = 0
+        df_settings = rfun.f_df2xl(writer, reports["stacked_saledateEL_offs"], 'saledateEL_offs', df_settings, option=xl_display_mode)
     if report_run.loc['run_salevalue_offs', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_salevalue_offs"], 'salevalue_offs', df_settings, option=xl_display_mode)
     if report_run.loc['run_salevalue_dams', 'Run']:
@@ -869,6 +903,8 @@ def f_save_reports(report_run, reports, processor):
         df_settings = rfun.f_df2xl(writer, reports["stacked_poccon"], 'poccon', df_settings, option=xl_display_mode)
     if report_run.loc['run_supcon', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_supcon"], 'supcon', df_settings, option=xl_display_mode)
+    if report_run.loc['run_supdsecon', 'Run']:
+        df_settings = rfun.f_df2xl(writer, reports["stacked_supdsecon"], 'supdsecon', df_settings, option=xl_display_mode)
     if report_run.loc['run_stubcon', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_stubcon"], 'stubcon', df_settings, option=xl_display_mode)
     if report_run.loc['run_cropcon', 'Run']:
@@ -900,4 +936,4 @@ def f_save_reports(report_run, reports, processor):
     df_settings.to_excel(writer, 'df_settings')
     writer.close()
 
-    print("Report complete. Processor: {0}".format(processor))
+    print(f"Report complete. Processor: {processor}")
