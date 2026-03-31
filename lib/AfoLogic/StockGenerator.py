@@ -1981,7 +1981,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     initial_a1e1b1nwzida0e0b0xyg = fun.f_expand(initial_a1, a1_pos)
     ###Distribution of initial numbers across the b1 axis
     # update the initial numbers (at weaning) for dams with the estimation of proportion of ewe lambs mated
-    sinp.stock['i_initial_b1'][0] = fun.f_sa(sinp.stock['i_initial_b1'][0], 1 - sen.sav['est_propn_dams_mated_og1'][0,0], 5)   #currently only handles using the first g1 in the SAV
+    sinp.stock['i_initial_b1'][0] = 1 - fun.f_sa(1 - sinp.stock['i_initial_b1'][0], sen.sav['est_propn_dams_mated_og1'][0,0], 5)   #currently only handles using the first g1 in the SAV
     sinp.stock['i_initial_b1'][2] = fun.f_sa(sinp.stock['i_initial_b1'][2], sen.sav['est_propn_dams_mated_og1'][0,0], 5)   #currently only handles using the first g1 in the SAV
     initial_b1nwzida0e0b0xyg = fun.f_expand(sinp.stock['i_initial_b1'], b1_pos)
     ###Distribution of initial numbers across the y-axis
