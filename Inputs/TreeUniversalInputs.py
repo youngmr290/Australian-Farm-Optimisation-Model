@@ -281,12 +281,12 @@ tree_inputs = {
     "yr_1_costs": {
         "weed_control": 10.00,  # $/ha
         "fertiliser_base": 0.00,  # $/ha
-        "fertiliser_extra_if_harvested": 82.00,  # $/ha
+        "fertiliser_extra_if_harvested": 0.00,  # $/ha
     },
     "yrs_2_to_100": {
         "weed_control": 0.00,  # $/ha
         "fertiliser_base": 0.00,  # $/ha
-        "fertiliser_extra_if_harvested": 82.00,  # $/ha
+        "fertiliser_extra_if_harvested": 0.00,  # $/ha
     },
 
     ###############
