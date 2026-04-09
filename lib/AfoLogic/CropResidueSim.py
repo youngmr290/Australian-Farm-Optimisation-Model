@@ -129,11 +129,9 @@ if __name__=="__main__":
     mask_p_offs_p = p_index_p<=(n_sim_periods_offs-1)
 
     ###scale trial start to the correct yr in the sim based on animal age
-    add_yrs_t = np.ceil((date_start_p[0] - trial_commencement_date_t) / 364)
-    # sub_yrs = np.ceil(np.maximum(0, (item_start - end_of_periods).astype('timedelta64[D]').astype(int) / 365))
-    trial_commencement_date_t = trial_commencement_date_t + add_yrs_t * 364
     ####scale for animal age
-    trial_commencement_date_t = trial_commencement_date_t + uinp.stubble['animal_age_t'] * 364
+    trial_commencement_date_t = trial_commencement_date_t + uinp.stubble['i_sim_yr_t'] * 364
+    lambing_date_yatf_t = uinp.stubble['lambing_date_t'] + uinp.stubble['i_sim_yr_t'] * 364
 
     ##general info
     b0_pos = sinp.stock['i_b0_pos']
@@ -188,8 +186,10 @@ if __name__=="__main__":
         ##call stock gen
         stubble_inp['shear_date'] = uinp.stubble['shear_date_t'][t]
         stubble_inp['lambing_date'] = uinp.stubble['lambing_date_t'][t]
+        stubble_inp['lambing_date_yatf'] = lambing_date_yatf_t[t]
         stubble_inp['a_c2_c0'] = uinp.stubble['a_c2_c0t'][:,t]
         stubble_inp['i_g3_inc'] = uinp.stubble['i_g3_inc_g3t'][:,t]
+        stubble_inp['i_srw'] = uinp.stubble['i_srw'][t]
         stubble_inp['i_sr'] = stocking_rate_t[t]
         stubble_inp['i_ws'] = uinp.stubble['i_ws_t'][t]
         stubble_inp['i_rain'] = uinp.stubble['i_rain_t'][t]

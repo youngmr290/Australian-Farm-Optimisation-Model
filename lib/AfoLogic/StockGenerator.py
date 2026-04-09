@@ -783,7 +783,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         date_shear_sida0e0b0xyg1[...] = stubble['shear_date']
         date_shear_sida0e0b0xyg3[...] = stubble['shear_date']
         ###birth control
-        date_born1st_oa1e1b1nwzida0e0b0xyg2[...] = stubble['lambing_date']
+        date_born1st_oa1e1b1nwzida0e0b0xyg2[...] = stubble['lambing_date_yatf']
+        date_born1st_ida0e0b0xyg1[...] = stubble['lambing_date']
+        date_born1st_ida0e0b0xyg3[...] = stubble['lambing_date']
 
     ###association between start w and full w
     a_wstart_w1 = np.floor(index_w1 / len_nut_dams).astype(int) #identify the start w slice (nut 0) for each w
@@ -797,6 +799,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     ##if generating for stubble then overwrite genotype selection
     if stubble:
         a_c2_c0 = stubble['a_c2_c0']
+        uinp.parameters['i_srw_c2'][...] = stubble['i_srw']
 
     ##association for the retained t of each g slice
     a_t_g1 = np.arange(pinp.sheep['i_n_dam_sales'], pinp.sheep['i_n_dam_sales']+len_g1)
@@ -1717,10 +1720,10 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     date_weaned_pa1e1b1nwzida0e0b0xyg2 = date_born1st_pa1e1b1nwzida0e0b0xyg2 + age_wean1st_pa1e1b1nwzida0e0b0xyg2 #use offs wean age input and has the same birth day (offset by a yr) therefore it will automatically align with a period start
 
     ##age start open (not capped at weaning or before birth) used to calc p1 stuff
-    age_start_open_pa1e1b1nwzida0e0b0xyg0 = date_start_pa1e1b1nwzida0e0b0xyg - date_born_ida0e0b0xyg0
-    age_start_open_pa1e1b1nwzida0e0b0xyg1 = date_start_pa1e1b1nwzida0e0b0xyg - date_born_ida0e0b0xyg1
-    age_start_open_pa1e1b1nwzida0e0b0xyg3 = date_start_pa1e1b1nwzida0e0b0xyg3 - date_born_ida0e0b0xyg3
-    age_start_open_pa1e1b1nwzida0e0b0xyg2 = date_start_pa1e1b1nwzida0e0b0xyg - date_born_pa1e1b1nwzida0e0b0xyg2
+    age_start_open_pa1e1b1nwzida0e0b0xyg0 = np.maximum(0,date_start_pa1e1b1nwzida0e0b0xyg - date_born_ida0e0b0xyg0)
+    age_start_open_pa1e1b1nwzida0e0b0xyg1 = np.maximum(0,date_start_pa1e1b1nwzida0e0b0xyg - date_born_ida0e0b0xyg1)
+    age_start_open_pa1e1b1nwzida0e0b0xyg3 = np.maximum(0,date_start_pa1e1b1nwzida0e0b0xyg3 - date_born_ida0e0b0xyg3)
+    age_start_open_pa1e1b1nwzida0e0b0xyg2 = np.maximum(0,date_start_pa1e1b1nwzida0e0b0xyg - date_born_pa1e1b1nwzida0e0b0xyg2)
     ##age start
     age_start_pa1e1b1nwzida0e0b0xyg0 = (np.maximum(date_start_pa1e1b1nwzida0e0b0xyg, date_weaned_ida0e0b0xyg0) - date_born_ida0e0b0xyg0).astype(int) #use date weaned because the simulation for these animals is starting at weaning.
     age_start_pa1e1b1nwzida0e0b0xyg1 = (np.maximum(date_start_pa1e1b1nwzida0e0b0xyg, date_weaned_ida0e0b0xyg1) - date_born_ida0e0b0xyg1).astype(int) #use date weaned because the simulation for these animals is starting at weaning.
@@ -2112,7 +2115,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     initial_a1e1b1nwzida0e0b0xyg = fun.f_expand(initial_a1, a1_pos)
     ###Distribution of initial numbers across the b1 axis
     # update the initial numbers (at weaning) for dams with the estimation of proportion of ewe lambs mated
-    sinp.stock['i_initial_b1'][0] = fun.f_sa(sinp.stock['i_initial_b1'][0], 1 - sen.sav['est_propn_dams_mated_og1'][0,0], 5)   #currently only handles using the first g1 in the SAV
+    sinp.stock['i_initial_b1'][0] = 1 - fun.f_sa(1 - sinp.stock['i_initial_b1'][0], sen.sav['est_propn_dams_mated_og1'][0,0], 5)   #currently only handles using the first g1 in the SAV
     sinp.stock['i_initial_b1'][2] = fun.f_sa(sinp.stock['i_initial_b1'][2], sen.sav['est_propn_dams_mated_og1'][0,0], 5)   #currently only handles using the first g1 in the SAV
     initial_b1nwzida0e0b0xyg = fun.f_expand(sinp.stock['i_initial_b1'], b1_pos)
     ###Distribution of initial numbers across the y-axis
@@ -2733,29 +2736,10 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3 = np.zeros(pg3)[0:1, ...]  # slice the p axis to convert to singleton
     sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3 = np.zeros(pg3)[0:1, ...]  # slice the p axis to convert to singleton
 
-    ## 2 LTW loops unless either:
-    ###     a. the feedsupply comes from pickle and pkl_ltwadj can be broadcast (loop_ltw_len=1).
-    ###     b. the LTW adjustment for dams & offs are both set to 0 (loop_ltw_len=1)
+    ## 2 LTW loops unless:
+    ###     a. the LTW adjustment for dams & offs are both set to 0 (loop_ltw_len=1)
     ### Note: The resulting number determined from the above steps can be increased by SAV if extra precision is required.
     loop_ltw_len = 2
-
-    ##If using feedsupply from pkl, read in LTW adjustment from pkl.
-    fs_use_number = sinp.structuralsa['i_fs_use_number']
-    if sinp.structuralsa['i_fs_use_pkl']:
-        ###update ltwadj with ltwadj from pkl
-        pkl_sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1 = pkl_fs['ltw_adj']['sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1']
-        pkl_sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1 = pkl_fs['ltw_adj']['sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1']
-        pkl_sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3 = pkl_fs['ltw_adj']['sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3']
-        pkl_sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3 = pkl_fs['ltw_adj']['sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3']
-        try:   #broadcast the ltwadj from pkl to the current feedsupply shape
-            sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1[...] = pkl_sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1
-            sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1[...] = pkl_sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1
-            sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3[...] = pkl_sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3
-            sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3[...] = pkl_sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3
-            loop_ltw_len = 1   #set number of loops to 1 if the feedsupply comes from pickle and the ltwadj could be broadcast
-        except ValueError: #could not broadcast the ltwadj array from shape x into shape y so carry out default ltw loops
-            pass
-            # loop_ltw_len = max(loop_ltw_len, 2)
 
     ##Turn off ltw loop if:
         ## When both dams & offs are not used (i.e. LTW_? == 0) then don't loop.
@@ -4919,7 +4903,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
                     ri_yatf = fsfun.f_rel_intake(1, rq_yatf, legume_pa1e1b1nwzida0e0b0xyg[p], cr_yatf) #use ra=1 for stubble
                     mei_yatf, mei_solid_yatf, intake_f_yatf, md_solid_yatf, mei_propn_milk_yatf, mei_propn_herb_yatf, mei_propn_supp_yatf \
-                                = sfun.f_intake(pi_yatf, ri_yatf, md_herb_yatf, feedsupplyw_tpa1e1b1nwzida0e0b0xyg1[p]
+                                = sfun.f_intake(pi_yatf, ri_yatf, md_herb_yatf, False
                                                 , intake_s_yatf, pinp.sheep['i_md_supp'], mp2_yatf)   #same feedsupply as dams
 
             ##energy - yatf
@@ -7047,14 +7031,6 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3 = t3_sfw_ltwadj_t1pa1e1b1nwzida0e0b0xyg3[0]
         sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3 = t3_sfd_ltwadj_t1pa1e1b1nwzida0e0b0xyg3[0]
         ### no active w so dont need to adjust like for dams above.
-
-        ##store ltw adjustments so they can be pickled
-        ## store on the second last ltw loop to remove randomness when pkl (so that the ltw adj that is pkl is the same as the ltw adj used in final iteration)
-        if loop_ltw == loop_ltw_len-2 or loop_ltw_len==1:
-            pkl_fs_info['sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1'] = sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1
-            pkl_fs_info['sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1'] = sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1
-            pkl_fs_info['sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3'] = sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3
-            pkl_fs_info['sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3'] = sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3
 
         ##This is the end of the LTW loop
 
