@@ -644,8 +644,14 @@ def f_save_reports(report_run, reports, processor):
     #run between trial reports and save#
     ####################################
     print("Writing to Excel")
+    ##set the group of trials being run. If no argument is passed in then all trials are run. To pass in argument need to run via terminal.
+    try:
+        exp_group = int(sys.argv[1]) #reads in as string so need to convert to int, the script path is the first value hence take the second.
+    except (IndexError, ValueError) as e: #in case no arg passed to python
+        exp_group = None
+
     ##first check that Excel is not open (Microsoft puts a lock on files, so they can't be updated from elsewhere while open)
-    report_file_path = relativeFile.find(__file__, "../../Output", "Report{0}.xlsx".format(processor))
+    report_file_path = relativeFile.find(__file__, "../../Output", f"Report{processor}_{exp_group}.xlsx")
     if os.path.isfile(report_file_path): #to check if report.xl exists
         while True:   # repeat until the try statement succeeds
             try:
@@ -921,4 +927,4 @@ def f_save_reports(report_run, reports, processor):
     df_settings.to_excel(writer, 'df_settings')
     writer.close()
 
-    print("Report complete. Processor: {0}".format(processor))
+    print(f"Report complete. Processor: {processor}")
