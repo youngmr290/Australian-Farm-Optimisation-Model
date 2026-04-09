@@ -106,6 +106,8 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
     if report_run.loc['run_pnl', 'Run']:
         option = f_update_default_controls(user_controls, 'pnl', 'option', 2) #1 = report q, s, & z. 2 = weighted average of q, s, & z
         reports["pnl"] = rfun.f_profitloss_table(lp_vars, r_vals, option=option)
+    if report_run.loc['run_trees', 'Run']:
+        reports["trees"] = rfun.f_tree_summary(r_vals, totals=False)
     if report_run.loc['run_mach', 'Run']:
         option = f_update_default_controls(user_controls, 'mach_summary', 'option', 4)
         reports["mach"] = rfun.f_mach_summary(lp_vars, r_vals, option=option)
@@ -196,6 +198,10 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         axis_slice = f_update_default_controls(user_controls, 'offs_dvp_dates', 'axis_slice', {})
         reports["offs_dvp_dates"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod,
                                                    keys=keys, arith=arith, index=index, cols=cols)
+
+    if report_run.loc['run_deepflow', 'Run']:
+        reports["deepflow"] = rfun.f_deepflow_summary(r_vals)
+
     if report_run.loc['run_saleprice', 'Run']:
         option = f_update_default_controls(user_controls, 'saleprice', 'option', 2)
         grid = f_update_default_controls(user_controls, 'saleprice', 'grid', [0,5,6])
@@ -1385,6 +1391,11 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         #returns consumption in each FP
         option = f_update_default_controls(user_controls, 'supcon', 'option', 1)
         reports["supcon"] = rfun.f_grain_sup_summary(lp_vars, r_vals, option=option)
+
+    if report_run.loc['run_supdsecon', 'Run']:
+        #returns sup consumption (kg/DSE/day) in each FP in each z
+        reports["supdsecon"] = rfun.f_sup_per_dse(lp_vars, r_vals)
+
     if report_run.loc['run_stubcon', 'Run']:
         #returns consumption in each FP
         prod = np.array([1])

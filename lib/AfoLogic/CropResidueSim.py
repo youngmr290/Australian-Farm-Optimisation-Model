@@ -77,19 +77,20 @@ if __name__=="__main__":
     ###############
     #User control #
     ###############
-    trial = 12   #12 = QT. Count the number of rows (starting at 0) offset from the Default trial i.e. the value in Column A
+    trial = 1   #this will run the first trial in the exp_group (so you need to set the exp group in the script params)
 
     ######
     #Run #
     ######
     ##load excel data and experiment data
     exp_data, exp_group_bool, trial_pinp = exp.f_read_exp()
+    exp_data = exp.f_group_exp(exp_data, exp_group_bool)
     sinp_defaults, uinp_defaults, pinp_defaults = dxl.f_load_excel_default_inputs(trial_pinp=trial_pinp)
     d_rot_info = dxl.f_load_phases()
     cat_propn_s1_ks2 = dxl.f_load_stubble()
 
     ##select property for the current trial
-    property = trial_pinp.loc[trial]
+    property = trial_pinp.iloc[trial]
 
     ##process user SA
     user_sa = rve.f_process_user_sa(exp_data, trial)
@@ -110,7 +111,6 @@ if __name__=="__main__":
     pinp.f_property_inp_sa(pinp_defaults)
 
     ##expand p6 axis to include nodes
-    sinp.f1_expand_p6()
     pinp.f1_expand_p6()
 
     #################
@@ -209,7 +209,7 @@ if __name__=="__main__":
         stubble_inp['i_muscle_yatf'] = uinp.stubble['i_muscle_yatf_t'][t]
         stubble_inp['i_viscera_yatf'] = uinp.stubble['i_viscera_yatf_t'][t]
         stubble_inp['i_foo'] = uinp.stubble['i_foo_t'][t]
-        stubble_inp['i_sup_intake'] = uinp.stubble['i_sup_intake_t'][t]
+        stubble_inp['i_sup_intake'] = uinp.stubble['i_sup_intake_pt'][:,t]
         stubble_inp['p_start'] = p_start_trial_t[t]
         stubble_inp['p_end'] = p_end_t[t]
         stubble_inp['lw'] = trial_lw_tp[t,:]

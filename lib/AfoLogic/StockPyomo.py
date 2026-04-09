@@ -13,6 +13,7 @@ import numpy as np
 #AFO modules
 from . import StockGenerator as sgen
 from . import StructuralInputs as sinp
+from . import Sensitivity as sen
 
 
 def stock_precalcs(params, r_vals, nv, pkl_fs_info, pkl_fs, calibration=None):
@@ -35,6 +36,8 @@ def f1_stockpyomo_local(params, model, MP_lp_vars):
     model.s_groups_prog = pe.Set(initialize=params['g_idx_dams'], doc='genotype groups of prog') #same as dams and offs
     model.s_gen_merit_dams = pe.Set(initialize=params['y_idx_dams'], doc='genetic merit of dams')
     model.s_sale_dams = pe.Set(initialize=params['t_idx_dams'], doc='Sales within the year for dams')
+    model.s_sale_t_dams = pe.Set(initialize=params['t_idx_dams'][0:2], doc='T slices where sale can occur for dams')
+    model.s_retained_t_dams = pe.Set(initialize=params['t_idx_dams'][2:], doc='T slices where dams are retained')
     model.s_dvp_offs = pe.Set(ordered=True, initialize=params['dvp_idx_offs'], doc='Decision variable periods for offs') #ordered so they can be indexed in constraint to determine previous period
     model.s_damage = pe.Set(initialize=params['d_idx'], doc='age of mother - offs')
     model.s_k3_damage_offs = pe.Set(initialize=params['k3_idx_offs'], doc='age of mother - offs')
@@ -95,10 +98,10 @@ def f1_stockpyomo_local(params, model, MP_lp_vars):
     model.p_progprov_offs = pe.Param(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_sale_prog, model.s_lw_prog,
                                      model.s_season_types, model.s_tol, model.s_wean_times, model.s_gender, 
                                      model.s_gen_merit_offs, model.s_groups_offs, model.s_lw_offs,
-                                     initialize=params['p_progprov_offs'], default=0.0, mutable=False, doc='number of progeny provided to dams')
+                                     initialize=params['p_progprov_offs'], default=0.0, mutable=False, doc='number of progeny provided to offs')
     model.p_progreq_offs = pe.Param(model.s_k3_damage_offs, model.s_dvp_offs, model.s_lw_offs, model.s_season_types,
                                     model.s_tol, model.s_gender, model.s_groups_offs, model.s_lw_offs,
-                              initialize=params['p_progreq_offs'], default=0.0, doc='number of progeny required by dams')
+                              initialize=params['p_progreq_offs'], default=0.0, doc='number of progeny required by offs')
 
 
     ##stock - dams
@@ -372,14 +375,37 @@ def f1_stockpyomo_local(params, model, MP_lp_vars):
     l_g3 = list(model.s_groups_offs)
     l_w9_offs = list(model.s_lw_offs)
 
+    # if using the fs_optimisation bounds then we add some slack to the RHS of numbers transfer to stop infeasibility.
+    if sen.sav['bnd_fs_opt_inc']:
+        lo_bnd = 1.0    #lo bound on the number of animals in the classes constrained
+        propn_sold = 0.005  #a low number so that the absolute number sold is small in each t slice. Also reduces the 'free' animals
+        n_dvp_per_condense_dams = 5 #this is higher so it works if nodes are included
+        n_sale_t_dams = 2
+        n_dvp_per_condense_offs = 4 #this is higher so it works if nodes are included
+        n_sale_t_offs = len(model.s_sale_t_offs)
+
+        ##Allow 20% (1.2) for mortality during the year. 2 for dams is to allow for mated and NM constraints
+        dams_RHS_fs_opt = 2 * 1.2 * lo_bnd / (1 - n_sale_t_dams * propn_sold)**n_dvp_per_condense_dams
+
+        offs_RHS_fs_opt = 1.2 * lo_bnd / (1 - n_sale_t_offs * propn_sold)**n_dvp_per_condense_offs
+
+        ###store and use in the bnds
+        params['fs_opt_lo_bnd'] = lo_bnd
+        params['fs_opt_min_propn_sold'] = propn_sold
+        params['fs_opt_max_propn_sold'] = 0.9 #this stops the model selling an entire class of sheep (e.g. triplets)
+
+    else:
+        dams_RHS_fs_opt = 0
+        offs_RHS_fs_opt = 0
+
     ##call local constraint functions
-    f_con_off_withinR(model, params, l_v3, l_k3, l_k5, l_z, l_i, l_x, l_g3, l_w9_offs)
-    f_con_off_betweenR(model, params, l_v3, l_k3, l_k5, l_z, l_i, l_x, l_g3, l_w9_offs, MP_lp_vars)
-    f_con_dam_withinR(model, params, l_v1, l_k29, l_a, l_z, l_i, l_y1, l_g9, l_w9)
-    f_con_dam_betweenR(model, params, l_v1, l_k29, l_a, l_z, l_i, l_y1, l_g9, l_w9, MP_lp_vars)
+    f_con_off_withinR(model, params, l_v3, l_k3, l_k5, l_z, l_i, l_x, l_g3, l_w9_offs, offs_RHS_fs_opt)
+    f_con_off_betweenR(model, params, l_v3, l_k3, l_k5, l_z, l_i, l_x, l_g3, l_w9_offs, MP_lp_vars, offs_RHS_fs_opt)
+    f_con_dam_withinR(model, params, l_v1, l_k29, l_a, l_z, l_i, l_y1, l_g9, l_w9, dams_RHS_fs_opt)
+    f_con_dam_betweenR(model, params, l_v1, l_k29, l_a, l_z, l_i, l_y1, l_g9, l_w9, MP_lp_vars, dams_RHS_fs_opt)
     f_con_progR(model)
-    f_con_prog2damsR(model,l_v1)
-    f_con_prog2offsR(model,l_v3)
+    f_con_prog2damsR(model,l_v1, dams_RHS_fs_opt)
+    f_con_prog2offsR(model,l_v3, offs_RHS_fs_opt)
     f_con_matingR(model)
     f_con_stock_trade_profit(model)
 
@@ -403,7 +429,7 @@ speed info:
 - constraints can only be skipped on based on the req param. if the provide side is 0 and you skip the constraint then that would mean there would be no restriction for the require variable.
 '''
 
-def f_con_off_withinR(model, params, l_v3, l_k3, l_k5, l_z, l_i, l_x, l_g3, l_w9_offs):
+def f_con_off_withinR(model, params, l_v3, l_k3, l_k5, l_z, l_i, l_x, l_g3, l_w9_offs, offs_RHS_fs_opt):
     '''
     Within year numbers/transfers of offspring to offspring in the following decision variable period.
 
@@ -429,9 +455,9 @@ def f_con_off_withinR(model, params, l_v3, l_k3, l_k5, l_z, l_i, l_x, l_g3, l_w9
                        - sum(model.v_offs[q,s,k3,k5,t3,v3_prev,n3,w8,z8,i,a,x,y3,g3] * model.p_numbers_prov_offs[k3,k5,t3,v3_prev,n3,w8,z8,i,a,x,y3,g3,w9]
                           * model.p_parentz_provwithin_offs[k3,v3_prev,z8,x,g3,z9] for z8 in model.s_season_types)
                        for t3 in model.s_sale_offs for n3 in model.s_nut_offs for w8 in model.s_lw_offs
-                       if pe.value(model.p_numbers_req_offs[k3,k5,v3,w8,z9,i,x,g3,w9]) != 0
+                       if pe.value(model.p_numbers_req_offs[k3,k5,v3,w8,z9,i,x,g3,w9]) != 0  #need to use both in the if statement (even though it is slower) because there are situations e.g. dvp4 (prejoining) where prov will have a value and req will not.
                        or pe.value(model.p_numbers_prov_offs[k3,k5,t3,v3_prev,n3,w8,z9,i,a,x,y3,g3,w9]) #doesn't need to use z8 because in the within constraint because z only provides to itsself and children with the same w patten.
-                       ) ==0 #need to use both in the if statement (even though it is slower) because there are situations e.g. dvp4 (prejoining) where prov will have a value and req will not.
+                       ) ==0 + offs_RHS_fs_opt*(v3 in params['p_condense_v_offs'])
         else:
             return pe.Constraint.Skip
     start_con_offwithinR=time.time()
@@ -440,7 +466,7 @@ def f_con_off_withinR(model, params, l_v3, l_k3, l_k5, l_z, l_i, l_x, l_g3, l_w9
     end_con_offwithinR=time.time()
     # print('con_offwithinR: ',end_con_offR - start_con_offR)
 
-def f_con_off_betweenR(model, params, l_v3, l_k3, l_k5, l_z, l_i, l_x, l_g3, l_w9_offs, MP_lp_vars):
+def f_con_off_betweenR(model, params, l_v3, l_k3, l_k5, l_z, l_i, l_x, l_g3, l_w9_offs, MP_lp_vars, offs_RHS_fs_opt):
     '''
     Between year numbers/transfers of offspring to offspring in the following decision variable period.
 
@@ -487,7 +513,8 @@ def f_con_off_betweenR(model, params, l_v3, l_k3, l_k5, l_z, l_i, l_x, l_g3, l_w
                              for z8 in model.s_season_types for s8 in model.s_sequence if pe.value(model.p_wyear_inc_qs[q_prev,s8])!=0)
                        for t3 in model.s_sale_offs for n3 in model.s_nut_offs for w8 in model.s_lw_offs
                        if pe.value(model.p_numbers_req_offs[k3,k5,v3,w8,z9,i,x,g3,w9]) != 0
-                       or any(pe.value(model.p_numbers_prov_offs[k3,k5,t3,v3_prev,n3,w8,z8,i,a,x,y3,g3,w9]) != 0 for z8 in model.s_season_types)) ==0 #need to use both in the if statement (even though it is slower) because there are situations e.g. dvp4 (prejoining) where prov will have a value and req will not.
+                       or any(pe.value(model.p_numbers_prov_offs[k3,k5,t3,v3_prev,n3,w8,z8,i,a,x,y3,g3,w9]) != 0 for z8 in model.s_season_types)  #need to use both in the if statement (even though it is slower) because there are situations e.g. dvp4 (prejoining) where prov will have a value and req will not.
+                       ) ==0 + offs_RHS_fs_opt*(v3 in params['p_condense_v_offs'])
         else:
             return pe.Constraint.Skip
     start_con_offbetweenR=time.time()
@@ -496,7 +523,7 @@ def f_con_off_betweenR(model, params, l_v3, l_k3, l_k5, l_z, l_i, l_x, l_g3, l_w
     end_con_offbetweenR=time.time()
     # print('con_offbetweenR: ',end_con_offR - start_con_offR)
 
-def f_con_dam_withinR(model, params, l_v1, l_k29, l_a, l_z, l_i, l_y1, l_g9, l_w9):
+def f_con_dam_withinR(model, params, l_v1, l_k29, l_a, l_z, l_i, l_y1, l_g9, l_w9, dams_RHS_fs_opt):
     '''
     Within year numbers/transfers of
 
@@ -530,21 +557,21 @@ def f_con_dam_withinR(model, params, l_v1, l_k29, l_a, l_z, l_i, l_y1, l_g9, l_w
                        for w8 in model.s_lw_dams for g1 in model.s_groups_dams
                        if pe.value(model.p_numbers_req_dams[k28, k29, t1, v1, a, n1, w8, z9, i, y1, g1,g9, w9]) != 0
                        or pe.value(model.p_numbers_prov_dams[k28, k29, t1, v1_prev, a, n1, w8, z9, i, y1, g1, g9, w9]) #doesn't need to use z8 because in the within constraint because z only provides to itsself and children with the same w patten.
-                       or pe.value(model.p_numbers_provthis_dams[k28, k29, t1, v1, a, n1, w8, z9, i, y1, g1, g9, w9]) != 0
-                       ) ==0 #need to use both in the if statement (even though it is slower) because there are situations e.g. dvp4 (prejoining) where prov will have a value and req will not.
+                       or pe.value(model.p_numbers_provthis_dams[k28, k29, t1, v1, a, n1, w8, z9, i, y1, g1, g9, w9]) != 0 #need to use both in the if statement (even though it is slower) because there are situations e.g. dvp4 (prejoining) where prov will have a value and req will not.
+                       ) ==0 + dams_RHS_fs_opt*(v1 in params['p_condense_v_dams'])
         else:
             return pe.Constraint.Skip
 
     start_con_damR=time.time()
-    model.con_dam_withinR = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_k2_birth_dams, model.s_dvp_dams, model.s_wean_times, model.s_season_types, model.s_tol, model.s_gen_merit_dams,
+    model.con_dam_withinR = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_k2_birth_dams, model.s_dvp_dams,
+                                   model.s_wean_times, model.s_season_types, model.s_tol, model.s_gen_merit_dams,
                                    model.s_groups_dams, model.s_lw_dams, rule=damwithinR, doc='transfer dam to dam from last dvp to current dvp.')
     end_con_damR=time.time()
     print('con_damwithinR: ',end_con_damR-start_con_damR)
 
-def f_con_dam_betweenR(model, params, l_v1, l_k29, l_a, l_z, l_i, l_y1, l_g9, l_w9, MP_lp_vars):
+def f_con_dam_betweenR(model, params, l_v1, l_k29, l_a, l_z, l_i, l_y1, l_g9, l_w9, MP_lp_vars, dams_RHS_fs_opt):
     '''
-    Between year numbers/transfers of
-
+    Between year numbers/transfers of:
     a) Dams to dams in the current decision variable period (only selected when a dam is changing its sire
        group e.g. BBB to BBT).
     b) Dams to dams in the following decision variable period.
@@ -598,7 +625,7 @@ def f_con_dam_betweenR(model, params, l_v1, l_k29, l_a, l_z, l_i, l_y1, l_g9, l_
                        if pe.value(model.p_numbers_req_dams[k28, k29, t1, v1, a, n1, w8, z9, i, y1, g1, g9, w9]) != 0
                        or any(pe.value(model.p_numbers_prov_dams[k28, k29, t1, v1_prev, a, n1, w8, z8, i, y1, g1, g9, w9]) != 0 for z8 in model.s_season_types)#need to use z8 because at season start all z's provide the initiating z's.
                        or pe.value(model.p_numbers_provthis_dams[k28, k29, t1, v1, a, n1, w8, z9, i, y1, g1, g9, w9]) != 0
-                       ) ==0
+                       ) ==0 + dams_RHS_fs_opt*(v1 in params['p_condense_v_dams'])
         else:
             return pe.Constraint.Skip
     start_con_damR=time.time()
@@ -615,7 +642,7 @@ def f_con_progR(model):
     '''
     #todo v_prog requires a y axis
     def progR(model, q,s,k3, k5, a, z, i9, x, y1, g1, w9):
-        if pe.value(model.p_wyear_inc_qs[q, s]) and any(model.p_npw_req[k3, t2, x, g1] for t2 in model.s_sale_prog):
+        if pe.value(model.p_wyear_inc_qs[q, s]) and any(pe.value(model.p_npw_req[k3, t2, x, g1]) for t2 in model.s_sale_prog):
             return (- sum(model.v_dams[q,s,k5, t1, v1, a, n1, w18, z, i, y1, g1] * model.p_npw[k3, k5, t1, v1, a, n1, w18, z, i, x, y1, g1, w9, i9] #pass in the k5 set to dams - each slice of k5 aligns with a slice in k2 e.g. 11 and 22. we don't need other k2 slices e.g. nm
                           for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams for w18 in model.s_lw_dams for i in model.s_tol
                           if pe.value(model.p_npw[k3, k5, t1, v1, a, n1, w18, z, i, x, y1, g1, w9, i9])!=0)
@@ -630,7 +657,7 @@ def f_con_progR(model):
     end_con_progR = time.time()
     # print('con_progR: ',end_con_progR-start_con_progR)
 
-def f_con_prog2damsR(model, l_v1):
+def f_con_prog2damsR(model, l_v1, dams_RHS_fs_opt):
     '''
     Numbers/transfer of progeny to dams. This transfer only happens in dvp0.
 
@@ -672,7 +699,7 @@ def f_con_prog2damsR(model, l_v1):
     #todo v_prog requires a y axis
     def prog2damR(model, q,s,v1, z, i, y1, g9, w9):
         if pe.value(model.p_wyear_inc_qs[q, s]) and v1==l_v1[0] \
-                and any(model.p_progreq_dams[k2, k3, k5, t1, w18, z, i, y1, g1, g9, w9]
+                and any(pe.value(model.p_progreq_dams[k2, k3, k5, t1, w18, z, i, y1, g1, g9, w9])
                         for k5 in model.s_k5_birth_offs for k3 in model.s_k3_damage_offs for k2 in model.s_k2_birth_dams
                         for t1 in model.s_sale_dams for w18 in model.s_lw_dams for g1 in model.s_groups_dams):
             return (sum(- model.v_prog[q,s,k3, k5, t2, w28, z, i, a0, x, g2] * model.p_progprov_dams[k3, k5, t2, w28, z, i, a0, x, y1, g2,g9,w9]
@@ -682,7 +709,7 @@ def f_con_prog2damsR(model, l_v1):
                        + sum(model.v_dams[q,s,k2, t1, v1, a1, n1, w18, z, i, y1, g1] * model.p_progreq_dams[k2, k3, k5, t1, w18, z, i, y1, g1, g9, w9]
                         for k3 in model.s_k3_damage_offs for k5 in model.s_k5_birth_offs for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams
                              for a1 in model.s_wean_times for n1 in model.s_nut_dams for w18 in model.s_lw_dams for g1 in model.s_groups_dams
-                             if pe.value(model.p_progreq_dams[k2, k3, k5, t1, w18, z, i, y1, g1, g9, w9])!= 0))<=0
+                             if pe.value(model.p_progreq_dams[k2, k3, k5, t1, w18, z, i, y1, g1, g9, w9])!= 0))<=0 + dams_RHS_fs_opt
         else:
             return pe.Constraint.Skip
     start_con_prog2damsR = time.time()
@@ -691,20 +718,20 @@ def f_con_prog2damsR(model, l_v1):
     end_con_prog2damsR = time.time()
     # print('con_prog2damsR: ',end_con_prog2damsR-start_con_prog2damsR)
 
-def f_con_prog2offsR(model, l_v3):
+def f_con_prog2offsR(model, l_v3, offs_RHS_fs_opt):
     '''
     Numbers/transfer of progeny to offs. This transfer only happens in dvp0.
 
     '''
     #todo v_prog requires a y axis
     def prog2offsR(model,q,s, k3, k5, v3, z, i, a, x, y3, g3, w9):
-        if pe.value(model.p_wyear_inc_qs[q, s]) and v3==l_v3[0] and any(model.p_progreq_offs[k3, v3, w38, z, i, x, g3, w9] for w38 in model.s_lw_offs):
+        if pe.value(model.p_wyear_inc_qs[q, s]) and v3==l_v3[0] and any(pe.value(model.p_progreq_offs[k3, v3, w38, z, i, x, g3, w9]) for w38 in model.s_lw_offs):
             return (sum(- model.v_prog[q,s,k3, k5, t2, w28, z, i, a, x, g3] * model.p_progprov_offs[k3, k5, t2, w28, z, i, a, x, y3, g3, w9] #use g3 (same as g2)
                         for w28 in model.s_lw_prog for t2 in model.s_sale_prog
                         if pe.value(model.p_progprov_offs[k3, k5, t2, w28, z, i, a, x, y3, g3, w9])!= 0)
                        + sum(model.v_offs[q,s,k3,k5,t3,v3,n3,w38, z, i,a,x,y3,g3] * model.p_progreq_offs[k3, v3, w38, z, i, x, g3, w9]
                         for t3 in model.s_sale_offs for n3 in model.s_nut_dams for w38 in model.s_lw_offs
-                             if pe.value(model.p_progreq_offs[k3, v3, w38, z, i, x, g3, w9])!= 0))<=0
+                             if pe.value(model.p_progreq_offs[k3, v3, w38, z, i, x, g3, w9])!= 0))<=0 + offs_RHS_fs_opt
         else:
             return pe.Constraint.Skip
     start_con_prog2offR = time.time()
@@ -841,7 +868,7 @@ def f_stock_cashflow(model,q,s,p7,z,c1):
                      if pe.value(model.p_cashflow_dams[c1,p7,q,k2,t1,v1,a,n1,w1,z,i,y1,g1]) != 0)
                 + sum(model.v_prog[q,s,k3, k5, t2, w2, z, i, a, x, g2] * model.p_cashflow_prog[c1,p7, q, k3, k5, t2, w2, z, i, a, x, g2]
                       for k3 in model.s_k3_damage_offs for k5 in model.s_k5_birth_offs for t2 in model.s_sale_prog for w2 in model.s_lw_prog
-                      for x in model.s_gender for g2 in model.s_groups_prog if model.p_cashflow_prog[c1,p7, q, k3, k5, t2, w2, z, i, a, x, g2] != 0)
+                      for x in model.s_gender for g2 in model.s_groups_prog if pe.value(model.p_cashflow_prog[c1,p7, q, k3, k5, t2, w2, z, i, a, x, g2]) != 0)
                 + sum(model.v_offs[q,s,k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3]  * model.p_cashflow_offs[c1,p7,q,k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3]
                       for k3 in model.s_k3_damage_offs for k5 in model.s_k5_birth_offs for t3 in model.s_sale_offs for v3 in model.s_dvp_offs
                       for n3 in model.s_nut_offs for w3 in model.s_lw_offs for x in model.s_gender for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs
@@ -871,7 +898,7 @@ def f_stock_wc(model,q,s,c0,p7,z):
                      if pe.value(model.p_wc_dams[c0,p7,q,k2,t1,v1,a,n1,w1,z,i,y1,g1]) != 0)
                 + sum(model.v_prog[q,s,k3, k5, t2, w2, z, i, a, x, g2] * model.p_wc_prog[c0,p7, q,k3, k5, t2, w2, z, i, a, x, g2]
                       for k3 in model.s_k3_damage_offs for k5 in model.s_k5_birth_offs for t2 in model.s_sale_prog for w2 in model.s_lw_prog
-                      for x in model.s_gender for g2 in model.s_groups_prog if model.p_wc_prog[c0,p7, q,k3, k5, t2, w2, z, i, a, x, g2] != 0)
+                      for x in model.s_gender for g2 in model.s_groups_prog if pe.value(model.p_wc_prog[c0,p7, q,k3, k5, t2, w2, z, i, a, x, g2]) != 0)
                 + sum(model.v_offs[q,s,k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3]  * model.p_wc_offs[c0,p7,q,k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3]
                       for k3 in model.s_k3_damage_offs for k5 in model.s_k5_birth_offs for t3 in model.s_sale_offs for v3 in model.s_dvp_offs
                       for n3 in model.s_nut_offs for w3 in model.s_lw_offs for x in model.s_gender for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs
@@ -1027,7 +1054,7 @@ def f_stock_emissions(model,q,s,p7,z):
     #     con = sum(model.v_dams[k28,t1,v1,a,n1,w8,i,y1,g1] * model.p_numbers_req_dams[k28,k29,v1,a,n1,w8,i,y1,g1,w9]
     #                - model.v_dams[k28,t1,v1_prev,a,n1,w8,i,y1,g1] * model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,i,y1,g1,w9]
     #                for t1 in model.s_sale_dams for k28 in model.s_k2_birth_dams for n1 in model.s_nut_dams for w8 in model.s_lw_dams
-    #                if model.p_numbers_req_dams[k28,k29,v1,a,n1,w8,i,y1,g1,w9] !=0 or model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,i,y1,g1,w9] !=0) <= 0
+    #                if pe.value(model.p_numbers_req_dams[k28,k29,v1,a,n1,w8,i,y1,g1,w9]) !=0 or pe.value(model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,i,y1,g1,w9]) !=0) <= 0
     #         # + sum(model.v_dams2sire[v1,a,b1,n1,w1,i,y1,g1,g1_new]
     #         #       - model.v_dams2sire[v1_prev,a,b1,n1,w1,i,y1,g1,g1_new] * model.p_dam2sire_numbers[v1,a,b1,n1,w1,i,y1,g1,g1_new]
     #         #       for n1 in model.s_nut_dams for g1_new in model.s_groups_dams) \
@@ -1036,8 +1063,8 @@ def f_stock_emissions(model,q,s,p7,z):
     #         #       for v3 in model.s_dvp_offs for n3 in model.s_nut_offs for w3 in model.s_lw_offs for z3 in model.s_season_types for i3 in model.s_tol for d in model.s_k3_damage_offs for a3 in model.s_wean_times
     #         #       for b3 in model.s_k5_birth_offs for x in model.s_gender for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs for g1_off in model.s_groups_dams)  #have to track off sets so only they are summed.
     #     ###if statement required to handle the constraints that don't exist due to lw clustering
-    #     # if sum(model.p_numbers_req_dams[k28,k29,v1,a,n1,w8,i,y1,g1,w9] for k28 in model.s_k2_birth_dams for n1 in model.s_nut_dams for w8 in model.s_lw_dams if model.p_numbers_req_dams[k28,k29,v1,a,n1,w8,i,y1,g1,w9] !=0) ==0 and sum(model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,i,y1,g1,w9]
-    #     #         for t1 in model.s_sale_dams for k28 in model.s_k2_birth_dams for n1 in model.s_nut_dams for w8 in model.s_lw_dams if model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,i,y1,g1,w9] !=0)==0:
+    #     # if sum(pe.value(model.p_numbers_req_dams[k28,k29,v1,a,n1,w8,i,y1,g1,w9]) for k28 in model.s_k2_birth_dams for n1 in model.s_nut_dams for w8 in model.s_lw_dams if pe.value(model.p_numbers_req_dams[k28,k29,v1,a,n1,w8,i,y1,g1,w9]) !=0) ==0 and sum(pe.value(model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,i,y1,g1,w9])
+    #     #         for t1 in model.s_sale_dams for k28 in model.s_k2_birth_dams for n1 in model.s_nut_dams for w8 in model.s_lw_dams if pe.value(model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,i,y1,g1,w9]) !=0)==0:
     #     #     pass
     #     if type(con)==bool:
     #         return pe.Constraint.Skip
@@ -1053,7 +1080,7 @@ def f_stock_emissions(model,q,s,p7,z):
     #     con = sum(model.v_dams[k28,t1,v1,a,n1,w8,i,y1,g1] * model.p_numbers_req_dams[k28,k29,v1,a,n1,w8,i,y1,g1,w9]
     #                - model.v_dams[k28,t1,v1_prev,a,n1,w8,i,y1,g1] * model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,i,y1,g1,w9]
     #                for t1 in model.s_sale_dams for k28 in model.s_k2_birth_dams for n1 in model.s_nut_dams for w8 in model.s_lw_dams
-    #                if model.p_numbers_req_dams[k28,k29,v1,a,n1,w8,i,y1,g1,w9] !=0) <= 0
+    #                if pe.value(model.p_numbers_req_dams[k28,k29,v1,a,n1,w8,i,y1,g1,w9]) !=0) <= 0
     #     if type(con)==bool:
     #         return pe.Constraint.Skip
     #     else: return con
@@ -1070,13 +1097,13 @@ def f_stock_emissions(model,q,s,p7,z):
     #     pass
     # def damR2(model,k29,v1,a,i,y1,g1,w9):
     #     v1_prev = list(model.s_dvp_dams)[list(model.s_dvp_dams).index(v1) - 1]  #used to get the activity number from the last period - to determine the number of dam provided into this period
-    #     ##skip constraint if the require param is 0
-    #     if not any(model.p_numbers_req_dams[k28,k29,v1,a,n1,w8,i,y1,g1,w9] for k28 in model.s_k2_birth_dams for n1 in model.s_nut_dams for w8 in model.s_lw_dams):
+    #     ##skip constraint if the required param is 0
+    #     if not any(pe.value(model.p_numbers_req_dams[k28,k29,v1,a,n1,w8,i,y1,g1,w9]) for k28 in model.s_k2_birth_dams for n1 in model.s_nut_dams for w8 in model.s_lw_dams):
     #         return pe.Constraint.Skip
     #     return sum(model.v_dams[k28,t1,v1,a,n1,w8,i,y1,g1] * model.p_numbers_req_dams[k28,k29,v1,a,n1,w8,i,y1,g1,w9]
     #                - model.v_dams[k28,t1,v1_prev,a,n1,w8,i,y1,g1] * model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,i,y1,g1,w9]
     #                for t1 in model.s_sale_dams for k28 in model.s_k2_birth_dams for n1 in model.s_nut_dams for w8 in model.s_lw_dams
-    #                if model.p_numbers_req_dams[k28,k29,v1,a,n1,w8,i,y1,g1,w9] !=0) <= 0
+    #                if pe.value(model.p_numbers_req_dams[k28,k29,v1,a,n1,w8,i,y1,g1,w9]) !=0) <= 0
     # start=time.time()
     # model.con_damR = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_k2_birth_dams, model.s_dvp_dams, model.s_wean_times, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, model.s_lw_dams, rule=damR2, doc='transfer of off to dam and dam from last dvp to current dvp.')
     # end=time.time()

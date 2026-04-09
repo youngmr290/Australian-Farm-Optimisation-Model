@@ -94,6 +94,208 @@ def searchsort_multiple_dim(a, v, axis_a0, axis_v0, axis_a1=None, axis_v1=None, 
     return final
 
 #print(timeit.timeit(phases2,number=100)/100)
+
+def f1_searchsorted_looped(a, v, axis, side='left'):
+    """
+    Apply np.searchsorted along the given axis of multidim arrays.
+    Done by flattening the other dimensions and looping along the flattened axis.
+
+    a and v must be broadcast-compatible except along `axis`.
+    a must be sorted along 'axis'.
+
+    Parameters (See np.searchsorted)
+    ----------
+    a : ndarray  Array to be searched (must be sorted along `axis`)
+    v : ndarray  Values whose insertion points are sought
+    axis : int  Axis along which to search
+    side : {'left', 'right'}, optional
+
+    Returns
+    -------
+    ndarray of int: Same shape as v, containing insertion indices
+    """
+    if a.ndim == 0 or v.ndim == 0:
+        raise ValueError("Inputs must be at least 1-D")
+
+    # Normalize axes to handle negative indices and test dimensions
+    axis = a.ndim + axis if axis < 0 else axis
+    if not (0 <= axis < a.ndim):
+        raise ValueError(f"axis {axis} out of bounds for array of dimension {a.ndim}")
+
+    # Move the search axis to the end → much easier broadcasting & indexing
+    a_moved = np.moveaxis(a, axis, -1)  # shape:  ..., M
+    v_moved = np.moveaxis(v, axis, -1)  # shape:  ..., K   (K may differ from M)
+
+    # Make sure leading dimensions match (broadcasting)
+    if a_moved.shape[:-1] != v_moved.shape[:-1]:
+        try:
+            v_moved = np.broadcast_to(v_moved, (*a_moved.shape[:-1], v_moved.shape[-1]))
+        except ValueError:
+            raise ValueError(f"Leading dimensions of v ({v_moved.shape[:-1]}) "
+                             f"cannot be broadcast to those of a ({a_moved.shape[:-1]})")
+
+    # Now flatten all dimensions except the last one
+    a_flat = a_moved.reshape(-1, a_moved.shape[-1])  # (N_slices, M)
+    v_flat = v_moved.reshape(-1, v_moved.shape[-1])  # (N_slices, K)
+
+    # Output container
+    result_flat = np.empty(v_flat.shape, dtype=np.int64)
+
+    # Loop over all slices
+    for i in range(a_flat.shape[0]):
+        result_flat[i] = np.searchsorted(a_flat[i], v_flat[i], side=side)
+
+    # Reshape back and move axis to original position
+    result = result_flat.reshape(v_moved.shape)
+
+    if axis != -1:
+        result = np.moveaxis(result, -1, axis)
+
+    return result
+
+
+def f1_unique_count(a, axes, weights=None, threshold=0.0, atol=0.0):
+    """
+    Count unique values along given axes with the unique values calculated with a tolerance.
+    Values whose relative weight < threshold are excluded.
+
+    Parameters
+    ----------
+    a : ndarray (float)
+    axes : int or tuple of int
+        Axes to collapse (result size becomes 1).
+    weights : ndarray or None
+        Broadcastable to a. If None, equal weights assumed.
+    threshold : float
+        Mask out entries with relative weight < threshold.
+    atol : float
+        Absolute tolerance for the differences.
+        Note: values that are close together can still be counted as unique if they fall either side of the integer comparison
+
+    Returns
+    -------
+    counts : ndarray
+        Same shape as a but with collapsed axes size = 1.
+    """
+    a = np.asarray(a, dtype=float)
+
+    if isinstance(axes, int):
+        axes = (axes,)
+    axes = tuple(ax % a.ndim for ax in axes)
+
+    if weights is None:
+        weights = np.ones_like(a, dtype=float)
+    else:
+        weights = np.asarray(weights, dtype=float)
+
+    # relative weights along reduction axes
+    denom = np.sum(weights, axis=axes, keepdims=True)
+
+    with np.errstate(divide="ignore", invalid="ignore"):
+        rel_w = np.where(denom != 0, weights / denom, 0.0)
+
+    # mask low-weight values
+    a = np.where(rel_w < threshold, np.nan, a)
+
+    # move axes to front
+    moved = np.moveaxis(a, axes, range(len(axes)))
+
+    front = np.prod(moved.shape[:len(axes)])
+    rest_shape = moved.shape[len(axes):]
+
+    flat = moved.reshape(front, -1)
+
+    counts = np.empty(flat.shape[1], dtype=int)
+
+    for i in range(flat.shape[1]):
+        col = flat[:, i]
+        col = col[~np.isnan(col)]  # ignore masked values
+        #implement the tolerance by dividing by atol and converting to an int (int is quicker for unique than a rounded float)
+        if atol == 0:
+            counts[i] = np.unique(col).size
+        else:
+            counts[i] = np.unique((col // atol).astype(int)).size
+
+    counts = counts.reshape(rest_shape)
+
+    # expand reduced axes back
+    for ax in sorted(axes):
+        counts = np.expand_dims(counts, axis=ax)
+
+    return counts
+
+
+def f1_percentile_weighted(values, weights, axes):
+    """
+    Compute weighted percentile rank within slices defined by the `axes` tuple.
+    Weighted percentile rank definition:
+        (cumulative of sorted weights - individual weight) / total of weights * 100
+
+    Parameters
+    ----------
+    values : array_like: Input array to rank
+    weights : array_like: Weights corresponding to each value (same shape as values)
+    axes : int or tuple of ints: Axis or axes along which to compute percentile ranks. These are the axes being collapsed plus w
+
+    Returns
+    -------
+    percentile : ndarray[float]
+        Same shape as values.
+        ~100 is the highest value and ~0 is the lowest value in the packed axes, based on average weighted position.
+        Percentile is the centre of the weighting for the animal, therefore not 0 to 100.
+    """
+    # Normalize axes to handle negative indices
+    axes = tuple(a % values.ndim for a in np.atleast_1d(axes))
+    k = len(axes)
+
+    # Move packed axes to end
+    values_moved = np.moveaxis(values, axes, range(values.ndim - k, values.ndim))
+    weights_moved = np.moveaxis(weights, axes, range(weights.ndim - k, weights.ndim))
+
+    rest_shape = values_moved.shape[:-k]
+    packed_shape = values_moved.shape[-k:]
+    n = int(np.prod(packed_shape))
+
+    # Flatten packed dimensions
+    values_flat = values_moved.reshape(*rest_shape, n)
+    weights_flat = weights_moved.reshape(*rest_shape, n)
+
+    # # argsort values along packed axis
+    # order = np.argsort(values_flat, axis=-1)
+
+    #lexsort on both criteria, values (weight of the animals) ascending and separate ties based on weights (number of animals)
+    ##The tie breaker is largest groups first for lighter animals (< median weight) and largest groups last for the heavier animals
+    ##This means that the largest groups will be at the lower and higher end of the sort on values
+    median_v = np.median(values_flat)    #note: this is the median over all the groups, not just within the tuple of axes
+    direction = np.where(values_flat < median_v, -1, 1)
+    tie_breaker = direction * weights_flat
+
+    # Now sort values ascending
+    order = np.lexsort((tie_breaker, values_flat), axis=-1)  # with a tie breaker (ascending)
+    # order = np.argsort(values_flat, axis=-1)    # sort without a tie breaker
+
+    # reorder weights
+    weights_sorted = np.take_along_axis(weights_flat, order, axis=-1)
+
+    # cumulative weights
+    weights_cum = np.cumsum(weights_sorted, axis=-1)
+
+    # total weights (with keepdims for broadcasting). Note: same as np.sum(weights, axis=-1, keepdims) but more efficient
+    weights_total = weights_cum[..., -1:]
+
+    # compute percentile in sorted order
+    # Handles edge case where only one valid entry exists and returns 50
+    percentile_sorted = (weights_cum - weights_sorted/2) / weights_total * 100.0
+
+    # unsort back to original order
+    inverse_order = np.argsort(order, axis=-1)
+    percentile_flat = np.take_along_axis(percentile_sorted, inverse_order, axis=-1)
+
+    # Reshape and Move axes back to original positions
+    percentile = percentile_flat.reshape(*rest_shape, *packed_shape)
+    percentile = np.moveaxis(percentile, range(values.ndim - k, values.ndim), axes)
+
+    return percentile
 #
 def f_expand(array, left_pos=0, swap=False, ax1=0, ax2=1, right_pos=0, left_pos2=0, right_pos2=0
                      , left_pos3=0, right_pos3=0, condition = None, axis = 0, swap2=False, ax1_2=1, ax2_2=2,
@@ -247,9 +449,10 @@ def f_update(existing_value, new_value, mask_for_new):
     except AttributeError:
         if new_value=='-':
             new_value = 0
-    #todo using a masked array may allow f_update to handle situation that have a nan value that is masked - MRY addition: i couldn't get this method to actually work
-    # updated = np.ma.masked_array(existing_value, mask_for_new) + np.ma.maskedarray(new_value, np.logical_not(mask_for_new))  #used 'not' rather than '~' because ~False == -1 rather than True (not the case for np.arrays only if bool is single - as it is for sire in some situations)
-    updated = existing_value * np.logical_not(mask_for_new) + new_value * mask_for_new #used not rather than ~ because ~False == -1 not True (not the case for np.arrays only if bool is single - as it is for sire in some situations)
+    updated = np.where(mask_for_new, new_value, existing_value)
+    # if result is a 0-D array, return a Python scalar
+    if isinstance(updated, np.ndarray) and updated.shape == ():
+        updated = updated.item()
 
     ##convert back to original dtype because adding float32 and int32 returns float64. And sometimes we don't want this e.g. postprocessing
     ###use try except because sometimes a single int is update e.g. in the first iteration on generator. this causes error because only numpy arrays have .dtype.
@@ -332,6 +535,12 @@ def f_divide(numerator, denominator, dtype='float64', option=0):
     if option == 1:
         mask = np.isclose(denominator, numerator)
         result[mask] = 1
+
+    ##If option is 2 then return the numerator if the denominator is 0
+    if option == 2:
+        mask = np.isclose(denominator.astype(float), 0)
+        result[mask] = numerator[mask]
+
     return result
 
 def f_bilinear_interpolate(im, x_im, y_im, x, y):
@@ -680,39 +889,66 @@ def f_logistic_integral(x, L, k, x0, offset):
     """
     return offset*x + (L - offset)/k * np.log(1 + np.exp(k*(x - x0)))
 
-def f_integral_gauss_tail(x, Y_normal, a, b, c, p, q):
+def f_combined_integral(x, offset, k, x0, a, mu, sigma, x_anchor):
     """
-    Indefinite integral (antiderivative) of the model:
-      Y(x) = Y_normal + a*exp(-((x-b)/c)**2) - p/(x+q).
-    
-    The result is:
-      Y_normal*x + a*(sqrt(pi)/2)*c*erf((x-b)/c) - p*ln|x+q| + C
-    
+    Indefinite integral (from 0 to x) of the anchored-and-clamped production function.
+
+    Definition:
+      Let g(x) = offset + (1 - offset)/(1 + exp(-k*(x - x0))) + a*exp(-((x - mu)/sigma)^2)
+      Let h    = g(x_anchor) - 1
+      Define the anchored function       f_anchor(x) = g(x) - h so that f_anchor(x_anchor) = 1
+      Define the clamped production      f(x) = f_anchor(x) for x <= x_anchor, and f(x) = 1 for x > x_anchor
+
+    This function returns:
+        F(x) = ∫_0^x f(t) dt
+
+    Notes
+    -----
+    - For x <= x_anchor:
+        F(x) = [A(x) - A(0)] - h * x
+      where A is the antiderivative of g.
+
+    - For x > x_anchor:
+        F(x) = ([A(x_anchor) - A(0)] - h * x_anchor) + 1 * (x - x_anchor)
+
+    - Uses log1p(exp(.)) for numerical stability in the logistic integral.
+
     Parameters
     ----------
-    x : float or array-like
-        The x-value(s) at which to evaluate the antiderivative.
-    Y_normal : float
-        Baseline offset.
-    a : float
-        Amplitude of the Gaussian term.
-    b : float
-        Center of the Gaussian term.
-    c : float
-        Width of the Gaussian term.
-    p : float
-        Coefficient for the rational term.
-    q : float
-        Shift for the rational term.
-    
+    x : float
+        Upper limit of integration (lower limit fixed at 0).
+    offset, k, x0, a, mu, sigma : floats
+        Parameters of the raw model g(x) from `fit_gauss_tail`.
+    x_anchor : float
+        Distance at which the curve equals 1 and remains exactly 1 thereafter.
+
     Returns
     -------
-    F(x) : float or array-like
-        The indefinite integral evaluated at x (up to a constant).
+    float
+        Value of ∫_0^x f(t) dt.
     """
-    return (Y_normal * x 
-            + a * (np.sqrt(np.pi)/2) * c * erf((x - b)/c)
-            - p * np.log(np.abs(x + q)))
+    from scipy.special import erf
+
+    x = float(x)
+
+    # Antiderivative of g(x) = logistic + Gaussian bump
+    # ∫ logistic dx  +  ∫ Gaussian dx
+    def A(t):
+        logistic_int = offset * t + (1 - offset) / k * np.log1p(np.exp(k * (t - x0)))
+        bump_int = a * (np.sqrt(np.pi) / 2) * sigma * erf((t - mu) / sigma)
+        return logistic_int + bump_int
+
+    # Compute anchor shift h = g(x_anchor) - 1
+    g_anchor = offset + (1 - offset) / (1 + np.exp(-k * (x_anchor - x0))) \
+               + a * np.exp(-((x_anchor - mu) / sigma) ** 2)
+    h = g_anchor - 1.0
+
+    if x <= x_anchor:
+        return (A(x) - A(0.0)) - h * x
+    else:
+        head = (A(x_anchor) - A(0.0)) - h * x_anchor
+        tail = 1.0 * (x - x_anchor)
+        return head + tail
 
 def f_dynamic_slice(arr, axis, start, stop, step=1, axis2=None, start2=None, stop2=None, step2=1):
     ##check if arr is int - this is the case for the first loop because arr may be initialised as 0
@@ -946,15 +1182,14 @@ def f_update_sen(user_sa, sam, saa, sap, sar, sat, sav):
                 sar[(key1, key2)] = sar[(key1,key2)] + value
             elif dic == 'sav':
                 sav[(key1, key2)]  # checks the keys exist. Not required for SA that have indicies.
-                try:
-                    if value != "-": #SAV entries with '-' do not update the SAV. This means that if slices of a SAV overlap in Exp.xl the last non '-' is the value used.
-                        update_sav=True
-                    else:
-                        update_sav=False
-                except ValueError:   #try and except required for web app because "value" is an array (so the if statement causes error).
-                    update_sav=True
-                if update_sav:
-                    sav[(key1,key2)] = value
+                if np.isscalar(sav[(key1,key2)]) and np.isscalar(value):
+                    sav[(key1,key2)] = value if value != '-' else sav[(key1,key2)]
+                elif isinstance(sav[(key1,key2)], np.ndarray) and np.isscalar(value):
+                    if value != '-':
+                        sav[(key1,key2)][...] = value
+                else: #required for web app because "value" is an array
+                    sliced_sav = sav[(key1,key2)][tuple(slice(0, s) for s in value.shape)] #have to slice to handle cases where sen is initiated with large number
+                    sav[(key1,key2)] = np.where(value != '-', value, sliced_sav)
         ##if just key1 exists
         else:
             if dic == 'sam':
@@ -974,15 +1209,14 @@ def f_update_sen(user_sa, sam, saa, sap, sar, sat, sav):
                 sar[key1] = sar[key1] + value
             elif dic == 'sav':
                 sav[key1]  # checks the keys exist. Not required for SA that have indicies.
-                try:
-                    if value != "-": #SAV entries with '-' do not update the SAV. This means that if slices of a SAV overlap in Exp.xl the last non '-' is the value used.
-                        update_sav=True
-                    else:
-                        update_sav=False
-                except ValueError:   #try and except required for web app because "value" is an array (so the if statement causes error).
-                    update_sav=True
-                if update_sav:
-                    sav[key1] = value
+                if np.isscalar(sav[key1]) and np.isscalar(value):
+                    sav[key1] = value if value != '-' else sav[key1]
+                elif isinstance(sav[key1], np.ndarray) and np.isscalar(value):
+                    if value != '-':
+                        sav[key1][...] = value
+                else: #required for web app because "value" is an array
+                    sliced_sav = sav[key1][tuple(slice(0, s) for s in value.shape)] #have to slice to handle cases where sen is initiated with large number
+                    sav[key1] = np.where(value != '-', value, sliced_sav)
 
 def f1_make_r_val(r_vals, param, name, maskz8=None, z_pos=0, shape=None):
     '''
@@ -1090,6 +1324,117 @@ def f1_make_pyomo_dict(param, index, loop_axis_pos=None, index_loop_axis_pos=Non
     tup = tuple(map(tuple,index_masked))
     return dict(zip(tup, param_masked))
 
+import numpy as np
+na = np.newaxis
+
+
+def build_active_index(
+    masks,
+    axis_keys,
+    reduce_extra_axes="any",
+    active_condition="!=0",
+):
+    """
+    Build a list of active index tuples from one or more masks.
+
+    Parameters
+    ----------
+    masks : np.ndarray or list of np.ndarray
+        Single mask or list of masks. They will be broadcast to a common
+        shape and combined with logical AND.
+
+        Example shapes:
+            (k,p6,p5,z,l)
+            (p6,z)  -> will be broadcast if needed
+
+    axis_keys : list of 1D arrays
+        Keys for each axis you want in the final index (left-most axes
+        after broadcasting).
+
+        Example:
+            axis_keys = [keys_k, keys_p6, keys_p5, keys_z, keys_l]
+
+    reduce_extra_axes : "any" | "all" | None | list[int]
+        How to collapse extra dimensions beyond len(axis_keys).
+
+        - "any": active if any extra axis is True.
+        - "all": active if all extra axes are True.
+        - list[int]: explicit axes to reduce over.
+        - None: require mask.ndim == len(axis_keys).
+
+    active_condition : str
+        How to treat non-bool masks (if masks are numeric):
+
+        - "!=0": mask != 0
+        - ">0":  mask > 0
+
+    Returns
+    -------
+    list[tuple]
+        A list of tuples (key0, key1, ..., keyN) where the combined mask is active.
+    """
+
+    # --- 1. Normalise to a combined boolean mask ---
+    if isinstance(masks, (list, tuple)):
+        arrs = []
+        for m in masks:
+            m = np.asarray(m)
+            if m.dtype == bool:
+                arrs.append(m)
+            else:
+                if active_condition == "!=0":
+                    arrs.append(m != 0)
+                elif active_condition == ">0":
+                    arrs.append(m > 0)
+                else:
+                    raise ValueError("unsupported active_condition")
+        combined = np.logical_and.reduce(arrs)
+    else:
+        m = np.asarray(masks)
+        if m.dtype == bool:
+            combined = m
+        else:
+            if active_condition == "!=0":
+                combined = (m != 0)
+            elif active_condition == ">0":
+                combined = (m > 0)
+            else:
+                raise ValueError("unsupported active_condition")
+
+    # --- 2. Reduce extra axes if needed ---
+    n_keep = len(axis_keys)
+    if combined.ndim < n_keep:
+        raise ValueError("mask has fewer dims than axis_keys")
+
+    if combined.ndim > n_keep:
+        if reduce_extra_axes is None:
+            raise ValueError("mask has extra dims and reduce_extra_axes is None")
+
+        if isinstance(reduce_extra_axes, str):
+            extra_axes = tuple(range(n_keep, combined.ndim))
+            if reduce_extra_axes == "any":
+                combined = np.any(combined, axis=extra_axes)
+            elif reduce_extra_axes == "all":
+                combined = np.all(combined, axis=extra_axes)
+            else:
+                raise ValueError("unknown reduce_extra_axes string")
+        else:
+            # explicit list of axes
+            combined = np.any(combined, axis=tuple(reduce_extra_axes))
+
+    # Now combined.shape must match the len of each axis_keys[i]
+    # --- 3. Extract active indices and map to keys ---
+    idx = np.nonzero(combined)
+    active = []
+
+    for indices in zip(*idx):
+        # indices is like (ik, ip6, ip5, iz, il)
+        key_tuple = tuple(axis_keys[ax][i] for ax, i in enumerate(indices))
+        active.append(key_tuple)
+
+    return active
+
+
 def write_variablesummary(model, trial_name, obj, option=0, property_id=''):
     '''
 
@@ -1116,8 +1461,13 @@ def write_variablesummary(model, trial_name, obj, option=0, property_id=''):
         file.write("Variable %s\n" % v)  # \n makes new line
         for index in v:
             try:
-                if v[index].value > 0.0001 or v[index].value < -0.0001:
-                    file.write("   %s %s\n" % (index,v[index].value))
+                val = v[index].value
+                if val is None:
+                    continue
+
+                r = round(val, 4)  # round to 4 decimal places
+                if r != 0.0:  # drop values that become 0.0000 (or -0.0000)
+                    file.write("   %s %.4f\n" % (index, r))  # always print 4 d.p.
             except:
                 pass
     file.close()
@@ -1357,4 +1707,34 @@ def f1_lmuregion_to_lmufarmer(dict, key1, a_lmuregion_lmufarmer, lmu_axis, lmu_f
         dict[key1].iloc[:,:] = np.take_along_axis(dict[key1].values, a_lmuregion_lmufarmer, lmu_axis)
     else:
         dict[key1] = np.take_along_axis(dict[key1], a_lmuregion_lmufarmer, lmu_axis)
+
+def f1_slices_to_str(array_name, slices):
+    """
+    Convert a list of slice objects into an indexing string like arr1[2:5,1:4,:]
+    Useful for reporting action carried out on blocks within multi-dimensional arrays
+    """
+
+    def fmt(s):
+        if s == slice(None):  # the most common case
+            return ':'
+
+        start = s.start if s.start is not None else ''
+        stop = s.stop if s.stop is not None else ''
+        step = s.step if s.step is not None else 1
+
+        if step == 1:  # step=1 is the default → omit it
+            if start == 0 and stop == '':
+                return ':'
+            elif start == 0:
+                return f':{stop}'
+            elif stop == '':
+                return f'{start}:'
+            else:
+                return f'{start}:{stop}'
+        else:  # explicit step
+            start_str = str(start) if start != 0 else ''
+            return f'{start_str}:{stop}:{step}'.strip(':') or ':'
+
+    parts = [fmt(sl) for sl in slices]
+    return f"{array_name}[{','.join(parts)}]"
 

@@ -135,6 +135,8 @@ def f_season_params(params):
     mask_childz8_p7z8 = zfun.f_season_transfer_mask(start_phase_periods_p7z, z_pos=-1, mask=True)
     mask_ancestor_provwithinz8z9_p7z8z9 = np.maximum.accumulate(mask_childz8_p7z8 * index_z, axis=1)[:,na,:] == index_z[:,na]
 
+    #todo comentted out dry seeding constraints - not required now that all seasons start at dry seeding
+
     # ###for rotation the between and within constraints are acting on different things (history vs the acutal phase) therefore
     # ### the req params above don't work because they have been adjusted for season start. so in the following line i make a
     # ### new req param which doesn't account for within or between

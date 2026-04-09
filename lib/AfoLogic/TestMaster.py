@@ -36,7 +36,7 @@ r_vals={}
 ###############
 #User control #
 ###############
-trial = 12   #31 is quick test
+trial = 1   #this will run the first trial in the exp_group (so you need to set the exp group in the script params)
 test_pas = False
 test_sup = False
 test_slp = False
@@ -50,12 +50,13 @@ test_trees = False
 ######
 ##load excel data and experiment data
 exp_data, exp_group_bool, trial_pinp = exp.f_read_exp()
-sinp_defaults, uinp_defaults, pinp_defaults = dxl.f_load_excel_default_inputs(trial_pinp=trial_pinp.loc[[trial]])
+exp_data = exp.f_group_exp(exp_data, exp_group_bool)
+sinp_defaults, uinp_defaults, pinp_defaults = dxl.f_load_excel_default_inputs(trial_pinp=trial_pinp.iloc[[trial]])
 d_rot_info = dxl.f_load_phases()
 cat_propn_s1_ks2 = dxl.f_load_stubble()
 
 ##select property for the current trial
-property = trial_pinp.loc[trial]
+property = trial_pinp.iloc[trial]
 
 ##process user SA
 user_sa = rve.f_process_user_sa(exp_data, trial)
@@ -77,7 +78,6 @@ pinp.f_property_inp_sa(pinp_defaults)
 
 
 ##expand p6 axis to include nodes
-sinp.f1_expand_p6()
 pinp.f1_expand_p6()
 
 ##check the rotations and inputs align - this means rotation method can be controlled using a SA
@@ -105,16 +105,9 @@ n_non_confinement_pools=4
 confinement_inc = False
 index_f = np.arange(n_non_confinement_pools+confinement_inc)
 ##create the upper and lower cutoffs. If there is a confinement slice then it will be populated with values but they never get used.
-###get association between the input fp and the node adjusted fp
-a_p6std_p6z = per.f_feed_periods(option=2)
-###apply association
-####stock
-sinp.structuralsa['i_nv_upper_p6z'] = np.take_along_axis(sinp.structuralsa['i_nv_upper_p6'][:,None],a_p6std_p6z,axis=0)
-sinp.structuralsa['i_nv_lower_p6z'] = np.take_along_axis(sinp.structuralsa['i_nv_lower_p6'][:,None],a_p6std_p6z,axis=0)
-
-nv_upper_p6fz = sinp.structuralsa['i_nv_upper_p6z'][:,None,:]
+nv_upper_p6fz = pinp.sheep['i_nv_upper_p6z'][:,None,:]
 nv_upper_p6fz = zfun.f_seasonal_inp(nv_upper_p6fz,numpy=True,axis=-1)
-nv_lower_p6fz = sinp.structuralsa['i_nv_lower_p6z'][:,None,:]
+nv_lower_p6fz = pinp.sheep['i_nv_lower_p6z'][:,None,:]
 nv_lower_p6fz = zfun.f_seasonal_inp(nv_lower_p6fz,numpy=True,axis=-1)
 nv_cutoff_lower_p6fz = nv_lower_p6fz + (
             nv_upper_p6fz - nv_lower_p6fz) / n_non_confinement_pools * index_f[:,None]

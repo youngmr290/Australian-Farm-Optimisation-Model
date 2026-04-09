@@ -555,6 +555,26 @@ def f_fert_passes():
     return total_fert_passes_rz_nl.sort_index()
 
 
+def f1_fert_rate():
+    '''Fert rate per hectare of rotation activity (note this includes un-arable land so the rate may look lower than expected).'''
+    ##fert price
+    fert_price_n1 = uinp.general['i_fert_info_n1']['price ($/t)']
+    a_ferttype_k_n = pinp.crop['i_a_ferttype_k_n']
+    missing_keys = set(pd.unique(a_ferttype_k_n.values.ravel())) - set(fert_price_n1.keys())
+    if missing_keys:
+        raise KeyError(f"Missing keys in fert_price_n1 mapping: {missing_keys}")
+    fert_price_k_n = a_ferttype_k_n.replace(fert_price_n1)
+    fert_price_r_n = fert_price_k_n.reindex(pinp.phases_r.iloc[:, -1].values)
+    fert_price_r_n.index = pinp.phases_r.index  # to match original rotation index
+
+    ##fert cost per hectare
+    phase_fert_cost_rzl_n = f_fert_cost(option=2)
+    phase_fert_cost_rn_zl = phase_fert_cost_rzl_n.stack().reorder_levels([0, 3, 1, 2]).unstack([2, 3])
+
+    ##fert rate per hectare
+    phase_fert_rate_rn_zl = phase_fert_cost_rn_zl.div(fert_price_r_n.stack().sort_index(), axis=0)
+    return phase_fert_rate_rn_zl
+
 def f1_fertilising_time():
     '''
     Determines the time (hr/ha) spent fertilising for each rotation.
@@ -568,28 +588,30 @@ def f1_fertilising_time():
     This is used to calculate machinery application cost, labour requirement and
     variable machinery depreciation associated with fertilising.
     '''
-    ##fert passes - arable (arable area accounted for in passes function)
-    total_passes_rzln = f_fert_passes().stack()
 
-    ##time linked to tonnage
-    ###fert used on each rotation phase - calculated based on inputted estimate of kgs of fert applied per pass
-    fert_req_n = pinp.crop['fert_info']['expected_rate']/1000 #convert to tonnes
-    fert_total_rzln = total_passes_rzln.mul(fert_req_n, level=-1)
+    ##time linked to tonnage - irrelevant of number of passes.
+    ###fert used on each rotation phase - calculated based on fert price and the cost per hectare.
+    phase_fert_rate_rn_zl = f1_fert_rate()
     ###time per tonne
-    time_n = mac.time_tonne()
-    ###total time
-    time_t_rzln = fert_total_rzln.mul(time_n, level=-1)
+    time_k_n = mac.time_tonne()
+    time_r_n = time_k_n.reindex(pinp.phases_r.iloc[:, -1].values)
+    time_r_n.index = pinp.phases_r.index  # to match original rotation index
+    ###time total
+    time_t_rn_zl = phase_fert_rate_rn_zl.mul(time_r_n.stack().sort_index(), axis=0)
+    time_t_rzln = time_t_rn_zl.stack([0,1]).reorder_levels([0,2,3,1])
 
-    ##time linked to spreading a hectare in paddock
+    ##time linked to spreading a hectare in paddock - depends on number of passes
+    ###fert passes - arable (arable area accounted for in passes function)
+    total_passes_rzln = f_fert_passes().stack()
     ###time taken to cover 1ha while spreading
     time_ha_n = mac.time_ha()
     ###total time
-    time_ha_rzln = total_passes_rzln.mul(time_ha_n, level=-1)
+    time_ha_rzln = total_passes_rzln.mul(time_ha_n, level=-1).fillna(0)
 
     return time_t_rzln + time_ha_rzln
 
 
-def f_fert_cost(r_vals):
+def f_fert_cost(r_vals={}, option=1):
     '''
     Cost of fertilising. Includes the fertiliser cost and the application cost.
 
@@ -615,6 +637,7 @@ def f_fert_cost(r_vals):
     purchased shortly before application because farmers wait to see how the year unfolds before locking
     in a fertiliser plan.
 
+    :param option: option changes when the function returns. Option 2 is used for calculating fert rate for application cost and emission calculations.
     :return: Dataframe of fertiliser costs. Summed with other cashflow items at the end of the module
 
     '''
@@ -686,6 +709,9 @@ def f_fert_cost(r_vals):
     nap_fert_rz_nl = nap_fert_rz_nl.mul(1-arable_l, axis=1, level=1) #add arable to df
     phase_fert_cost_rzl_n = fert_rz_nl.fillna(0).stack(1) + nap_fert_rz_nl.fillna(0).stack(1)
 
+    if option==2:
+        return phase_fert_cost_rzl_n
+
     ##adjust for interest and p7 period
     phase_fert_cost_rzl_p7n = phase_fert_cost_rzl_n.reindex(fert_cost_allocation_z_p7n.columns, axis=1, level=1)
     phase_fert_cost_rl_p7nz = phase_fert_cost_rzl_p7n.unstack(1)
@@ -742,7 +768,7 @@ Limitations with the way stubble is handled in this Table:
     This probability is calculated by dividing the average yield for that LMU by the critical grain yield. This means the likelihood of stubble handling being req’d increases for higher yielding soil types etc, which is logical. However, the probability isn’t accurately linked to the likelihood that stubble will actually require handling. For instance, just because the average steady-state wht yield of a LMU is 1.75t/ha doesn’t necessarily mean that the wheat stubble on that LMU will need handling 1.75/3.5 = 50% of the time.
     So in summary, these probabilities are fairly crude...
     additionally this new structure assumes that even if the preceding landuse is pasture the current phase will still get handling cost (wasn't able to find an alternative way)
-frost is not included because that doesn't reduce biomass
+The impact of sowing time on stubble handling is not reflected.
 '''
 
 def f1_stubble_handling_prob():
@@ -1058,8 +1084,6 @@ def f_seedcost(r_vals):
     phases_df3 = pinp.phases_r.copy()
     phases_df3.columns = pd.MultiIndex.from_product([phases_df3.columns,[''],[''],['']])  # make the df multi index so that when it merges with other df below the indexs remaining separate (otherwise it turn into a one leveled tuple)
 
-    ##seasonal inputs
-    seed_period_lengths = zfun.f_seasonal_inp(pinp.period['seed_period_lengths'], numpy=True, axis=1)
     ##inputs
     seeding_rate = pinp.crop['seeding_rate']
     seeding_cost = pinp.crop['seed_info']['Seed cost']
@@ -1330,23 +1354,36 @@ def f1_rot_fert_emissions(r_vals):
     :param r_vals:
     :return:
     '''
-    ##call emission function
-    co2e_fert_k = efun.f_fert_emissions()
 
-    ##convert k to r
-    keys_k = sinp.general['i_idx_k']
-    phases_df = pinp.phases_r
-    landuse_r = phases_df.iloc[:, -1].values
-    a_k_rk = landuse_r[:, na] == keys_k
-    co2e_fert_r = np.sum(co2e_fert_k * a_k_rk, axis=1)
+    ##fert nitrogen propn
+    a_ferttype_k_n = pinp.crop['i_a_ferttype_k_n']
+    fert_nitrogen_propn_n1 = uinp.general['i_fert_info_n1']['N proportion']
+    fert_nitrogen_propn_k_n = a_ferttype_k_n.replace(fert_nitrogen_propn_n1)
+    ##fert urea propn
+    fert_propn_urea_n1 = uinp.general['i_fert_info_n1']['propn of N that is urea']
+    fert_propn_urea_k_n = a_ferttype_k_n.replace(fert_propn_urea_n1)
+
+    ##call emission function
+    co2e_fert_kn = efun.f_fert_emissions(fert_nitrogen_propn_k_n, fert_propn_urea_k_n)
+    co2e_fert_k_n = pd.DataFrame(co2e_fert_kn, index=fert_nitrogen_propn_k_n.index, columns=fert_nitrogen_propn_k_n.columns)
+    co2e_fert_r_n = co2e_fert_k_n.reindex(pinp.phases_r.iloc[:, -1].values)
+    co2e_fert_r_n.index = pinp.phases_r.index  # to match original rotation index
+
+    ##total emissions for each rotation phase
+    phase_fert_rate_rn_zl = f1_fert_rate()
+    co2e_fert_rn_zl = phase_fert_rate_rn_zl.mul(co2e_fert_r_n.stack().sort_index(), axis=0)
+    co2e_fert_zrl = co2e_fert_rn_zl.unstack(0).sum().reorder_levels([0,2,1])
 
     ##save r_val
-    fun.f1_make_r_val(r_vals, co2e_fert_r, 'co2e_fert_r')
+    keys_r  = np.array(pinp.phases_r.index).astype('str')
+    keys_l  = pinp.general['i_lmu_idx']
+    keys_z  = zfun.f_keys_z()
+    zrl = pd.MultiIndex.from_product([keys_z, keys_r, keys_l], names=['z', 'r', 'l'])
+    co2e_fert_zrl = co2e_fert_zrl.reindex(zrl) #reindex so that nump array is in the correct order (rotation index was sorted)
+    np_co2e_fert_zrl = co2e_fert_zrl.values.reshape((len(keys_z), len(keys_r), len(keys_l)))
+    fun.f1_make_r_val(r_vals, np_co2e_fert_zrl, 'co2e_fert_zrl')
 
-    ##make df
-    keys_r = np.array(phases_df.index).astype('str')
-    co2e_fert_r = pd.Series(co2e_fert_r, keys_r)
-    return co2e_fert_r
+    return co2e_fert_zrl
 
 #########################
 #total rot cost         #
@@ -1421,12 +1458,6 @@ def f_sow_prov():
 
     This accounts for period and crop e.g. wet seeding activity only provides sowing to crop after the break.
 
-    This also stop seeding (dry and wet) in a false break between the identification and the real break.
-    This is because the soil is a "little bit wet". So in the areas that are wet enough the seed will germinate
-    and in other areas it won't. So this will lead to a patchy crop establishment and make crop management difficult
-    later in the season due to the variation in crop stages.
-    This only effects crop because pasture seeding timing is an input with a z axis so it can be altered there if desired.
-
     '''
     ##machine periods
     labour_period_p5z = per.f_p_dates_df()
@@ -1441,24 +1472,11 @@ def f_sow_prov():
     dry_sown_landuses = sinp.landuse['dry_sown']
     wet_sown_landuses = set(sinp.general['i_idx_k1']) - dry_sown_landuses #can subtract sets to return differences
     dry_sown_landuses = dry_sown_landuses | {"ms"}
-    false_brk_identification_z = zfun.f_seasonal_inp(pinp.general['i_false_brk_identification_z'],numpy=True,axis=0)
-    false_brk_followuprains_z = zfun.f_seasonal_inp(pinp.general['i_false_brk_followuprains_z'],numpy=True,axis=0)
-
-    ##determine which periods crop can't be sown because it is a false break (this doesnt effect seasons with no false brk)
-    ## any p5 period that the false break goes through cant be seeded even if the false brk only partially covers a period.
-    ## to avoid any misrepresentation ensure the false brk timing inputs line up with p5 periods
-    z_is_false_break_z = false_brk_identification_z < false_brk_followuprains_z
-    p5_is_false_break_p5z = np.logical_and(false_brk_identification_z >= labour_period_start_p5z, false_brk_followuprains_z > labour_period_start_p5z)
-    p5z_is_false_break_p5z = np.logical_and(z_is_false_break_z, p5_is_false_break_p5z)
-    p5z_isnot_during_false_break_p5z = np.logical_not(p5z_is_false_break_p5z)
 
     ##wet sowing periods
-    seed_period_lengths_pz = zfun.f_seasonal_inp(pinp.period['seed_period_lengths'],numpy=True,axis=1)
     wet_seed_start_z = per.f_wet_seeding_start_date()
-    wet_seed_len_z = np.sum(seed_period_lengths_pz, axis=0)
-    wet_seed_end_z = wet_seed_start_z + wet_seed_len_z
-    period_is_wetseeding_p5z = (labour_period_start_p5z < wet_seed_end_z) * (labour_period_end_p5z > wet_seed_start_z) \
-                               * p5z_isnot_during_false_break_p5z
+    wet_seed_end_z = per.f_wet_seeding_end_date()
+    period_is_wetseeding_p5z = (labour_period_start_p5z < wet_seed_end_z) * (labour_period_end_p5z > wet_seed_start_z)
     ###add k axis
     period_is_wetseeding_p5zk = period_is_wetseeding_p5z[...,na] * np.sum(keys_k[:,na] == list(wet_sown_landuses), axis=-1)
 
@@ -1466,8 +1484,7 @@ def f_sow_prov():
     ##currently we are saying that dry sowning cant occur between the brk of season and wet seeding start. This may or may not be correct (not if dry seeding occurs after the brk of the season it doesnt need to happen in the children seasons).
     dry_seed_start = pinp.crop['dry_seed_start']
     season_break_z = zfun.f_seasonal_inp(pinp.general['i_break'],numpy=True)
-    period_is_dryseeding_p5z = (labour_period_start_p5z < season_break_z) * (labour_period_end_p5z > dry_seed_start)\
-                               * p5z_isnot_during_false_break_p5z
+    period_is_dryseeding_p5z = (labour_period_start_p5z < season_break_z) * (labour_period_end_p5z > dry_seed_start)
     ###add k axis
     if not sinp.structuralsa['i_differentiate_wet_dry_seeding']: #in the web app all land uses can be dry sown (this is a simplification to save seperate representation of dry sown land uses.)
         dry_sown_landuses = sinp.general['i_idx_k1']
@@ -1504,6 +1521,28 @@ def f_sow_prov():
     can_sow_p5zk = pd.Series(period_is_seeding_p5zk.ravel(), index=index_p5zk)
     return sow_prov_p7p5zk, can_sow_p5zk
 
+def f_deepflow(r_vals):
+    '''
+
+    Tallies the water that is not used by plants and leaks through the soil to the groundwater.
+    This depends on landuse, soil type and rainfall.
+
+    Future improvement would be to adjust the input by weather year.
+
+    '''
+    ##read phases and add two empty col levels
+    phases_df = pinp.phases_r.copy()
+
+    ##inputs
+    recharge_kl = pinp.general['i_recharge_kl']
+    recharge_k_l = pd.DataFrame(recharge_kl, index=sinp.general['i_idx_k'], columns=pinp.general['i_lmu_idx'])
+
+    ##merge to rotation df
+    recharge_r_l = pd.merge(phases_df, recharge_k_l, how='left', left_on=sinp.end_col(), right_index = True)
+    recharge_r_l = recharge_r_l.drop(list(range(sinp.general['phase_len'])), axis=1)
+
+    ##store r_vals
+    fun.f1_make_r_val(r_vals, recharge_r_l.values, 'recharge_rl')
 
 #########
 #params #
@@ -1519,7 +1558,8 @@ def f1_crop_params(params,r_vals):
     phasesow_req = f_phase_sow_req()
     sow_prov_p7p5zk, can_sow_p5zk = f_sow_prov()
     total_co2e_phase_fuel_zrl = f1_rot_fuel_emissions(r_vals)
-    co2e_fert_r = f1_rot_fert_emissions(r_vals)
+    co2e_fert_zrl = f1_rot_fert_emissions(r_vals)
+    f_deepflow(r_vals)
 
     ##create params
     params['grain_pool_proportions'] = propn.to_dict()
@@ -1537,7 +1577,7 @@ def f1_crop_params(params,r_vals):
     params['spreader_sprayer_dep_p7zlr'] = spreader_sprayer_dep_p7zlr.to_dict()
     params['increment_spreader_sprayer_dep_p7zlr'] = increment_spreader_sprayer_dep_p7zlr.to_dict()
     params['co2e_phase_fuel_zrl'] = total_co2e_phase_fuel_zrl.to_dict()
-    params['co2e_phase_fert_r'] = co2e_fert_r.to_dict()
+    params['co2e_phase_fert_zrl'] = co2e_fert_zrl.to_dict()
 
 
 

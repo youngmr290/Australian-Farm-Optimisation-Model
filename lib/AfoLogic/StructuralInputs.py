@@ -74,7 +74,8 @@ def f_structural_inp_sa(sinp_defaults):
     ##have to import it here since sen.py imports this module
     from . import Sensitivity as sen
 
-    ##SAV
+    ##StructuralSA
+    ###SAV
     structuralsa['steady_state'] = fun.f_sa(structuralsa['steady_state'], sen.sav['steady_state'], 5)
     structuralsa['i_inc_node_periods'] = fun.f_sa(structuralsa['i_inc_node_periods'], sen.sav['inc_node_periods'], 5)
     structuralsa['i_len_q'] = fun.f_sa(structuralsa['i_len_q'], sen.sav['seq_len'], 5)
@@ -114,7 +115,7 @@ def f_structural_inp_sa(sinp_defaults):
     structuralsa['i_differentiate_wet_dry_seeding'] = fun.f_sa(structuralsa['i_differentiate_wet_dry_seeding'], sen.sav['differentiate_wet_dry_seeding'], 5)
     structuralsa['i_age_max'] = fun.f_sa(stock['i_age_max'], sen.sav['age_max'], 5)
     structuralsa['i_age_max_offs'] = fun.f_sa(stock['i_age_max_offs'], sen.sav['age_max_offs'], 5)
-    ##report controls
+    ##Report Settings
     ###SAV
     rep['i_store_nv_rep'] = fun.f_sa(rep['i_store_nv_rep'], sen.sav['nv_inc'], 5)
     rep['i_store_cs_rep'] = fun.f_sa(rep['i_store_cs_rep'], sen.sav['cs_inc'], 5)
@@ -125,23 +126,6 @@ def f_structural_inp_sa(sinp_defaults):
     rep['i_store_on_hand_mort'] = fun.f_sa(rep['i_store_on_hand_mort'], sen.sav['onhand_mort_p_inc'], 5)
     rep['i_store_mort'] = fun.f_sa(rep['i_store_mort'], sen.sav['mort_inc'], 5)
     rep['i_store_feedbud'] = fun.f_sa(rep['i_store_feedbud'], sen.sav['feedbud_inc'], 5)
-
-
-##############################
-# handle inputs with p6 axis #
-##############################
-def f1_expand_p6():
-    ##When using DSP, expand inputs with a p6 axis for each season node.
-    ##has to be a separate function to the sa because values altered in SA impact a_p6std_p6z
-    ##have to import it here since sen.py imports this module
-    from . import Periods as per
-
-    ###get association between the input fp and the node adjusted fp
-    a_p6std_p6z = per.f_feed_periods(option=2)
-    ###apply association
-    ####stock
-    structuralsa['i_nv_upper_p6z'] = np.take_along_axis(structuralsa['i_nv_upper_p6'][:,None], a_p6std_p6z, axis=0)
-    structuralsa['i_nv_lower_p6z'] = np.take_along_axis(structuralsa['i_nv_lower_p6'][:,None], a_p6std_p6z, axis=0)
 
 
 ###############

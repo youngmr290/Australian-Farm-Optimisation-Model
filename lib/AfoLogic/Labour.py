@@ -121,9 +121,8 @@ def f_labour_general(params,r_vals):
     cas_weekend_p5z = (lp_len_p5z) * 2/7
 
     ##set up stuff to calc hours work per period be each source
-    seed_period_lengths_pz = zfun.f_seasonal_inp(pinp.period['seed_period_lengths'], numpy=True, axis=1)
     seeding_start_z = per.f_wet_seeding_start_date()
-    seeding_end_z = seeding_start_z + np.sum(seed_period_lengths_pz, axis=0)
+    seeding_end_z = per.f_wet_seeding_end_date()
     seeding_occur_p5z =  np.logical_and(seeding_start_z <= lp_start_p5z, lp_start_p5z < seeding_end_z)
     harv_period_lengths_pz = zfun.f_seasonal_inp(pinp.period['harv_period_lengths'], numpy=True, axis=1)
     harv_start_z = harv_date_z

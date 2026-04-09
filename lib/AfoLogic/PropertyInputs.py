@@ -115,6 +115,8 @@ def f_reshape_pinp_defaults(pinp_defaults, sinp_defaults):
         ###stock
         sheep_inp = pinp_defaults[property]['sheep_inp']
         sheep_inp['i_pasture_stage_p6z'] = np.reshape(sheep_inp['i_pasture_stage_p6z'], zp6)
+        sheep_inp['i_nv_upper_p6z'] = np.reshape(sheep_inp['i_nv_upper_zp6'], zp6).T
+        sheep_inp['i_nv_lower_p6z'] = np.reshape(sheep_inp['i_nv_lower_zp6'], zp6).T
         sheep_inp['i_legume_p6z'] = np.reshape(sheep_inp['i_legume_p6z'], zp6)
         sheep_inp['i_supplement_zp6'] = np.reshape(sheep_inp['i_supplement_zp6'], zp6)
         sheep_inp['i_paststd_foo_zp6j0'] = np.reshape(sheep_inp['i_paststd_foo_zp6j0'], zp6j0)
@@ -223,6 +225,7 @@ def f_farmer_lmu_adj(a_lmuregion_lmufarmer):
     fun.f1_lmuregion_to_lmufarmer(general, "i_lmu_area", a_lmuregion_lmufarmer, lmu_axis=0, lmu_flag=lmu_flag)
     fun.f1_lmuregion_to_lmufarmer(general, "i_non_cropable_area_l", a_lmuregion_lmufarmer, lmu_axis=0, lmu_flag=lmu_flag)
     fun.f1_lmuregion_to_lmufarmer(general, "arable", a_lmuregion_lmufarmer, lmu_axis=0, lmu_flag=lmu_flag)
+    fun.f1_lmuregion_to_lmufarmer(general, "i_recharge_kl", a_lmuregion_lmufarmer, lmu_axis=1, lmu_flag=lmu_flag)
 
     ##crop
     fun.f1_lmuregion_to_lmufarmer(crop, "yield_by_lmu", a_lmuregion_lmufarmer, lmu_axis=1, lmu_flag=lmu_flag)
@@ -262,6 +265,8 @@ def f_farmer_lmu_adj(a_lmuregion_lmufarmer):
     fun.f1_lmuregion_to_lmufarmer(tree, "tree_fert_soil_scalar", a_lmuregion_lmufarmer, lmu_axis=0, lmu_flag=lmu_flag)
     fun.f1_lmuregion_to_lmufarmer(tree, "estimated_area_trees_l", a_lmuregion_lmufarmer, lmu_axis=0, lmu_flag=lmu_flag)
     fun.f1_lmuregion_to_lmufarmer(tree, "lmu_growth_scalar_l", a_lmuregion_lmufarmer, lmu_axis=0, lmu_flag=lmu_flag)
+    fun.f1_lmuregion_to_lmufarmer(tree, "lmu_carbon_scalar_l", a_lmuregion_lmufarmer, lmu_axis=0, lmu_flag=lmu_flag)
+    fun.f1_lmuregion_to_lmufarmer(tree, "recharge_l", a_lmuregion_lmufarmer, lmu_axis=0, lmu_flag=lmu_flag)
 
 
 #######################
@@ -493,6 +498,8 @@ def f_property_inp_sa(pinp_defaults):
     ###sam
     ###sap
     ###saa
+    sheep['i_eqn_date_g1_p7'] = fun.f_sa(sheep['i_eqn_date_g1_p7'], sen.saa['eqn_date_g1_p7'], 2).astype('int')
+    sheep['i_eqn_date_g2_p7'] = fun.f_sa(sheep['i_eqn_date_g2_p7'], sen.saa['eqn_date_g2_p7'], 2).astype('int')
     sheep['ia_r1_zig1'] = fun.f_sa(sheep['ia_r1_zig1'], sen.saa['r1_izg1'], 2).astype('int')
     sheep['ia_r2_isk2g1'] = fun.f_sa(sheep['ia_r2_isk2g1'], sen.saa['r2_isk2g1'], 2).astype('int')
     sheep['ia_r1_zig3'] = fun.f_sa(sheep['ia_r1_zig3'], sen.saa['r1_izg3'], 2).astype('int')
@@ -555,6 +562,8 @@ def f1_expand_p6():
     sheep['i_mobsize_offs_zp6i'] = np.take_along_axis(sheep['i_mobsize_offs_zp6i'], a_p6std_zp6[...,na], axis=1)
     sheep['i_dse_group_dp6z'] = np.take_along_axis(sheep['i_dse_group'][:,:,na], a_p6std_p6z[na,:,:], axis=1)
     sheep['i_wg_propn_p6z'] = np.take_along_axis(sheep['i_wg_propn_p6'][:,na], a_p6std_p6z, axis=0)
+    sheep['i_nv_upper_p6z'] = np.take_along_axis(sheep['i_nv_upper_p6z'], a_p6std_p6z, axis=0)
+    sheep['i_nv_lower_p6z'] = np.take_along_axis(sheep['i_nv_lower_p6z'], a_p6std_p6z, axis=0)
 
     ####crop grazing
     cropgraze['i_cropgraze_yield_reduction_scalar_zp6'] = np.take_along_axis(cropgraze['i_cropgraze_yield_reduction_scalar_zp6'], a_p6std_zp6, axis=1)
@@ -603,9 +612,6 @@ def f1_expand_p6():
         pasture_inputs[pasture]['i_dry_exists'] = np.max((a_p6std_p6z == pasture_inputs[pasture]['i_dry_exists']) * index_p6z, axis=0) \
                                                   - (np.count_nonzero(a_p6std_p6z == pasture_inputs[pasture]['i_dry_exists'], axis=0) -1) #have to minus count non zero in case an extra fp is added in the period dry pas becomes available. because in this case we still want to point at the first period it become available (opposite to end of gs)
 
-    ###crop residue
-    stubble['i_fp_end_stub_z'] = np.max((a_p6std_p6z == stubble['i_fp_end_stub_z']) * index_p6z, axis=0)
-
     ###fp index needs special handling because it isn't just expanded it is rebuilt
     period['i_fp_idx'] = ['fp%02d'%i for i in range(len(a_p6std_p6z))]
 
@@ -642,6 +648,7 @@ def f1_mask_lmu():
     f1_do_mask_lmu(general, "i_lmu_area", lmu_axis=0)
     f1_do_mask_lmu(general, "i_non_cropable_area_l", lmu_axis=0)
     f1_do_mask_lmu(general, "arable", lmu_axis=0)
+    f1_do_mask_lmu(general, "i_recharge_kl", lmu_axis=1)
 
     ##crop
     f1_do_mask_lmu(crop, "yield_by_lmu", lmu_axis=1)
@@ -681,6 +688,8 @@ def f1_mask_lmu():
     f1_do_mask_lmu(tree, "tree_fert_soil_scalar", lmu_axis=0)
     f1_do_mask_lmu(tree, "estimated_area_trees_l", lmu_axis=0)
     f1_do_mask_lmu(tree, "lmu_growth_scalar_l", lmu_axis=0)
+    f1_do_mask_lmu(tree, "lmu_carbon_scalar_l", lmu_axis=0)
+    f1_do_mask_lmu(tree, "recharge_l", lmu_axis=0)
 
 def f1_do_mask_landuse(dict, key, landuse_axis_type, landuse_axis):
     '''
@@ -730,6 +739,7 @@ def f1_mask_landuse():
     ##general
     f1_do_mask_landuse(general, "i_phase_can_increase_kp7", landuse_axis_type="all", landuse_axis=0)
     f1_do_mask_landuse(general, "i_phase_can_reduce_kp7", landuse_axis_type="all", landuse_axis=0)
+    f1_do_mask_landuse(general, "i_recharge_kl", landuse_axis_type="all", landuse_axis=0)
 
     ##crop
     f1_do_mask_landuse(crop, "seeding_yield_penalty", landuse_axis_type="crop", landuse_axis=0)
@@ -738,12 +748,10 @@ def f1_mask_landuse():
     f1_do_mask_landuse(crop, "yield_by_lmu", landuse_axis_type="crop", landuse_axis=0)
     f1_do_mask_landuse(crop, "seeding_rate", landuse_axis_type="all", landuse_axis=0)
     f1_do_mask_landuse(crop, "seed_info", landuse_axis_type="all", landuse_axis=0)
+    f1_do_mask_landuse(crop, "i_a_ferttype_k_n", landuse_axis_type="all", landuse_axis=0)
 
     ##emmisions
     f1_do_mask_landuse(emissions, "i_burn_propn_k", landuse_axis_type="crop", landuse_axis=0)
-    f1_do_mask_landuse(emissions, "i_nitrogen_applied_k", landuse_axis_type="all", landuse_axis=0)
-    f1_do_mask_landuse(emissions, "i_propn_Urea", landuse_axis_type="all", landuse_axis=0)
-    f1_do_mask_landuse(emissions, "i_lime_applied_k", landuse_axis_type="all", landuse_axis=0)
 
     ##cropgrazing
     f1_do_mask_landuse(cropgraze, "i_cropgraze_propn_area_grazed_kl", landuse_axis_type="crop", landuse_axis=0)

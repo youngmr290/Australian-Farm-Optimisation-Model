@@ -180,30 +180,40 @@ def load_pkl(trial_name):
         r_vals = pkl.load(f)
     return lp_vars, r_vals
 
-def f_vars2np(lp_vars, var_key, shape, maskz8=None, z_pos=-1):
+def f_vars2np(lp_vars, var_key, axis_keys=None, maskz8=None, z_pos=-1):
     '''
     Converts lp_vars to numpy.
 
     :param lp_vars: dict of lp variables
     :param var_key: string - name of variable to convert to numpy
-    :param shape: shape of desired numpy array
+    :param axis_keys: list of lists/arrays, one per axis, giving the labels (e.g. [keys_q, keys_s, keys_f, ...])
     :param maskz8: z8 mask. Must be broadcastable to lp_vars
     :param z_pos: position of z axis
     :return: numpy array with un-clustered season axis.
     '''
 
-    vars = np.array(list(lp_vars[var_key].values())).astype(float)
-    vars = vars.reshape(shape)
-    vars[np.isnan(vars)] = 0  # replace nan with 0
+    var_comp = lp_vars[var_key]
+    shape = tuple(len(k) for k in axis_keys)
+    arr = np.zeros(shape, dtype=float)
+
+    axis_maps = [{label: i for i, label in enumerate(k)} for k in axis_keys]
+
+    for idx, var in var_comp.items():
+        if not isinstance(idx, tuple):
+            idx = (idx,)
+        pos = tuple(axis_maps[a][label] for a, label in enumerate(idx))
+        arr[pos] = var#float(var.value or 0.0)
+
+    arr[np.isnan(arr)] = 0  # replace nan with 0
 
     ##uncluster z so that each season gets complete information
     if maskz8 is not None:
-        index_z = fun.f_expand(np.arange(maskz8.shape[z_pos]),z_pos)
+        index_z = fun.f_expand(np.arange(maskz8.shape[z_pos]), z_pos)
         a_zcluster = np.maximum.accumulate(index_z * maskz8,axis=z_pos)
-        a_zcluster = np.broadcast_to(a_zcluster,vars.shape)
-        vars = np.take_along_axis(vars,a_zcluster,axis=z_pos)
+        a_zcluster = np.broadcast_to(a_zcluster, arr.shape)
+        arr = np.take_along_axis(arr, a_zcluster, axis=z_pos)
 
-    return vars
+    return arr
 
 
 def f_vars2df(lp_vars, var_key, maskz8=None, z_pos=-1):
@@ -325,51 +335,6 @@ def f_var_reshape(lp_vars, r_vals):
     keys_z = r_vals['zgen']['keys_z']
     keys_pastures = r_vals['pas']['keys_pastures']
 
-    ##axis len
-    len_a = len(keys_a)
-    len_d = len(keys_d)
-    len_dry = len(keys_dry_pool)
-    len_g = len(keys_g)
-    len_g0 = len(keys_g0)
-    len_g1 = len(keys_g1)
-    len_g2 = len(keys_g2)
-    len_g3 = len(keys_g3)
-    len_f = len(keys_f)
-    len_h1 = len(keys_h1)
-    len_i = len(keys_i)
-    len_k = len(keys_k)
-    len_k1 = len(keys_k1)
-    len_k2 = len(keys_k2)
-    len_k3 = len(keys_k3)
-    len_k5 = len(keys_k5)
-    len_l = len(keys_l)
-    len_lw1 = len(keys_lw1)
-    len_lw3 = len(keys_lw3)
-    len_lw_prog = len(keys_lw_prog)
-    len_n1 = len(keys_n1)
-    len_n3 = len(keys_n3)
-    len_o = len(keys_o)
-    len_p5 = len(keys_p5)
-    len_p6 = len(keys_p6)
-    len_p7 = len(keys_p7)
-    len_p8 = len(keys_p8)
-    len_q = len(keys_q)
-    len_r = len(keys_r)
-    len_s1 = len(keys_s1)
-    len_s2 = len(keys_s2)
-    len_s = len(keys_s)
-    len_t = len(keys_t)
-    len_t1 = len(keys_t1)
-    len_t2 = len(keys_t2)
-    len_t3 = len(keys_t3)
-    len_v1 = len(keys_v1)
-    len_v3 = len(keys_v3)
-    len_y0 = len(keys_y0)
-    len_y1 = len(keys_y1)
-    len_y3 = len(keys_y3)
-    len_x = len(keys_x)
-    len_z = len(keys_z)
-
     ##create dict for reshaped variables
     global d_keys
     d_keys = {}
@@ -401,6 +366,9 @@ def f_var_reshape(lp_vars, r_vals):
     ###saltbush
     d_keys['keys_qszp6fl'] = [keys_q, keys_s, keys_z, keys_p6, keys_f, keys_l]
     d_keys['keys_qsp7zl'] = [keys_q, keys_s, keys_p7, keys_z, keys_l]
+    d_keys['keys_qszl'] = [keys_q, keys_s, keys_z, keys_l]
+    ###trees
+    d_keys['keys_p7zl'] = [keys_p7, keys_z, keys_l]
     ###periods
     d_keys['keys_p7z'] = [keys_p7, keys_z]
     d_keys['keys_p6z'] = [keys_p6, keys_z]
@@ -408,43 +376,12 @@ def f_var_reshape(lp_vars, r_vals):
     d_keys['keys_qszp5kl'] = [keys_q, keys_s, keys_z, keys_p5, keys_k, keys_l]
     d_keys['keys_qszp5k'] = [keys_q, keys_s, keys_z, keys_p5, keys_k1]
     ##biomass
-    d_keys['keys_qsp7zkls2'] = [keys_q, keys_s, keys_p7, keys_z, keys_k, keys_l, keys_s2]
+    d_keys['keys_qsp7zkls2'] = [keys_q, keys_s, keys_p7, keys_z, keys_k1, keys_l, keys_s2]
     ##v_phase residue
     d_keys['keys_qsp7p6zrlt'] = [keys_q, keys_s, keys_p7, keys_p6, keys_z, keys_r, keys_l, keys_t]
     d_keys['keys_qsp7zrl'] = [keys_q, keys_s, keys_p7, keys_z, keys_r, keys_l]
     ##trees
     d_keys['keys_l'] = [keys_l]
-
-
-    #########
-    #shapes #
-    #########
-    ##stock
-    sire_shape = len_q, len_s, 1, len_g0
-    dams_shape = len_q, len_s, len_k2, len_t1, len_v1, len_a, len_n1, len_lw1, len_z, len_i, len_y1, len_g1
-    prog_shape = len_q, len_s, len_k3, len_k5, len_t2, len_lw_prog, len_z, len_i, len_a, len_x, len_g2
-    offs_shape = len_q, len_s, len_k3, len_k5, len_t3, len_v3, len_n3, len_lw3, len_z, len_i, len_a, len_x, len_y3, len_g3
-    ##pasture
-    qsfgop6lzt = len_q, len_s, len_f, len_g, len_o, len_p6, len_l, len_z, len_t
-    qsfdp6zt = len_q, len_s, len_f, len_dry, len_p6, len_z, len_t
-    qsfdp6zlt = len_q, len_s, len_f, len_dry, len_p6, len_z, len_l, len_t
-    qsdp6zt = len_q, len_s, len_dry, len_p6, len_z, len_t
-    qsdp6zlt = len_q, len_s, len_dry, len_p6, len_z, len_l, len_t
-    qsfp6lz = len_q, len_s, len_f, len_p6, len_l, len_z
-    ##residue
-    qszp6fks1s2 = len_q, len_s, len_z, len_p6, len_f, len_k1, len_s1, len_s2
-    ###crop graze
-    qsfkp6p5zl = len_q, len_s, len_f, len_k1, len_p6, len_p5, len_z, len_l
-    ###saltbush
-    qszp6fl = len_q, len_s, len_z, len_p6, len_f, len_l
-    qszl = len_q, len_s, len_z, len_l
-    ###machinery
-    qszp5kl = len_q, len_s, len_z, len_p5, len_k, len_l
-    qszp5k = len_q, len_s, len_z, len_p5, len_k1
-    ###biomass
-    qsp7zkls2 = len_q, len_s, len_p7, len_z, len_k1, len_l, len_s2
-    ###v_phase
-    qsp7zrl = len_q, len_s, len_p7, len_z, len_r, len_l
 
 
     ##############
@@ -453,27 +390,28 @@ def f_var_reshape(lp_vars, r_vals):
     prob_qsz = r_vals['zgen']['z_prob_qsz']
     ##stock
     ###sire
-    sire_numbers_qszg0 = f_vars2np(lp_vars, 'v_sire', sire_shape).astype(float) #z is singleton (same numbers of sires in all z)
+    sire_numbers_qsg0 = f_vars2np(lp_vars, 'v_sire', [keys_q, keys_s, keys_g0]).astype(float)
+    sire_numbers_qszg0 = sire_numbers_qsg0[:,:,na,:] #give sire a singleton z axis (same numbers of sires in all z)
     d_vars['base']['sire_numbers_qszg0'] = sire_numbers_qszg0
     d_vars['qsz_weighted']['sire_numbers_qszg0'] = sire_numbers_qszg0 * prob_qsz[...,na]
     ###dams
     maskz8_k2tvanwziy1g1 = r_vals['stock']['maskz8_k2tvanwziy1g1']
-    dams_numbers_qsk2tvanwziy1g1 = f_vars2np(lp_vars, 'v_dams', dams_shape, maskz8_k2tvanwziy1g1, z_pos=-4).astype(float)
+    dams_numbers_qsk2tvanwziy1g1 = f_vars2np(lp_vars, 'v_dams', r_vals['stock']['dams_keys_qsk2tvanwziy1g1'], maskz8_k2tvanwziy1g1, z_pos=-4).astype(float)
     d_vars['base']['dams_numbers_qsk2tvanwziy1g1'] = dams_numbers_qsk2tvanwziy1g1
     d_vars['qsz_weighted']['dams_numbers_qsk2tvanwziy1g1'] = dams_numbers_qsk2tvanwziy1g1 * prob_qsz[...,na,na,na,na,na,na,:,na,na,na]
     ###prog
-    prog_numbers_qsk3k5twzia0xg2 = f_vars2np(lp_vars, 'v_prog', prog_shape).astype(float)
+    prog_numbers_qsk3k5twzia0xg2 = f_vars2np(lp_vars, 'v_prog', r_vals['stock']['prog_keys_qsk3k5twzia0xg2']).astype(float)
     d_vars['base']['prog_numbers_qsk3k5twzia0xg2'] = prog_numbers_qsk3k5twzia0xg2
     d_vars['qsz_weighted']['prog_numbers_qsk3k5twzia0xg2'] = prog_numbers_qsk3k5twzia0xg2 * prob_qsz[...,na,na,na,na,:,na,na,na,na]
     ###offs
     maskz8_k3k5tvnwziaxyg3 = r_vals['stock']['maskz8_k3k5tvnwziaxyg3']
-    offs_numbers_qsk3k5tvnwziaxyg3 = f_vars2np(lp_vars, 'v_offs', offs_shape, maskz8_k3k5tvnwziaxyg3, z_pos=-6).astype(float)
+    offs_numbers_qsk3k5tvnwziaxyg3 = f_vars2np(lp_vars, 'v_offs', r_vals['stock']['offs_keys_qsk3k5tvnwziaxyg3'], maskz8_k3k5tvnwziaxyg3, z_pos=-6).astype(float)
     d_vars['base']['offs_numbers_qsk3k5tvnwziaxyg3'] = offs_numbers_qsk3k5tvnwziaxyg3
     d_vars['qsz_weighted']['offs_numbers_qsk3k5tvnwziaxyg3'] = offs_numbers_qsk3k5tvnwziaxyg3 * prob_qsz[...,na,na,na,na,na,na,:,na,na,na,na,na]
 
     ##biomass
     mask_season_p7z = r_vals['zgen']['mask_season_p7z']
-    v_use_biomass_qsp7zkls2 = f_vars2np(lp_vars, 'v_use_biomass', qsp7zkls2, mask_season_p7z[:, :, na, na, na], z_pos=-4)
+    v_use_biomass_qsp7zkls2 = f_vars2np(lp_vars, 'v_use_biomass', d_keys['keys_qsp7zkls2'], mask_season_p7z[:, :, na, na, na], z_pos=-4)
     d_vars['base']['v_use_biomass_qsp7zkls2'] = v_use_biomass_qsp7zkls2
     d_vars['qsz_weighted']['v_use_biomass_qsp7zkls2'] = v_use_biomass_qsp7zkls2 * prob_qsz[:,:,na,:,na,na,na]
 
@@ -487,43 +425,43 @@ def f_var_reshape(lp_vars, r_vals):
     maskz8_p6naz = maskz8_p6z[:, na, :]
     maskz8_p6nazna = maskz8_p6z[:, na, :, na]
     ###green pasture hectare variable
-    greenpas_ha_qsfgop6lzt = f_vars2np(lp_vars, 'v_greenpas_ha', qsfgop6lzt, maskz8_p6nazna, z_pos=-2)
+    greenpas_ha_qsfgop6lzt = f_vars2np(lp_vars, 'v_greenpas_ha', d_keys['keys_qsfgop6lzt'], maskz8_p6nazna, z_pos=-2)
     d_vars['base']['greenpas_ha_qsfgop6lzt'] = greenpas_ha_qsfgop6lzt
     d_vars['qsz_weighted']['greenpas_ha_qsfgop6lzt'] = greenpas_ha_qsfgop6lzt * prob_qsz[...,na,na,na,na,na,:,na]
     ###dry end period
-    drypas_transfer_qsdp6zlt = f_vars2np(lp_vars, 'v_drypas_transfer', qsdp6zlt, maskz8_p6znana, z_pos=-3)
+    drypas_transfer_qsdp6zlt = f_vars2np(lp_vars, 'v_drypas_transfer', d_keys['keys_qsdp6zlt'], maskz8_p6znana, z_pos=-3)
     d_vars['base']['drypas_transfer_qsdp6zlt'] = drypas_transfer_qsdp6zlt
     d_vars['qsz_weighted']['drypas_transfer_qsdp6zlt'] = drypas_transfer_qsdp6zlt * prob_qsz[...,na,na,:,na,na]
     ###nap end period
-    nap_transfer_qsdp6zt = f_vars2np(lp_vars, 'v_nap_transfer', qsdp6zt, maskz8_p6zna, z_pos=-2)
+    nap_transfer_qsdp6zt = f_vars2np(lp_vars, 'v_nap_transfer', d_keys['keys_qsdp6zt'], maskz8_p6zna, z_pos=-2)
     d_vars['base']['nap_transfer_qsdp6zt'] = nap_transfer_qsdp6zt
     d_vars['qsz_weighted']['nap_transfer_qsdp6zt'] = nap_transfer_qsdp6zt * prob_qsz[...,na,na,:,na]
     ###dry consumed
-    drypas_consumed_qsfdp6zlt = f_vars2np(lp_vars, 'v_drypas_consumed', qsfdp6zlt, maskz8_p6znana, z_pos=-3)
+    drypas_consumed_qsfdp6zlt = f_vars2np(lp_vars, 'v_drypas_consumed', d_keys['keys_qsfdp6zlt'], maskz8_p6znana, z_pos=-3)
     d_vars['base']['drypas_consumed_qsfdp6zlt'] = drypas_consumed_qsfdp6zlt
     d_vars['qsz_weighted']['drypas_consumed_qsfdp6zlt'] = drypas_consumed_qsfdp6zlt * prob_qsz[...,na,na,na,:,na,na]
     ###nap consumed
-    nap_consumed_qsfdp6zt = f_vars2np(lp_vars, 'v_nap_consumed', qsfdp6zt, maskz8_p6zna, z_pos=-2)
+    nap_consumed_qsfdp6zt = f_vars2np(lp_vars, 'v_nap_consumed', d_keys['keys_qsfdp6zt'], maskz8_p6zna, z_pos=-2)
     d_vars['base']['nap_consumed_qsfdp6zt'] = nap_consumed_qsfdp6zt
     d_vars['qsz_weighted']['nap_consumed_qsfdp6zt'] = nap_consumed_qsfdp6zt * prob_qsz[...,na,na,na,:,na]
     ###poc consumed
-    poc_consumed_qsfp6lz = f_vars2np(lp_vars, 'v_poc', qsfp6lz, maskz8_p6naz, z_pos=-1)
+    poc_consumed_qsfp6lz = f_vars2np(lp_vars, 'v_poc', d_keys['keys_qsfp6lz'], maskz8_p6naz, z_pos=-1)
     d_vars['base']['poc_consumed_qsfp6lz'] = poc_consumed_qsfp6lz
     d_vars['qsz_weighted']['poc_consumed_qsfp6lz'] = poc_consumed_qsfp6lz * prob_qsz[...,na,na,na,:]
     ###stubble consumed
-    stub_qszp6fks1s2 = f_vars2np(lp_vars, 'v_stub_con', qszp6fks1s2, maskz8_zp6[:, :, na, na, na, na], z_pos=-6)
+    stub_qszp6fks1s2 = f_vars2np(lp_vars, 'v_stub_con', d_keys['keys_qszp6fks1s2'], maskz8_zp6[:, :, na, na, na, na], z_pos=-6)
     d_vars['base']['stub_qszp6fks1s2'] = stub_qszp6fks1s2
     d_vars['qsz_weighted']['stub_qszp6fks1s2'] = stub_qszp6fks1s2 * prob_qsz[...,na,na,na,na,na]
     ###crop consumed
-    crop_consumed_qsfkp6p5zl = f_vars2np(lp_vars, 'v_tonnes_crop_consumed', qsfkp6p5zl, maskz8_p6nazna, z_pos=-2)
+    crop_consumed_qsfkp6p5zl = f_vars2np(lp_vars, 'v_tonnes_crop_consumed', d_keys['keys_qsfkp6p5zl'], maskz8_p6nazna, z_pos=-2)
     d_vars['base']['crop_consumed_qsfkp6p5zl'] = crop_consumed_qsfkp6p5zl
     d_vars['qsz_weighted']['crop_consumed_qsfkp6p5zl'] = crop_consumed_qsfkp6p5zl * prob_qsz[...,na,na,na,na,:,na]
     ###saltbush consumed
-    v_tonnes_sb_consumed_qszp6fl = f_vars2np(lp_vars, 'v_tonnes_sb_consumed', qszp6fl, maskz8_zp6[:, :, na, na], z_pos=-4)
+    v_tonnes_sb_consumed_qszp6fl = f_vars2np(lp_vars, 'v_tonnes_sb_consumed', d_keys['keys_qszp6fl'], maskz8_zp6[:, :, na, na], z_pos=-4)
     d_vars['base']['v_tonnes_sb_consumed_qszp6fl'] = v_tonnes_sb_consumed_qszp6fl
     d_vars['qsz_weighted']['v_tonnes_sb_consumed_qszp6fl'] = v_tonnes_sb_consumed_qszp6fl * prob_qsz[...,na,na,na]
     ###area saltbush
-    v_slp_ha_qszl = f_vars2np(lp_vars, 'v_slp_ha', qszl, z_pos=-2)
+    v_slp_ha_qszl = f_vars2np(lp_vars, 'v_slp_ha', d_keys['keys_qszl'], z_pos=-2)
     d_vars['base']['v_slp_ha_qszl'] = v_slp_ha_qszl
     d_vars['qsz_weighted']['v_slp_ha_qszl'] = v_slp_ha_qszl * prob_qsz[...,na]
 
@@ -534,29 +472,29 @@ def f_var_reshape(lp_vars, r_vals):
     maskz8_zp5nana = maskz8_zp5[:, :, na, na]
     maskz8_zp5na = maskz8_zp5[:, :, na]
     ###mach variable
-    v_contractseeding_ha = f_vars2np(lp_vars, 'v_contractseeding_ha', qszp5kl, maskz8_zp5nana, z_pos=-4)
+    v_contractseeding_ha = f_vars2np(lp_vars, 'v_contractseeding_ha', d_keys['keys_qszp5kl'], maskz8_zp5nana, z_pos=-4)
     d_vars['base']['v_contractseeding_ha'] = v_contractseeding_ha
     d_vars['base']['v_contractseeding_ha'] = v_contractseeding_ha * prob_qsz[...,na,na,na]
-    v_seeding_machdays = f_vars2np(lp_vars, 'v_seeding_machdays', qszp5kl, maskz8_zp5nana, z_pos=-4)
+    v_seeding_machdays = f_vars2np(lp_vars, 'v_seeding_machdays', d_keys['keys_qszp5kl'], maskz8_zp5nana, z_pos=-4)
     d_vars['base']['v_seeding_machdays'] = v_seeding_machdays
     d_vars['qsz_weighted']['v_seeding_machdays'] = v_seeding_machdays * prob_qsz[...,na,na,na]
-    v_harv_hours = f_vars2np(lp_vars, 'v_harv_hours', qszp5k, maskz8_zp5na, z_pos=-3)
+    v_harv_hours = f_vars2np(lp_vars, 'v_harv_hours', d_keys['keys_qszp5k'], maskz8_zp5na, z_pos=-3)
     d_vars['base']['v_harv_hours'] = v_harv_hours
     d_vars['qsz_weighted']['v_harv_hours'] = v_harv_hours * prob_qsz[...,na,na]
-    v_contractharv_hours = f_vars2np(lp_vars, 'v_contractharv_hours', qszp5k, maskz8_zp5na, z_pos=-3)
+    v_contractharv_hours = f_vars2np(lp_vars, 'v_contractharv_hours', d_keys['keys_qszp5k'], maskz8_zp5na, z_pos=-3)
     d_vars['base']['v_contractharv_hours'] = v_contractharv_hours
     d_vars['qsz_weighted']['v_contractharv_hours'] = v_contractharv_hours * prob_qsz[...,na,na]
 
     ##v_phase
-    v_phase_area_qsp7zrl = f_vars2np(lp_vars, 'v_phase_area', qsp7zrl, mask_season_p7z[:, :, na, na], z_pos=-3)
+    v_phase_area_qsp7zrl = f_vars2np(lp_vars, 'v_phase_area', d_keys['keys_qsp7zrl'], mask_season_p7z[:, :, na, na], z_pos=-3)
     d_vars['base']['v_phase_area_qsp7zrl'] = v_phase_area_qsp7zrl
     d_vars['qsz_weighted']['v_phase_area_qsp7zrl'] = v_phase_area_qsp7zrl * prob_qsz[:,:,na,:,na,na]
-    v_phase_change_increase_qsp7zrl = f_vars2np(lp_vars, 'v_phase_change_increase', qsp7zrl, mask_season_p7z[:, :, na, na], z_pos=-3)
+    v_phase_change_increase_qsp7zrl = f_vars2np(lp_vars, 'v_phase_change_increase', d_keys['keys_qsp7zrl'], mask_season_p7z[:, :, na, na], z_pos=-3)
     d_vars['base']['v_phase_change_increase_qsp7zrl'] = v_phase_change_increase_qsp7zrl
     d_vars['qsz_weighted']['v_phase_change_increase_qsp7zrl'] = v_phase_change_increase_qsp7zrl * prob_qsz[:,:,na,:,na,na]
 
     ##trees
-    v_tree_area_l = f_vars2np(lp_vars, 'v_tree_area_l', len_l)
+    v_tree_area_l = f_vars2np(lp_vars, 'v_tree_area_l', [keys_l])
     d_vars['base']['v_tree_area_l'] = v_tree_area_l
     d_vars['qsz_weighted']['v_tree_area_l'] = v_tree_area_l #doesnt need to be weight by qsz because doesnt vary
 
@@ -1047,11 +985,11 @@ def f_mach_summary(lp_vars, r_vals, option=0):
         keys_s = r_vals['zgen']['keys_s']
         keys_z = r_vals['zgen']['keys_z']
         idx = pd.IndexSlice
-        subtype = ['Total harvest costs', 'Owner harvest costs', 'Owner harvest hours', 'Contract costs', 'Contract harvest hours',
-                   'Total seeding costs', 'Owner seeding costs', 'Owner seeding days', 'Contract costs', 'Contract seeded hectares',
+        subtype = ['Total harvest costs', 'Owner harvest costs', 'Owner harvest hours', 'Contract harvest costs', 'Contract harvest hours',
+                   'Total seeding costs', 'Owner seeding costs', 'Owner seeding days', 'Contract seeding costs', 'Contract seeded hectares',
                    'Total spreading and spraying costs', 'Spreading hours', 'Spraying hours',
                    'Variable depreciation', 'Fixed depreciation',
-                   'Insurance', 'Total']
+                   'Insurance']
         mach_index = pd.MultiIndex.from_product([keys_q, keys_s, keys_z, subtype], names=['Sequence_year', 'Sequence', 'Season', 'Subtype'])
         mach = pd.DataFrame(index=mach_index, columns=["item"])  # need to initialise df with multiindex so rows can be added
 
@@ -1083,13 +1021,13 @@ def f_mach_summary(lp_vars, r_vals, option=0):
         mach.loc[idx[:, :, :, 'Total harvest costs'],:] = harvest_cost_zkqs_p7.sum(axis=1).groupby(axis=0,level=(0,2,3)).sum().reorder_levels([1, 2, 0]) #sum p7, k and reorder
         mach.loc[idx[:, :, :, 'Owner harvest costs'],:] = own_harvest_cost_zp5kqs_p7.sum(axis=1).groupby(axis=0,level=(0,3,4)).sum().reorder_levels([1, 2, 0]) #sum p7, p5, k and reorder
         mach.loc[idx[:, :, :, 'Owner harvest hours'],:] = harv_hours_qsz
-        mach.loc[idx[:, :, :, 'Contract costs'],:] = contract_harvest_cost_zp5kqs_p7.sum(axis=1).groupby(axis=0,level=(0,3,4)).sum().reorder_levels([1, 2, 0]) #sum p7, p5, k and reorder
+        mach.loc[idx[:, :, :, 'Contract harvest costs'],:] = contract_harvest_cost_zp5kqs_p7.sum(axis=1).groupby(axis=0,level=(0,3,4)).sum().reorder_levels([1, 2, 0]) #sum p7, p5, k and reorder
         mach.loc[idx[:, :, :, 'Contract harvest hours'],:] = contractharv_hours_zp5kqs.groupby(axis=0,level=(0,3,4)).sum().reorder_levels([1, 2, 0]) #sum p5, k and reorder
         ###seeding summary
         mach.loc[idx[:, :, :, 'Total seeding costs'],:] = seeding_cost_zkqs_p7.sum(axis=1).groupby(axis=0,level=(0,2,3)).sum().reorder_levels([1, 2, 0]) #sum p7, k and reorder
         mach.loc[idx[:, :, :, 'Owner seeding costs'],:] = seeding_cost_own_zkqs_p7.sum(axis=1).groupby(axis=0,level=(0,2,3)).sum().reorder_levels([1, 2, 0]) #sum p7, k and reorder
         mach.loc[idx[:, :, :, 'Owner seeding days'],:] = seeding_days_qszp5_kl.sum(axis=1).groupby(axis=0,level=(0,1,2)).sum() #sum k, l, p5
-        mach.loc[idx[:, :, :, 'Contract costs'],:] = seeding_cost_contract_zkqs_p7.sum(axis=1).groupby(axis=0,level=(0,2,3)).sum().reorder_levels([1, 2, 0]) #sum p7, k and reorder
+        mach.loc[idx[:, :, :, 'Contract seeding costs'],:] = seeding_cost_contract_zkqs_p7.sum(axis=1).groupby(axis=0,level=(0,2,3)).sum().reorder_levels([1, 2, 0]) #sum p7, k and reorder
         mach.loc[idx[:, :, :, 'Contract seeded hectares'],:] = contractseeding_ha_zp5kqs.groupby(axis=0,level=(0,3,4)).sum().reorder_levels([1, 2, 0]) #sum p5, k and reorder
         ###spreading and sprarying
         mach.loc[idx[:, :, :, 'Total spreading and spraying costs'],:] = fertchem_cost_zkqs_p7.sum(axis=1).groupby(axis=0,level=(0,2,3)).sum().reorder_levels([1, 2, 0]) #sum p7, k and reorder
@@ -1466,14 +1404,9 @@ def f_labour_summary(lp_vars, r_vals, option=0):
     keys_q = r_vals['zgen']['keys_q']
     keys_s = r_vals['zgen']['keys_s']
     keys_z = r_vals['zgen']['keys_z']
-    len_p5 = len(keys_p5)
-    len_q = len(keys_q)
-    len_s = len(keys_s)
-    len_z = len(keys_z)
 
-    qsp5z = len_q, len_s, len_p5, len_z
-    qsz = len_q, len_s, len_z
-    qs = len_q, len_s
+    qsp5z = keys_q, keys_s, keys_p5, keys_z
+    qs = keys_q, keys_s
 
     ##total labour cost
     if option == 0:
@@ -1521,11 +1454,7 @@ def f_dep_summary(lp_vars, r_vals):
     keys_q = r_vals['zgen']['keys_q']
     keys_s = r_vals['zgen']['keys_s']
     keys_z = r_vals['zgen']['keys_z']
-    len_p7 = len(keys_p7)
-    len_q = len(keys_q)
-    len_s = len(keys_s)
-    len_z = len(keys_z)
-    qsp7z = len_q, len_s, len_p7, len_z
+    qsp7z = keys_q, keys_s, keys_p7, keys_z
     dep_qsp7z = f_vars2np(lp_vars, 'v_dep', qsp7z, mask_season_p7z, z_pos=-1)
     return dep_qsp7z
 
@@ -1536,11 +1465,7 @@ def f_minroe_summary(lp_vars, r_vals):
     keys_q = r_vals['zgen']['keys_q']
     keys_s = r_vals['zgen']['keys_s']
     keys_z = r_vals['zgen']['keys_z']
-    len_p7 = len(keys_p7)
-    len_q = len(keys_q)
-    len_s = len(keys_s)
-    len_z = len(keys_z)
-    qsp7z = len_q, len_s, len_p7, len_z
+    qsp7z = keys_q, keys_s, keys_p7, keys_z
 
     minroe_qsp7z = f_vars2np(lp_vars, 'v_minroe', qsp7z, mask_season_p7z, z_pos=-1)
     return minroe_qsp7z
@@ -1552,11 +1477,7 @@ def f_asset_cost_summary(lp_vars, r_vals):
     keys_q = r_vals['zgen']['keys_q']
     keys_s = r_vals['zgen']['keys_s']
     keys_z = r_vals['zgen']['keys_z']
-    len_p7 = len(keys_p7)
-    len_q = len(keys_q)
-    len_s = len(keys_s)
-    len_z = len(keys_z)
-    qsp7z = len_q, len_s, len_p7, len_z
+    qsp7z = keys_q, keys_s, keys_p7, keys_z
     asset_cost_qsp7z = f_vars2np(lp_vars, 'v_asset_cost', qsp7z, mask_season_p7z, z_pos=-1)
     return asset_cost_qsp7z
 
@@ -1568,12 +1489,7 @@ def f_wc_summary(lp_vars, r_vals):
     keys_q = r_vals['zgen']['keys_q']
     keys_s = r_vals['zgen']['keys_s']
     keys_z = r_vals['zgen']['keys_z']
-    len_p7 = len(keys_p7)
-    len_c0 = len(keys_c0)
-    len_q = len(keys_q)
-    len_s = len(keys_s)
-    len_z = len(keys_z)
-    qsc0p7z = len_q, len_s, len_c0, len_p7, len_z
+    qsc0p7z = keys_q, keys_s, keys_c0, keys_p7, keys_z
     capital_qsc0p7z = f_vars2np(lp_vars, 'v_wc_debit', qsc0p7z, mask_season_p7z, z_pos=-1)
     capital_qsz = np.max(capital_qsc0p7z, axis=(2,3)) #max c0 and p7 axis
     keys_qsz = [keys_q, keys_s, keys_z]
@@ -1585,38 +1501,132 @@ def f_overhead_summary(r_vals):
     exp_fix_c = r_vals['fin']['overheads']
     return exp_fix_c
 
-def f_tree_summary(r_vals):
-    ##costs
-    tree_sequestration_cost_qsz_p7 = f_stock_pasture_summary(r_vals, type='tree', prod='tree_sequestration_cost_p7z', na_prod=[0, 1, 4]
-                                                    , weights='v_tree_area_l', na_weights=[0,1,2,3]
-                                                    , keys='keys_qsp7zl', arith=2, index=[0, 1, 3], cols=[2])
-    tree_biodiversity_cost_qsz_p7 = f_stock_pasture_summary(r_vals, type='tree', prod='tree_biodiversity_cost_p7z', na_prod=[0, 1, 4]
-                                                    , weights='v_tree_area_l', na_weights=[0,1,2,3]
-                                                    , keys='keys_qsp7zl', arith=2, index=[0, 1, 3], cols=[2])
-    tree_biomass_cost_qsz_p7 = f_stock_pasture_summary(r_vals, type='tree', prod='tree_biomass_cost_p7zl', na_prod=[0, 1]
-                                                    , weights='v_tree_area_l', na_weights=[0,1,2,3]
-                                                    , keys='keys_qsp7zl', arith=2, index=[0, 1, 3], cols=[2])
-    tree_estab_cost_qsz_p7 = f_stock_pasture_summary(r_vals, type='tree', prod='tree_estab_cost_p7zl', na_prod=[0, 1]
-                                                    , weights='v_tree_area_l', na_weights=[0,1,2,3]
-                                                    , keys='keys_qsp7zl', arith=2, index=[0, 1, 3], cols=[2])
+def f_deepflow_summary(r_vals):
+    '''average recharge across the whole farm'''
+    ##deepflow phases
+    v_phase_area_qsp7zrl = d_vars['base']['v_phase_area_qsp7zrl']
+    v_phase_area_qszrl = v_phase_area_qsp7zrl[:,:,-1,...] #slice p7[-1] - will need to be more complex if dual season.
+    recharge_rl = r_vals['crop']['recharge_rl']
+    total_rot_recharge_qsz = np.sum(v_phase_area_qszrl * recharge_rl, axis=(3,4))
 
-    total_cost_qsz_p7 = tree_sequestration_cost_qsz_p7 + tree_biodiversity_cost_qsz_p7 + tree_biomass_cost_qsz_p7 + tree_estab_cost_qsz_p7
+    ##deepflow trees
+    v_tree_area_l = d_vars['base']['v_tree_area_l']
+    tree_recharge_l = r_vals['tree']['recharge_l']
+    total_tree_recharge = np.sum(v_tree_area_l * tree_recharge_l)
+
+    ##average deepflow across farm
+    total_area_qsz = np.sum(v_tree_area_l) + np.sum(v_phase_area_qszrl, axis=(3,4))
+    total_recharge_qsz = total_rot_recharge_qsz + total_tree_recharge
+    ave_recharge_qsz = total_recharge_qsz/total_area_qsz
+
+    ##make df
+    keys_q = r_vals['zgen']['keys_q']
+    keys_s = r_vals['zgen']['keys_s']
+    keys_z = r_vals['zgen']['keys_z']
+    keys_qsz = [keys_q, keys_s, keys_z]
+    ave_recharge_qsz = f_numpy2df(ave_recharge_qsz, keys_qsz, [0,1], [2])
+
+    return ave_recharge_qsz
+
+def f_tree_summary(r_vals, totals=True):
+    ##fixed costs
+    keys_p7 = r_vals['zgen']['keys_p7']
+    keys_z = r_vals['zgen']['keys_z']
+    sequestration_fixed_cost_p7z = r_vals['tree']['tree_sequestration_fixed_cost_p7z']
+    biodiversity_fixed_cost_p7z = r_vals['tree']['tree_biodiversity_fixed_cost_p7z']
+    total_fixed_costs_z_p7 = f_numpy2df(sequestration_fixed_cost_p7z + biodiversity_fixed_cost_p7z, [keys_p7, keys_z], [1], [0])
+
+    ##variable costs
+    tree_sequestration_variable_cost_z_p7 = f_stock_pasture_summary(r_vals, type='tree', prod='tree_sequestration_variable_cost_p7z', na_prod=[2]
+                                                    , weights='v_tree_area_l', na_weights=[0,1]
+                                                    , keys='keys_p7zl', arith=2, index=[1], cols=[0])
+    tree_biodiversity_variable_cost_z_p7 = f_stock_pasture_summary(r_vals, type='tree', prod='tree_biodiversity_variable_cost_p7z', na_prod=[2]
+                                                    , weights='v_tree_area_l', na_weights=[0,1]
+                                                    , keys='keys_p7zl', arith=2, index=[1], cols=[0])
+    tree_biomass_cost_z_p7 = f_stock_pasture_summary(r_vals, type='tree', prod='tree_biomass_cost_p7zl', na_prod=[]
+                                                    , weights='v_tree_area_l', na_weights=[0,1]
+                                                    , keys='keys_p7zl', arith=2, index=[1], cols=[0])
+    tree_estab_cost_z_p7 = f_stock_pasture_summary(r_vals, type='tree', prod='tree_estab_cost_p7zl', na_prod=[]
+                                                    , weights='v_tree_area_l', na_weights=[0,1]
+                                                    , keys='keys_p7zl', arith=2, index=[1], cols=[0])
+
+    ##total costs
+    total_cost_z_p7 = (tree_sequestration_variable_cost_z_p7 + tree_biodiversity_variable_cost_z_p7 +
+                       tree_biomass_cost_z_p7 + tree_estab_cost_z_p7 + total_fixed_costs_z_p7)
 
     ##income
-    tree_sequestration_income_qsz_p7 = f_stock_pasture_summary(r_vals, type='tree', prod='tree_sequestration_income_p7zl', na_prod=[0, 1]
-                                                    , weights='v_tree_area_l', na_weights=[0,1,2,3]
-                                                    , keys='keys_qsp7zl', arith=2, index=[0, 1, 3], cols=[2])
-    tree_biodiversity_income_qsz_p7 = f_stock_pasture_summary(r_vals, type='tree', prod='tree_biodiversity_income_p7z', na_prod=[0, 1, 4]
-                                                    , weights='v_tree_area_l', na_weights=[0,1,2,3]
-                                                    , keys='keys_qsp7zl', arith=2, index=[0, 1, 3], cols=[2])
-    tree_biomass_income_qsz_p7 = f_stock_pasture_summary(r_vals, type='tree', prod='tree_biomass_income_p7zl', na_prod=[0, 1]
-                                                    , weights='v_tree_area_l', na_weights=[0,1,2,3]
-                                                    , keys='keys_qsp7zl', arith=2, index=[0, 1, 3], cols=[2])
+    tree_sequestration_income_z_p7 = f_stock_pasture_summary(r_vals, type='tree', prod='tree_sequestration_income_p7zl', na_prod=[]
+                                                    , weights='v_tree_area_l', na_weights=[0,1]
+                                                    , keys='keys_p7zl', arith=2, index=[1], cols=[0])
+    tree_biodiversity_income_z_p7 = f_stock_pasture_summary(r_vals, type='tree', prod='tree_biodiversity_income_p7z', na_prod=[2]
+                                                    , weights='v_tree_area_l', na_weights=[0,1]
+                                                    , keys='keys_p7zl', arith=2, index=[1], cols=[0])
+    tree_biomass_income_z_p7 = f_stock_pasture_summary(r_vals, type='tree', prod='tree_biomass_income_p7zl', na_prod=[]
+                                                    , weights='v_tree_area_l', na_weights=[0,1]
+                                                    , keys='keys_p7zl', arith=2, index=[1], cols=[0])
 
-    total_income_qsz_p7 = tree_sequestration_income_qsz_p7 + tree_biodiversity_income_qsz_p7 + tree_biomass_income_qsz_p7
+    total_income_z_p7 = tree_sequestration_income_z_p7 + tree_biodiversity_income_z_p7 + tree_biomass_income_z_p7
 
-    return total_cost_qsz_p7, total_income_qsz_p7
+    if totals:
+        return total_cost_z_p7, total_income_z_p7
 
+    ###create tree cost & benefits table - averaged across z because tree are fixed long term.
+    z_prob_z = r_vals['zgen']['z_prob_qsz'].sum(axis=(0, 1))
+    z_prob_z = pd.Series(z_prob_z, index=keys_z)
+
+    def f_tree_expected_total(df_z_p7):
+        '''Sum p7 and probability-weight z to one scalar.'''
+        p7_total_z = df_z_p7.sum(axis=1)
+        return p7_total_z.mul(z_prob_z.reindex(p7_total_z.index).fillna(0)).sum()
+
+    exp_estab_maint = f_tree_expected_total(tree_estab_cost_z_p7)
+    exp_seq_var = f_tree_expected_total(tree_sequestration_variable_cost_z_p7)
+    exp_seq_fix = f_tree_expected_total(f_numpy2df(sequestration_fixed_cost_p7z, [keys_p7, keys_z], [1], [0]))
+    exp_bio_var = f_tree_expected_total(tree_biodiversity_variable_cost_z_p7)
+    exp_bio_fix = f_tree_expected_total(f_numpy2df(biodiversity_fixed_cost_p7z, [keys_p7, keys_z], [1], [0]))
+    exp_harvest = f_tree_expected_total(tree_biomass_cost_z_p7)
+
+    rev_seq = f_tree_expected_total(tree_sequestration_income_z_p7)
+    rev_bio = f_tree_expected_total(tree_biodiversity_income_z_p7)
+    rev_biomass = f_tree_expected_total(tree_biomass_income_z_p7)
+    tree_area_ha = np.sum(d_vars['base']['v_tree_area_l'])
+
+    total_expenses = exp_estab_maint + exp_seq_var + exp_seq_fix + exp_bio_var + exp_bio_fix + exp_harvest
+    total_revenue = rev_seq + rev_bio + rev_biomass
+    net_benefit = total_revenue - total_expenses
+
+    idx = pd.MultiIndex.from_tuples([
+        ('Total', 'Tree area (ha)'),
+        ('Total', 'Net benefit'),
+        ('Expense', 'Total expenses'),
+        ('Expense', 'Establishment and maintenance costs'),
+        ('Expense', 'Sequestration cost (variable)'),
+        ('Expense', 'Sequestration cost (fixed)'),
+        ('Expense', 'Biodiversity cost (variable)'),
+        ('Expense', 'Biodiversity cost (fixed)'),
+        ('Expense', 'Harvesting costs'),
+        ('Revenue', 'Total Revenue (net of selling costs and freight)'),
+        ('Revenue', 'sequestration_income'),
+        ('Revenue', 'biodiversity_income'),
+        ('Revenue', 'biomass_income'),
+    ], names=['Section', 'Item'])
+
+    tree_summary = pd.DataFrame(index=idx, columns=['Total'], dtype=float)
+    tree_summary.loc[('Total', 'Tree area (ha)'), 'Total'] = tree_area_ha
+    tree_summary.loc[('Total', 'Net benefit'), 'Total'] = net_benefit
+    tree_summary.loc[('Expense', 'Total expenses'), 'Total'] = total_expenses
+    tree_summary.loc[('Expense', 'Establishment and maintenance costs'), 'Total'] = exp_estab_maint
+    tree_summary.loc[('Expense', 'Sequestration cost (variable)'), 'Total'] = exp_seq_var
+    tree_summary.loc[('Expense', 'Sequestration cost (fixed)'), 'Total'] = exp_seq_fix
+    tree_summary.loc[('Expense', 'Biodiversity cost (variable)'), 'Total'] = exp_bio_var
+    tree_summary.loc[('Expense', 'Biodiversity cost (fixed)'), 'Total'] = exp_bio_fix
+    tree_summary.loc[('Expense', 'Harvesting costs'), 'Total'] = exp_harvest
+    tree_summary.loc[('Revenue', 'Total Revenue (net of selling costs and freight)'), 'Total'] = total_revenue
+    tree_summary.loc[('Revenue', 'sequestration_income'), 'Total'] = rev_seq
+    tree_summary.loc[('Revenue', 'biodiversity_income'), 'Total'] = rev_bio
+    tree_summary.loc[('Revenue', 'biomass_income'), 'Total'] = rev_biomass
+
+    return tree_summary
 def f_dse(lp_vars, r_vals, method, per_ha, summary1=False, summary2=False, summary3=False):
     '''
     DSE calculation.
@@ -1762,7 +1772,7 @@ def f_profitloss_table(lp_vars, r_vals, option=1):
     slp_estab_cost_qsz_p7 = f_stock_pasture_summary(r_vals, type='slp', prod='slp_estab_cost_p7z', na_prod=[0,1,4]
                                              , weights='v_slp_ha_qszl', na_weights=[2]
                                              , keys='keys_qsp7zl', arith=2, index=[0,1,3], cols=[2])
-    tree_cost_qsz_p7, tree_income_qsz_p7 = f_tree_summary(r_vals)
+    tree_cost_z_p7, tree_income_z_p7 = f_tree_summary(r_vals)
     labour_p7qsz = f_labour_summary(lp_vars, r_vals, option=0)
     exp_fix_p7_z = f_overhead_summary(r_vals).unstack()
     dep_qsp7z = f_dep_summary(lp_vars, r_vals)
@@ -1830,14 +1840,14 @@ def f_profitloss_table(lp_vars, r_vals, option=1):
     pnl.loc[idx[:, :, :,'Revenue','grain'],:] = rev_grain_p7_qsz.T.reindex(pnl_cols, axis=1).values #reindex because  has been sorted alphabetically
     pnl.loc[idx[:, :, :, 'Revenue', 'sheep sales'], :] = stocksale_qszp7.reshape(-1, len_p7)
     pnl.loc[idx[:, :, :, 'Revenue', 'wool'], :] = wool_qszp7.reshape(-1, len_p7)
-    pnl.loc[idx[:, :, :, 'Revenue', 'trees'], :] = tree_income_qsz_p7.values
+    pnl.loc[idx[:, :, :, 'Revenue', 'trees'], :] = tree_income_z_p7.values
     pnl.loc[idx[:, :, :, 'Revenue', 'Total Revenue (net of selling costs and freight)'], :] = pnl.loc[pnl.index.get_level_values(3) == 'Revenue'].groupby(axis=0,level=(0,1,2)).sum().values
 
     ##expenses - add to p/l table each as a new row
     pnl.loc[idx[:, :, :, 'Expense', 'crop'], :] = crop_p7_qsz.T.values
     pnl.loc[idx[:, :, :, 'Expense', 'pasture'], :] = pas_p7_qsz.T.values
     pnl.loc[idx[:, :, :, 'Expense', 'salt land pasture'], :] = slp_estab_cost_qsz_p7.add(slp_p7_qsz.T).values
-    pnl.loc[idx[:, :, :, 'Expense', 'trees'], :] = tree_cost_qsz_p7.values
+    pnl.loc[idx[:, :, :, 'Expense', 'trees'], :] = tree_cost_z_p7.values
     pnl.loc[idx[:, :, :, 'Expense', 'stock husb and infra'], :] = husbcost_qszp7.reshape(-1, len_p7)
     pnl.loc[idx[:, :, :, 'Expense', 'stock sup'], :] = supcost_qsz_p7.values
     pnl.loc[idx[:, :, :, 'Expense', 'stock purchase'], :] = purchasecost_qszp7.reshape(-1, len_p7)
@@ -2001,12 +2011,7 @@ def f_profit(lp_vars, r_vals, option=0):
         keys_q = r_vals['zgen']['keys_q']
         keys_s = r_vals['zgen']['keys_s']
         keys_z = r_vals['zgen']['keys_z']
-        len_p7 = len(keys_p7)
-        len_c1 = len(keys_c1)
-        len_q = len(keys_q)
-        len_s = len(keys_s)
-        len_z = len(keys_z)
-        qsc1p7z = len_q, len_s, len_c1, len_p7, len_z
+        qsc1p7z = keys_q, keys_s, keys_c1, keys_p7, keys_z
         ###credit/debit (profit/loss before depreciation and tradevalue)
         credit_qsc1p7z = f_vars2np(lp_vars, 'v_credit', qsc1p7z, mask_season_p7z, z_pos=-1)
         debit_qsc1p7z = f_vars2np(lp_vars, 'v_debit', qsc1p7z, mask_season_p7z, z_pos=-1)
@@ -2534,6 +2539,22 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
     return feed_budget.astype(float).round(2)
 
 
+def f_sup_per_dse(lp_vars, r_vals):
+    '''
+    Total supplement fed per dse per day.
+    '''
+    grain_fed_qszkfp6 = f_grain_sup_summary(lp_vars, r_vals, option=3)
+    grain_fed_qsp6z = grain_fed_qszkfp6.unstack([3,4]).sum(axis=1).reorder_levels([0,1,3,2])
+    dse_sire_qsp6z, dse_dams_qsp6z, dse_offs_qsp6z = f_dse(lp_vars, r_vals, 0, False)
+    total_dse_qsp6z = dse_dams_qsp6z.add(dse_offs_qsp6z, fill_value=0).add(dse_sire_qsp6z, fill_value=0).sum(axis=1)
+    days_p6z = pd.DataFrame(r_vals['pas']['days_p6z'], index=r_vals['pas']['keys_p6'], columns=r_vals['zgen']['keys_z']).stack()
+    sup_per_dse_qsp6z = grain_fed_qsp6z/total_dse_qsp6z
+    sup_per_dse_per_day_qs_p6z = sup_per_dse_qsp6z.unstack([-2,-1]).div(days_p6z, axis=1)
+    sup_per_dse_per_day_qsp6_z = sup_per_dse_per_day_qs_p6z.stack(0)
+
+    return sup_per_dse_per_day_qsp6_z * 1000
+
+
 def f_emission_summary(lp_vars, r_vals, option=0):
     '''
     Summary of whole farm emissions. The report summarises the methane, nitrous oxide, carbon dioxide and
@@ -2857,15 +2878,22 @@ def f_emission_summary(lp_vars, r_vals, option=0):
 
     ##Fertiliser
     type = 'crop'
-    prod = 'co2e_fert_r'.format(e)
-    na_prod = [0,1,2,3,5]  # q,s,p7,z,l
+    prod = 'co2e_fert_zrl'.format(e)
+    na_prod = [0,1,2]  # q,s,p7
     weights = 'v_phase_change_increase_qsp7zrl'
     keys = 'keys_qsp7zrl'
     index = [0, 1, 3]  # q,s,z
-    cols = []
-    fert_co2e_qsz = f_stock_pasture_summary(r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
+    cols = [4]
+    fert_co2e_qsz_r = f_stock_pasture_summary(r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
                                           keys=keys, arith=arith, index=index, cols=cols)
-    fert_co2e_qsz = fert_co2e_qsz/1000 #convert to tonnes
+    fert_co2e_qsz_r = fert_co2e_qsz_r/1000 #convert to tonnes
+    ###convert r to k
+    phases_df = r_vals['rot']['phases']
+    phases_rk = phases_df.set_index(phases_df.columns[-1], append=True)  # add landuse as index level
+    fert_co2e_qsz_rk = fert_co2e_qsz_r.reindex(phases_rk.index, axis=1, level=0)
+    fert_co2e_qsz_k = fert_co2e_qsz_rk.groupby(axis=1,level=1).sum()
+    fert_co2e_qsz = fert_co2e_qsz_k.sum(axis=1).to_frame()
+    fert_cols_k = [str("Fertiliser CO2e ")+i+str(" (t)") for i in fert_co2e_qsz_k.columns]
 
     ##trees
     type = 'tree'
@@ -2893,8 +2921,9 @@ def f_emission_summary(lp_vars, r_vals, option=0):
     keys_s = r_vals['zgen']['keys_s']
     keys_z = r_vals['zgen']['keys_z']
     keys_qsz = [keys_q, keys_s, keys_z]
-    annual_sequestration_qsz = pd.Series(annual_sequestration, index=keys_qsz)
-    tree_co2e_sold_qsz = pd.Series(tree_co2e_sold, index=keys_qsz)
+    idx = pd.MultiIndex.from_product(keys_qsz)
+    annual_sequestration_qsz = pd.Series(annual_sequestration, index=idx)
+    tree_co2e_sold_qsz = pd.Series(tree_co2e_sold, index=idx)
 
     ##calc info for intensity calcs
     ###wool production
@@ -2992,7 +3021,7 @@ def f_emission_summary(lp_vars, r_vals, option=0):
                                total_residue_co2e_qsz, ch4_residue_co2e_qsz, n2o_residue_co2e_qsz,
                                n2o_pas_residue_co2e_qsz, n2o_pas_residue_co2e_qsz,
                                total_fuel_co2e_qsz,
-                               fert_co2e_qsz,
+                               fert_co2e_qsz, fert_co2e_qsz_k,
                                annual_sequestration_qsz,
                                tree_co2e_sold_qsz,
                                crop_production_qsz,
@@ -3002,7 +3031,7 @@ def f_emission_summary(lp_vars, r_vals, option=0):
                              'Total Crop Residue CO2e (t)', 'Crop Residue Methane co2e (t)', 'Crop Residue Nitrous Oxide co2e (t)',
                              'Total Pas Residue CO2e (t)', 'Pasture Residue Nitrous Oxide co2e (t)',
                              'Total Fuel CO2e (t)',
-                             'Total Fertiliser CO2e (t)',
+                             'Total Fertiliser CO2e (t)'] + fert_cols_k + [
                              'Total Sequestered CO2e (t)',
                              'Total Sold CO2e (t)',
                              'Crop yield (t)',
@@ -3439,11 +3468,11 @@ def f_saleage_analysis(lp_vars, r_vals, trial):
     stocksale_qszp7, wool_qszp7, husbcost_qszp7, supcost_qsz_p7, purchasecost_qszp7, trade_value_qszp7 = f_stock_cash_summary(lp_vars, r_vals)
     ##sale income
     stocksale = np.sum(stocksale_qszp7 * z_prob_qsz[...,na])
-    stocksale_per_wgha = stocksale/total_pas_are
+    stocksale_per_wgha = stocksale / total_pas_are if total_pas_are != 0 else 0
     summary_df.loc[trial, 'Sheep sales ($/WgHa)'] = round(stocksale_per_wgha, 0)
     ##wool income
     woolsale = np.sum(wool_qszp7 * z_prob_qsz[...,na])
-    woolsale_per_wgha = woolsale/total_pas_are
+    woolsale_per_wgha = woolsale / total_pas_are if total_pas_are != 0 else 0
     summary_df.loc[trial, 'Wool sales ($/WgHa)'] = round(woolsale_per_wgha, 0)
     ##feed cost
     keys_q = r_vals['zgen']['keys_q']
@@ -3453,7 +3482,7 @@ def f_saleage_analysis(lp_vars, r_vals, trial):
     z_prob_qsz = pd.Series(z_prob_qsz.ravel(), index=index_qsz)
     feedcost_qsz = supcost_qsz_p7.sum(axis=1)
     feedcost = feedcost_qsz.mul(z_prob_qsz, axis=0).sum(axis=0)
-    feedcost_per_wgha = feedcost/total_pas_are
+    feedcost_per_wgha = feedcost / total_pas_are if total_pas_are != 0 else 0
     summary_df.loc[trial, 'Feed cost ($/WgHa)'] = round(feedcost_per_wgha, 0)
 
     return summary_df
