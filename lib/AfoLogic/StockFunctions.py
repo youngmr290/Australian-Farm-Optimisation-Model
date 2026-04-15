@@ -698,7 +698,7 @@ def f1_rev_sa(value, sa, age, sa_type):
     target_age_stage = fun.f_sa(0, sen.sav['rev_age_stage'], 5) #default is 0 which means apply the rev to all age stages
     age = fun.f_dynamic_slice(age, axis=sinp.stock['i_e1_pos'], start=0, stop=1, axis2=sinp.stock['i_e0_pos'], start2=0, stop2=1)   #slice age for e[0] (keep dims) - just means age stage is based on first drop.
     a_startage_agestage = sinp.structuralsa['i_rev_age_stage'][0] #start age of each age stage.
-    a_endage_agestage = sinp.structuralsa['i_rev_age_stage'][1] #start age of each age stage.
+    a_endage_agestage = sinp.structuralsa['i_rev_age_stage'][1]   #end age of each age stage.
     age_start = a_startage_agestage[target_age_stage]
     age_end = a_endage_agestage[target_age_stage]
     period_is_agestage = np.logical_and(age >= age_start, age <= age_end)
