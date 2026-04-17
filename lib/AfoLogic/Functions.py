@@ -53,7 +53,7 @@ def cartesian_product_simple_transpose(arrays):
 def searchsort_multiple_dim(a, v, axis_a0, axis_v0, axis_a1=None, axis_v1=None, side='left'):
     '''
     Find the indices into a sorted array 'a' such that, if the corresponding elements in 'v' were inserted before the indices, the order of 'a' would be preserved.
-    It does this iteratively down the specified axis (therefore the specified axis must be present in both 'a' and 'v'
+    It does this iteratively down the specified axis (therefore the specified axis must be present in both 'a' and 'v')
 
     Parameters:
         a: 3-D array_like
@@ -476,7 +476,7 @@ def f_update(existing_value, new_value, mask_for_new):
 
 def f_weighted_average(array, weights, axis, keepdims=False, non_zero=False, den_weights=1, den_assoc=None, assoc_axis=0):
     '''
-    Calculates weighted average (similar to np.average however this will handle:
+    Calculates weighted average, similar to np.average, however this will handle:
         if the sum of the weights is 0 (np.average doesn't handle this)
         keeping the axis (using the keepdims argument)
     'non-zero' handles how the average is calculated
@@ -520,6 +520,7 @@ def f_divide(numerator, denominator, dtype='float64', option=0):
     If the denominator = 0 then return value depends on 'option'
      option == 0 then return 0
      option == 1 then return 1 if the numerator is also 0
+     option == 2 then return numerator
 
      option == 1 will also return 1 if both the numerator and denominator are np.inf
 
@@ -1323,9 +1324,6 @@ def f1_make_pyomo_dict(param, index, loop_axis_pos=None, index_loop_axis_pos=Non
     ##make index a tuple and zip with param and make dict
     tup = tuple(map(tuple,index_masked))
     return dict(zip(tup, param_masked))
-
-import numpy as np
-na = np.newaxis
 
 
 def build_active_index(

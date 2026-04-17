@@ -89,14 +89,14 @@ def f1_period_is_(period_is, date_array, date_start_p=0, date_array2 = 0, date_e
 
 def f1_c2g(params_c2, y, a_c2_c0, i_g3_inc, var_pos=0, condition=None, axis=0, dtype=False):
     '''
-    :param params_c2 : array - parameter array - input from excel.
+    :param params_c2 : array - parameter array - input from Excel. Can be var_c2, var_cc2 or var_cc1c2
     :param y : array - sensitivity array for genetic merit.
-    :param a_c2_c0 :
+    :param a_c2_c0 : association between c2 and c0, i.e. which genotype input (c2) for each sire type (B,M,T)
     :param i_g3_inc : the offspring genotypes that are included in this trial
     :param var_pos : int - position of last axis when inserted into all axis.
-    :param condition :
-    :param axis:
-    :param dtype :
+    :param condition : slices to mask in the target axis
+    :param axis: the target axis for masking
+    :param dtype : A dtype for the return variable
 
     :return: param array for each genotype. Grouped by sheep group ie sire, offs, dams, yatf.
 
