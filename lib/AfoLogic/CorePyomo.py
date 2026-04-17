@@ -121,7 +121,7 @@ def coremodel_all(trial_name, model, method, nv, print_debug_output, MP_lp_vars)
     model.rc = pe.Suffix(direction=pe.Suffix.IMPORT)
     # model.slack = pe.Suffix(direction=pe.Suffix.IMPORT)
     ##solve - solver choice is passed in as an argument so the user can change it. -
-    if method=="CPLEX" and not shutil.which("cplex") == None:
+    if method=="CPLEX" and not shutil.which("cplex") is None:
         ##solve with cplex if it exists
         solver = pe.SolverFactory('cplex')
         solver_result = solver.solve(model, warmstart=True, tee=False)  # tee=True for solver output - may be useful for troubleshooting, currently warmstart doesnt do anything (could only get it to work for MIP)

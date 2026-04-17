@@ -126,7 +126,7 @@ def f1_c2g(params_c2, y, a_c2_c0, i_g3_inc, var_pos=0, condition=None, axis=0, d
     y=y[...,uinp.parameters['i_mask_y']]
     params_c0 = np.multiply(params_c0[...,na,:],  y[...,na]) #na here is to account for c0 axis
     ##get axis into correct position (-2 because y & g are in correct position)
-    if var_pos != None or var_pos != 0:
+    if not(var_pos is None or var_pos == 0):
         extra_axes = tuple(range((var_pos + 1), -2))
     else: extra_axes = ()
     allaxis_params_c0 = np.expand_dims(params_c0, axis = extra_axes)

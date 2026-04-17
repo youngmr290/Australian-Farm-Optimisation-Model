@@ -707,7 +707,7 @@ def f_clean_dict(d):
         if type(d[k]) is dict:  # check if value is a dict. if so go a level deeper
             f_clean_dict(d[k])
         else:
-            if d[k] == None:
+            if d[k] is None:
                 d[k] = 0
     return d
 
