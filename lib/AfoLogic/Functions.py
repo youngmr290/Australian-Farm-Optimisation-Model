@@ -13,6 +13,8 @@ import pyomo.environ as pe
 import copy
 from contextlib import contextmanager
 from typing import Any, Dict
+import inspect as ins
+import os
 
 #this module shouldn't import other AFO modules
 from . import Exceptions as exc #can import exceptions because exceptions imports no modules
@@ -864,6 +866,7 @@ def f_solve_cubic_for_logistic_multidim(a, b, c, d):
     cut_off01 = np.log(x_roots)   #todo an error here is most likely due to incorrect specification of the b1[24 or 25] parameters in Universal.xlsx or RR == 0 or LS == 1.0
     return cut_off01
 
+
 def f_logistic_integral(x, L, k, x0, offset):
     """
     Indefinite integral of the logistic function:
@@ -891,6 +894,7 @@ def f_logistic_integral(x, L, k, x0, offset):
         Value of the indefinite integral at x (up to a constant).
     """
     return offset*x + (L - offset)/k * np.log(1 + np.exp(k*(x - x0)))
+
 
 def f_combined_integral(x, offset, k, x0, a, mu, sigma, x_anchor):
     """
@@ -953,23 +957,91 @@ def f_combined_integral(x, offset, k, x0, a, mu, sigma, x_anchor):
         tail = 1.0 * (x - x_anchor)
         return head + tail
 
-def f_dynamic_slice(arr, axis, start, stop, step=1, axis2=None, start2=None, stop2=None, step2=1):
+
+def f1_get_caller_info(skip=1, levels=1):
+    """
+    Return information about the caller of the function that called this one.
+
+    Parameters
+    ----------
+    skip : int, default=1
+        - skip=0 → info about f1_get_caller_info itself
+        - skip=1 → info about the function that called f1_get_caller_info (recommended)
+        - skip=2 → one level further up
+    Returns
+    -------
+    If levels == 1:  (filename, lineno)
+    If levels > 1:   list of (filename, lineno) tuples
+    """
+
+    try:
+        stack = ins.stack()
+        results=[]
+
+        for i in range(levels):
+            idx = skip + i
+            if idx >= len(stack):
+                results.append(("unknown_file", 0))
+                continue
+
+            frame_info = stack[idx]
+            short_file = os.path.basename(frame_info.filename or "unknown_file")
+            results.append((short_file, frame_info.lineno))
+
+        return results[0] if levels == 1 else results
+
+    except (IndexError, AttributeError, TypeError):
+        return ("unknown_file", 0) if levels == 1 else [("unknown_file", 0)] * levels
+
+
+def f_dynamic_slice(arr, slice_specs):
+    '''
+    Slice a numpy array over multiple axes in a single call.
+    Default values differ from python slicing. A single value is taken as the start and
+    if stop is not specified it is start + 1 (rather than None). Default step is +1
+
+    Example:
+        f_dynamic_slice(arr, {b1_pos: [1, 5], e1_pos: [0]})
+            would return b1: dry, single, twin and triplet and e1: first cycle.
+
+    :param arr: numpy array to slice
+    :param slice_specs: dict of {axis: args} where args is an int or a list (or tuple) of 1, 2, or 3 values
+        - Single value  [start]             → slice(start, start+1)  e.g. single position, dimension preserved
+        - Two values    [start, stop]       → slice(start, stop)
+        - Three values  [start, stop, step] → slice(start, stop, step)
+    :return: sliced view of arr
+
+    '''
     ##check if arr is int - this is the case for the first loop because arr may be initialised as 0
-    if type(arr)==int:
+    if type(arr) == int:
         return arr
-    else:
-        ##first axis slice if it is not singleton
-        if arr.shape[axis]!=1:
-            sl = [slice(None)] * arr.ndim
-            sl[axis] = slice( start, stop, step)
-            arr = arr[tuple(sl)]
-        if axis2 is not None:
-            ##second axis slice if required and not singleton
-            if arr.shape[axis2] != 1:
-                sl = [slice(None)] * arr.ndim
-                sl[axis2] = slice( start2, stop2, step2)
-                arr = arr[tuple(sl)]
-        return arr
+
+    # Build a list of slice(None) — i.e. [:] — for every axis, as the default
+    sl = [slice(None)] * arr.ndim
+
+    for axis, args in slice_specs.items():
+        # Single value → interpret as start, with stop = start + 1 (preserves dimension)
+        # Multi value  → unpack directly into slice(start, stop) or slice(start, stop, step)
+        if arr.shape[axis] == 1:  #don't slice if singleton axis
+            if args[0] != 0 or args[0] != -1:  #don't display warning if taking slice 0 or -1
+                pass
+            else:
+                callers = f1_get_caller_info(skip=1, levels=3)
+                locations = [f"{file}:{line}" for file, line in callers]
+                print(f'*** Warning, Trying to slice a singleton axis ({axis}) '
+                      f'in {" and ".join(locations)}')
+        else:
+            if isinstance(args, int):
+                # Int rather than a list can be single position shorthand
+                sl[axis] = slice(args, args + 1)
+            elif len(args) == 1:
+                start = args[0]
+                sl[axis] = slice(start, start + 1)
+            else:
+                sl[axis] = slice(*args)
+
+    return arr[tuple(sl)]
+
 
 def f_nD_interp(x, xp, yp, axis):
     '''
@@ -1298,7 +1370,7 @@ def f1_make_pyomo_dict(param, index, loop_axis_pos=None, index_loop_axis_pos=Non
         index_masked = np.array([])
         for i in range(param.shape[loop_axis_pos]):
             ###mask out values=0
-            param_cut = f_dynamic_slice(param, loop_axis_pos, start=i, stop=i+1)
+            param_cut = f_dynamic_slice(param, {loop_axis_pos: [i, i+1]})
             mask = param_cut != 0
             param_masked = np.concatenate([param_masked,param_cut[mask]],0).astype(dtype)  # applying the mask does the raveling and squeezing of singleton axis
             mask = mask.ravel() #needs to be 1d to mask the index

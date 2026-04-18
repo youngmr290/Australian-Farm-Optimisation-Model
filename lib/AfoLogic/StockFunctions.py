@@ -696,7 +696,8 @@ def f1_rev_sa(value, sa, age, sa_type):
     This is used for REVs.
     '''
     target_age_stage = fun.f_sa(0, sen.sav['rev_age_stage'], 5) #default is 0 which means apply the rev to all age stages
-    age = fun.f_dynamic_slice(age, axis=sinp.stock['i_e1_pos'], start=0, stop=1, axis2=sinp.stock['i_e0_pos'], start2=0, stop2=1)   #slice age for e[0] (keep dims) - just means age stage is based on first drop.
+    age = fun.f_dynamic_slice(age, {sinp.stock['i_e1_pos']: [0, 1]
+                                           , sinp.stock['i_e0_pos']: [0, 1]})   #slice age for e[0] (keep dims) - just means age stage is based on first drop.
     a_startage_agestage = sinp.structuralsa['i_rev_age_stage'][0] #start age of each age stage.
     a_endage_agestage = sinp.structuralsa['i_rev_age_stage'][1]   #end age of each age stage.
     age_start = a_startage_agestage[target_age_stage]
@@ -1313,23 +1314,27 @@ def f_progenyfd_mu(cu1, cg, fd_adj, cf_fd_dams, ffcfw_birth_dams, ffcfw_birth_st
 def f_milk_cs(cl, srw, relsize_start, rc_birth_start, mei, meme, rc_start, ffcfw75_exp_yatf, lb_start, ldr_start
            , age_yatf, mp_age_y,  mp2_age_y, i_x_pos, days_period_yatf, kl, lact_nut_effect, rev_trait_value):
     #calculates the energy requirement for lactation for the days lactating. The result is scaled by lact_propn when used
-    ##Max milk prodn based on dam rc birth
-    mpmax = srw** 0.75 * relsize_start * rc_birth_start * lb_start * mp_age_y
-    ##Excess ME available for milk	
-    mel_xs = np.maximum(0, (mei - meme) * cl[5, ...] * kl)
-    ##Excess ME as a ratio of mpmax
-    milk_ratio = fun.f_divide(mel_xs, mpmax) #func stops div0 error - and milk ratio is later discarded because days period f = 0
-    ##Age or energy factor
-    ad = np.maximum(age_yatf, milk_ratio / (2 * cl[22, ...]))
-    ##Milk production based on energy available
-    mp1 = cl[7, ...] * mpmax * fun.f_back_transform(-cl[19, ...] + cl[20, ...] * milk_ratio
-                                                    + cl[21, ...] * ad * (milk_ratio - cl[22, ...] * ad)
-                                                    - cl[23, ...] * rc_start * (milk_ratio - cl[24, ...] * rc_start))
-    ##Milk production (per animal) based on suckling volume	(milk production per day of lactation)
-    ### Based on the standard parameter values 'Suckling volume of young' is very rarely limiting milk production.
-    mp2 = np.minimum(mp1, np.mean(fun.f_dynamic_slice(ffcfw75_exp_yatf, i_x_pos, 1, None), axis = i_x_pos, keepdims=True) * mp2_age_y)   # averages female and castrates weight, ffcfw75 is metabolic weight
-    ##Process the milk production REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
-    mp2 = f1_rev_update('milk', mp2, rev_trait_value)
+    if np.any(days_period_yatf>0):
+        ##Max milk prodn based on dam rc birth
+        mpmax = srw** 0.75 * relsize_start * rc_birth_start * lb_start * mp_age_y
+        ##Excess ME available for milk
+        mel_xs = np.maximum(0, (mei - meme) * cl[5, ...] * kl)
+        ##Excess ME as a ratio of mpmax
+        milk_ratio = fun.f_divide(mel_xs, mpmax) #func stops div0 error - and milk ratio is later discarded because days period f = 0
+        ##Age or energy factor
+        ad = np.maximum(age_yatf, milk_ratio / (2 * cl[22, ...]))
+        ##Milk production based on energy available
+        mp1 = cl[7, ...] * mpmax * fun.f_back_transform(-cl[19, ...] + cl[20, ...] * milk_ratio
+                                                        + cl[21, ...] * ad * (milk_ratio - cl[22, ...] * ad)
+                                                        - cl[23, ...] * rc_start * (milk_ratio - cl[24, ...] * rc_start))
+        ##Milk production (per animal) based on suckling volume	(milk production per day of lactation)
+        ### Based on the standard parameter values 'Suckling volume of young' is very rarely limiting milk production.
+        mp2 = np.minimum(mp1, np.mean(fun.f_dynamic_slice(ffcfw75_exp_yatf, {i_x_pos: [1, None]}), axis=i_x_pos, keepdims=True) * mp2_age_y)   # averages female and castrates weight, ffcfw75 is metabolic weight
+        ##Process the milk production REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
+        mp2 = f1_rev_update('milk', mp2, rev_trait_value)
+    else:
+        mp2 = 0
+        mpmax = 1
     ##NE for lactation (per day lactating)
     nel = mp2 / cl[5, ...]
     ##ratio of actual to potential milk
@@ -1346,23 +1351,27 @@ def f_milk_cs(cl, srw, relsize_start, rc_birth_start, mei, meme, rc_start, ffcfw
 def f_milk_nfs(cl, srw, relsize_start, rc_birth_start, mei, hp_maint, rc_start, ffcfw75_exp_yatf, lb_start
            , ldr_start, age_yatf, mp_age_y,  mp2_age_y, i_x_pos, days_period_yatf, lact_nut_effect, rev_trait_value):
     #calculates the energy requirement for lactation for the days lactating. The result is scaled by lact_propn when used
-    ##Max milk prodn based on dam rc birth
-    mpmax = srw** 0.75 * relsize_start * rc_birth_start * lb_start * mp_age_y
-    ##Excess ME available for milk. CSIRO uses meme which is a lower than hp_maint, therefore using 0.9 instead of using kl
-    mel_xs = np.maximum(0, (mei - hp_maint) * cl[5, ...] * 0.9)  #kl
-    ##Excess ME as a ratio of mpmax
-    milk_ratio = fun.f_divide(mel_xs, mpmax) #func stops div0 error - and milk ratio is later discarded because days period f = 0
-    ##Age or energy factor
-    ad = np.maximum(age_yatf, milk_ratio / (2 * cl[22, ...]))
-    ##Milk production based on energy available
-    mp1 = cl[7, ...] * mpmax * fun.f_back_transform(-cl[19, ...] + cl[20, ...] * milk_ratio
-                                                    + cl[21, ...] * ad * (milk_ratio - cl[22, ...] * ad)
-                                                    - cl[23, ...] * rc_start * (milk_ratio - cl[24, ...] * rc_start))
-    ##Milk production (per animal) based on suckling volume	(milk production per day of lactation)
-    ### Based on the standard parameter values 'Suckling volume of young' is very rarely limiting milk production.
-    mp2 = np.minimum(mp1, np.mean(fun.f_dynamic_slice(ffcfw75_exp_yatf, i_x_pos, 1, None), axis = i_x_pos, keepdims=True) * mp2_age_y)   # averages female and castrates weight, ffcfw75 is metabolic weight
-    ##Process the milk production REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
-    mp2 = f1_rev_update('milk', mp2, rev_trait_value)
+    if np.any(days_period_yatf > 0):
+        ##Max milk prodn based on dam rc birth
+        mpmax = srw** 0.75 * relsize_start * rc_birth_start * lb_start * mp_age_y
+        ##Excess ME available for milk. CSIRO uses meme which is a lower than hp_maint, therefore using 0.9 instead of using kl
+        mel_xs = np.maximum(0, (mei - hp_maint) * cl[5, ...] * 0.9)  #kl
+        ##Excess ME as a ratio of mpmax
+        milk_ratio = fun.f_divide(mel_xs, mpmax) #func stops div0 error - and milk ratio is later discarded because days period f = 0
+        ##Age or energy factor
+        ad = np.maximum(age_yatf, milk_ratio / (2 * cl[22, ...]))
+        ##Milk production based on energy available
+        mp1 = cl[7, ...] * mpmax * fun.f_back_transform(-cl[19, ...] + cl[20, ...] * milk_ratio
+                                                        + cl[21, ...] * ad * (milk_ratio - cl[22, ...] * ad)
+                                                        - cl[23, ...] * rc_start * (milk_ratio - cl[24, ...] * rc_start))
+        ##Milk production (per animal) based on suckling volume	(milk production per day of lactation)
+        ### Based on the standard parameter values 'Suckling volume of young' is very rarely limiting milk production.
+        mp2 = np.minimum(mp1, np.mean(fun.f_dynamic_slice(ffcfw75_exp_yatf, {i_x_pos: [1, None]}), axis = i_x_pos, keepdims=True) * mp2_age_y)   # averages female and castrates weight, ffcfw75 is metabolic weight
+        ##Process the milk production REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
+        mp2 = f1_rev_update('milk', mp2, rev_trait_value)
+    else:
+        mp2=0
+        mpmax = 1
     ##NE for lactation
     #todo What is the role of cl[5] (milk metabolisability) in reducing the amount of energy available for milk production
     dl = mp2 / cl[5, ...]
@@ -2331,7 +2340,7 @@ def f_conception_mu2(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, doj, d
     :param cu2: LMAT parameters controlling impact of LWJ, LWC during joining, NLB, Age at joining
     :param srw: Standard reference weight of the dam genotype, not including the adjustment associated with BTRT
     :param maternallw_mating: Maternal LW at mating. Allows that mating may occur mid-period.
-                           Note: the e and b axis have been handled before passing in.
+                        Note: the e and b axis have been handled before passing in.
     :param lwc: Liveweight change of the dam during the generator period in g/hd/d.
     :param age: age of dam mid-period in days. Indexed for p. The i axis can be non-singleton
     :param nlb: Number of lambs born ASBV - mid-parent average (achieved by using nlb_g3).
@@ -2361,14 +2370,11 @@ def f_conception_mu2(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, doj, d
         cu2_sliced = fun.f_update(cu2[26, ...], cu2[24, ...], age < 364)
         cb1_sliced = fun.f_update(cb1_sliced, cb1[25, ...], np.logical_and(364 <= age, age < 728))
         cu2_sliced = fun.f_update(cu2_sliced, cu2[25, ...], np.logical_and(364 <= age, age < 728))
-        ##Use the LW & LWC of the '11' (singles) slice of the b1_axis because it is the slice that contains the ewes that will be mated
-        slc_11 = [slice(None)] * len(maternallw_mating.shape)
-        slc_11[b1_pos] = slice(2, 3)
         ##Calculate the transformed estimates of proportion empty (slice cu2 allowing for active i axis)
-        cutoff0 = cb1_sliced[:,:,1:2,...] + cu2_sliced[-1, ...] + (cu2_sliced[0, ...] * maternallw_mating[tuple(slc_11)]
-                                                                 + cu2_sliced[1, ...] * maternallw_mating[tuple(slc_11)] ** 2
-                                                                 + cu2_sliced[2, ...] * lwc[tuple(slc_11)]
-                                                                 + cu2_sliced[3, ...] * lwc[tuple(slc_11)] ** 2
+        cutoff0 = cb1_sliced[:,:,1:2,...] + cu2_sliced[-1, ...] + (cu2_sliced[0, ...] * maternallw_mating
+                                                                 + cu2_sliced[1, ...] * maternallw_mating ** 2
+                                                                 + cu2_sliced[2, ...] * lwc
+                                                                 + cu2_sliced[3, ...] * lwc ** 2
                                                                  + cu2_sliced[4, ...] * age
                                                                  + cu2_sliced[5, ...] * age ** 2
                                                                  + cu2_sliced[6, ...] * nlb
@@ -2499,7 +2505,7 @@ def f1_convert_propn_to_2cycleRR(dst_propn, nfoet_b1any, cycles = 1):
     repro_rate = np.sum(dst_propn * nfoet_b1any, axis = sinp.stock['i_b1_pos'], keepdims = True)
 
     ##convert number of cycles by scaling the proportion of drys (holding litter size constant)
-    dry_propn = fun.f_dynamic_slice(dst_propn, sinp.stock['i_b1_pos'], 1, 2)
+    dry_propn = fun.f_dynamic_slice(dst_propn, {sinp.stock['i_b1_pos']: [1, 2]})
     dry_propn_cal = dry_propn ** (calibration_cycles / cycles)
     litter_size = fun.f_divide(repro_rate, 1 - dry_propn)
     repro_rate_cal = litter_size * (1 - dry_propn_cal)
@@ -2523,7 +2529,7 @@ def f1_convert_propn_to_LS(dst_propn, nfoet_b1any):
     '''
     ##calculate litter size from repro rate and proportion empty
     repro_rate = np.sum(dst_propn * nfoet_b1any, axis = sinp.stock['i_b1_pos'], keepdims = True)
-    empty_propn = fun.f_dynamic_slice(dst_propn, sinp.stock['i_b1_pos'], 1, 2)
+    empty_propn = fun.f_dynamic_slice(dst_propn, {sinp.stock['i_b1_pos']: [1, 2]})
     litter_size = fun.f_divide(repro_rate, 1 - empty_propn)
 
     return litter_size
@@ -3515,7 +3521,8 @@ def f1_adjust_pkl_condensed_axis_len(temporary, i_w_len, i_t_len):
     ####handle when the current trial has a different number of w slices than the create trial
     if i_w_len!=temporary.shape[sinp.stock['i_w_pos']]:
         #####cut back to 3 w slices that represent the start animals
-        temporary = fun.f_dynamic_slice(temporary, sinp.stock['i_w_pos'], 0, None, int(temporary.shape[sinp.stock['i_w_pos']]/sinp.structuralsa['i_w_start_len1']))
+        temporary = fun.f_dynamic_slice(temporary, {sinp.stock['i_w_pos']:
+                            [0, None, int(temporary.shape[sinp.stock['i_w_pos']]/sinp.structuralsa['i_w_start_len1'])]})
         #####expand back to the number of w in the current trial
         a_s_w = (np.arange(i_w_len)/(i_w_len/sinp.structuralsa['i_w_start_len1'])).astype(int)
         a_s_twg = fun.f_expand(a_s_w, left_pos=sinp.stock['i_w_pos'], right_pos2=sinp.stock['i_w_pos'], left_pos2=-len(temporary.shape)-1)

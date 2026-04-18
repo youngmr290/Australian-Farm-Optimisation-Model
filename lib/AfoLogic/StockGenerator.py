@@ -4476,7 +4476,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     # print('fs target iteration: ', itn)
                     if np.any(target_ebg_pb1dams[p] != 9999) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p]>0):
                         ###calc error - base on w[0] (active w axis can confuse the fs because high starting w needs much higher diet to get same lwc)
-                        error_dams = (fun.f_dynamic_slice(ebg_dams, w_pos, 0, 1) * days_period_pa1e1b1nwzida0e0b0xyg1[p]) - target_ebg_pb1dams[p] * (days_period_pa1e1b1nwzida0e0b0xyg1[p]>0) #if 0 days in period then target is 0
+                        error_dams = (fun.f_dynamic_slice(ebg_dams, {w_pos: [0, 1]}) * days_period_pa1e1b1nwzida0e0b0xyg1[p]
+                                      - target_ebg_pb1dams[p] * (days_period_pa1e1b1nwzida0e0b0xyg1[p]>0)) #if 0 days in period then target is 0
                         ###store in attempts array - build new array assign old array and then add current itn results - done like this to handle the shape changing and because we don't know what shape feedsupply and error are before this loop starts
                         attempts_dams[...,itn,0] = feedsupplyw_tpa1e1b1nwzida0e0b0xyg1[:,p]
                         attempts_dams[...,itn,1] = error_dams
@@ -4495,7 +4496,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
 
                     if np.any(target_ebg_pb0offs[p] != 9999) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p]>0):
                         ###calc error - base on w[0] (active w axis can confuse the fs because high starting w needs much higher diet to get same lwc)
-                        error_offs = (fun.f_dynamic_slice(ebg_offs, w_pos, 0, 1) * days_period_pa1e1b1nwzida0e0b0xyg3[p]) - target_ebg_pb0offs[p] * (days_period_pa1e1b1nwzida0e0b0xyg3[p]>0) #if 0 days in period then target is 0
+                        error_offs = (fun.f_dynamic_slice(ebg_offs, {w_pos: [0, 1]}) * days_period_pa1e1b1nwzida0e0b0xyg3[p]
+                                            - target_ebg_pb0offs[p] * (days_period_pa1e1b1nwzida0e0b0xyg3[p]>0)) #if 0 days in period then target is 0
                         ###store in attempts array - build new array assign old array and then add current itn results - done like this to handle the shape changing and because we don't know what shape feedsupply and error are before this loop starts
                         attempts_offs[...,itn,0] = feedsupplyw_tpa1e1b1nwzida0e0b0xyg3[:,p]
                         attempts_offs[...,itn,1] = error_offs
@@ -4526,12 +4528,12 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     ## use the condition of dams in the 11 slice because mated animals can have a different feed supply
                     ## use dams in e[-1] because want the condition of the animal before it conceives. Note all e slices will have the same condition until conceived because they have the same feedsupply until scanning.
                     #todo Change the calculation of maternalLW to be based on ebw with the CSIRO gut fill so that changing diet quality doesn't affect repro.
-                    ffcfw_e1b1sliced = fun.f_dynamic_slice(ffcfw_start_dams, e1_pos, -1, None, b1_pos, 2, 3) #slice e1 & b1 axis
-                    relsize_start_dams_e1b1sliced = fun.f_dynamic_slice(relsize_start_dams, e1_pos, -1, None, b1_pos, 2, 3)  #slice e1 & b1 axis
-                    ebg_e1b1sliced = fun.f_dynamic_slice(ebg_dams, e1_pos, -1, None, b1_pos, 2, 3) #slice e1 & b1 axis
-                    nw_start_dams_e1b1sliced = fun.f_dynamic_slice(nw_start_dams, e1_pos, -1, None, b1_pos, 2, 3) #slice e1 & b1 axis
-                    gest_propn_b1sliced = fun.f_dynamic_slice(gest_propn_pa1e1b1nwzida0e0b0xyg1[p], b1_pos, 2, 3) #slice b1 axis
-                    days_period_b1sliced = fun.f_dynamic_slice(days_period_pa1e1b1nwzida0e0b0xyg1[p], b1_pos, 2, 3) #slice b1 axis
+                    ffcfw_e1b1sliced = fun.f_dynamic_slice(ffcfw_start_dams, {e1_pos: [-1, None], b1_pos: [2, 3]}) #slice e1 & b1 axis
+                    relsize_start_dams_e1b1sliced = fun.f_dynamic_slice(relsize_start_dams, {e1_pos: [-1, None], b1_pos: [2, 3]}) #slice e1 & b1 axis
+                    ebg_e1b1sliced = fun.f_dynamic_slice(ebg_dams, {e1_pos: [-1, None], b1_pos: [2, 3]}) #slice e1 & b1 axis
+                    nw_start_dams_e1b1sliced = fun.f_dynamic_slice(nw_start_dams, {e1_pos: [-1, None], b1_pos: [2, 3]}) #slice e1 & b1 axis
+                    gest_propn_b1sliced = gest_propn_pa1e1b1nwzida0e0b0xyg1[p]     # gest_propn_pa1e1b1nwzida0e0b0xyg1 does not have an active b1 axis
+                    days_period_b1sliced = fun.f_dynamic_slice(days_period_pa1e1b1nwzida0e0b0xyg1[p], {b1_pos: [2, 3]}) #slice b1 axis
 
                     t_w_mating = np.sum((ffcfw_e1b1sliced + ebg_e1b1sliced * cg_dams[18, ...]
                                          * (days_period_b1sliced * (1 - gest_propn_b1sliced) + cf_dams[4, ...] / 2))
@@ -6738,14 +6740,13 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             if not sinp.structuralsa['i_generate_with_t']:
                                 pkl_ebw_condensed_dams = np.take_along_axis(pkl_ebw_condensed_dams, a_t_tpg1[:,0,...], axis=p_pos)
 
-                            pkl_ebw_condensed_dams = fun.f_dynamic_slice(pkl_ebw_condensed_dams, w_pos, start=0, stop=None,
-                                                                         step=int(pkl_ebw_condensed_dams.shape[w_pos] / w_start_len1))
+                            pkl_ebw_condensed_dams = fun.f_dynamic_slice(pkl_ebw_condensed_dams, {w_pos: [0, None
+                                                    , int(pkl_ebw_condensed_dams.shape[w_pos] / w_start_len1)]})
                             t_fs_w_reallocation_ta1e1b1nw8zida0e0b0xyg1s9 = sfun.f1_lw_distribution(pkl_ebw_condensed_dams,
-                                                                                                    ebw_start_dams, #start of next period ie this is condensed ebw
-                                                                                                    for_feedsupply=True)
+                                                                            ebw_start_dams, for_feedsupply=True) #start of next period ie this is condensed ebw
                             fs_w_reallocation_ta1e1b1nw8zida0e0b0xyg1s9 = fun.f_update(fs_w_reallocation_ta1e1b1nw8zida0e0b0xyg1s9,
-                                                                                       t_fs_w_reallocation_ta1e1b1nw8zida0e0b0xyg1s9,
-                                                                                       period_is_condense_pa1e1b1nwzida0e0b0xyg1[p + 1,...,na])
+                                                                t_fs_w_reallocation_ta1e1b1nw8zida0e0b0xyg1s9,
+                                                                period_is_condense_pa1e1b1nwzida0e0b0xyg1[p + 1,...,na])
                         ###adjust the fs - every period
                         ####add start w axis
                         temp_feedsupplyw_ta1e1b1nwzida0e0b0xyg1s = np.moveaxis(fun.f_split_axis(feedsupplyw_tpa1e1b1nwzida0e0b0xyg1[:, p + 1, ...], w_start_len1, w_pos), w_pos - 1, -1)
@@ -6766,8 +6767,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             pkl_ebw_condensed_offs = pkl_condensed_values['offs'][p]['ebw_offs']
                             if not sinp.structuralsa['i_generate_with_t']:
                                 pkl_ebw_condensed_offs=pkl_ebw_condensed_offs[0:1,...]
-                            pkl_ebw_condensed_offs = fun.f_dynamic_slice(pkl_ebw_condensed_offs, w_pos, start=0, stop=None,
-                                                                         step=int(pkl_ebw_condensed_offs.shape[w_pos] / w_start_len3))
+                            pkl_ebw_condensed_offs = fun.f_dynamic_slice(pkl_ebw_condensed_offs, {w_pos: [0, None
+                                                            , int(pkl_ebw_condensed_offs.shape[w_pos] / w_start_len3)]})
                             t_fs_w_reallocation_ta1e1b1nw8zida0e0b0xyg3s9 = sfun.f1_lw_distribution(pkl_ebw_condensed_offs,
                                                                                                     ebw_start_offs, #start of next period ie this is condensed ebw
                                                                                                     for_feedsupply=True)
@@ -6884,7 +6885,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
         ###         b1 axis in the position of b0 and simplified using a_b0_b1
         ###         w axis to only have slice 0
         ###         z axis is the weighted average across season types
-        temporary = np.sum(fun.f_dynamic_slice(o_cfw_ltwadj_tpdams,w_pos,0,1) / sfw_a0e0b0xyg1
+        temporary = np.sum(fun.f_dynamic_slice(o_cfw_ltwadj_tpdams, {w_pos: [0, 1]}) / sfw_a0e0b0xyg1
                            * (a_prevjoining_o_pa1e1b1nwzida0e0b0xyg1 == index_da0e0b0xyg)
                            * period_is_birth_pa1e1b1nwzida0e0b0xyg1, axis=p_pos, keepdims = True)
         ##dams have an e1 axis, whereas offspring have an e0 axis, swap the e1 into position of e0
@@ -6896,7 +6897,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
         t3_sfw_ltwadj_t1pa1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(temporary, t_season_propn_pg, axis=z_pos, keepdims=True)
 
         ## repeat for FD
-        temporary = np.sum(fun.f_dynamic_slice(o_fd_ltwadj_tpdams,w_pos,0,1)
+        temporary = np.sum(fun.f_dynamic_slice(o_fd_ltwadj_tpdams, {w_pos: [0, 1]})
                            * (a_prevjoining_o_pa1e1b1nwzida0e0b0xyg1 == index_da0e0b0xyg)
                            * period_is_birth_pa1e1b1nwzida0e0b0xyg1, axis=p_pos, keepdims = True)
         temporary = np.swapaxes(temporary, e1_pos, e0_pos)
@@ -7109,11 +7110,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
 
     ###calculate period pointer here because it needed a_v_p association
     dvp_is_mating = sfun.f1_p2v(period_is_mating_pa1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1).astype(dtypeint)
-    dvp_is_mating = fun.f_dynamic_slice(dvp_is_mating, e1_pos, 0, 1) #slice e axis because e axis doesn't alter the mating DVP.
+    dvp_is_mating = fun.f_dynamic_slice(dvp_is_mating, {e1_pos: [0, 1]}) #slice e axis because e axis doesn't alter the mating DVP.
     dvp_is_wean = sfun.f1_p2v(period_is_wean_pa1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1).astype(dtypeint)
-    dvp_is_wean = fun.f_dynamic_slice(dvp_is_wean, e1_pos, 0, 1) #slice e axis because e axis doesn't alter the wean DVP.
+    dvp_is_wean = fun.f_dynamic_slice(dvp_is_wean, {e1_pos: [0, 1]}) #slice e axis because e axis doesn't alter the wean DVP.
     dvp_is_scan = sfun.f1_p2v(period_is_scan_pa1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1).astype(dtypeint)
-    dvp_is_scan = fun.f_dynamic_slice(dvp_is_scan, e1_pos, 0, 1) #slice e axis because e axis doesn't alter the scan DVP.
+    dvp_is_scan = fun.f_dynamic_slice(dvp_is_scan, {e1_pos: [0, 1]}) #slice e axis because e axis doesn't alter the scan DVP.
 
     ###other dvp associations and masks
     a_p_va1e1b1nwzida0e0b0xyg1 = fun.f_next_prev_association(date_start_p, dvp_start_va1e1b1nwzida0e0b0xyg1
@@ -8737,8 +8738,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
 
     ##asset value
     ###set start of season assetvalue for season trade to be the same across t & z axis (it has been calculated at the end of the first generator period but we want to reflect the start of the period - at the start all t & z are the same). All T & z need to be the same or the model can optimise trade vale.
-    assetvalue_a5qtva1e1b1nwzida0e0b0xyg1[1, ...] = np.take_along_axis(fun.f_dynamic_slice(assetvalue_a5qtva1e1b1nwzida0e0b0xyg1, z_pos, 0, 1), a_t_tpg1[na,na,...], axis=p_pos-1)[1,...]
-    assetvalue_a5qtva1e1b1nwzida0e0b0xyg3[1, ...] = np.take_along_axis(fun.f_dynamic_slice(assetvalue_a5qtva1e1b1nwzida0e0b0xyg3, z_pos, 0, 1), a_t_tpg3[na,na,...], axis=p_pos-1)[1,...]
+    assetvalue_a5qtva1e1b1nwzida0e0b0xyg1[1, ...] = np.take_along_axis(fun.f_dynamic_slice(assetvalue_a5qtva1e1b1nwzida0e0b0xyg1
+                                                        , {z_pos: [0, 1]}), a_t_tpg1[na,na,...], axis=p_pos-1)[1,...]
+    assetvalue_a5qtva1e1b1nwzida0e0b0xyg3[1, ...] = np.take_along_axis(fun.f_dynamic_slice(assetvalue_a5qtva1e1b1nwzida0e0b0xyg3
+                                                        , {z_pos: [0, 1]}), a_t_tpg3[na,na,...], axis=p_pos-1)[1,...]
     ###back calculate the end of season asset value at the end of the last dvp. Technically the asset value at the end
     #### of the season should equal the asset value at the start of the next season (because this is the
     ### same point in time). However, at the season start a new animal is formed (from the weighted average of all
@@ -9658,7 +9661,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     dvp_is_mating_or_weaning_yvg1 = idx_mating_or_weaning_yvg1 == index_va1e1b1nwzida0e0b0xyg1
     ###shearing or weaning offs - with a y (year axis)
     dvp_is_shear = sfun.f1_p2v(period_is_mainshearing_pa1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3).astype(dtypeint)
-    dvp_is_shear_or_weaning = fun.f_dynamic_slice(dvp_is_shear,d_pos,0,1).astype(bool) #slice d - assuming that shearing dvp will be the same across d. If this is ever a problem we could cluster d.
+    dvp_is_shear_or_weaning = fun.f_dynamic_slice(dvp_is_shear, {d_pos: [0, 1]}).astype(bool) #slice d - assuming that shearing dvp will be the same across d. If this is ever a problem we could cluster d.
     dvp_is_shear_or_weaning[0,...] = True #dvp 0 is weaning so set it to true.
     idx_mating_or_weaning_yvg3 = (np.broadcast_to(index_va1e1b1nwzida0e0b0xyg3, dvp_is_shear_or_weaning.shape)[
          dvp_is_shear_or_weaning].reshape((-1,) + dvp_is_shear_or_weaning.shape[1:])[:, na, ...])
@@ -10743,7 +10746,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ###dvp date
     r_repro_dates_roe1zg1 = np.stack([fvp_prejoin_start_oa1e1b1nwzida0e0b0xyg1, fvp_scan_start_oa1e1b1nwzida0e0b0xyg1,
                                      fvp_birth_start_oa1e1b1nwzida0e0b0xyg1, fvp_wean_start_oa1e1b1nwzida0e0b0xyg1], axis=0)
-    r_repro_dates_roe1g1 = fun.f_dynamic_slice(r_repro_dates_roe1zg1, axis=z_pos, start=0, stop=1) #remove z axis since repro dates don't change along z
+    r_repro_dates_roe1g1 = fun.f_dynamic_slice(r_repro_dates_roe1zg1, {z_pos: [0, 1]}) #remove z axis since repro dates don't change along z
     fun.f1_make_r_val(r_vals,dvp_start_va1e1b1nwzida0e0b0xyg1 % 364,'dvp_start_vezg1', shape=ve1zg1_shape) #mod 364 so that all dates are from the start of the yr (makes it easier to compare in the report)
     fun.f1_make_r_val(r_vals,dvp_start_va1e1b1nwzida0e0b0xyg3 % 364,'dvp_start_vzdxg3', shape=vzdxg3_shape) #mod 364 so that all dates are from the start of the yr (makes it easier to compare in the report)
     fun.f1_make_r_val(r_vals,r_repro_dates_roe1g1 % 364,'r_repro_dates_roe1g1', shape=roe1g1_shape) #mod 364 so that all dates are from the start of the yr (makes it easier to compare in the report)
