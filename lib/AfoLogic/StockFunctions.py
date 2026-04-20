@@ -87,7 +87,7 @@ def f1_period_is_(period_is, date_array, date_start_p=0, date_array2 = 0, date_e
 #input and manipulation functions #
 ###################################
 
-def f1_c2g(params_c2, y, a_c2_c0, i_g3_inc, var_pos=0, condition=None, axis=0, dtype=False):
+def f1_c2g(params_c2, y, a_c2_c0, i_g3_inc, var_pos=None, condition=None, axis=0, dtype=False):
     '''
     :param params_c2 : array - parameter array - input from Excel. Can be var_c2, var_cc2 or var_cc1c2
     :param y : array - sensitivity array for genetic merit.
@@ -125,11 +125,19 @@ def f1_c2g(params_c2, y, a_c2_c0, i_g3_inc, var_pos=0, condition=None, axis=0, d
     ###apply y mask
     y=y[...,uinp.parameters['i_mask_y']]
     params_c0 = np.multiply(params_c0[...,na,:],  y[...,na]) #na here is to account for c0 axis
-    ##get axis into correct position (-2 because y & g are in correct position)
-    if not(var_pos is None or var_pos == 0):
-        extra_axes = tuple(range((var_pos + 1), -2))
-    else: extra_axes = ()
-    allaxis_params_c0 = np.expand_dims(params_c0, axis = extra_axes)
+    ##get axes into correct position
+    if var_pos is None:     #if var_pos not passed as an arg don't add axes
+        extra_axes1 = ()
+        extra_axes2 = ()
+    elif var_pos == 0:      #if 0 is passed then add axes so the coefficients of the parameters are to left of p_pos
+        extra_axes1 = tuple(range(sinp.stock['i_p_pos'], -2))  # (-2 because y & g are in correct position)
+        extra_axes2 = ()
+    else:                   #if >0 then the second coefficient axes is in target position and first is left of p_pos
+        extra_axes1 = tuple(range(var_pos + 1, -2))  # (-2 because y & g are in correct position)
+        extra_axes2 = tuple(range(sinp.stock['i_p_pos'], var_pos))   # one axis remains at var_pos1 other axes moved to var_pos2
+
+    allaxis_params_c0 = np.expand_dims(params_c0, axis = extra_axes1)
+    allaxis_params_c0 = np.expand_dims(allaxis_params_c0, axis = extra_axes2)
     ##create mask g?c0
     mask_sire_inc_g0 = np.any(i_mask_g0g3 * i_g3_inc, axis = 1)
     mask_dams_inc_g1 = np.any(i_mask_g1g3 * i_g3_inc, axis = 1)
@@ -180,27 +188,25 @@ def f1_DSTw_adjust(propn_source_b1, cycles_source, cycles_destination, axis_b1, 
 
     '''
     ##create slices for the b1 axis
-    slc0 = [slice(None)] * len(propn_source_b1.shape)
-    slc0[axis_b1] = slice(0,1)
-    slc1 = [slice(None)] * len(propn_source_b1.shape)
-    slc1[axis_b1] = slice(1,None)
+    slc0 = fun.f_dynamic_slice_idx(propn_source_b1, {axis_b1: [0,1]})
+    slc1 = fun.f_dynamic_slice_idx(propn_source_b1, {axis_b1: [1,None]})
     ##store the proportion in slice 0 for reset later if there is a NM slice (because NM shouldn't change with cycles)
-    nm_propn = propn_source_b1[tuple(slc0)]
+    nm_propn = propn_source_b1[slc0]
     ##roll the b1 axis so that the dry slice is in [0:1]
     t_source = np.roll(propn_source_b1, -dry_slice, axis=axis_b1)
 
     ##convert the litter size proportion from the source number of cycles to the destination number
     t_destination = np.zeros_like(propn_source_b1)
-    dry_propn_source = t_source[tuple(slc0)]
+    dry_propn_source = t_source[slc0]
     dry_propn_destination = dry_propn_source ** (cycles_destination / cycles_source)
-    t_destination[tuple(slc0)] = dry_propn_destination
-    t_destination[tuple(slc1)] = t_source[tuple(slc1)] * fun.f_divide((1 - dry_propn_destination), (1 - dry_propn_source))
+    t_destination[slc0] = dry_propn_destination
+    t_destination[slc1] = t_source[slc1] * fun.f_divide((1 - dry_propn_destination), (1 - dry_propn_source))
     ##roll the b1 axis back to starting position
     propn_destination_b1 = np.roll(t_destination, dry_slice, axis=axis_b1)
     ##If the NM slice exists, reset it to starting value (default is it exists as part of the b1 axis)
     #todo check if this code does anything. Perhaps the NM slice is getting overwritten in f_conception_mu2()
     if dry_slice != 0:
-        propn_destination_b1[tuple(slc0)] = nm_propn
+        propn_destination_b1[slc0] = nm_propn
     return propn_destination_b1
 
 
@@ -256,9 +262,11 @@ def f1_RR_propn_logistic(RR_g, cb1, nfoet_b1any, nyatf_b1any, b1_pos, cycles=1):
     '''
 
     ## calculate the coefficients of the cubic equation ax3 + bx2 + cx + d = 0
-    ### requires some intermediate values y & z calculated from the cut-off coefficients in cb1_dams
-    cut1_g = cb1[:,:,2:3,...] - cb1[:,:,1:2,...]
-    cut2_g = cb1[:,:,3:4,...] - cb1[:,:,2:3,...]
+    ### requires some intermediate values y & z calculated from the cut-off coefficients in cb1_cpdams
+    cut1_g = (fun.f_dynamic_slice(cb1, {b1_pos: [2, 3]})
+            - fun.f_dynamic_slice(cb1, {b1_pos: [1, 2]}))
+    cut2_g = (fun.f_dynamic_slice(cb1, {b1_pos: [3, 4]})
+            - fun.f_dynamic_slice(cb1, {b1_pos: [2, 3]}))
     ### calculations are done with the exp of the cut-off values
     y = np.exp(cut1_g)
     z = np.exp(cut2_g)
@@ -268,7 +276,7 @@ def f1_RR_propn_logistic(RR_g, cb1, nfoet_b1any, nyatf_b1any, b1_pos, cycles=1):
     c = (2 - RR_g) * (y * z + y + 1)
     d = (3 - RR_g)
 
-    ##solve the cubic and calculate values that are the fitted values for the cutoffs (equivalent of cb1_dams[25])
+    ##solve the cubic and calculate values that are the fitted values for the cutoffs (equivalent of cb1_cpdams[25])
     ##Note: If RR_g is 0 then the equation is quadratic and will generate RuntimeWarnings in f_solvecubic().
     cutoff0 = fun.f_solve_cubic_for_logistic_multidim(a,b,c,d)
 
@@ -297,9 +305,12 @@ def f1_LS_propn_logistic(LS_g, cb1, nfoet_b1any, nyatf_b1any, b1_pos, cycles=1):
     '''
 
     ## calculate the coefficients of the cubic equation ax3 + bx2 + cx + d = 0
-    ### requires some intermediate values y & z calculated from the cut-off coefficients in cb1_dams
-    cut1_g = cb1[:,:,2:3,...] - cb1[:,:,1:2,...]
-    cut2_g = cb1[:,:,3:4,...] - cb1[:,:,2:3,...]
+    ### requires some intermediate values y & z calculated from the cut-off coefficients in cb1_cpdams
+    ### requires some intermediate values y & z calculated from the cut-off coefficients in cb1_cpdams
+    cut1_g = (fun.f_dynamic_slice(cb1, {b1_pos: [2, 3]})
+            - fun.f_dynamic_slice(cb1, {b1_pos: [1, 2]}))
+    cut2_g = (fun.f_dynamic_slice(cb1, {b1_pos: [3, 4]})
+            - fun.f_dynamic_slice(cb1, {b1_pos: [2, 3]}))
     ### calculations are done with the exp of the cut-off values
     y = np.exp(cut1_g)
     z = np.exp(cut2_g)
@@ -309,7 +320,7 @@ def f1_LS_propn_logistic(LS_g, cb1, nfoet_b1any, nyatf_b1any, b1_pos, cycles=1):
     c = (2-LS_g)*(y*z + y + 1) + 3
     d = (3-LS_g)
 
-    ##solve the cubic and calculate values that are the fitted values for the cutoffs (equivalent of cb1_dams[25])
+    ##solve the cubic and calculate values that are the fitted values for the cutoffs (equivalent of cb1_cpdams[25])
     ##Note: If LS_g is 1.0 then the equation is quadratic and will generate RuntimeWarnings in f_solvecubic().
     cutoff0 = fun.f_solve_cubic_for_logistic_multidim(a, b, c, d)
 
@@ -330,14 +341,17 @@ def f1_cp_from_cutoff(cutoff0, cb1, nfoet_b1any, nyatf_b1any, b1_pos, cycles=1):
     :return:
     '''
 
-    ## calculate the difference between the cut-off coefficients from cb1_dams (remembering the NM slice in cb1)
-    cut1_g = cb1[:,:,2:3,...] - cb1[:,:,1:2,...]
-    cut2_g = cb1[:,:,3:4,...] - cb1[:,:,2:3,...]
+    ## calculate the difference between the cut-off coefficients from cb1_cpdams (remembering the NM slice in cb1)
+    ### requires some intermediate values y & z calculated from the cut-off coefficients in cb1_cpdams
+    cut1_g = (fun.f_dynamic_slice(cb1, {b1_pos: [2, 3]})
+            - fun.f_dynamic_slice(cb1, {b1_pos: [1, 2]}))
+    cut2_g = (fun.f_dynamic_slice(cb1, {b1_pos: [3, 4]})
+            - fun.f_dynamic_slice(cb1, {b1_pos: [2, 3]}))
 
     ###calculate the cut-off values from the fitted value and the differences
     cutoff1 = cutoff0 + cut1_g
     cutoff2 = cutoff1 + cut2_g
-    cutoff3 = cb1[:,:,4:5,...]  #this is a high number to ensure that all dams are less than or equal to the maximum number of foetuses
+    cutoff3 = fun.f_dynamic_slice(cb1, {b1_pos: [4, 5]})  #cutoff3 is a high number to ensure that all dams are less than or equal to the maximum number of foetuses
 
     boundaries = np.zeros_like(cb1)
     boundaries = fun.f_update(boundaries, cutoff0, nfoet_b1any == 0)
@@ -1333,10 +1347,10 @@ def f_milk_cs(cl, srw, relsize_start, rc_birth_start, mei, meme, rc_start, ffcfw
         ##Process the milk production REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
         mp2 = f1_rev_update('milk', mp2, rev_trait_value)
     else:
-        mp2 = 0
-        mpmax = 1
-    ##NE for lactation (per day lactating)
-    nel = mp2 / cl[5, ...]
+        mp2 = np.zeros_like(relsize_start)
+        mpmax = np.zeros_like(relsize_start)
+    ##NE for lactation (per day lactating) - mp2 is energy available to progeny, nel is energy cost to the dam
+    nel = mp2 / cl[5, ...]  #cl[5] increases energy required by dams for a given energy available to the lambs
     ##ratio of actual to potential milk
     dr = fun.f_divide(mp2, mpmax) #div func stops div0 error - and dr has no effect later because days period f = 0
     ##Lagged DR (lactation deficit)
@@ -1370,11 +1384,10 @@ def f_milk_nfs(cl, srw, relsize_start, rc_birth_start, mei, hp_maint, rc_start, 
         ##Process the milk production REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
         mp2 = f1_rev_update('milk', mp2, rev_trait_value)
     else:
-        mp2=0
-        mpmax = 1
-    ##NE for lactation
-    #todo What is the role of cl[5] (milk metabolisability) in reducing the amount of energy available for milk production
-    dl = mp2 / cl[5, ...]
+        mp2 = np.zeros_like(relsize_start)
+        mpmax = np.zeros_like(relsize_start)
+    ##NE for lactation (per day lactating) - mp2 is energy available to progeny, nel is energy cost to the dam
+    dl = mp2 / cl[5, ...]  #cl[5] increases energy required by dams for a given energy available to the lambs
     ##ratio of actual to potential milk
     dr = fun.f_divide(mp2, mpmax) #div func stops div0 error - and dr has no effect later because days period f = 0
     ##Lagged DR (lactation deficit)
@@ -2371,21 +2384,23 @@ def f_conception_mu2(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, doj, d
         cb1_sliced = fun.f_update(cb1_sliced, cb1[25, ...], np.logical_and(364 <= age, age < 728))
         cu2_sliced = fun.f_update(cu2_sliced, cu2[25, ...], np.logical_and(364 <= age, age < 728))
         ##Calculate the transformed estimates of proportion empty (slice cu2 allowing for active i axis)
-        cutoff0 = cb1_sliced[:,:,1:2,...] + cu2_sliced[-1, ...] + (cu2_sliced[0, ...] * maternallw_mating
-                                                                 + cu2_sliced[1, ...] * maternallw_mating ** 2
-                                                                 + cu2_sliced[2, ...] * lwc
-                                                                 + cu2_sliced[3, ...] * lwc ** 2
-                                                                 + cu2_sliced[4, ...] * age
-                                                                 + cu2_sliced[5, ...] * age ** 2
-                                                                 + cu2_sliced[6, ...] * nlb
-                                                                 + cu2_sliced[7, ...] * nlb ** 2
-                                                                 + cu2_sliced[8, ...] * srw
-                                                                 + cu2_sliced[9, ...] * lat
-                                                                 + cu2_sliced[10, ...] * doj
-                                                                 + cu2_sliced[11, ...] * doj2
-                                                                 + cu2_sliced[12, ...] * cs
-                                                                 + cu2_sliced[13, ...] * cs ** 2
-                                                                  )
+        cutoff0 = (fun.f_dynamic_slice(cb1_sliced, {b1_pos: [1,2]})
+                                     + cu2_sliced[-1, ...]
+                                     + cu2_sliced[0, ...] * maternallw_mating
+                                     + cu2_sliced[1, ...] * maternallw_mating ** 2
+                                     + cu2_sliced[2, ...] * lwc
+                                     + cu2_sliced[3, ...] * lwc ** 2
+                                     + cu2_sliced[4, ...] * age
+                                     + cu2_sliced[5, ...] * age ** 2
+                                     + cu2_sliced[6, ...] * nlb
+                                     + cu2_sliced[7, ...] * nlb ** 2
+                                     + cu2_sliced[8, ...] * srw
+                                     + cu2_sliced[9, ...] * lat
+                                     + cu2_sliced[10, ...] * doj
+                                     + cu2_sliced[11, ...] * doj2
+                                     + cu2_sliced[12, ...] * cs
+                                     + cu2_sliced[13, ...] * cs ** 2
+                                       )
 
         ##calc conception propn
         cp = f1_cp_from_cutoff(cutoff0, cb1_sliced, nfoet_b1any, nyatf_b1any, b1_pos, cycles=1)
@@ -2403,14 +2418,10 @@ def f_conception_mu2(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, doj, d
         #### Back calculate the proportion of empty, single, twins & triplets for 1 cycle using the Logistic function
         cp = f1_RR_propn_logistic(repro_rate_adj, cb1_sliced, nfoet_b1any, nyatf_b1any, b1_pos, cycles=1)
 
-        ##Set up slices and store values for the SA
-        ###define empty slice (LSLN 00) and store proportion empty
-        slc_empty = [slice(None)] * len(cp.shape)
-        slc_empty[b1_pos] = slice(1, 2)
-        empty = cp[tuple(slc_empty)]
-        ###define slices for litter size from singles (LSLN 11) to the end
-        slc_preg = [slice(None)] * len(cp.shape)
-        slc_preg[b1_pos] = slice(2,None)
+        ##Store values for the SA
+        slc_empty = fun.f_dynamic_slice_idx(cp, {b1_pos: [1]})
+        empty = cp[slc_empty].copy()
+        slc_preg = fun.f_dynamic_slice_idx(cp, {b1_pos: [1]})
 
         ##Apply litter size sa to adjust the probability of the number of foetuses using logistic function.
         ### Carried out here prior to conception saa so that the proportions are still consistent with the logistic function
@@ -2422,17 +2433,17 @@ def f_conception_mu2(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, doj, d
         #### Back calculate the proportion of empty, single, twins & triplets using the Logistic function for the increased LS
         cp = f1_LS_propn_logistic(litter_size_adj, cb1_sliced, nfoet_b1any, nyatf_b1any, b1_pos, cycles=1)
         #### Scale the proportions so that the proportion of empty is same as prior to SA and the total is 1
-        t_empty = cp[tuple(slc_empty)]
-        cp[tuple(slc_preg)] = cp[tuple(slc_preg)] * (1 - empty) / (1 - t_empty)
-        cp[tuple(slc_empty)] = empty
+        t_empty = cp[slc_empty]
+        cp[slc_preg] = cp[slc_preg] * (1 - empty) / (1 - t_empty)
+        cp[slc_empty] = empty
 
         ##Apply conception saa to adjust the proportion of ewes that are empty with constant litter size.
         ### Carried out here so that the sa affects the REV and is included in proportion of NM
         ### Apply the saa to the square of the empty slice (based on the saa applying to the outcome after 2 cycles)
         empty_adj = np.sqrt(fun.f_sa(empty ** 2, saa_con * (repro_rate > 0), 2, value_min=0))     # only adjust if original RR was non-zero
-        cp[tuple(slc_empty)] = empty_adj
+        cp[slc_empty] = empty_adj
         #### Adjust the pregnant slices to keep litter size constant and allow for the change in the number pregnant
-        cp[tuple(slc_preg)] = cp[tuple(slc_preg)] * (1-empty_adj) / (1-empty)
+        cp[slc_preg] = cp[slc_preg] * (1-empty_adj) / (1-empty)
 
         ##Apply preg increment saa to increment an individual b1 slice at conception, so that the value of an extra lamb conceived of a given birth type can be calculated.
         ###Scale the increment by the proportion of dams that got pregnant this cycle
@@ -2451,20 +2462,22 @@ def f_conception_mu2(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, doj, d
         ###Conception is the proportion of dams that are dry and a change in conception is assumed to be converting
         ### a dry ewe into a pregnant ewe with litter size as per rest of the flock. It is calculated by altering the proportion of empty ewes b1[1].
         empty_rev = f1_rev_update('conception', empty_adj, rev_trait_value)
-        cp[tuple(slc_preg)] = cp[tuple(slc_preg)] * (1 - empty_rev) / (1 - empty_adj)
-        cp[tuple(slc_empty)] = empty_rev
+        cp[slc_preg] = cp[slc_preg] * (1 - empty_rev) / (1 - empty_adj)
+        cp[slc_empty] = empty_rev
 
         ##Process the Litter size REV: either save the trait value to the dictionary or over-write trait value with value from the dictionary
         ##The litter size REV is stored as the proportion of the pregnant dams that are single-, twin- & triplet-bearing
         ###Steps: Calculate litter size from cp, adjust litter size (if required) then recalculate cp from new litter size
         ### Calculating litter size (# of foetuses / dam pregnant) requires a mask for the pregnant dams that is the same shape as cp
         mask = nfoet_b1any.squeeze() > 0
-        cp_masked = np.compress(mask, cp, b1_pos)
+        cp_mask = np.compress(mask, cp, b1_pos)
         ### Calculate the proportion of single-, twin- & triplet-bearing dams
-        litter_propn = fun.f_divide(cp_masked, np.sum(cp_masked, b1_pos, keepdims=True))
+        litter_propn = fun.f_divide(cp_mask, np.sum(cp_mask, b1_pos, keepdims=True))
         litter_propn = f1_rev_update('litter_size', litter_propn, rev_trait_value)
         ###calculate cp from the REV adjusted litter size. cp will only change from the original value if litter_size REV is active
-        cp[:,:,:,mask,...] = litter_propn * np.sum(cp_masked, b1_pos, keepdims=True)
+        ###this is more complicated to convert to a function because the _idx function can't handle masks
+        cp_masked = fun.f_dynamic_slice(cp, {b1_pos: mask})
+        cp_masked = litter_propn * np.sum(cp_mask, b1_pos, keepdims=True)
 
         ## Some dams implant (and therefore don't return to service) but don't retain to scanning.
         ###These dams are added to 00 slice (b1[1:2]) so that they are removed from 'available for mating'.
@@ -2474,8 +2487,7 @@ def f_conception_mu2(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, doj, d
         ### not representing this source of dry ewes.
         ### Disabled by setting the value of propn_pregnant to 0 rather remove the code because the proportion
         ###of empty needs to be set to 0 anyway (and the problem may be fixable)
-        slc_empty[b1_pos] = slice(1,2)
-        cp[tuple(slc_empty)] = cf[5, ...] * cp[tuple(slc_empty)]
+        cp[fun.f_dynamic_slice_idx(cp, {b1_pos: [1]})] = cf[5, ...] * fun.f_dynamic_slice(cp, {b1_pos: [1]})
 
         ##If the period is mating then set conception = temporary probability array
         conception = cp * period_is_mating
@@ -3448,7 +3460,8 @@ def f1_check_all_bins_present(pointers, w_pos, group_axes, expected_w):
     return missing
 
 
-def f1_collapse(pointers, index_unique_wzida0e0b0xyg, prod, numbers, period_is_condense, period_is_seasonstart, w_pos, z_pos, period_is_prejoin=False, prejoin_tup=()):
+def f1_collapse(pointers, index_unique_wzida0e0b0xyg, prod, numbers, period_is_condense, period_is_seasonstart
+                , w_pos, z_pos, period_is_prejoin=False, prejoin_tup=()):
     '''
     This function applies the collapse pointers to a production array and returns the production for the new animal.
 
