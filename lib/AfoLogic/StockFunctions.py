@@ -93,7 +93,7 @@ def f1_c2g(params_c2, y, a_c2_c0, i_g3_inc, var_pos=None, condition=None, axis=0
     :param y : array - sensitivity array for genetic merit.
     :param a_c2_c0 : association between c2 and c0, i.e. which genotype input (c2) for each sire type (B,M,T)
     :param i_g3_inc : the offspring genotypes that are included in this trial
-    :param var_pos : int - position of last axis when inserted into all axis.
+    :param var_pos : int - negative position of stock axis (p,a,e,b,n,w,z,i,d,a,e,b,x) when inserted into all axis (dont need to add a position for the param axes or the c2 axis)
     :param condition : slices to mask in the target axis
     :param axis: the target axis for masking
     :param dtype : A dtype for the return variable
@@ -126,15 +126,24 @@ def f1_c2g(params_c2, y, a_c2_c0, i_g3_inc, var_pos=None, condition=None, axis=0
     y=y[...,uinp.parameters['i_mask_y']]
     params_c0 = np.multiply(params_c0[...,na,:],  y[...,na]) #na here is to account for c0 axis
     ##get axes into correct position
-    if var_pos is None:     #if var_pos not passed as an arg don't add axes
+    if params_c2.ndim==1:     #if only the c2 axis is present than dont need to expand.
         extra_axes1 = ()
         extra_axes2 = ()
-    elif var_pos == 0:      #if 0 is passed then add axes so the coefficients of the parameters are to left of p_pos
-        extra_axes1 = tuple(range(sinp.stock['i_p_pos'], -2))  # (-2 because y & g are in correct position)
+    elif params_c2.ndim==2:
+        if var_pos is None:  # this means the second axis is the param (c) axis. Which gets put infront of the p axis. (-2 because y & g are in correct position)
+            extra_axes1 = tuple(range(sinp.stock['i_p_pos'], -2))
+        else:
+            extra_axes1 = tuple(range(var_pos + 1 , -2))  # (-2 because y & g are in correct position)
         extra_axes2 = ()
-    else:                   #if >0 then the second coefficient axes is in target position and first is left of p_pos
-        extra_axes1 = tuple(range(var_pos + 1, -2))  # (-2 because y & g are in correct position)
-        extra_axes2 = tuple(range(sinp.stock['i_p_pos'], var_pos))   # one axis remains at var_pos1 other axes moved to var_pos2
+    elif params_c2.ndim == 3:
+        if var_pos is None:  # this means the second and third axes are both the param (c) axis. Which gets put infront of the p axis. (-2 because y & g are in correct position)
+            extra_axes1 = tuple(range(sinp.stock['i_p_pos'], -2))
+            extra_axes2 = ()
+        else:
+            extra_axes1 = tuple(range(var_pos + 1, -2))  # (-2 because y & g are in correct position)
+            extra_axes2 = tuple(range(sinp.stock['i_p_pos'], var_pos))   # one axis remains at var_pos1 other axes moved to var_pos2
+    else:
+        raise RuntimeError("An unhandled scenario in f1_c2g has been triggered")
 
     allaxis_params_c0 = np.expand_dims(params_c0, axis = extra_axes1)
     allaxis_params_c0 = np.expand_dims(allaxis_params_c0, axis = extra_axes2)

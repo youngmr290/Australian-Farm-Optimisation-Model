@@ -676,17 +676,17 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ##convert input params from c to g
     ###genotype & production params
     ####Weight
-    srw_female_psire, srw_female_pdams, srw_female_pyatf, srw_female_poffs = sfun.f1_c2g(uinp.parameters['i_srw_c2']
-                                , uinp.parameters['i_srw_y'], a_c2_c0, i_g3_inc, var_pos=0) #srw of a female of the given genotype (this is the definition of the inputs)
+    srw_female_yg0, srw_female_yg1, srw_female_yg2, srw_female_yg3 = sfun.f1_c2g(uinp.parameters['i_srw_c2']
+                                , uinp.parameters['i_srw_y'], a_c2_c0, i_g3_inc) #srw of a female of the given genotype (this is the definition of the inputs)
     muscle_target_female_yg0, muscle_target_female_yg1, muscle_target_female_yg2, muscle_target_female_yg3 = sfun.f1_c2g(uinp.parameters['i_muscle_target_c2']
                                 , uinp.parameters['i_muscle_target_y'], a_c2_c0, i_g3_inc)
     lw_initial_yg0, lw_initial_yg1, lw_initial_yatf, lw_initial_yg3 = sfun.f1_c2g(uinp.parameters['i_lw_initial_c2']
                                 , uinp.parameters['i_lw_initial_y'], a_c2_c0, i_g3_inc)
     ####Fleece
-    sfd_psire, sfd_pdams, sfd_pyatf, sfd_poffs = sfun.f1_c2g(uinp.parameters['i_sfd_c2']
-                                , uinp.parameters['i_sfd_y'], a_c2_c0, i_g3_inc, var_pos=0)
-    sfw_psire, sfw_pdams, sfw_pyatf, sfw_poffs = sfun.f1_c2g(uinp.parameters['i_sfw_c2']
-                                , uinp.parameters['i_sfw_y'], a_c2_c0, i_g3_inc, var_pos=0)
+    sfd_yg0, sfd_yg1, sfd_yg2, sfd_yg3 = sfun.f1_c2g(uinp.parameters['i_sfd_c2']
+                                , uinp.parameters['i_sfd_y'], a_c2_c0, i_g3_inc)
+    sfw_yg0, sfw_yg1, sfw_yg2, sfw_yg3 = sfun.f1_c2g(uinp.parameters['i_sfw_c2']
+                                , uinp.parameters['i_sfw_y'], a_c2_c0, i_g3_inc)
     cfw_initial_yg0, cfw_initial_yg1, cfw_initial_yatf, cfw_initial_yg3 = sfun.f1_c2g(uinp.parameters['i_cfw_initial_c2']
                                 , uinp.parameters['i_cfw_initial_y'], a_c2_c0, i_g3_inc)
     fd_initial_yg0, fd_initial_yg1, fd_initial_yatf, fd_initial_yg3 = sfun.f1_c2g(uinp.parameters['i_fd_initial_c2']
@@ -715,7 +715,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                 , uinp.parameters['i_nlb_y'], a_c2_c0, i_g3_inc)
     agedam_propn_da0e0b0xyg0, agedam_propn_da0e0b0xyg1, agedam_propn_da0e0b0xyg2, agedam_propn_da0e0b0xyg3 = \
         sfun.f1_c2g(uinp.parameters['i_agedam_propn_std_dc2'], uinp.parameters['i_agedam_propn_y'], a_c2_c0, i_g3_inc,
-                    uinp.parameters['i_agedam_propn_pos'], condition=mask_o_dams, axis=d_pos) #yatf and off never used
+                    d_pos, condition=mask_o_dams, axis=d_pos) #yatf and off never used
     agedam_propn_da0e0b0xyg0 = agedam_propn_da0e0b0xyg0 / np.sum(agedam_propn_da0e0b0xyg0, axis=d_pos) #scale unmasked slices to a total of 1
     agedam_propn_da0e0b0xyg1 = agedam_propn_da0e0b0xyg1 / np.sum(agedam_propn_da0e0b0xyg1, axis=d_pos) #scale unmasked slices to a total of 1
     agedam_propn_da0e0b0xyg2 = agedam_propn_da0e0b0xyg2 / np.sum(agedam_propn_da0e0b0xyg2, axis=d_pos) #scale unmasked slices to a total of 1
@@ -744,58 +744,58 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                 , uinp.parameters['i_sd_ebg_y'], a_c2_c0, i_g3_inc)
 
     ###sim params
-    #todo the uinp pos parameters could be replaced with the global ?_pos vars. Removes one place that the positions needs to updated if they ever change
+    #todo the uinp pos parameters are no longer used. The should be removed from unip spreadsheet.
     ca_cpsire, ca_cpdams, ca_cpyatf, ca_cpoffs = sfun.f1_c2g(uinp.parameters['i_ca_c2'], uinp.parameters['i_ca_y']
-                                , a_c2_c0, i_g3_inc, uinp.parameters['i_ca_pos'])
+                                , a_c2_c0, i_g3_inc)
     cb0_cpsire, cb0_cpdams, cb0_cpyatf, cb0_cpoffs = sfun.f1_c2g(uinp.parameters['i_cb0_c2'], uinp.parameters['i_cb0_y']
-                                , a_c2_c0, i_g3_inc, uinp.parameters['i_cb0_pos'])
+                                , a_c2_c0, i_g3_inc, b0_pos)
     #### cc_cpyatf needs an active p axis to represent parameter change when age < 30 days.
     cc_cpsire, cc_cpdams, cc_cpyatf, cc_cpoffs = sfun.f1_c2g(uinp.parameters['i_cc_c2'], uinp.parameters['i_cc_y']
-                                , a_c2_c0, i_g3_inc, uinp.parameters['i_cc_pos'])
+                                , a_c2_c0, i_g3_inc)
     cd_cpsire, cd_cpdams, cd_cpyatf, cd_cpoffs = sfun.f1_c2g(uinp.parameters['i_cd_c2'], uinp.parameters['i_cd_y']
-                                , a_c2_c0, i_g3_inc, uinp.parameters['i_cd_pos'])
+                                , a_c2_c0, i_g3_inc)
     ce_cpsire, ce_cpdams, ce_cpyatf, ce_cpoffs = sfun.f1_c2g(uinp.parameters['i_ce_c2'], uinp.parameters['i_ce_y']
-                                , a_c2_c0, i_g3_inc, uinp.parameters['i_ce_pos'], condition=mask_o_dams, axis=d_pos)
+                                , a_c2_c0, i_g3_inc, d_pos, condition=mask_o_dams, axis=d_pos)
     ce_cpoffs = sfun.f1_c2g(uinp.parameters['i_ce_c2'], uinp.parameters['i_ce_y']
-                                , a_c2_c0, i_g3_inc, uinp.parameters['i_ce_pos'], condition=mask_d_offs, axis=d_pos)[3]  #re calc offs using off d mask
+                                , a_c2_c0, i_g3_inc, d_pos, condition=mask_d_offs, axis=d_pos)[3]  #re calc offs using off d mask
     cf_cpsire, cf_cpdams, cf_cpyatf, cf_cpoffs = sfun.f1_c2g(uinp.parameters['i_cf_c2'], uinp.parameters['i_cf_y']
-                                , a_c2_c0, i_g3_inc, uinp.parameters['i_cf_pos'])
+                                , a_c2_c0, i_g3_inc)
     cg_cpsire, cg_cpdams, cg_cpyatf, cg_cpoffs = sfun.f1_c2g(uinp.parameters['i_cg_c2'], uinp.parameters['i_cg_y']
-                                , a_c2_c0, i_g3_inc, uinp.parameters['i_cg_pos'])
+                                , a_c2_c0, i_g3_inc)
     ch_cpsire, ch_cpdams, ch_cpyatf, ch_cpoffs = sfun.f1_c2g(uinp.parameters['i_ch_c2'], uinp.parameters['i_ch_y']
-                                , a_c2_c0, i_g3_inc, uinp.parameters['i_ch_pos'])
+                                , a_c2_c0, i_g3_inc)
     ci_cpsire, ci_cpdams, ci_cpyatf, ci_cpoffs = sfun.f1_c2g(uinp.parameters['i_ci_c2'], uinp.parameters['i_ci_y']
-                                , a_c2_c0, i_g3_inc, uinp.parameters['i_ci_pos'])
+                                , a_c2_c0, i_g3_inc)
     ck_cpsire, ck_cpdams, ck_cpyatf, ck_cpoffs = sfun.f1_c2g(uinp.parameters['i_ck_c2'], uinp.parameters['i_ck_y']
-                                , a_c2_c0, i_g3_inc, uinp.parameters['i_ck_pos'])
+                                , a_c2_c0, i_g3_inc)
     cl0_cpsire, cl0_cpdams, cl0_cpyatf, cl0_cpoffs = sfun.f1_c2g(uinp.parameters['i_cl0_c2'], uinp.parameters['i_cl0_y']
-                                , a_c2_c0, i_g3_inc, uinp.parameters['i_cl0_pos'])
+                                , a_c2_c0, i_g3_inc, b1_pos)
     cl1_cpsire, cl1_cpdams, cl1_cpyatf, cl1_cpoffs = sfun.f1_c2g(uinp.parameters['i_cl1_c2'], uinp.parameters['i_cl1_y']
-                                , a_c2_c0, i_g3_inc, uinp.parameters['i_cl1_pos'])
+                                , a_c2_c0, i_g3_inc, b1_pos)
     cl_cpsire, cl_cpdams, cl_cpyatf, cl_cpoffs = sfun.f1_c2g(uinp.parameters['i_cl_c2'], uinp.parameters['i_cl_y']
-                                , a_c2_c0, i_g3_inc, uinp.parameters['i_cl_pos'])
+                                , a_c2_c0, i_g3_inc)
     cm_cpsire, cm_cpdams, cm_cpyatf, cm_cpoffs = sfun.f1_c2g(uinp.parameters['i_cm_c2'], uinp.parameters['i_cm_y']
-                                , a_c2_c0, i_g3_inc, uinp.parameters['i_cm_pos'])
+                                , a_c2_c0, i_g3_inc)
     cn_cpsire, cn_cpdams, cn_cpyatf, cn_cpoffs = sfun.f1_c2g(uinp.parameters['i_cn_c2'], uinp.parameters['i_cn_y']
-                                , a_c2_c0, i_g3_inc, uinp.parameters['i_cn_pos'])
+                                , a_c2_c0, i_g3_inc)
     cp_cpsire, cp_cpdams, cp_cpyatf, cp_cpoffs = sfun.f1_c2g(uinp.parameters['i_cp_c2'], uinp.parameters['i_cp_y']
-                                , a_c2_c0, i_g3_inc, uinp.parameters['i_cp_pos'])
+                                , a_c2_c0, i_g3_inc)
     cr_cpsire, cr_cpdams, cr_cpyatf, cr_cpoffs = sfun.f1_c2g(uinp.parameters['i_cr_c2'], uinp.parameters['i_cr_y']
-                                , a_c2_c0, i_g3_inc, uinp.parameters['i_cr_pos'])
+                                , a_c2_c0, i_g3_inc)
     crd_cpsire, crd_cpdams, crd_cpyatf, crd_cpoffs = sfun.f1_c2g(uinp.parameters['i_crd_c2'], uinp.parameters['i_crd_y']
-                                , a_c2_c0, i_g3_inc, uinp.parameters['i_crd_pos'])
+                                , a_c2_c0, i_g3_inc)
     cu0_cpsire, cu0_cpdams, cu0_cpyatf, cu0_cpoffs = sfun.f1_c2g(uinp.parameters['i_cu0_c2'], uinp.parameters['i_cu0_y']
-                                , a_c2_c0, i_g3_inc, uinp.parameters['i_cu0_pos'])
+                                , a_c2_c0, i_g3_inc)
     cu1_cpsire, cu1_cpdams, cu1_cpyatf, cu1_cpoffs = sfun.f1_c2g(uinp.parameters['i_cu1_c2'], uinp.parameters['i_cu1_y']
-                                , a_c2_c0, i_g3_inc, uinp.parameters['i_cu1_pos'])
+                                , a_c2_c0, i_g3_inc)
     cu2_cc1psire, cu2_cc1pdams, cu2_cc1pyatf, cu2_cc1poffs = sfun.f1_c2g(uinp.parameters['i_cu2_c2'], uinp.parameters['i_cu2_y']
-                                , a_c2_c0, i_g3_inc, uinp.parameters['i_cu2_pos'])
+                                , a_c2_c0, i_g3_inc)
     cu6_cc1psire, cu6_cc1pdams, cu6_cc1pyatf, cu6_cpoffs = sfun.f1_c2g(uinp.parameters['i_cu6_c2'], uinp.parameters['i_cu6_y']
-                                , a_c2_c0, i_g3_inc, uinp.parameters['i_cu6_pos'])
+                                , a_c2_c0, i_g3_inc)
     cw_cpsire, cw_cpdams, cw_cpyatf, cw_cpoffs = sfun.f1_c2g(uinp.parameters['i_cw_c2'], uinp.parameters['i_cw_y']
-                                , a_c2_c0, i_g3_inc, uinp.parameters['i_cw_pos'])
+                                , a_c2_c0, i_g3_inc)
     cx_cpsire, cx_cpdams, cx_cpyatf, cx_cpoffs = sfun.f1_c2g(uinp.parameters['i_cx_c2'], uinp.parameters['i_cx_y']
-                                , a_c2_c0, i_g3_inc, uinp.parameters['i_cx_pos'])
+                                , a_c2_c0, i_g3_inc, x_pos)
     ##Convert the cl0 & cl1 to cb1 (dams and yatf only need cb1, sires and offs don't have b1 axis)
     cb1_cpdams = (np.take(cl0_cpdams,sinp.stock['a_nfoet_b1'], axis=b1_pos)
                 + np.take(cl1_cpdams,sinp.stock['a_nyatf_b1'], axis=b1_pos))
@@ -1764,10 +1764,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ###########################
     ##apply rev sa to stock params (c2 genotype sensitivity) - this activates the p axis (if not doing a rev the p axis will be singleton)
     ##LW REV using SRW
-    srw_female_pa1e1b1nwzida0e0b0xyg0 = sfun.f1_rev_sa(srw_female_psire, sen.saa['rev_srw'], age=age_pa1e1b1nwzida0e0b0xyg0, sa_type=2)
-    srw_female_pa1e1b1nwzida0e0b0xyg1 = sfun.f1_rev_sa(srw_female_pdams, sen.saa['rev_srw'], age=age_pa1e1b1nwzida0e0b0xyg1, sa_type=2)
-    srw_female_pa1e1b1nwzida0e0b0xyg2 = sfun.f1_rev_sa(srw_female_pyatf, sen.saa['rev_srw'], age=age_pa1e1b1nwzida0e0b0xyg2, sa_type=2)
-    srw_female_pa1e1b1nwzida0e0b0xyg3 = sfun.f1_rev_sa(srw_female_poffs, sen.saa['rev_srw'], age=age_cut_pa1e1b1nwzida0e0b0xyg3, sa_type=2)
+    srw_female_pa1e1b1nwzida0e0b0xyg0 = sfun.f1_rev_sa(srw_female_yg0, sen.saa['rev_srw'], age=age_pa1e1b1nwzida0e0b0xyg0, sa_type=2)
+    srw_female_pa1e1b1nwzida0e0b0xyg1 = sfun.f1_rev_sa(srw_female_yg1, sen.saa['rev_srw'], age=age_pa1e1b1nwzida0e0b0xyg1, sa_type=2)
+    srw_female_pa1e1b1nwzida0e0b0xyg2 = sfun.f1_rev_sa(srw_female_yg2, sen.saa['rev_srw'], age=age_pa1e1b1nwzida0e0b0xyg2, sa_type=2)
+    srw_female_pa1e1b1nwzida0e0b0xyg3 = sfun.f1_rev_sa(srw_female_yg3, sen.saa['rev_srw'], age=age_cut_pa1e1b1nwzida0e0b0xyg3, sa_type=2)
 
     ##calc proportion of dry, singles, twin and triplets based on the genotype as born.
     ###e.g. BBM dams are based on BBB scanning and BBB survival. BBM offspring are based on BBB scanning and BBM survival
@@ -1801,10 +1801,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     adja_sfw_b0_b1nwzida0e0b0xyg2 = cb1_cpyatf[12, ...]
     adja_sfw_b0_b0xyg3 = cb0_cpoffs[12, ...]
     ###apply adjustments sfw
-    sfw_a0e0b0xyg0 = sfw_psire + adja_sfw_d_a0e0b0xyg0 + adja_sfw_b0_xyg0
-    sfw_a0e0b0xyg1 = sfw_pdams + adja_sfw_d_a0e0b0xyg1 + adja_sfw_b0_xyg1
-    sfw_pa1e1b1nwzida0e0b0xyg2 = sfw_pyatf + adja_sfw_d_pa1e1b1nwzida0e0b0xyg2 + adja_sfw_b0_b1nwzida0e0b0xyg2
-    sfw_da0e0b0xyg3 = sfw_poffs + adja_sfw_d_da0e0b0xyg3 + adja_sfw_b0_b0xyg3
+    sfw_a0e0b0xyg0 = sfw_yg0 + adja_sfw_d_a0e0b0xyg0 + adja_sfw_b0_xyg0
+    sfw_a0e0b0xyg1 = sfw_yg1 + adja_sfw_d_a0e0b0xyg1 + adja_sfw_b0_xyg1
+    sfw_pa1e1b1nwzida0e0b0xyg2 = sfw_yg2 + adja_sfw_d_pa1e1b1nwzida0e0b0xyg2 + adja_sfw_b0_b1nwzida0e0b0xyg2
+    sfw_da0e0b0xyg3 = sfw_yg3 + adja_sfw_d_da0e0b0xyg3 + adja_sfw_b0_b0xyg3
     ###calc adjustments sfd
     adja_sfd_d_a0e0b0xyg0 = np.sum(ce_cpsire[13, ...] * agedam_propn_da0e0b0xyg0, axis = d_pos)
     adja_sfd_d_a0e0b0xyg1 = np.sum(ce_cpdams[13, ...] * agedam_propn_da0e0b0xyg1, axis = d_pos)
@@ -1815,10 +1815,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     adja_sfd_b0_b0xyg2 = cb1_cpyatf[13, ...]
     adja_sfd_b0_b0xyg3 = cb0_cpoffs[13, ...]
     ###apply adjustments sfd
-    sfd_a0e0b0xyg0 = sfd_psire + adja_sfd_d_a0e0b0xyg0 + adja_sfd_b0_xyg0
-    sfd_a0e0b0xyg1 = sfd_pdams + adja_sfd_d_a0e0b0xyg1 + adja_sfd_b0_xyg1
-    sfd_pa1e1b1nwzida0e0b0xyg2 = sfd_pyatf + adja_sfd_d_pa1e1b1nwzida0e0b0xyg2 + adja_sfd_b0_b0xyg2
-    sfd_da0e0b0xyg3 = sfd_poffs + adja_sfd_d_da0e0b0xyg3 + adja_sfd_b0_b0xyg3
+    sfd_a0e0b0xyg0 = sfd_yg0 + adja_sfd_d_a0e0b0xyg0 + adja_sfd_b0_xyg0
+    sfd_a0e0b0xyg1 = sfd_yg1 + adja_sfd_d_a0e0b0xyg1 + adja_sfd_b0_xyg1
+    sfd_pa1e1b1nwzida0e0b0xyg2 = sfd_yg2 + adja_sfd_d_pa1e1b1nwzida0e0b0xyg2 + adja_sfd_b0_b0xyg2
+    sfd_da0e0b0xyg3 = sfd_yg3 + adja_sfd_d_da0e0b0xyg3 + adja_sfd_b0_b0xyg3
 
     ###gender and BTRT adjustment for srw & muscle_target - 11 is the srw parameter, 0:1 is the sire gender slice (retaining the axis).
     srw_pa1e1b1nwzida0e0b0xyg0 = srw_female_pa1e1b1nwzida0e0b0xyg0 * np.sum(cb0_cpsire[11, ...] * btrt_propn_b0xyg0, axis = b0_pos) * fun.f_dynamic_slice(cx_cpsire[11], {x_pos: [0,1]})
@@ -1839,9 +1839,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ### Does not include the gender scalar on SRW because std BW is related to the female SRW of the genotype
     ### Does not include the BTRT scalar of the dam i.e. assuming that the BTRT adjustment of dam SRW doesn't affect her progeny
     ### SRW for g0, g1 & g3 excludes the age stage adjustment from rev_srw with a p axis (so BW is held constant - small error for whole of life age stage)
-    w_b_std_b0xyg0 = srw_female_psire * np.sum(cb0_cpsire[15, ...] * btrt_propn_b0xyg0, axis = b0_pos, keepdims=True) * fun.f_dynamic_slice(cx_cpsire[15], {x_pos: [0,1]})
-    w_b_std_b0xyg1 = srw_female_pdams * np.sum(cb0_cpdams[15, ...] * btrt_propn_b0xyg1, axis = b0_pos, keepdims=True) * fun.f_dynamic_slice(cx_cpdams[15], {x_pos: [1,2]})
-    w_b_std_b0xyg3 = srw_female_poffs * cb0_cpoffs[15, ...] * fun.f_dynamic_slice(cx_cpoffs[15], {x_pos: mask_x})
+    w_b_std_b0xyg0 = srw_female_yg0 * np.sum(cb0_cpsire[15, ...] * btrt_propn_b0xyg0, axis = b0_pos, keepdims=True) * fun.f_dynamic_slice(cx_cpsire[15], {x_pos: [0,1]})
+    w_b_std_b0xyg1 = srw_female_yg1 * np.sum(cb0_cpdams[15, ...] * btrt_propn_b0xyg1, axis = b0_pos, keepdims=True) * fun.f_dynamic_slice(cx_cpdams[15], {x_pos: [1,2]})
+    w_b_std_b0xyg3 = srw_female_yg3 * cb0_cpoffs[15, ...] * fun.f_dynamic_slice(cx_cpoffs[15], {x_pos: mask_x})
     ##fetal param - normal birthweight young - used as target birthweight during pregnancy if sheep fed well. Therefore, average gender effect.
     w_b_std_y_pa1e1b1nwzida0e0b0xyg1 = srw_female_pa1e1b1nwzida0e0b0xyg2 * cb1_cpyatf[15, ...] * cp_cpyatf[15, ...] #gender not considered until actual birth therefore no cx
     ##wool growth efficiency
@@ -1905,9 +1905,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     lw_initial_a1e1b1nwzida0e0b0xyg1 = (lw_initial_yg1 * (1 + adjp_lw_initial_wzida0e0b0xyg1)) * srw_Pa1e1b1nwzida0e0b0xyg1
     lw_initial_a1e1b1nwzida0e0b0xyg3 = (lw_initial_yg3 * (1 + adjp_lw_initial_wzida0e0b0xyg3)) * srw_Pa1e1b1nwzida0e0b0xyg3
     ###the initial cfw input is a proportion of sfw
-    cfw_initial_wzida0e0b0xyg0 = (cfw_initial_yg0 * (1 + adjp_cfw_initial_wzida0e0b0xyg0)) * sfw_psire
-    cfw_initial_wzida0e0b0xyg1 = (cfw_initial_yg1 * (1 + adjp_cfw_initial_wzida0e0b0xyg1)) * sfw_pdams
-    cfw_initial_wzida0e0b0xyg3 = (cfw_initial_yg3 * (1 + adjp_cfw_initial_wzida0e0b0xyg3)) * sfw_poffs
+    cfw_initial_wzida0e0b0xyg0 = (cfw_initial_yg0 * (1 + adjp_cfw_initial_wzida0e0b0xyg0)) * sfw_yg0
+    cfw_initial_wzida0e0b0xyg1 = (cfw_initial_yg1 * (1 + adjp_cfw_initial_wzida0e0b0xyg1)) * sfw_yg1
+    cfw_initial_wzida0e0b0xyg3 = (cfw_initial_yg3 * (1 + adjp_cfw_initial_wzida0e0b0xyg3)) * sfw_yg3
     fd_initial_wzida0e0b0xyg0 = fd_initial_yg0 * (1 + adjp_fd_initial_wzida0e0b0xyg0)
     fd_initial_wzida0e0b0xyg1 = fd_initial_yg1 * (1 + adjp_fd_initial_wzida0e0b0xyg1)
     fd_initial_wzida0e0b0xyg3 = fd_initial_yg3 * (1 + adjp_fd_initial_wzida0e0b0xyg3)
@@ -5626,7 +5626,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                         , period_is_birth_pa1e1b1nwzida0e0b0xyg1[p], rev_trait_values['yatf'][p]
                                         , sap_mortalityp_pa1e1b1nwzida0e0b0xyg2[p], saa_mortalityx_pa1e1b1nwzida0e0b0xyg1[p])  ##code for absolute BW
                         # temp0 = sfun.f_mortality_progeny_mu(cu2_cc1pyatf, cb1_cpyatf, cx_cpyatf[...,mask_x,:,:], ce_cyatf
-                        #                 , w_b_yatf / srw_female_pyatf, w_b_ltw_std_yatf / srw_female_pyatf, cv_bw_yatf
+                        #                 , w_b_yatf / srw_female_yg2, w_b_ltw_std_yatf / srw_female_yg2, cv_bw_yatf
                         #                 , foo_dams, chill_index_a1e1b1nwzida0e0b0xyg1p0[p], mobsize_pa1e1b1nwzida0e0b0xyg1[p]
                         #                 , period_is_birth_pa1e1b1nwzida0e0b0xyg1[p], rev_trait_values['yatf'][p]
                         #                 , sap_mortalityp_pa1e1b1nwzida0e0b0xyg2[p], saa_mortalityx_pa1e1b1nwzida0e0b0xyg1[p])   ##code for BW/SRW
@@ -9662,9 +9662,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
 
     # ###DSE based on SRW. Currently not working because the axes don't align with the _nw method
     # ####convert SRW to dse based on metabolic weight (w**0.75). SRW of the genotype relative to the base SRW.
-    # dsehd_female_yg0 = srw_female_psire**0.75 / pinp.sheep['i_dse_srw']**0.75
-    # dsehd_female_yg1 = srw_female_pdams**0.75 / pinp.sheep['i_dse_srw']**0.75
-    # dsehd_female_yg3 = srw_female_poffs**0.75 / pinp.sheep['i_dse_srw']**0.75
+    # dsehd_female_yg0 = srw_female_yg0**0.75 / pinp.sheep['i_dse_srw']**0.75
+    # dsehd_female_yg1 = srw_female_yg1**0.75 / pinp.sheep['i_dse_srw']**0.75
+    # dsehd_female_yg3 = srw_female_yg3**0.75 / pinp.sheep['i_dse_srw']**0.75
     # dsenw_p6tva1e1b1nwzida0e0b0xyg0 = dsehd_female_yg0 * dse_group_dp6tva1e1b1nwzida0e0b0xyg[sinp.stock['ia_sire_dsegroup']]
     # dsenw_p6tva1e1b1nwzida0e0b0xyg1 = dsehd_female_yg1 * np.take_along_axis(dse_group_dp6tva1e1b1nwzida0e0b0xyg
     #                                                , a_dams_dsegroup_b1nwzida0e0b0xyg[na,na,na,na,na,na],0)[0,...] #take along the dse group axis and remove the d axis from the front
