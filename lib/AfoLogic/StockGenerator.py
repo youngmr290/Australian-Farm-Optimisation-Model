@@ -654,7 +654,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     a_wstart_w3 = np.floor(index_w3 / len_nut_offs).astype(int) #identify the start w slice (nut 0) for each w
 
     ############################
-    ### sim param arrays       # '''csiro params '''
+    ### sim param arrays 1      #
     ############################
     ##select the genotype
     a_c2_c0 = pinp.sheep['a_c2_c0']
@@ -663,150 +663,13 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
         a_c2_c0 = stubble['a_c2_c0']
         uinp.parameters['i_srw_c2'][...] = stubble['i_srw']
 
-    ##association for the retained t of each g slice
-    a_t_g1 = np.arange(pinp.sheep['i_n_dam_sales'], pinp.sheep['i_n_dam_sales']+len_g1)
-    a_t_tpg1 = fun.f_expand(a_t_g1, p_pos - 2, right_pos=-1)
-    a_t_g3 = np.array([0]) #g axis doesn't affect t for offs
-    a_t_tpg3 = fun.f_expand(a_t_g3, p_pos - 2, right_pos=-1)
-
-    ##convert input params from c to g
-    ###genotype & production params
-    ####Weight
-    srw_female_yg0, srw_female_yg1, srw_female_yg2, srw_female_yg3 = sfun.f1_c2g(uinp.parameters['i_srw_c2']
-                                , uinp.parameters['i_srw_y'], a_c2_c0, i_g3_inc) #srw of a female of the given genotype (this is the definition of the inputs)
-    muscle_target_female_yg0, muscle_target_female_yg1, muscle_target_female_yg2, muscle_target_female_yg3 = sfun.f1_c2g(uinp.parameters['i_muscle_target_c2']
-                                , uinp.parameters['i_muscle_target_y'], a_c2_c0, i_g3_inc)
-    lw_initial_yg0, lw_initial_yg1, lw_initial_yatf, lw_initial_yg3 = sfun.f1_c2g(uinp.parameters['i_lw_initial_c2']
-                                , uinp.parameters['i_lw_initial_y'], a_c2_c0, i_g3_inc)
-    ####Fleece
-    sfd_yg0, sfd_yg1, sfd_yg2, sfd_yg3 = sfun.f1_c2g(uinp.parameters['i_sfd_c2']
-                                , uinp.parameters['i_sfd_y'], a_c2_c0, i_g3_inc)
-    sfw_yg0, sfw_yg1, sfw_yg2, sfw_yg3 = sfun.f1_c2g(uinp.parameters['i_sfw_c2']
-                                , uinp.parameters['i_sfw_y'], a_c2_c0, i_g3_inc)
-    cfw_initial_yg0, cfw_initial_yg1, cfw_initial_yatf, cfw_initial_yg3 = sfun.f1_c2g(uinp.parameters['i_cfw_initial_c2']
-                                , uinp.parameters['i_cfw_initial_y'], a_c2_c0, i_g3_inc)
-    fd_initial_yg0, fd_initial_yg1, fd_initial_yatf, fd_initial_yg3 = sfun.f1_c2g(uinp.parameters['i_fd_initial_c2']
-                                , uinp.parameters['i_fd_initial_y'], a_c2_c0, i_g3_inc)
-    fl_initial_yg0, fl_initial_yg1, fl_initial_yatf, fl_initial_yg3 = sfun.f1_c2g(uinp.parameters['i_fl_initial_c2']
-                                , uinp.parameters['i_fl_initial_y'], a_c2_c0, i_g3_inc)
-    cfw_propn_yg0, cfw_propn_yg1, cfw_propn_yg2, cfw_propn_yg3 = sfun.f1_c2g(uinp.parameters['i_cfw_propn_c2']
-                                , uinp.parameters['i_cfw_propn_y'], a_c2_c0, i_g3_inc)
-    fl_birth_yg0, fl_birth_yg1, fl_birth_yg2, fl_birth_yg3 = sfun.f1_c2g(uinp.parameters['i_fl_birth_c2']
-                                , uinp.parameters['i_fl_birth_y'], a_c2_c0, i_g3_inc)
-    fl_shear_yg0, fl_shear_yg1, fl_shear_yg2, fl_shear_yg3 = sfun.f1_c2g(uinp.parameters['i_fl_shear_c2']
-                                , uinp.parameters['i_fl_shear_y'], a_c2_c0, i_g3_inc)
-    ####Reproduction
-    pss_std_yg0, pss_std_yg1, pss_std_yg2, pss_std_yg3 = sfun.f1_c2g(uinp.parameters['i_lss_std_c2']
-                                , uinp.parameters['i_lss_std_y'], a_c2_c0, i_g3_inc)
-    pstr_std_yg0, pstr_std_yg1, pstr_std_yg2, pstr_std_yg3 = sfun.f1_c2g(uinp.parameters['i_lstr_std_c2']
-                                , uinp.parameters['i_lstr_std_y'], a_c2_c0, i_g3_inc)
-    pstw_std_yg0, pstw_std_yg1, pstw_std_yg2, pstw_std_yg3 = sfun.f1_c2g(uinp.parameters['i_lstw_std_c2']
-                                , uinp.parameters['i_lstw_std_y'], a_c2_c0, i_g3_inc)
-    scan_std_yg0, scan_std_yg1, scan_std_yg2, scan_std_yg3 = sfun.f1_c2g(uinp.parameters['i_scan_std_c2']
-                                , uinp.parameters['i_scan_std_y'], a_c2_c0, i_g3_inc) #scan_std_yg2/3 not used
-    scan_std_doj_yg0, scan_std_doj_yg1, scan_std_doj_yg2, scan_std_doj_yg3 = sfun.f1_c2g(uinp.parameters['i_scan_std_doj_c2']
-                                , uinp.parameters['i_scan_std_doj_y'], a_c2_c0, i_g3_inc)
-    scan_dams_std_yg3 = scan_std_yg1 #offs needs to be the same as dams because scan_std is used to calc starting propn of BTRT which is dependent on dams scanning
-    nlb_yg0, nlb_yg1, nlb_yg2, nlb_yg3 = sfun.f1_c2g(uinp.parameters['i_nlb_c2']
-                                , uinp.parameters['i_nlb_y'], a_c2_c0, i_g3_inc)
-    agedam_propn_da0e0b0xyg0, agedam_propn_da0e0b0xyg1, agedam_propn_da0e0b0xyg2, agedam_propn_da0e0b0xyg3 = \
-        sfun.f1_c2g(uinp.parameters['i_agedam_propn_std_dc2'], uinp.parameters['i_agedam_propn_y'], a_c2_c0, i_g3_inc,
-                    d_pos, condition=mask_o_dams, axis=d_pos) #yatf and off never used
-    agedam_propn_da0e0b0xyg0 = agedam_propn_da0e0b0xyg0 / np.sum(agedam_propn_da0e0b0xyg0, axis=d_pos) #scale unmasked slices to a total of 1
-    agedam_propn_da0e0b0xyg1 = agedam_propn_da0e0b0xyg1 / np.sum(agedam_propn_da0e0b0xyg1, axis=d_pos) #scale unmasked slices to a total of 1
-    agedam_propn_da0e0b0xyg2 = agedam_propn_da0e0b0xyg2 / np.sum(agedam_propn_da0e0b0xyg2, axis=d_pos) #scale unmasked slices to a total of 1
-    agedam_propn_da0e0b0xyg3 = agedam_propn_da0e0b0xyg3 / np.sum(agedam_propn_da0e0b0xyg3, axis=d_pos) #scale unmasked slices to a total of 1
-    # fat_propn_wean_yg0, fat_propn_wean_yg1, fat_propn_wean_yg2, fat_propn_wean_yg3 = sfun.f1_c2g(uinp.parameters['i_fat_propn_wean_c2']
-    #                             , uinp.parameters['i_fat_wean_y'], a_c2_c0, i_g3_inc)
-    # muscle_propn_wean_yg0, muscle_propn_wean_yg1, muscle_propn_wean_yg2, muscle_propn_wean_yg3 = sfun.f1_c2g(uinp.parameters['i_muscle_propn_wean_c2']
-    #                             , uinp.parameters['i_muscle_wean_y'], a_c2_c0, i_g3_inc)
-    # viscera_propn_wean_yg0, viscera_propn_wean_yg1, viscera_propn_wean_yg2, viscera_propn_wean_yg3 = sfun.f1_c2g(uinp.parameters['i_viscera_propn_wean_c2']
-    #                             , uinp.parameters['i_viscera_wean_y'], a_c2_c0, i_g3_inc)
-    fat_propn_birth_yg0, fat_propn_birth_yg1, fat_propn_birth_yg2, fat_propn_birth_yg3 = sfun.f1_c2g(uinp.parameters['i_fat_propn_birth_c2']
-                                , uinp.parameters['i_fat_birth_y'], a_c2_c0, i_g3_inc) #only for yatf
-    muscle_propn_birth_yg0, muscle_propn_birth_yg1, muscle_propn_birth_yg2, muscle_propn_birth_yg3 = sfun.f1_c2g(uinp.parameters['i_muscle_propn_birth_c2']
-                                , uinp.parameters['i_muscle_birth_y'], a_c2_c0, i_g3_inc) #only for yatf
-    viscera_propn_birth_yg0, viscera_propn_birth_yg1, viscera_propn_birth_yg2, viscera_propn_birth_yg3 = sfun.f1_c2g(uinp.parameters['i_viscera_propn_birth_c2']
-                                , uinp.parameters['i_viscera_birth_y'], a_c2_c0, i_g3_inc) #only for yatf
-
-    ###p1 variation params (used for mort)
-    cv_weight_sire, cv_weight_dams, cv_weight_yatf, cv_weight_offs = sfun.f1_c2g(uinp.parameters['i_cv_weight_c2']
-                                , uinp.parameters['i_cv_weight_y'], a_c2_c0, i_g3_inc)
-    cv_bw_sire, cv_bw_dams, cv_bw_yatf, cv_bw_offs = sfun.f1_c2g(uinp.parameters['i_cv_bw_c2']
-                                , uinp.parameters['i_cv_bw_y'], a_c2_c0, i_g3_inc)
-    cv_cs_sire, cv_cs_dams, cv_cs_yatf, cv_cs_offs = sfun.f1_c2g(uinp.parameters['i_cv_cs_c2']
-                                , uinp.parameters['i_cv_cs_y'], a_c2_c0, i_g3_inc)
-    sd_ebg_sire, sd_ebg_dams, sd_ebg_yatf, sd_ebg_offs = sfun.f1_c2g(uinp.parameters['i_sd_ebg_c2']
-                                , uinp.parameters['i_sd_ebg_y'], a_c2_c0, i_g3_inc)
-
-    ###sim params
-    #todo the uinp pos parameters are no longer used. The should be removed from unip spreadsheet.
-    ca_cpsire, ca_cpdams, ca_cpyatf, ca_cpoffs = sfun.f1_c2g(uinp.parameters['i_ca_c2'], uinp.parameters['i_ca_y']
-                                , a_c2_c0, i_g3_inc)
-    cb0_cpsire, cb0_cpdams, cb0_cpyatf, cb0_cpoffs = sfun.f1_c2g(uinp.parameters['i_cb0_c2'], uinp.parameters['i_cb0_y']
-                                , a_c2_c0, i_g3_inc, b0_pos)
-    #### cc_cpyatf needs an active p axis to represent parameter change when age < 30 days.
-    cc_cpsire, cc_cpdams, cc_cpyatf, cc_cpoffs = sfun.f1_c2g(uinp.parameters['i_cc_c2'], uinp.parameters['i_cc_y']
-                                , a_c2_c0, i_g3_inc)
-    cd_cpsire, cd_cpdams, cd_cpyatf, cd_cpoffs = sfun.f1_c2g(uinp.parameters['i_cd_c2'], uinp.parameters['i_cd_y']
-                                , a_c2_c0, i_g3_inc)
+    #only the esential ones used to calc initial stuff. The rest are below so they can be adjusted using age stage SAs
     ce_cpsire, ce_cpdams, ce_cpyatf, ce_cpoffs = sfun.f1_c2g(uinp.parameters['i_ce_c2'], uinp.parameters['i_ce_y']
                                 , a_c2_c0, i_g3_inc, d_pos, condition=mask_o_dams, axis=d_pos)
-    ce_cpoffs = sfun.f1_c2g(uinp.parameters['i_ce_c2'], uinp.parameters['i_ce_y']
-                                , a_c2_c0, i_g3_inc, d_pos, condition=mask_d_offs, axis=d_pos)[3]  #re calc offs using off d mask
     cf_cpsire, cf_cpdams, cf_cpyatf, cf_cpoffs = sfun.f1_c2g(uinp.parameters['i_cf_c2'], uinp.parameters['i_cf_y']
-                                , a_c2_c0, i_g3_inc)
-    cg_cpsire, cg_cpdams, cg_cpyatf, cg_cpoffs = sfun.f1_c2g(uinp.parameters['i_cg_c2'], uinp.parameters['i_cg_y']
-                                , a_c2_c0, i_g3_inc)
-    ch_cpsire, ch_cpdams, ch_cpyatf, ch_cpoffs = sfun.f1_c2g(uinp.parameters['i_ch_c2'], uinp.parameters['i_ch_y']
-                                , a_c2_c0, i_g3_inc)
-    ci_cpsire, ci_cpdams, ci_cpyatf, ci_cpoffs = sfun.f1_c2g(uinp.parameters['i_ci_c2'], uinp.parameters['i_ci_y']
-                                , a_c2_c0, i_g3_inc)
-    ck_cpsire, ck_cpdams, ck_cpyatf, ck_cpoffs = sfun.f1_c2g(uinp.parameters['i_ck_c2'], uinp.parameters['i_ck_y']
-                                , a_c2_c0, i_g3_inc)
-    cl0_cpsire, cl0_cpdams, cl0_cpyatf, cl0_cpoffs = sfun.f1_c2g(uinp.parameters['i_cl0_c2'], uinp.parameters['i_cl0_y']
-                                , a_c2_c0, i_g3_inc, b1_pos)
-    cl1_cpsire, cl1_cpdams, cl1_cpyatf, cl1_cpoffs = sfun.f1_c2g(uinp.parameters['i_cl1_c2'], uinp.parameters['i_cl1_y']
-                                , a_c2_c0, i_g3_inc, b1_pos)
-    cl_cpsire, cl_cpdams, cl_cpyatf, cl_cpoffs = sfun.f1_c2g(uinp.parameters['i_cl_c2'], uinp.parameters['i_cl_y']
-                                , a_c2_c0, i_g3_inc)
-    cm_cpsire, cm_cpdams, cm_cpyatf, cm_cpoffs = sfun.f1_c2g(uinp.parameters['i_cm_c2'], uinp.parameters['i_cm_y']
-                                , a_c2_c0, i_g3_inc)
-    cn_cpsire, cn_cpdams, cn_cpyatf, cn_cpoffs = sfun.f1_c2g(uinp.parameters['i_cn_c2'], uinp.parameters['i_cn_y']
                                 , a_c2_c0, i_g3_inc)
     cp_cpsire, cp_cpdams, cp_cpyatf, cp_cpoffs = sfun.f1_c2g(uinp.parameters['i_cp_c2'], uinp.parameters['i_cp_y']
                                 , a_c2_c0, i_g3_inc)
-    cr_cpsire, cr_cpdams, cr_cpyatf, cr_cpoffs = sfun.f1_c2g(uinp.parameters['i_cr_c2'], uinp.parameters['i_cr_y']
-                                , a_c2_c0, i_g3_inc)
-    crd_cpsire, crd_cpdams, crd_cpyatf, crd_cpoffs = sfun.f1_c2g(uinp.parameters['i_crd_c2'], uinp.parameters['i_crd_y']
-                                , a_c2_c0, i_g3_inc)
-    cu0_cpsire, cu0_cpdams, cu0_cpyatf, cu0_cpoffs = sfun.f1_c2g(uinp.parameters['i_cu0_c2'], uinp.parameters['i_cu0_y']
-                                , a_c2_c0, i_g3_inc)
-    cu1_cpsire, cu1_cpdams, cu1_cpyatf, cu1_cpoffs = sfun.f1_c2g(uinp.parameters['i_cu1_c2'], uinp.parameters['i_cu1_y']
-                                , a_c2_c0, i_g3_inc)
-    cu2_cc1psire, cu2_cc1pdams, cu2_cc1pyatf, cu2_cc1poffs = sfun.f1_c2g(uinp.parameters['i_cu2_c2'], uinp.parameters['i_cu2_y']
-                                , a_c2_c0, i_g3_inc)
-    cu6_cc1psire, cu6_cc1pdams, cu6_cc1pyatf, cu6_cpoffs = sfun.f1_c2g(uinp.parameters['i_cu6_c2'], uinp.parameters['i_cu6_y']
-                                , a_c2_c0, i_g3_inc)
-    cw_cpsire, cw_cpdams, cw_cpyatf, cw_cpoffs = sfun.f1_c2g(uinp.parameters['i_cw_c2'], uinp.parameters['i_cw_y']
-                                , a_c2_c0, i_g3_inc)
-    cx_cpsire, cx_cpdams, cx_cpyatf, cx_cpoffs = sfun.f1_c2g(uinp.parameters['i_cx_c2'], uinp.parameters['i_cx_y']
-                                , a_c2_c0, i_g3_inc, x_pos)
-    ##Convert the cl0 & cl1 to cb1 (dams and yatf only need cb1, sires and offs don't have b1 axis)
-    cb1_cpdams = (np.take(cl0_cpdams,sinp.stock['a_nfoet_b1'], axis=b1_pos)
-                + np.take(cl1_cpdams,sinp.stock['a_nyatf_b1'], axis=b1_pos))
-    cb1_cpyatf = (np.take(cl0_cpyatf,sinp.stock['a_nfoet_b1'], axis=b1_pos)
-                + np.take(cl1_cpyatf,sinp.stock['a_nyatf_b1'], axis=b1_pos))
-    ###Alter select slices only for yatf (yatf don't have cb0 axis - instead they use cb1 so it aligns with dams)
-    ###The b1 parameters that are relevant to the dams relate to either number of foetus (entered as cl0) or number of yatf (entered as cl1).
-    ### For the yatf the b1 axis also represents their BTRT, therefore some parameters that change due to
-    ### birth type and rear type (BTRT - b0) are needed in the b1 axis for the yatf to estimate values for the yatf
-    ### This can be done because the slices of b0 & b1 (b1 is l0 & l1) do not overlap.
-    slices = [11, 12, 13, 17, 18]    #slices of the parameter that are used in yatf calculations
-    temp = np.moveaxis(cb0_cpyatf[slices, ...], b0_pos, -1)
-    temp = np.take(temp, sinp.stock['ia_b0_b1'], axis=-1)   #expands the b0 axis (in pos -1) to b1 shape
-    cb1_cpyatf[slices, ...] = np.moveaxis(temp, -1, b1_pos)
-
 
     ########################################
     ###create vars with extra period axes  #
@@ -1464,6 +1327,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     a_fvp_pa1e1b1nwzida0e0b0xyg1 = np.apply_along_axis(fun.f_next_prev_association, 0, fvp_start_fa1e1b1nwzida0e0b0xyg1, date_end_p, 1,'right')
     a_fvp_pa1e1b1nwzida0e0b0xyg3 = np.apply_along_axis(fun.f_next_prev_association, 0, fvp_start_fa1e1b1nwzida0e0b0xyg3, offs_date_end_p, 1,'right')
 
+    ##association for the retained t of each g slice
+    a_t_g1 = np.arange(pinp.sheep['i_n_dam_sales'], pinp.sheep['i_n_dam_sales']+len_g1)
+    a_t_tpg1 = fun.f_expand(a_t_g1, p_pos - 2, right_pos=-1)
+    a_t_g3 = np.array([0]) #g axis doesn't affect t for offs
+    a_t_tpg3 = fun.f_expand(a_t_g3, p_pos - 2, right_pos=-1)
 
     ############################
     ### apply associations     #
@@ -1676,6 +1544,148 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                                 , date_start_pa1e1b1nwzida0e0b0xyg - date_mated_pa1e1b1nwzida0e0b0xyg1))
     age_f_end_pa1e1b1nwzida0e0b0xyg1 = np.minimum(fun.f_dynamic_slice(cp_cpdams[1], {y_pos: [0,1]}) - 1
                                                   , date_end_pa1e1b1nwzida0e0b0xyg - date_mated_pa1e1b1nwzida0e0b0xyg1) #open at bottom capped at top, cp -1 so that the period_days formula below is correct when p_date - date_mated is greater than cp (because plus 1)
+
+
+    ############################
+    ### sim param arrays 2      #
+    ############################
+
+
+
+
+    ##convert input params from c to g
+    ###genotype & production params
+    ####Weight
+    srw_female_yg0, srw_female_yg1, srw_female_yg2, srw_female_yg3 = sfun.f1_c2g(uinp.parameters['i_srw_c2']
+                                , uinp.parameters['i_srw_y'], a_c2_c0, i_g3_inc) #srw of a female of the given genotype (this is the definition of the inputs)
+    muscle_target_female_yg0, muscle_target_female_yg1, muscle_target_female_yg2, muscle_target_female_yg3 = sfun.f1_c2g(uinp.parameters['i_muscle_target_c2']
+                                , uinp.parameters['i_muscle_target_y'], a_c2_c0, i_g3_inc)
+    lw_initial_yg0, lw_initial_yg1, lw_initial_yatf, lw_initial_yg3 = sfun.f1_c2g(uinp.parameters['i_lw_initial_c2']
+                                , uinp.parameters['i_lw_initial_y'], a_c2_c0, i_g3_inc)
+    ####Fleece
+    sfd_yg0, sfd_yg1, sfd_yg2, sfd_yg3 = sfun.f1_c2g(uinp.parameters['i_sfd_c2']
+                                , uinp.parameters['i_sfd_y'], a_c2_c0, i_g3_inc)
+    sfw_yg0, sfw_yg1, sfw_yg2, sfw_yg3 = sfun.f1_c2g(uinp.parameters['i_sfw_c2']
+                                , uinp.parameters['i_sfw_y'], a_c2_c0, i_g3_inc)
+    cfw_initial_yg0, cfw_initial_yg1, cfw_initial_yatf, cfw_initial_yg3 = sfun.f1_c2g(uinp.parameters['i_cfw_initial_c2']
+                                , uinp.parameters['i_cfw_initial_y'], a_c2_c0, i_g3_inc)
+    fd_initial_yg0, fd_initial_yg1, fd_initial_yatf, fd_initial_yg3 = sfun.f1_c2g(uinp.parameters['i_fd_initial_c2']
+                                , uinp.parameters['i_fd_initial_y'], a_c2_c0, i_g3_inc)
+    fl_initial_yg0, fl_initial_yg1, fl_initial_yatf, fl_initial_yg3 = sfun.f1_c2g(uinp.parameters['i_fl_initial_c2']
+                                , uinp.parameters['i_fl_initial_y'], a_c2_c0, i_g3_inc)
+    cfw_propn_yg0, cfw_propn_yg1, cfw_propn_yg2, cfw_propn_yg3 = sfun.f1_c2g(uinp.parameters['i_cfw_propn_c2']
+                                , uinp.parameters['i_cfw_propn_y'], a_c2_c0, i_g3_inc)
+    fl_birth_yg0, fl_birth_yg1, fl_birth_yg2, fl_birth_yg3 = sfun.f1_c2g(uinp.parameters['i_fl_birth_c2']
+                                , uinp.parameters['i_fl_birth_y'], a_c2_c0, i_g3_inc)
+    fl_shear_yg0, fl_shear_yg1, fl_shear_yg2, fl_shear_yg3 = sfun.f1_c2g(uinp.parameters['i_fl_shear_c2']
+                                , uinp.parameters['i_fl_shear_y'], a_c2_c0, i_g3_inc)
+    ####Reproduction
+    pss_std_yg0, pss_std_yg1, pss_std_yg2, pss_std_yg3 = sfun.f1_c2g(uinp.parameters['i_lss_std_c2']
+                                , uinp.parameters['i_lss_std_y'], a_c2_c0, i_g3_inc)
+    pstr_std_yg0, pstr_std_yg1, pstr_std_yg2, pstr_std_yg3 = sfun.f1_c2g(uinp.parameters['i_lstr_std_c2']
+                                , uinp.parameters['i_lstr_std_y'], a_c2_c0, i_g3_inc)
+    pstw_std_yg0, pstw_std_yg1, pstw_std_yg2, pstw_std_yg3 = sfun.f1_c2g(uinp.parameters['i_lstw_std_c2']
+                                , uinp.parameters['i_lstw_std_y'], a_c2_c0, i_g3_inc)
+    scan_std_yg0, scan_std_yg1, scan_std_yg2, scan_std_yg3 = sfun.f1_c2g(uinp.parameters['i_scan_std_c2']
+                                , uinp.parameters['i_scan_std_y'], a_c2_c0, i_g3_inc) #scan_std_yg2/3 not used
+    scan_std_doj_yg0, scan_std_doj_yg1, scan_std_doj_yg2, scan_std_doj_yg3 = sfun.f1_c2g(uinp.parameters['i_scan_std_doj_c2']
+                                , uinp.parameters['i_scan_std_doj_y'], a_c2_c0, i_g3_inc)
+    scan_dams_std_yg3 = scan_std_yg1 #offs needs to be the same as dams because scan_std is used to calc starting propn of BTRT which is dependent on dams scanning
+    nlb_yg0, nlb_yg1, nlb_yg2, nlb_yg3 = sfun.f1_c2g(uinp.parameters['i_nlb_c2']
+                                , uinp.parameters['i_nlb_y'], a_c2_c0, i_g3_inc)
+    agedam_propn_da0e0b0xyg0, agedam_propn_da0e0b0xyg1, agedam_propn_da0e0b0xyg2, agedam_propn_da0e0b0xyg3 = \
+        sfun.f1_c2g(uinp.parameters['i_agedam_propn_std_dc2'], uinp.parameters['i_agedam_propn_y'], a_c2_c0, i_g3_inc,
+                    d_pos, condition=mask_o_dams, axis=d_pos) #yatf and off never used
+    agedam_propn_da0e0b0xyg0 = agedam_propn_da0e0b0xyg0 / np.sum(agedam_propn_da0e0b0xyg0, axis=d_pos) #scale unmasked slices to a total of 1
+    agedam_propn_da0e0b0xyg1 = agedam_propn_da0e0b0xyg1 / np.sum(agedam_propn_da0e0b0xyg1, axis=d_pos) #scale unmasked slices to a total of 1
+    agedam_propn_da0e0b0xyg2 = agedam_propn_da0e0b0xyg2 / np.sum(agedam_propn_da0e0b0xyg2, axis=d_pos) #scale unmasked slices to a total of 1
+    agedam_propn_da0e0b0xyg3 = agedam_propn_da0e0b0xyg3 / np.sum(agedam_propn_da0e0b0xyg3, axis=d_pos) #scale unmasked slices to a total of 1
+    # fat_propn_wean_yg0, fat_propn_wean_yg1, fat_propn_wean_yg2, fat_propn_wean_yg3 = sfun.f1_c2g(uinp.parameters['i_fat_propn_wean_c2']
+    #                             , uinp.parameters['i_fat_wean_y'], a_c2_c0, i_g3_inc)
+    # muscle_propn_wean_yg0, muscle_propn_wean_yg1, muscle_propn_wean_yg2, muscle_propn_wean_yg3 = sfun.f1_c2g(uinp.parameters['i_muscle_propn_wean_c2']
+    #                             , uinp.parameters['i_muscle_wean_y'], a_c2_c0, i_g3_inc)
+    # viscera_propn_wean_yg0, viscera_propn_wean_yg1, viscera_propn_wean_yg2, viscera_propn_wean_yg3 = sfun.f1_c2g(uinp.parameters['i_viscera_propn_wean_c2']
+    #                             , uinp.parameters['i_viscera_wean_y'], a_c2_c0, i_g3_inc)
+    fat_propn_birth_yg0, fat_propn_birth_yg1, fat_propn_birth_yg2, fat_propn_birth_yg3 = sfun.f1_c2g(uinp.parameters['i_fat_propn_birth_c2']
+                                , uinp.parameters['i_fat_birth_y'], a_c2_c0, i_g3_inc) #only for yatf
+    muscle_propn_birth_yg0, muscle_propn_birth_yg1, muscle_propn_birth_yg2, muscle_propn_birth_yg3 = sfun.f1_c2g(uinp.parameters['i_muscle_propn_birth_c2']
+                                , uinp.parameters['i_muscle_birth_y'], a_c2_c0, i_g3_inc) #only for yatf
+    viscera_propn_birth_yg0, viscera_propn_birth_yg1, viscera_propn_birth_yg2, viscera_propn_birth_yg3 = sfun.f1_c2g(uinp.parameters['i_viscera_propn_birth_c2']
+                                , uinp.parameters['i_viscera_birth_y'], a_c2_c0, i_g3_inc) #only for yatf
+
+    ###p1 variation params (used for mort)
+    cv_weight_sire, cv_weight_dams, cv_weight_yatf, cv_weight_offs = sfun.f1_c2g(uinp.parameters['i_cv_weight_c2']
+                                , uinp.parameters['i_cv_weight_y'], a_c2_c0, i_g3_inc)
+    cv_bw_sire, cv_bw_dams, cv_bw_yatf, cv_bw_offs = sfun.f1_c2g(uinp.parameters['i_cv_bw_c2']
+                                , uinp.parameters['i_cv_bw_y'], a_c2_c0, i_g3_inc)
+    cv_cs_sire, cv_cs_dams, cv_cs_yatf, cv_cs_offs = sfun.f1_c2g(uinp.parameters['i_cv_cs_c2']
+                                , uinp.parameters['i_cv_cs_y'], a_c2_c0, i_g3_inc)
+    sd_ebg_sire, sd_ebg_dams, sd_ebg_yatf, sd_ebg_offs = sfun.f1_c2g(uinp.parameters['i_sd_ebg_c2']
+                                , uinp.parameters['i_sd_ebg_y'], a_c2_c0, i_g3_inc)
+
+    ###sim params
+    #todo the uinp pos parameters are no longer used. The should be removed from unip spreadsheet.
+    ca_cpsire, ca_cpdams, ca_cpyatf, ca_cpoffs = sfun.f1_c2g(uinp.parameters['i_ca_c2'], uinp.parameters['i_ca_y']
+                                , a_c2_c0, i_g3_inc)
+    cb0_cpsire, cb0_cpdams, cb0_cpyatf, cb0_cpoffs = sfun.f1_c2g(uinp.parameters['i_cb0_c2'], uinp.parameters['i_cb0_y']
+                                , a_c2_c0, i_g3_inc, b0_pos)
+    #### cc_cpyatf needs an active p axis to represent parameter change when age < 30 days.
+    cc_cpsire, cc_cpdams, cc_cpyatf, cc_cpoffs = sfun.f1_c2g(uinp.parameters['i_cc_c2'], uinp.parameters['i_cc_y']
+                                , a_c2_c0, i_g3_inc)
+    cd_cpsire, cd_cpdams, cd_cpyatf, cd_cpoffs = sfun.f1_c2g(uinp.parameters['i_cd_c2'], uinp.parameters['i_cd_y']
+                                , a_c2_c0, i_g3_inc)
+    ce_cpoffs = sfun.f1_c2g(uinp.parameters['i_ce_c2'], uinp.parameters['i_ce_y']
+                                , a_c2_c0, i_g3_inc, d_pos, condition=mask_d_offs, axis=d_pos)[3]  #re calc offs using off d mask
+    cg_cpsire, cg_cpdams, cg_cpyatf, cg_cpoffs = sfun.f1_c2g(uinp.parameters['i_cg_c2'], uinp.parameters['i_cg_y']
+                                , a_c2_c0, i_g3_inc)
+    ch_cpsire, ch_cpdams, ch_cpyatf, ch_cpoffs = sfun.f1_c2g(uinp.parameters['i_ch_c2'], uinp.parameters['i_ch_y']
+                                , a_c2_c0, i_g3_inc)
+    ci_cpsire, ci_cpdams, ci_cpyatf, ci_cpoffs = sfun.f1_c2g(uinp.parameters['i_ci_c2'], uinp.parameters['i_ci_y']
+                                , a_c2_c0, i_g3_inc)
+    ck_cpsire, ck_cpdams, ck_cpyatf, ck_cpoffs = sfun.f1_c2g(uinp.parameters['i_ck_c2'], uinp.parameters['i_ck_y']
+                                , a_c2_c0, i_g3_inc)
+    cl0_cpsire, cl0_cpdams, cl0_cpyatf, cl0_cpoffs = sfun.f1_c2g(uinp.parameters['i_cl0_c2'], uinp.parameters['i_cl0_y']
+                                , a_c2_c0, i_g3_inc, b1_pos)
+    cl1_cpsire, cl1_cpdams, cl1_cpyatf, cl1_cpoffs = sfun.f1_c2g(uinp.parameters['i_cl1_c2'], uinp.parameters['i_cl1_y']
+                                , a_c2_c0, i_g3_inc, b1_pos)
+    cl_cpsire, cl_cpdams, cl_cpyatf, cl_cpoffs = sfun.f1_c2g(uinp.parameters['i_cl_c2'], uinp.parameters['i_cl_y']
+                                , a_c2_c0, i_g3_inc)
+    cm_cpsire, cm_cpdams, cm_cpyatf, cm_cpoffs = sfun.f1_c2g(uinp.parameters['i_cm_c2'], uinp.parameters['i_cm_y']
+                                , a_c2_c0, i_g3_inc)
+    cn_cpsire, cn_cpdams, cn_cpyatf, cn_cpoffs = sfun.f1_c2g(uinp.parameters['i_cn_c2'], uinp.parameters['i_cn_y']
+                                , a_c2_c0, i_g3_inc)
+    cr_cpsire, cr_cpdams, cr_cpyatf, cr_cpoffs = sfun.f1_c2g(uinp.parameters['i_cr_c2'], uinp.parameters['i_cr_y']
+                                , a_c2_c0, i_g3_inc)
+    crd_cpsire, crd_cpdams, crd_cpyatf, crd_cpoffs = sfun.f1_c2g(uinp.parameters['i_crd_c2'], uinp.parameters['i_crd_y']
+                                , a_c2_c0, i_g3_inc)
+    cu0_cpsire, cu0_cpdams, cu0_cpyatf, cu0_cpoffs = sfun.f1_c2g(uinp.parameters['i_cu0_c2'], uinp.parameters['i_cu0_y']
+                                , a_c2_c0, i_g3_inc)
+    cu1_cpsire, cu1_cpdams, cu1_cpyatf, cu1_cpoffs = sfun.f1_c2g(uinp.parameters['i_cu1_c2'], uinp.parameters['i_cu1_y']
+                                , a_c2_c0, i_g3_inc)
+    cu2_cc1psire, cu2_cc1pdams, cu2_cc1pyatf, cu2_cc1poffs = sfun.f1_c2g(uinp.parameters['i_cu2_c2'], uinp.parameters['i_cu2_y']
+                                , a_c2_c0, i_g3_inc)
+    cu6_cc1psire, cu6_cc1pdams, cu6_cc1pyatf, cu6_cpoffs = sfun.f1_c2g(uinp.parameters['i_cu6_c2'], uinp.parameters['i_cu6_y']
+                                , a_c2_c0, i_g3_inc)
+    cw_cpsire, cw_cpdams, cw_cpyatf, cw_cpoffs = sfun.f1_c2g(uinp.parameters['i_cw_c2'], uinp.parameters['i_cw_y']
+                                , a_c2_c0, i_g3_inc)
+    cx_cpsire, cx_cpdams, cx_cpyatf, cx_cpoffs = sfun.f1_c2g(uinp.parameters['i_cx_c2'], uinp.parameters['i_cx_y']
+                                , a_c2_c0, i_g3_inc, x_pos)
+    ##Convert the cl0 & cl1 to cb1 (dams and yatf only need cb1, sires and offs don't have b1 axis)
+    cb1_cpdams = (np.take(cl0_cpdams,sinp.stock['a_nfoet_b1'], axis=b1_pos)
+                + np.take(cl1_cpdams,sinp.stock['a_nyatf_b1'], axis=b1_pos))
+    cb1_cpyatf = (np.take(cl0_cpyatf,sinp.stock['a_nfoet_b1'], axis=b1_pos)
+                + np.take(cl1_cpyatf,sinp.stock['a_nyatf_b1'], axis=b1_pos))
+    ###Alter select slices only for yatf (yatf don't have cb0 axis - instead they use cb1 so it aligns with dams)
+    ###The b1 parameters that are relevant to the dams relate to either number of foetus (entered as cl0) or number of yatf (entered as cl1).
+    ### For the yatf the b1 axis also represents their BTRT, therefore some parameters that change due to
+    ### birth type and rear type (BTRT - b0) are needed in the b1 axis for the yatf to estimate values for the yatf
+    ### This can be done because the slices of b0 & b1 (b1 is l0 & l1) do not overlap.
+    slices = [11, 12, 13, 17, 18]    #slices of the parameter that are used in yatf calculations
+    temp = np.moveaxis(cb0_cpyatf[slices, ...], b0_pos, -1)
+    temp = np.take(temp, sinp.stock['ia_b0_b1'], axis=-1)   #expands the b0 axis (in pos -1) to b1 shape
+    cb1_cpyatf[slices, ...] = np.moveaxis(temp, -1, b1_pos)
+
+
 
 
     #########################################################
