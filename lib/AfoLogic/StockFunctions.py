@@ -2629,11 +2629,11 @@ def f_ws_adjust(relative_ws_c, numbers_b1, dse_per_hd, nfoet_b1, scan, propn_car
     rank_b1 = np.max(rank_b1, axis=b1_pos, keepdims=True) - rank_b1  # rank 0 is the highest priority
     dse_b1 = np.sum(numbers_b1, axis=e1_pos, keepdims=True) * dse_per_hd
     propn_total_dse_b1 = fun.f_divide(dse_b1, np.sum(dse_b1, axis=b1_pos, keepdims=True))
-    indx_rank = fun.f_expand(np.arange(np.max(rank_b1) + 1), -len(dse_b1.shape)-1)
-    propn_total_dse_ranked_rb1 = propn_total_dse_b1 * (rank_b1 == indx_rank)
+    indx_rank_rtpg = fun.f_expand(np.arange(np.max(rank_b1) + 1), e1_pos-4)
+    propn_total_dse_ranked_rb1 = propn_total_dse_b1 * (rank_b1 == indx_rank_rtpg)
 
     shelter_rank_c = np.argsort(relative_ws_c)  # ranking of the c slices based on the ws
-    section_allocation_ctab1g = np.zeros((len(shelter_rank_c),) + propn_total_dse_ranked_rb1.shape[1:])
+    section_allocation_ctpab1g = np.zeros((len(shelter_rank_c),) + propn_total_dse_ranked_rb1.shape[1:])
 
     # Loop over each shelter.
     for c_rank in shelter_rank_c:
@@ -2647,7 +2647,7 @@ def f_ws_adjust(relative_ws_c, numbers_b1, dse_per_hd, nfoet_b1, scan, propn_car
 
             # Calculate how much has already been allocated for these sheep types.
             # If multiple b1 slices are active, they have the same allocation. Therefore, take average of b1 for included slices.
-            currently_allocated = fun.f_weighted_average(np.sum(section_allocation_ctab1g, axis=0), weights=t_propn_total_dse_b1 > 0, axis=b1_pos, keepdims=True)
+            currently_allocated = fun.f_weighted_average(np.sum(section_allocation_ctpab1g, axis=0), weights=t_propn_total_dse_b1 > 0, axis=b1_pos, keepdims=True)
 
             # Calculate the new allocation:
             # The allocation is the minimum between what remains to be allocated (1 - currently_allocated)
@@ -2658,16 +2658,16 @@ def f_ws_adjust(relative_ws_c, numbers_b1, dse_per_hd, nfoet_b1, scan, propn_car
 
             # Update the allocation for the current section (c_rank) and for the active sheep types.
             t_new_alloc = np.broadcast_to(new_alloc, t_propn_total_dse_b1.shape)
-            section_allocation_ctab1g[c_rank, t_propn_total_dse_b1 > 0, ...] = t_new_alloc[t_propn_total_dse_b1 > 0]
+            section_allocation_ctpab1g[c_rank, t_propn_total_dse_b1 > 0, ...] = t_new_alloc[t_propn_total_dse_b1 > 0]
 
             # Reduce the available carrying capacity by the amount allocated (weighted by the sheep proportion).
             propn_carry_capacity = propn_carry_capacity - np.sum(t_propn_total_dse_b1, axis=b1_pos, keepdims=True) * new_alloc
 
     # return the ave windspeed for each class of stock
-    relative_ws_c = fun.f_expand(relative_ws_c, -len(section_allocation_ctab1g.shape))
-    relative_ws_tab1g = np.sum(relative_ws_c * section_allocation_ctab1g, axis=0)
-    relative_ws_tab1g[np.sum(section_allocation_ctab1g, axis=0)==0] = 1 #animals that aren't allocated (ie with no numbers_start) are allocated to normal paddocks(not that it really matters but looks better when debugging)
-    return relative_ws_tab1g
+    relative_ws_c = fun.f_expand(relative_ws_c, -len(section_allocation_ctpab1g.shape))
+    relative_ws_tpab1g = np.sum(relative_ws_c * section_allocation_ctpab1g, axis=0)
+    relative_ws_tpab1g[np.sum(section_allocation_ctpab1g, axis=0)==0] = 1 #animals that aren't allocated (ie with no numbers_start) are allocated to normal paddocks(not that it really matters but looks better when debugging)
+    return relative_ws_tpab1g
 
 
 ##################
@@ -3125,7 +3125,7 @@ def f1_period_start_prod2(pointers, index_unique_w, var, numbers, p_pos, w_pos, 
     ##b)if generating with t axis reset the sale slices to the retained slice at the start of each dvp
     if np.any(period_is_startdvp) and len_gen_t > 1:
         a_t_g = np.broadcast_to(a_t_g, var_start.shape)
-        temporary = np.take_along_axis(var_start, a_t_g, axis=p_pos)  # t is in the p pos
+        temporary = np.take_along_axis(var_start, a_t_g, axis=p_pos-1)
         var_start = fun.f_update(var_start, temporary, period_is_startdvp)
 
 
@@ -3563,7 +3563,7 @@ def f1_period_start_nums(numbers, prejoin_tup, z_pos, period_is_startseason, sea
     #a)if generating with t axis reset the sale slices to the retained slice at the start of each dvp
     if np.any(period_is_startdvp) and len_gen_t>1:
         a_t_g = np.broadcast_to(a_t_g, numbers.shape)
-        temporary = np.take_along_axis(numbers, a_t_g, axis=sinp.stock['i_p_pos']) #t is in the p pos
+        temporary = np.take_along_axis(numbers, a_t_g, axis=sinp.stock['i_p_pos']-1)
         numbers = fun.f_update(numbers, temporary, period_is_startdvp)
 
     ##b) reallocate for season type
