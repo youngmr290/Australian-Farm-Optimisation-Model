@@ -1487,7 +1487,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     #######################
 
     ## date mated (average date that the dams conceive in this cycle)
-    date_mated_pa1e1b1nwzida0e0b0xyg1 = date_born2_pa1e1b1nwzida0e0b0xyg2 - fun.f_dynamic_slice(cp_cpdams[1], {y_pos: [0,1]}) #use dateborn2 so it increments at prejoining
+    date_mated_pa1e1b1nwzida0e0b0xyg1 = date_born2_pa1e1b1nwzida0e0b0xyg2 - cp_cpdams[1,...,0:1,:] #use dateborn2 so it increments at prejoining & take slice 0 from y-axis because cp1 is not affected by genetic merit
     ##day90 after mating (for use in the LTW calculations)
     date_d90_pa1e1b1nwzida0e0b0xyg1 = date_mated_pa1e1b1nwzida0e0b0xyg1 + np.array([90])
     ##pre-lambing assessment in MU trials (135 days after mating (for use in the LTW calculations))
@@ -1540,9 +1540,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     #todo will need fixing when adding cattle
     age_f_start_open_pa1e1b1nwzida0e0b0xyg1 = date_start_pa1e1b1nwzida0e0b0xyg - date_mated_pa1e1b1nwzida0e0b0xyg1
     age_f_start_pa1e1b1nwzida0e0b0xyg1 = np.maximum(np.array([0])
-                                            , np.minimum(fun.f_dynamic_slice(cp_cpdams[1], {y_pos: [0,1]})
+                                            , np.minimum(cp_cpdams[1,...,0:1,:] #take slice 0 from y-axis because cp1 is not affected by genetic merit
                                                 , date_start_pa1e1b1nwzida0e0b0xyg - date_mated_pa1e1b1nwzida0e0b0xyg1))
-    age_f_end_pa1e1b1nwzida0e0b0xyg1 = np.minimum(fun.f_dynamic_slice(cp_cpdams[1], {y_pos: [0,1]}) - 1
+    age_f_end_pa1e1b1nwzida0e0b0xyg1 = np.minimum(cp_cpdams[1,...,0:1,:] - 1   #take slice 0 from y-axis because cp1 is not affected by genetic merit
                                                   , date_end_pa1e1b1nwzida0e0b0xyg - date_mated_pa1e1b1nwzida0e0b0xyg1) #open at bottom capped at top, cp -1 so that the period_days formula below is correct when p_date - date_mated is greater than cp (because plus 1)
 
 
@@ -2114,7 +2114,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     age_y_adj_weights_pa1e1b1nwzida0e0b0xyg1p0 = age_y_adj_pa1e1b1nwzida0e0b0xyg1p0 > 0  #no max cap (ie represents age young would be if never weaned off mum)
     ##Foetal age relative to parturition (based on gestation length of the first genotype) with p0 axis
     #todo this will need fixing when cattle added that have different gestation length
-    relage_f_pa1e1b1nwzida0e0b0xyg1p0 = np.maximum(0,age_f_p0_pa1e1b1nwzida0e0b0xyg1p0 / fun.f_dynamic_slice(cp_cpdams[1], {y_pos: [0,1]})[na])
+    relage_f_pa1e1b1nwzida0e0b0xyg1p0 = np.maximum(0,age_f_p0_pa1e1b1nwzida0e0b0xyg1p0 / cp_cpdams[1,...,0:1,:, na])  #take slice 0 from y-axis because cp1 is not affected by genetic merit
     ##Age of lamb relative to peak intake-with minor function
     pimi_pa1e1b1nwzida0e0b0xyg1p0 = age_y_adj_pa1e1b1nwzida0e0b0xyg1p0 / ci_cpdams[8, ..., na]
     ##Age of lamb relative to peak lactation-with minor axis
@@ -2298,7 +2298,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     #                                       * (1 - relage_f_pa1e1b1nwzida0e0b0xyg1p0))))
     #                                               , weights=age_f_p0_weights_pa1e1b1nwzida0e0b0xyg1p0, axis = -1)
     ##Conceptus energy pattern (d_nec). Average for the days that the dam is gestating
-    dce_age_f_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(cp_cpdams[9, ..., na] * cp_cpdams[10, ..., na] / cp_cpdams[1, ..., 0, :, na]
+    dce_age_f_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(cp_cpdams[9, ..., na] * cp_cpdams[10, ..., na] / cp_cpdams[1, ..., 0, :, na] #take slice 0 from y-axis because cp1 is not affected by genetic merit
                                             * np.exp(cp_cpdams[10, ..., na] * (1 - relage_f_pa1e1b1nwzida0e0b0xyg1p0)
                                             + cp_cpdams[9, ..., na] * (1 - np.exp(cp_cpdams[10, ..., na]
                                             * (1 - relage_f_pa1e1b1nwzida0e0b0xyg1p0))))
@@ -2995,8 +2995,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
         numbers_start_offs = numbers_initial_ida0e0b0xyg3
         numbers_at_condense_offs = numbers_initial_ida0e0b0xyg3 #just need a default because this is processed using update function.
         md_solid_offs = np.array([12.0])  # need a start value to convert ebw_initial to ffcfw
-        fs_w_reallocation_ta1e1b1nw8zida0e0b0xyg3s9 = fun.f_expand(a_wstart_w3[:, na] == np.arange(w_start_len3),
-                                                                   w_pos - 1, right_pos=-1, left_pos2=p_pos-2,right_pos2=w_pos - 1) #create default fs allocation - default means 1:1. This gets updated at period_is_condense.
+        fs_w_reallocation_tpa1e1b1nw8zida0e0b0xyg3s9 = fun.f_expand(a_wstart_w3[:, na] == np.arange(w_start_len3),
+                                                                   w_pos - 1, right_pos=-1, left_pos2=p_pos-3,right_pos2=w_pos - 1) #create default fs allocation - default means 1:1. This gets updated at period_is_condense.
 
 
         '''if generating for stubble then overwrite some initial params to align with paddock trial.
@@ -6825,17 +6825,17 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                 pkl_ebw_condensed_offs=pkl_ebw_condensed_offs[0:1,...]
                             pkl_ebw_condensed_offs = fun.f_dynamic_slice(pkl_ebw_condensed_offs, {w_pos: [0, None
                                                             , int(pkl_ebw_condensed_offs.shape[w_pos] / w_start_len3)]})
-                            t_fs_w_reallocation_ta1e1b1nw8zida0e0b0xyg3s9 = sfun.f1_lw_distribution(pkl_ebw_condensed_offs,
+                            t_fs_w_reallocation_tpa1e1b1nw8zida0e0b0xyg3s9 = sfun.f1_lw_distribution(pkl_ebw_condensed_offs,
                                                                                                     ebw_start_offs, #start of next period ie this is condensed ebw
                                                                                                     for_feedsupply=True)
-                            fs_w_reallocation_ta1e1b1nw8zida0e0b0xyg3s9 = fun.f_update(fs_w_reallocation_ta1e1b1nw8zida0e0b0xyg3s9,
-                                                                                       t_fs_w_reallocation_ta1e1b1nw8zida0e0b0xyg3s9,
+                            fs_w_reallocation_tpa1e1b1nw8zida0e0b0xyg3s9 = fun.f_update(fs_w_reallocation_tpa1e1b1nw8zida0e0b0xyg3s9,
+                                                                                       t_fs_w_reallocation_tpa1e1b1nw8zida0e0b0xyg3s9,
                                                                                        period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1:p+2,...,na])
                         ###adjust the fs - evey period
                         ####add start w axis
-                        temp_feedsupplyw_ta1e1b1nwzida0e0b0xyg3s = np.moveaxis(fun.f_split_axis(feedsupplyw_tpa1e1b1nwzida0e0b0xyg3[:, p+1:p+2, ...], w_start_len3, w_pos), w_pos - 1, -1)
-                        fs_w_allocation_s8ta1e1b1nw8zida0e0b0xyg3s9 = np.moveaxis(fun.f_split_axis(fs_w_reallocation_ta1e1b1nw8zida0e0b0xyg3s9, w_start_len3, w_pos - 1), w_pos - 2, 0)
-                        temp_feedsupplyw_s8ta1e1b1nwzida0e0b0xyg3 = np.sum(temp_feedsupplyw_ta1e1b1nwzida0e0b0xyg3s * fs_w_allocation_s8ta1e1b1nw8zida0e0b0xyg3s9, axis=-1)
+                        temp_feedsupplyw_tpa1e1b1nwzida0e0b0xyg3s = np.moveaxis(fun.f_split_axis(feedsupplyw_tpa1e1b1nwzida0e0b0xyg3[:, p+1:p+2, ...], w_start_len3, w_pos), w_pos - 1, -1)
+                        fs_w_allocation_s8tpa1e1b1nw8zida0e0b0xyg3s9 = np.moveaxis(fun.f_split_axis(fs_w_reallocation_tpa1e1b1nw8zida0e0b0xyg3s9, w_start_len3, w_pos - 1), w_pos - 2, 0)
+                        temp_feedsupplyw_s8ta1e1b1nwzida0e0b0xyg3 = np.sum(temp_feedsupplyw_tpa1e1b1nwzida0e0b0xyg3s * fs_w_allocation_s8tpa1e1b1nw8zida0e0b0xyg3s9, axis=-1)
                         ####remove start w axis
                         temp_feedsupplyw_ta1e1b1nwzida0e0b0xyg3 = fun.f_merge_axis(temp_feedsupplyw_s8ta1e1b1nwzida0e0b0xyg3, 0, w_pos)
                         feedsupplyw_tpa1e1b1nwzida0e0b0xyg3[:, p+1:p+2, ...] = temp_feedsupplyw_ta1e1b1nwzida0e0b0xyg3

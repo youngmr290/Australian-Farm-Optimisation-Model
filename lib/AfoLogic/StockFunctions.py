@@ -2248,7 +2248,9 @@ def f_conception_cs(cf, cb1, relsize_mating, rc_mating, cpg_doy, nfoet_b1any, ny
         litter_propn = cp_masked / np.sum(cp_masked, b1_pos, keepdims=True)
         litter_propn = f1_rev_update('litter_size', litter_propn, rev_trait_value)
         ###calculate cp from the REV adjusted litter size. cp will only change from the original value if litter_size REV is active
-        cp[:,:,:,mask,...] = litter_propn * np.sum(cp_masked, b1_pos, keepdims=True)
+        slc = [slice(None)] * cp.ndim
+        slc[b1_pos] = mask
+        cp[tuple(slc)] = litter_propn * np.sum(cp_masked, b1_pos, keepdims=True)
 
         ## Some dams implant (and therefore don't return to service) but don't retain to scanning.
         ###These dams are added to 00 slice (b1[1:2]) so that they are removed from 'available for mating'.
@@ -2915,7 +2917,7 @@ def f_mortality_dam_EL(cu6, cb1, cf_value, lw, lwc, cv_lw, nfoet_b1, days_period
     coeff_shape = np.broadcast_shapes(cu6.shape, cb1.shape[1:])
     coeff_combined = np.broadcast_to(cu6, coeff_shape).copy()
     ###Use fancy indexing to sum the arrays
-    coeff_combined[cu6_slc1, cu6_slices, ...] = cu6[cu6_slc1, cu6_slices, ...] + cb1[cb1_slices, na, na, ...]
+    coeff_combined[cu6_slc1, cu6_slices, ...] = cu6[cu6_slc1, cu6_slices, ...] + cb1[cb1_slices, ...]
     ###The estimate of mortality includes a distribution for both the LW & LW change
     ###Note: Mortality is calculated each loop and only retained if the period is pre-birth
     lw_p1p2 = fun.f_distribution7(lw, cv=cv_lw)[...,na]
@@ -3023,7 +3025,7 @@ def f_mortality_progeny_EL(cu6, cb1, cx, cf_value, lw, lwc, cv_lw, foo, chill_in
     coeff_shape = np.broadcast_shapes(cu6.shape, cb1.shape[1:])
     coeff_combined = np.broadcast_to(cu6, coeff_shape).copy()
     ###Use fancy indexing to sum the arrays
-    coeff_combined[cu6_slc1, cu6_slices, ...] = cu6[cu6_slc1, cu6_slices, ...] + cb1[cb1_slices, na, na, ...]
+    coeff_combined[cu6_slc1, cu6_slices, ...] = cu6[cu6_slc1, cu6_slices, ...] + cb1[cb1_slices, ...]
     ###The estimate of mortality includes a distribution for both the LW & LW change
     ###Note: Mortality is calculated each loop and only retained if the period is pre-birth
     lw_p1p2 = fun.f_distribution7(lw, cv=cv_lw)[...,na]
