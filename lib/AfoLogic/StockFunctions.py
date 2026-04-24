@@ -417,7 +417,7 @@ def f1_btrt0(dstwtr_propn,pss,pstw,pstr): #^this function is inflexible ie if yo
     a_nfoet_b0 = sinp.stock['a_nfoet_b1'][sinp.stock['i_mask_b0_b1']] #create association between l0 and b0
     btrt_b0yg = progeny_numbers_b0yg * dstwtr_propn[a_nfoet_b0]
     ##add singleton x axis
-    btrt_b0xyg = np.expand_dims(btrt_b0yg, axis = tuple(range((uinp.parameters['i_cb0_pos'] + 1), -2))) #note i_cb0_pos refers to b0 position
+    btrt_b0xyg = np.expand_dims(btrt_b0yg, axis = tuple(range((sinp.stock['i_b0_pos'] + 1), -2)))
     ##finally convert proportion from 'per dam' to 'per progeny'
     ###total number of progeny surviving per dam (similar to number of progeny marked)
     progeny_total_xyg = np.sum(btrt_b0xyg, axis=0)
@@ -452,7 +452,7 @@ def f1_btrt1(dstwtr_l0yg,pss,pstw,pstr): #^this function is inflexible ie if you
     ##mul progeny numbers array with birth type proportion to get overall btrt per progeny reared.
     btrt_b1yg = progeny_propn_b1yg * dstwtr_l0yg[sinp.stock['a_nfoet_b1'] ]
     ##add singleton x axis
-    btrt_b1nwzida0e0b0xyg = np.expand_dims(btrt_b1yg, axis = tuple(range((uinp.parameters['i_cl1_pos'] + 1), -2))) #note i_cl1_pos refers to b1 position
+    btrt_b1nwzida0e0b0xyg = np.expand_dims(btrt_b1yg, axis = tuple(range((sinp.stock['i_b1_pos'] + 1), -2)))
     return btrt_b1nwzida0e0b0xyg
 
 def f1_lsln(dstwtr_l0yg,pss,pstw,pstr): #^this function is inflexible ie if you want to add quadruplets
@@ -481,7 +481,7 @@ def f1_lsln(dstwtr_l0yg,pss,pstw,pstr): #^this function is inflexible ie if you 
     ##mul progeny numbers array with birth type proportion to get overall btrt
     lsln_b1yg = dam_numbers_b1yg * dstwtr_l0yg[sinp.stock['a_nfoet_b1'] ]
     ##add singleton x axis
-    lsln_b1nwzida0e0b0xyg = np.expand_dims(lsln_b1yg, axis = tuple(range((uinp.parameters['i_cl1_pos'] + 1), -2))) #note i_cl1_pos refers to b1 position
+    lsln_b1nwzida0e0b0xyg = np.expand_dims(lsln_b1yg, axis = tuple(range((sinp.stock['i_b1_pos'] + 1), -2)))
     return lsln_b1nwzida0e0b0xyg
 
 
@@ -2432,7 +2432,7 @@ def f_conception_mu2(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, doj, d
         ##Store values for the SA
         slc_empty = fun.f_dynamic_slice_idx(cp, {b1_pos: [1]})
         empty = cp[slc_empty].copy()
-        slc_preg = fun.f_dynamic_slice_idx(cp, {b1_pos: [1]})
+        slc_preg = fun.f_dynamic_slice_idx(cp, {b1_pos: [2, None]})
 
         ##Apply litter size sa to adjust the probability of the number of foetuses using logistic function.
         ### Carried out here prior to conception saa so that the proportions are still consistent with the logistic function
@@ -2487,8 +2487,9 @@ def f_conception_mu2(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, doj, d
         litter_propn = f1_rev_update('litter_size', litter_propn, rev_trait_value)
         ###calculate cp from the REV adjusted litter size. cp will only change from the original value if litter_size REV is active
         ###this is more complicated to convert to a function because the _idx function can't handle masks
-        cp_masked = fun.f_dynamic_slice(cp, {b1_pos: mask})
-        cp_masked = litter_propn * np.sum(cp_mask, b1_pos, keepdims=True)
+        slc = [slice(None)] * cp.ndim
+        slc[b1_pos] = mask
+        cp[tuple(slc)] = litter_propn * np.sum(cp_mask, b1_pos, keepdims=True)
 
         ## Some dams implant (and therefore don't return to service) but don't retain to scanning.
         ###These dams are added to 00 slice (b1[1:2]) so that they are removed from 'available for mating'.
