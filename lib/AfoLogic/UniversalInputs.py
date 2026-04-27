@@ -254,8 +254,6 @@ def f_universal_inp_sa(uinp_defaults):
     sheep['i_salep_months_priceadj_s7s9p4'] = fun.f_sa(sheep['i_salep_months_priceadj_s7s9p4'], sen.sav['salep_month_adjust_s7s9p4'], 5)  #Value for the premiums and discounts by month
     sheep['i_salep_price_type_s7'] = fun.f_sa(sheep['i_salep_price_type_s7'], sen.sav['salep_price_type_s7'], 5)
     sheep['ia_s8_s7'] = fun.f_sa(sheep['ia_s8_s7'], sen.sav['salep_score_type_s7'], 5)
-    sheep['i_sale_ffcfw_min'] = fun.f_sa(sheep['i_sale_ffcfw_min'], sen.sav['sale_ffcfw_min'], 5) #Value for min ffcfw for each grid
-    sheep['i_sale_ffcfw_max'] = fun.f_sa(sheep['i_sale_ffcfw_max'], sen.sav['sale_ffcfw_max'], 5) #Value for max ffcfw for each grid
     sheep['i_mobsize_scalar_l0'] = fun.f_sa(sheep['i_mobsize_scalar_l0'], sen.sav['mobsize_scalar_l0'], 5) #Relative mobsize at lambing across the b1 axis
     ###SAM
     sheep['i_husb_operations_contract_cost_h2'] = fun.f_sa(sheep['i_husb_operations_contract_cost_h2'],sen.sam['husb_cost_h2'])

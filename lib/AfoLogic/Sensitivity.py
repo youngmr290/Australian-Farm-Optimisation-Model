@@ -164,8 +164,6 @@ def create_sa():
     sav['manager_cost'] = '-' #SA value for manager cost per year
     sav['permanent_cost'] = '-' #SA value for permanent cost per year
     sav['casual_cost'] = '-' #SA value for casual cost per hour
-    sav['sale_ffcfw_min'] = np.full(len_s7, '-', dtype=object)        #min weight for sale in grid
-    sav['sale_ffcfw_max'] = np.full(len_s7, '-', dtype=object)        #max weight for sale in grid
     ##SAM
     sam['grainp_k'] = np.ones(len_crop_and_sup_k4, dtype='float64')   # SA multiplier for grain prices for each crop
     sam['q_grain_price_scalar_Qk'] = np.ones((len_Q, len_crop_and_sup_k4), dtype='float64')   # SAM for grain price with q axis
@@ -645,6 +643,8 @@ def create_sa():
     sav['bnd_min_sale_age_female_g1'] = np.full(pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #SA to set min age a dam can be sold - BBT offspring can be sold but BBT dams can't (because they are BB)
     sav['bnd_min_sale_age_female_dg3'] = np.full((len_d,) + (len_g3,), '-', dtype=object)   #SA to set min age a female can be sold - used to bound prog & offs
     sav['bnd_max_sale_age_female_g3'] = np.full(pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #SA to set max age wether can be sold
+    sav['bnd_min_sale_ffcfw_g3'] = np.full(pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #SA to set min weight offspring (wethers and females in the g3 activity) can be sold - this doesnt alter the actual grids therefore asset value is still calculated as if there is no bnd (this is good because it removes randomness if examining flk structure)
+    sav['bnd_max_sale_ffcfw_g3'] = np.full(pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #SA to set max weight offspring (wethers and females in the g3 activity) can be sold - this doesnt alter the actual grids therefore asset value is still calculated as if there is no bnd (this is good because it removes randomness if examining flk structure)
     sav['rot_lobound_rl'] = np.full((len_R,) + (len_l,), '-', dtype=object)
     ##SAM
     ##SAP

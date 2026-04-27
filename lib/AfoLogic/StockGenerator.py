@@ -7378,6 +7378,14 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 , np.logical_and(age_start_pa1e1b1nwzida0e0b0xyg3[mask_p_offs_p,...,-1:,:,:,:,:] > min_age_female_sale_da0e0b0xyg3
                                , age_start_pa1e1b1nwzida0e0b0xyg3[mask_p_offs_p,...,0:1,:,:,:,:] < max_age_female_sale_g3)) #min bnd using e[-1] and max using e[0] so we dont end up with one e being sold and the other not.
     period_is_sale_tpa1e1b1nwzida0e0b0xyg3 = np.logical_and(period_is_sale_tpa1e1b1nwzida0e0b0xyg3, off_sale_mask_pa1e1b1nwzida0e0b0xyg3)
+
+    ###bound offspring sale weights
+    min_ffcfw_sale_g3 = fun.f_sa(np.array([0]), sen.sav['bnd_min_sale_ffcfw_g3'][mask_offs_inc_g3], 5)
+    max_ffcfw_sale_g3 = fun.f_sa(np.array([9999]), sen.sav['bnd_max_sale_ffcfw_g3'][mask_offs_inc_g3], 5)
+    offs_sale_mask_pa1e1b1nwzida0e0b0xyg3 = np.logical_and(o_ffcfw_tpoffs[...,0:1:,:,:,:,:] > min_ffcfw_sale_g3,
+                       o_ffcfw_tpoffs[...,0:1,:,:,:,:] < max_ffcfw_sale_g3) #min bnd using e[0] so we dont end up with one e being sold and the other not.
+    period_is_sale_tpa1e1b1nwzida0e0b0xyg3 = np.logical_and(period_is_sale_tpa1e1b1nwzida0e0b0xyg3, offs_sale_mask_pa1e1b1nwzida0e0b0xyg3)
+
     ###shearing - one true per dvp when shearing actually occurs
     ###shearing occurs at main shearing if the animal is on hand or at sale if cfw is above an inputted threshold.
     shearing_mincfw_g3 = pinp.sheep['i_shearing_mincfw_g3'][mask_offs_inc_g3]
