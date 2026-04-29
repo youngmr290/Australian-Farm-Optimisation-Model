@@ -997,6 +997,8 @@ def f_mach_summary(lp_vars, r_vals, option=0):
         rot_area_qs_rzl = rot_area_qszrl_p7.iloc[:,-1].unstack([3,2,4]) # slice p7[-1]
         chem_time_rzl = r_vals['crop']['chem_time_ha_rzl_n'].sum(axis=1)
         fert_time_rzl = r_vals['crop']['fert_time_rzl_n'].sum(axis=1)
+        chem_time_rzl.index = chem_time_rzl.index.set_names(rot_area_qs_rzl.columns.names) # allign level names - Pandas MultiIndex alignment can fail if the level names differ, even when the actual labels match.
+        fert_time_rzl.index = fert_time_rzl.index.set_names(rot_area_qs_rzl.columns.names) # allign level names - Pandas MultiIndex alignment can fail if the level names differ, even when the actual labels match.
         spraying_time_qs_z = rot_area_qs_rzl.mul(chem_time_rzl, axis=1).groupby(axis=1, level=1).sum()  # mul area and sum lmu and rot
         spreading_time_qs_z = rot_area_qs_rzl.mul(fert_time_rzl, axis=1).groupby(axis=1, level=1).sum()  # mul area and sum lmu and rot
 
