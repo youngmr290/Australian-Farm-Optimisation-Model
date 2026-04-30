@@ -3173,17 +3173,18 @@ def f_sheep_summary(lp_vars, r_vals):
     pnl = f_profitloss_table(lp_vars, r_vals, option=2)
     pasture_area_propn = round(f_area_summary(lp_vars, r_vals, option=5)[0], 0) / 100
     wool_income = pnl.loc[('Revenue', 'wool'), 'Full year']
-    sheep_trading_income = (pnl.loc[('Revenue', 'sheep sales'), 'Full year']
-                            - pnl.loc[('Expense', 'stock purchase'), 'Full year'])
+    sheep_trading_income = pnl.loc[('Revenue', 'sheep sales'), 'Full year']
     fixed_cost = pnl.loc[('Expense', 'fixed'), 'Full year'] * pasture_area_propn
     husbandry_cost = pnl.loc[('Expense', 'stock husb and infra'), 'Full year']
     supplement_cost = pnl.loc[('Expense', 'stock sup'), 'Full year']
+    purchase_cost = pnl.loc[('Expense', 'stock purchase'), 'Full year']
     pasture_cost = (pnl.loc[('Expense', 'pasture'), 'Full year']
                     + pnl.loc[('Expense', 'salt land pasture'), 'Full year'])
     machinery_cost = f_sheep_machinery_cost()
     labour_cost = pnl.loc[('Expense', 'labour'), 'Full year'] * pasture_area_propn
     total_income = wool_income + sheep_trading_income
-    total_costs = fixed_cost + husbandry_cost + supplement_cost + pasture_cost + machinery_cost + labour_cost
+    total_costs = (fixed_cost + husbandry_cost + supplement_cost + purchase_cost + pasture_cost
+                   + machinery_cost + labour_cost)
 
     numbers_dams, numbers_wethers_crossys = f_stock_numbers_summary(r_vals)
     female_prog_price, wether_crossy_prog_price = f_sale_price_prog()
@@ -3321,6 +3322,7 @@ def f_sheep_summary(lp_vars, r_vals):
         ('Costs', 'Fixed'),
         ('Costs', 'Husbandry'),
         ('Costs', 'Supplement'),
+        ('Costs', 'Purchases'),
         ('Costs', 'Pasture'),
         ('Costs', 'Machinery'),
         ('Costs', 'Labour'),
@@ -3333,6 +3335,7 @@ def f_sheep_summary(lp_vars, r_vals):
     dollars.loc[('Costs', 'Fixed'), 'Total $'] = fixed_cost
     dollars.loc[('Costs', 'Husbandry'), 'Total $'] = husbandry_cost
     dollars.loc[('Costs', 'Supplement'), 'Total $'] = supplement_cost
+    dollars.loc[('Costs', 'Purchases'), 'Total $'] = purchase_cost
     dollars.loc[('Costs', 'Pasture'), 'Total $'] = pasture_cost
     dollars.loc[('Costs', 'Machinery'), 'Total $'] = machinery_cost
     dollars.loc[('Costs', 'Labour'), 'Total $'] = labour_cost
