@@ -8345,14 +8345,22 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     mask_w8nut_va1e1b1nw8zida0e0b0xyg1 = np.moveaxis(mask_w8nut_va1e1b1nzida0e0b0xyg1w,-1,w_pos) #move w axis to w8 position
     ###Combine the w8vars mask and the user nutrition mask
     mask_w8vars_va1e1b1nw8zida0e0b0xyg1 = mask_w8vars_va1e1b1nw8zida0e0b0xyg1 * mask_w8nut_va1e1b1nw8zida0e0b0xyg1
-    ##Mask numbers provided based on the steps (with a t axis) and the next dvp type (with a t axis) (t0&1 are sold and never transfer so the mask doesn't mean anything for them. for t2 animals always transfer to themselves unless dvpnext is 'condense')
-    dist_occurs_nextdvp_tva1e1b1nwzida0e0b0xyg1 = np.logical_or(dvp_type_next_tva1e1b1nwzida0e0b0xyg1 == prejoin_vtype1
-                                                                , np.logical_and(dvp_type_next_tva1e1b1nwzida0e0b0xyg1 == season_start_vtype1,
-                                                                                 not(bool_steady_state))) #when distribution occurs any w8 can provide w9, no dist required at season start if SE model
+    ##Distribution occurs at the end of the current DVP into the start of the next DVP. Use the period masks as the
+    ##source of truth so genotype transfer is included and no DVP is flagged before animals exist.
+    period_is_lw_dist_tpdams = np.logical_or(
+        np.logical_or(period_is_transfer_tpa1e1b1nwzida0e0b0xyg1, nextperiod_is_condense_pa1e1b1nwzida0e0b0xyg1),
+        np.logical_and(nextperiod_is_startseason_pa1e1b1nwzida0e0b0xyg, not(bool_steady_state))
+    ) * (days_period_pa1e1b1nwzida0e0b0xyg1 > 0)
+    dvp_is_lw_dist_tvdams = sfun.f1_p2v(period_is_lw_dist_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1)
+    dvp_is_lw_dist_tvdams = sfun.f1_p2v_adj(dvp_is_lw_dist_tvdams, a_p_va1e1b1nwzida0e0b0xyg1,
+                                            a_v_pa1e1b1nwzida0e0b0xyg1).astype(bool)
+    ##Mask numbers provided based on the steps (with a t axis) and whether lw distribution occurs in the next DVP.
+    ##t0&1 are sold and never transfer so the mask doesn't mean anything for them. t2 animals transfer to themselves
+    ##unless distribution occurs.
     ###Mask the provide constraint (w9)
     mask_numbers_provw8w9_tva1e1b1nw8zida0e0b0xyg1w9 = mask_w8vars_va1e1b1nw8zida0e0b0xyg1[...,na] \
-                        * (np.trunc((index_wzida0e0b0xyg1[...,na] * np.logical_not(dist_occurs_nextdvp_tva1e1b1nwzida0e0b0xyg1[...,na])
-                                     + index_w1 * dist_occurs_nextdvp_tva1e1b1nwzida0e0b0xyg1[...,na])
+                        * (np.trunc((index_wzida0e0b0xyg1[...,na] * np.logical_not(dvp_is_lw_dist_tvdams[...,na])
+                                     + index_w1 * dvp_is_lw_dist_tvdams[...,na])
                                     / step_con_prov_tva1e1b1nw8zida0e0b0xyg1w9) == index_w1 / step_con_prov_tva1e1b1nw8zida0e0b0xyg1w9)
     ###Mask numbers required from the previous period (broadcast across t axis) - Note: req does not need a t axis because the destination decision variable don’t change for the transfer
     ###Mask for the require constraint (w9)
@@ -8362,7 +8370,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ###Create a mask for the constraint. This is used in the distribution of w8 to w9
     ### There are only Trues when next dvp is distribution
     mask_dest_tva1e1b1nwzida0e0b0xyg1 = (np.trunc(
-        index_wzida0e0b0xyg1 * dist_occurs_nextdvp_tva1e1b1nwzida0e0b0xyg1 / step_con_prov_tva1e1b1nw8zida0e0b0xyg1w9[
+        index_wzida0e0b0xyg1 * dvp_is_lw_dist_tvdams / step_con_prov_tva1e1b1nw8zida0e0b0xyg1w9[
             ..., 0]) == index_wzida0e0b0xyg1 / step_con_prov_tva1e1b1nw8zida0e0b0xyg1w9[..., 0])
     ####Add the nut mask so that distribution can't occur to a masked w slice.
     mask_dest_tva1e1b1nwzida0e0b0xyg1 = mask_dest_tva1e1b1nwzida0e0b0xyg1 * mask_w8nut_va1e1b1nw8zida0e0b0xyg1
@@ -8440,14 +8448,17 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     mask_w8nut_va1e1b1nwzida0e0b0xyg3 = np.moveaxis(mask_w8nut_va1e1b1nzida0e0b0xyg3w,-1,w_pos) #move w axis to correct w position
     ###Combine the w8vars mask and the user nutrition mask
     mask_w8vars_va1e1b1nw8zida0e0b0xyg3 = mask_w8vars_va1e1b1nw8zida0e0b0xyg3 * mask_w8nut_va1e1b1nwzida0e0b0xyg3
-    ###Mask numbers provided based on the steps (with a t axis) and the next dvp type (with a t axis) (t0&1 are sold and never transfer so the mask doesn't mean anything for them. for t2 animals always transfer to themselves unless dvpnext is 'condense')
-    dist_occurs_nextdvp_va1e1b1nwzida0e0b0xyg3 = np.logical_or(dvp_type_next_va1e1b1nwzida0e0b0xyg3 == condense_vtype3
-                                                               , np.logical_and(dvp_type_next_va1e1b1nwzida0e0b0xyg3 == season_start_vtype3,
-                                                                                not(bool_steady_state))) #when distribution occurs any w8 can provide w9, no dist reguired at season start if SE model
+    ###Offs distribution, also gated by days/period so the p-to-v conversion doesn't flag pre-weaning DVPs.
+    period_is_lw_dist_poffs = np.logical_or(nextperiod_is_condense_pa1e1b1nwzida0e0b0xyg3,
+        np.logical_and(nextperiod_is_startseason_pa1e1b1nwzida0e0b0xyg3, not(bool_steady_state))) * (days_period_cut_pa1e1b1nwzida0e0b0xyg3 > 0)
+    dvp_is_lw_dist_voffs = sfun.f1_p2v(period_is_lw_dist_poffs, a_v_pa1e1b1nwzida0e0b0xyg3)
+    dvp_is_lw_dist_voffs = sfun.f1_p2v_adj(dvp_is_lw_dist_voffs, a_p_va1e1b1nwzida0e0b0xyg3,
+                                            a_v_pa1e1b1nwzida0e0b0xyg3).astype(bool)
+    ###Mask numbers provided based on the steps and whether lw distribution occurs in the next DVP.
     ###Mask the provide constraint (w9)
     mask_numbers_provw8w9_va1e1b1nw8zida0e0b0xyg3w9 = mask_w8vars_va1e1b1nw8zida0e0b0xyg3[...,na] \
-                        * (np.trunc((index_wzida0e0b0xyg3[...,na] * np.logical_not(dist_occurs_nextdvp_va1e1b1nwzida0e0b0xyg3[...,na])
-                                     + index_w3 * dist_occurs_nextdvp_va1e1b1nwzida0e0b0xyg3[...,na])
+                        * (np.trunc((index_wzida0e0b0xyg3[...,na] * np.logical_not(dvp_is_lw_dist_voffs[...,na])
+                                     + index_w3 * dvp_is_lw_dist_voffs[...,na])
                                     / step_con_prov_va1e1b1nw8zida0e0b0xyg3w9) == index_w3 / step_con_prov_va1e1b1nw8zida0e0b0xyg3w9)
     ###Mask numbers required from the previous period (broadcast across t axis) - Note: req does not need a t axis because the destination decision variable don’t change for the transfer
     mask_numbers_reqw8w9_va1e1b1nw8zida0e0b0xyg3w9 = mask_w8vars_va1e1b1nw8zida0e0b0xyg3[...,na] \
@@ -8455,7 +8466,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                            == index_w3 / step_con_req_va1e1b1nw8zida0e0b0xyg3[...,na])
     ###Create a mask for the constraint. This is used in the distribution of w8 to w9
     ### There are only Trues when next dvp is distribution
-    mask_dest_va1e1b1nwzida0e0b0xyg3 = (np.trunc(index_wzida0e0b0xyg3 * dist_occurs_nextdvp_va1e1b1nwzida0e0b0xyg3
+    mask_dest_va1e1b1nwzida0e0b0xyg3 = (np.trunc(index_wzida0e0b0xyg3 * dvp_is_lw_dist_voffs
                                                 / step_con_prov_va1e1b1nw8zida0e0b0xyg3w9[...,0])
                                        == index_wzida0e0b0xyg3 / step_con_prov_va1e1b1nw8zida0e0b0xyg3w9[...,0])
     ####Add the nut mask so that distribution can't occur to a masked w slice.
@@ -8620,26 +8631,13 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     lwdist_start = time.time()
 
 
-    ##distribution occurs at priojoin/transfer (transfer is between genotypes), seasonstart (if DSE) & condensing of w axis.
-    period_is_dist_tpdams = np.logical_or(
-        np.logical_or(period_is_transfer_tpa1e1b1nwzida0e0b0xyg1, nextperiod_is_condense_pa1e1b1nwzida0e0b0xyg1),
-        np.logical_and(nextperiod_is_startseason_pa1e1b1nwzida0e0b0xyg, not(bool_steady_state)))
-    dvp_is_dist_tvdams = sfun.f1_p2v(period_is_dist_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_dist_tpdams)  #numbers not required for ffcfw
-    dvp_is_dist_tvdams = sfun.f1_p2v_adj(dvp_is_dist_tvdams, a_p_va1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1)
-
-    period_is_dist_tpoffs = np.logical_or(nextperiod_is_condense_pa1e1b1nwzida0e0b0xyg3,
-        np.logical_and(nextperiod_is_startseason_pa1e1b1nwzida0e0b0xyg3, not(bool_steady_state)))
-    dvp_is_dist_tvoffs = sfun.f1_p2v(period_is_dist_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, period_is_tp=period_is_dist_tpoffs)  #numbers not required for ffcfw
-    dvp_is_dist_tvoffs = sfun.f1_p2v_adj(dvp_is_dist_tvoffs, a_p_va1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3)
-
-
     ## calc the ‘source’ weight of the animal at the end of each period in which they can be transferred
     ###dams - the period is based on period_is_transfer which points at the nextperiod_is_prejoin for the destination g1 slice
-    ebw_source_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(r_ebw_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_dist_tpdams)  #numbers not required for ffcfw
+    ebw_source_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(r_ebw_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_lw_dist_tpdams)  #numbers not required for ffcfw
     ebw_source_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v_adj(ebw_source_tva1e1b1nwzida0e0b0xyg1,
                                                                   a_p_va1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1)
     ###offs
-    ebw_source_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(r_ebw_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, period_is_tp=period_is_dist_tpoffs)  #numbers not required for ffcfw
+    ebw_source_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(r_ebw_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, period_is_tp=period_is_lw_dist_poffs)  #numbers not required for ffcfw
     ebw_source_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v_adj(ebw_source_tva1e1b1nwzida0e0b0xyg3,
                                                            a_p_va1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3)
 
@@ -8648,11 +8646,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ebw_dest_tdams = np.take_along_axis(o_ebw_lw_dist_tpdams, a_g1_tpa1e1b1nwzida0e0b0xyg1, -1)
     ### Convert from p to v.
     #### for dams the period is based on period_is_transfer which points at the nextperiod_is_prejoin for the destination g1 slice
-    ebw_dest_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(ebw_dest_tdams, a_v_pa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_dist_tpdams)  #numbers not required for ffcfw
+    ebw_dest_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(ebw_dest_tdams, a_v_pa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_lw_dist_tpdams)  #numbers not required for ffcfw
     ebw_dest_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v_adj(ebw_dest_tva1e1b1nwzida0e0b0xyg1,
                                                        a_p_va1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1)
     ###offs
-    ebw_dest_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(o_ebw_lw_dist_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, period_is_tp=period_is_dist_tpoffs)  #numbers not required for ffcfw
+    ebw_dest_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(o_ebw_lw_dist_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, period_is_tp=period_is_lw_dist_poffs)  #numbers not required for ffcfw
     ebw_dest_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v_adj(ebw_dest_tva1e1b1nwzida0e0b0xyg3,
                                                        a_p_va1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3)
 
@@ -8660,11 +8658,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ###t0 and t1 are distributed however this is not used because t0 and t1 don't transfer to next dvp
     distribution_tva1e1b1nw8zida0e0b0xyg1w9 = sfun.f1_lw_distribution(
         ebw_dest_tva1e1b1nwzida0e0b0xyg1, ebw_source_tva1e1b1nwzida0e0b0xyg1,
-        mask_dest_tva1e1b1nwzida0e0b0xyg1, index_wzida0e0b0xyg1, dvp_is_dist_tvdams[..., na])
+        mask_dest_tva1e1b1nwzida0e0b0xyg1, index_wzida0e0b0xyg1, dvp_is_lw_dist_tvdams[..., na])
 
     distribution_tva1e1b1nw8zida0e0b0xyg3w9 = sfun.f1_lw_distribution(
         ebw_dest_tva1e1b1nwzida0e0b0xyg3, ebw_source_tva1e1b1nwzida0e0b0xyg3,
-        mask_dest_va1e1b1nwzida0e0b0xyg3[na], index_wzida0e0b0xyg3, dvp_is_dist_tvoffs[..., na])
+        mask_dest_va1e1b1nwzida0e0b0xyg3[na], index_wzida0e0b0xyg3, dvp_is_lw_dist_voffs[..., na])
 
     # ##store cluster associations for use in creating the optimal feedsupply at the end of the trial
     # pkl_fs_info['distribution_condense_tva1e1b1nw8zida0e0b0xyg1w9'] = distribution_condense_tva1e1b1nw8zida0e0b0xyg1w9
