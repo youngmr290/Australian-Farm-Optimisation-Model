@@ -400,7 +400,8 @@ def f_var_reshape(lp_vars, r_vals):
     d_vars['base']['dams_numbers_qsk2tvanwziy1g1'] = dams_numbers_qsk2tvanwziy1g1
     d_vars['qsz_weighted']['dams_numbers_qsk2tvanwziy1g1'] = dams_numbers_qsk2tvanwziy1g1 * prob_qsz[...,na,na,na,na,na,na,:,na,na,na]
     ###prog
-    prog_numbers_qsk3k5twzia0xg2 = f_vars2np(lp_vars, 'v_prog', r_vals['stock']['prog_keys_qsk3k5twzia0xg2']).astype(float)
+    maskz8_zia0xg2 = r_vals['stock']['maskz8_zia0xg2']
+    prog_numbers_qsk3k5twzia0xg2 = f_vars2np(lp_vars, 'v_prog', r_vals['stock']['prog_keys_qsk3k5twzia0xg2'], maskz8_zia0xg2, z_pos=-5).astype(float)
     d_vars['base']['prog_numbers_qsk3k5twzia0xg2'] = prog_numbers_qsk3k5twzia0xg2
     d_vars['qsz_weighted']['prog_numbers_qsk3k5twzia0xg2'] = prog_numbers_qsk3k5twzia0xg2 * prob_qsz[...,na,na,na,na,:,na,na,na,na]
     ###offs

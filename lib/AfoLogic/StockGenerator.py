@@ -10553,6 +10553,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3 = 1 * (np.sum(mask_z8var_va1e1b1nwzida0e0b0xyg3
                                                          * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3),
                                                          axis=d_pos, keepdims=True) > 0)
+    ###prog - v_prog occurs at weaning, so build a z8 report mask from the weaning date.
+    mask_prog_z8var_pa1e1b1nwzida0e0b0xyg2 = zfun.f_season_transfer_mask(date_weaned_i_pa1e1b1nwzida0e0b0xyg1, z_pos=z_pos, mask=True)
     ##store in report dict
     ###keys
     fun.f1_make_r_val(r_vals,keys_a,'keys_a')
@@ -10784,6 +10786,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
 
     ###z8 masks for unclustering lp_vars
     fun.f1_make_r_val(r_vals,mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,:,0,0,:,:,:,:,0,0,0,0,0,:,:],'maskz8_k2tvanwziy1g1') #slice off unused axis
+    fun.f1_make_r_val(r_vals,mask_prog_z8var_pa1e1b1nwzida0e0b0xyg2[0,0,0,0,0,0,:,:,0,:,0,0,:,0,:],'maskz8_zia0xg2')
     fun.f1_make_r_val(r_vals,mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,0,0,0,:,:,:,:,0,:,0,0,:,:,:],'maskz8_k3k5tvnwziaxyg3') #slice off unused axis
 
     ###dse
