@@ -10777,7 +10777,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     fun.f1_make_r_val(r_vals,alloc_p7k2tva1e1b1nwzida0e0b0xyg1,'alloc_p7k2vzig1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1, z_pos, shape=p7k2vzig1_shape)
     ###yatf - needs link between p7 and weaning
     p7k3zg2_shape = len_p7, len_k3, len_z, len_g2
-    fun.f1_make_r_val(r_vals,wean_alloc_p7k3k5tva1e1b1nwzida0e0b0xyg2,'wean_alloc_p7k3zg2', mask_z8var_p7tva1e1b1nwzida0e0b0xyg[:,na,...], z_pos, shape=p7k3zg2_shape)
+    fun.f1_make_r_val(r_vals,wean_alloc_p7k3k5tva1e1b1nwzida0e0b0xyg2,'wean_alloc_p7k3zg2', mask_z8var_p7tva1e1b1nwzida0e0b0xyg[:,na,na,...], z_pos, shape=p7k3zg2_shape)
     ###offs
     p7k3vzixg3_shape = len_p7, len_k3, len_v3, len_z, len_i, len_x, len_g3
     fun.f1_make_r_val(r_vals,alloc_p7k3k5tva1e1b1nwzida0e0b0xyg3,'alloc_p7k3vzixg3', mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3, z_pos, shape=p7k3vzixg3_shape)
