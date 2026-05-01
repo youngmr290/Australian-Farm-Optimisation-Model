@@ -47,7 +47,7 @@ def f_report(processor, trials, non_exist_trials):
     for i, trial_name in enumerate(trials):
         ###run
         if i % frequency == 0:
-            print(f"{time.ctime()} processed trial {i}/{len(trials)-1}: {trial_name}")  #, flush=True)  # \r to overwrite each time and flush to force the print
+            print(f"{time.ctime()} processed trial {i+1}/{len(trials)}: {trial_name}")  #, flush=True)  # \r to overwrite each time and flush to force the print
         lp_vars, r_vals = rfun.load_pkl(trial_name)
         reports = rep.f_run_report(lp_vars,r_vals, report_run, trial_name, user_controls=user_controls)
         ###stack

@@ -216,6 +216,7 @@ def f_concat_reports(stacked_reports, reports, report_run, trial_name):
     if report_run.loc['run_sheep_summary', 'Run']:
         sheep_summary = pd.concat([reports["sheep_summary"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
         stacked_reports["stacked_sheep_summary"] = rfun.f_append_dfs(stacked_reports["stacked_sheep_summary"], sheep_summary)
+        stacked_reports["stacked_sheep_summary"] = f_align_stacked_report_index(stacked_reports["stacked_sheep_summary"])
 
     if report_run.loc['run_emissions', 'Run']:
         grazing = pd.concat([reports["emissions"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
@@ -643,6 +644,27 @@ def f_concat_reports(stacked_reports, reports, report_run, trial_name):
         stacked_reports["stacked_mp"] = rfun.f_append_dfs(stacked_reports["stacked_mp"], mp_report)
 
     return stacked_reports
+
+
+def f_align_stacked_report_index(stacked_report):
+    """Give every trial in a stacked report the same non-Trial row index."""
+    if stacked_report.empty:
+        return stacked_report
+
+    trial_level = 'Trial'
+    if not isinstance(stacked_report.index, pd.MultiIndex) or trial_level not in stacked_report.index.names:
+        return stacked_report
+
+    index_names = stacked_report.index.names
+    trial_level_pos = index_names.index(trial_level)
+    trials = stacked_report.index.get_level_values(trial_level_pos).unique()
+    inner_index = stacked_report.index.droplevel(trial_level_pos).unique()
+    full_index = pd.MultiIndex.from_tuples(
+        [(trial, *inner_row) for trial in trials for inner_row in inner_index],
+        names=index_names,
+    )
+    return stacked_report.reindex(full_index).fillna(0)
+
 
 def f_save_reports(report_run, reports, processor):
     ####################################
