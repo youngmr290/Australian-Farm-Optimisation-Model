@@ -7266,7 +7266,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         return calibration_objective
 
     else:
-        if calibration == {}:   #to access this code define calibration = {} in RunAfoRaw.py
+        if calibration is not None:   #to access this code define calibration = {} in RunAfoRaw.py
             ##print & save the calibration variables when running AFO - used as a record of the calibration.
             calibration_values_p = np.zeros(n_traits)
             i = 0

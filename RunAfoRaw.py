@@ -15,8 +15,7 @@ from lib.RawVersion import SaveOutputs as out
 ##controls #
 ############
 force_run = True #set to True if you want to force all trials to run even if they are up to date.
-solver_method = 'HiGHS'     #options CPLEX, glpk, cbc, ipopt, HiGHS (default)
-solver_method = 'CPLEX'
+solver_method = 'CPLEX'     #options CPLEX, glpk, cbc, ipopt, HiGHS (default)
 print_debug_output = False
 
 ########################################
@@ -37,7 +36,7 @@ run = 0  # counter to work out average time per loop
 for row in dataset:
     ##start timer for each loop
     start_trial_time = time.time()
-    if calibration == None:
+    if calibration is None:
         calibration_row = None
     else:
         calibration[row]={}  #create row key inside calibration dictionary
@@ -76,7 +75,7 @@ for row in dataset:
     run += 1
 
     ##save AFO outputs
-    if calibration == None:
+    if calibration is None:
         out.f_save_trial_outputs(exp_data, row, trial_name, model, profit, trial_infeasible, lp_vars, r_vals, pkl_fs_info, d_rot_info)
 
     ##determine expected time to completion - trials left multiplied by average time per trial &time for current loop
@@ -89,7 +88,7 @@ for row in dataset:
     print(
         f'{trial_description}, Expected finish time: \033[1m{time.ctime(finish_time_expected)}\033[0m (at {time.ctime()})')
 
-if calibration != None:    #this is for saving the calibration trait values for each team. Done as a separate experiment
+if calibration is not None:    #this is for saving the calibration trait values for each team. Done as a separate experiment
     traits_to_save = pd.DataFrame({row: values["output"] for row, values in calibration.items()}).T
     writer = pd.ExcelWriter("Output/TraitValues.xlsx", engine='xlsxwriter')
     traits_to_save.to_excel(writer, sheet_name='Traits', index=True, header=False)
