@@ -640,7 +640,7 @@ def f_con_progR(model):
     a progeny variable before being transferred to either offspring or dam variables (see prog2dams and prog2offs).
 
     '''
-    #todo v_prog requires a y axis
+    #todo v_prog requires a y axis & constraint doesnt need to exist if Z not active at weaning.
     def progR(model, q,s,k3, k5, a, z, i9, x, y1, g1, w9):
         if pe.value(model.p_wyear_inc_qs[q, s]) and any(pe.value(model.p_npw_req[k3, t2, x, g1]) for t2 in model.s_sale_prog):
             return (- sum(model.v_dams[q,s,k5, t1, v1, a, n1, w18, z, i, y1, g1] * model.p_npw[k3, k5, t1, v1, a, n1, w18, z, i, x, y1, g1, w9, i9] #pass in the k5 set to dams - each slice of k5 aligns with a slice in k2 e.g. 11 and 22. we don't need other k2 slices e.g. nm

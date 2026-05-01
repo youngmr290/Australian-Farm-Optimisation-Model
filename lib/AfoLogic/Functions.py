@@ -6,11 +6,15 @@ Functions used across the model (multi module functions). These functions don't 
 """
 import pandas as pd
 import numpy as np
-import pickle as pkl
-from dateutil import relativedelta as rdelta
-import os.path
+# import pickle as pkl
+# from dateutil import relativedelta as rdelta
+# import os.path
 import pyomo.environ as pe
 import copy
+from contextlib import contextmanager
+from typing import Any, Dict
+import inspect as ins
+import os
 
 #this module shouldn't import other AFO modules
 from . import Exceptions as exc #can import exceptions because exceptions imports no modules
@@ -53,7 +57,7 @@ def cartesian_product_simple_transpose(arrays):
 def searchsort_multiple_dim(a, v, axis_a0, axis_v0, axis_a1=None, axis_v1=None, side='left'):
     '''
     Find the indices into a sorted array 'a' such that, if the corresponding elements in 'v' were inserted before the indices, the order of 'a' would be preserved.
-    It does this iteratively down the specified axis (therefore the specified axis must be present in both 'a' and 'v'
+    It does this iteratively down the specified axis (therefore the specified axis must be present in both 'a' and 'v')
 
     Parameters:
         a: 3-D array_like
@@ -476,7 +480,7 @@ def f_update(existing_value, new_value, mask_for_new):
 
 def f_weighted_average(array, weights, axis, keepdims=False, non_zero=False, den_weights=1, den_assoc=None, assoc_axis=0):
     '''
-    Calculates weighted average (similar to np.average however this will handle:
+    Calculates weighted average, similar to np.average, however this will handle:
         if the sum of the weights is 0 (np.average doesn't handle this)
         keeping the axis (using the keepdims argument)
     'non-zero' handles how the average is calculated
@@ -520,6 +524,7 @@ def f_divide(numerator, denominator, dtype='float64', option=0):
     If the denominator = 0 then return value depends on 'option'
      option == 0 then return 0
      option == 1 then return 1 if the numerator is also 0
+     option == 2 then return numerator
 
      option == 1 will also return 1 if both the numerator and denominator are np.inf
 
@@ -707,7 +712,7 @@ def f_clean_dict(d):
         if type(d[k]) is dict:  # check if value is a dict. if so go a level deeper
             f_clean_dict(d[k])
         else:
-            if d[k] == None:
+            if d[k] is None:
                 d[k] = 0
     return d
 
@@ -861,6 +866,7 @@ def f_solve_cubic_for_logistic_multidim(a, b, c, d):
     cut_off01 = np.log(x_roots)   #todo an error here is most likely due to incorrect specification of the b1[24 or 25] parameters in Universal.xlsx or RR == 0 or LS == 1.0
     return cut_off01
 
+
 def f_logistic_integral(x, L, k, x0, offset):
     """
     Indefinite integral of the logistic function:
@@ -888,6 +894,7 @@ def f_logistic_integral(x, L, k, x0, offset):
         Value of the indefinite integral at x (up to a constant).
     """
     return offset*x + (L - offset)/k * np.log(1 + np.exp(k*(x - x0)))
+
 
 def f_combined_integral(x, offset, k, x0, a, mu, sigma, x_anchor):
     """
@@ -950,23 +957,133 @@ def f_combined_integral(x, offset, k, x0, a, mu, sigma, x_anchor):
         tail = 1.0 * (x - x_anchor)
         return head + tail
 
-def f_dynamic_slice(arr, axis, start, stop, step=1, axis2=None, start2=None, stop2=None, step2=1):
+
+def f1_get_caller_info(skip=1, levels=1):
+    """
+    Return information about the caller of the function that called this one.
+
+    Parameters
+    ----------
+    skip : int, default=1
+        - skip=0 → info about f1_get_caller_info itself
+        - skip=1 → info about the function that called f1_get_caller_info (recommended)
+        - skip=2 → one level further up
+    Returns
+    -------
+    If levels == 1:  (filename, lineno)
+    If levels > 1:   list of (filename, lineno) tuples
+    """
+
+    try:
+        stack = ins.stack()
+        results=[]
+
+        for i in range(levels):
+            idx = skip + i
+            if idx >= len(stack):
+                results.append(("unknown_file", 0))
+                continue
+
+            frame_info = stack[idx]
+            short_file = os.path.basename(frame_info.filename or "unknown_file")
+            results.append((short_file, frame_info.lineno))
+
+        return results[0] if levels == 1 else results
+
+    except (IndexError, AttributeError, TypeError):
+        return ("unknown_file", 0) if levels == 1 else [("unknown_file", 0)] * levels
+
+
+def f_dynamic_slice_idx(arr, slice_specs):
+    '''
+    Build the slice index tuple from slice_specs, ignoring any boolean masks.
+    Use for assignment: arr[fun.f_dynamic_slice_idx(arr, specs) = value
+    Note1: boolean masks are not supported for assignment use case.
+    Note2: can't assign to fun.f_dynamic_slice(arr, specs) = value
+
+    See f_dynamic_slice for more description
+
+    :param arr: numpy array to slice
+    :param slice_specs: dict of {axis: args} - see f_dynamic_slice for full description
+    :return: tuple of slices, one per axis
+    '''
     ##check if arr is int - this is the case for the first loop because arr may be initialised as 0
-    if type(arr)==int:
+    if type(arr) == int:
         return arr
-    else:
-        ##first axis slice if it is not singleton
-        if arr.shape[axis]!=1:
-            sl = [slice(None)] * arr.ndim
-            sl[axis] = slice( start, stop, step)
-            arr = arr[tuple(sl)]
-        if axis2 is not None:
-            ##second axis slice if required and not singleton
-            if arr.shape[axis2] != 1:
-                sl = [slice(None)] * arr.ndim
-                sl[axis2] = slice( start2, stop2, step2)
-                arr = arr[tuple(sl)]
+
+    # Build a list of slice(None) — i.e. [:] — for every axis, as the default
+    sl_slices = [slice(None)] * arr.ndim
+
+    for axis, args in slice_specs.items():
+        # Single value → interpret as start, with stop = start + 1 (preserves dimension)
+        # Multi value  → unpack directly into slice(start, stop) or slice(start, stop, step)
+        if arr.shape[axis] == 1:  #don't slice if singleton axis
+            if args[0] != 0 or args[0] != -1:  #don't display warning if taking slice 0 or -1
+                pass
+            else:
+                callers = f1_get_caller_info(skip=1, levels=3)
+                locations = [f"{file}:{line}" for file, line in callers]
+                print(f'*** Warning, Trying to slice a singleton axis ({axis}) '
+                      f'in {" and ".join(locations)}')
+        else:
+            if isinstance(args, np.ndarray) and args.dtype == bool:  # Boolean mask → ignore
+                pass  # masks ignored — only supported in f_dynamic_slice
+            elif isinstance(args, int):  # Int rather than a list can be single position shorthand
+                sl_slices[axis] = slice(args, args + 1)
+            elif len(args) == 1:
+                start = args[0]
+                sl_slices[axis] = slice(start, start + 1)
+            else:
+                sl_slices[axis] = slice(*args)
+
+    return tuple(sl_slices)
+
+
+def f_dynamic_slice(arr, slice_specs):
+    '''
+    Calling this function with both mask array and slice args can cause erratic behaviour and is not recommended
+    Slice a numpy array over multiple axes in a single call.
+    Default values differ from python slicing. A single value is taken as the start and
+    if stop is not specified it is start + 1 (rather than None). Default step is +1
+
+    Example:
+        f_dynamic_slice(arr, {b1_pos: [1, 5], e1_pos: [0]})
+            would return b1: dry, single, twin and triplet and e1: first cycle using slicing.
+        f_dynamic_slice(arr, {x_pos: np.array([False, True, False])})
+            would return second element of x axis using fancy indexing
+
+    :param arr: numpy array to slice
+    :param slice_specs: dict of {axis: args} where args is an int or a list (or tuple) of 1, 2, or 3 values, or boolean mask array
+           - np.ndarray (bool)                 → boolean mask applied along axis (fancy indexing, returns copy)
+           - Single value  [start]             → slice(start, start+1)  e.g. single position, dimension preserved
+           - Two values    [start, stop]       → slice(start, stop)
+           - Three values  [start, stop, step] → slice(start, stop, step)
+       Note: if an axis is passed multiple times in the dictionary, only the last instance is used.
+    :return: sliced only - returns view of arr, masked - returns a copy of arr
+
+    '''
+    ##check if arr is int - this is the case for the first loop because arr may be initialised as 0
+    if type(arr) == int:
         return arr
+
+    # Build and apply slices first via f_dynamic_slice_idx (returns a view, ignoring masks)
+    result = arr[f_dynamic_slice_idx(arr, slice_specs)]
+
+    # Build a list of slice(None) — i.e. [:] — for every axis, as the default
+    sl_masks = [slice(None)] * arr.ndim
+
+    for axis, args in slice_specs.items():
+        # Single value → interpret as start, with stop = start + 1 (preserves dimension)
+        # Multi value  → unpack directly into slice(start, stop) or slice(start, stop, step)
+        if arr.shape[axis] == 1:  #don't mask if singleton axis, warning will show up in f_dynamic_slice_idx()
+            pass
+        else:
+            if isinstance(args, np.ndarray) and args.dtype == bool:  # Boolean mask → apply directly (fancy indexing, reduces axis to number of True values)
+                sl_masks[axis] = args
+
+    result = result[tuple(sl_masks)]
+    return result
+
 
 def f_nD_interp(x, xp, yp, axis):
     '''
@@ -1295,7 +1412,7 @@ def f1_make_pyomo_dict(param, index, loop_axis_pos=None, index_loop_axis_pos=Non
         index_masked = np.array([])
         for i in range(param.shape[loop_axis_pos]):
             ###mask out values=0
-            param_cut = f_dynamic_slice(param, loop_axis_pos, start=i, stop=i+1)
+            param_cut = f_dynamic_slice(param, {loop_axis_pos: [i, i+1]})
             mask = param_cut != 0
             param_masked = np.concatenate([param_masked,param_cut[mask]],0).astype(dtype)  # applying the mask does the raveling and squeezing of singleton axis
             mask = mask.ravel() #needs to be 1d to mask the index
@@ -1323,9 +1440,6 @@ def f1_make_pyomo_dict(param, index, loop_axis_pos=None, index_loop_axis_pos=Non
     ##make index a tuple and zip with param and make dict
     tup = tuple(map(tuple,index_masked))
     return dict(zip(tup, param_masked))
-
-import numpy as np
-na = np.newaxis
 
 
 def build_active_index(
@@ -1738,3 +1852,44 @@ def f1_slices_to_str(array_name, slices):
     parts = [fmt(sl) for sl in slices]
     return f"{array_name}[{','.join(parts)}]"
 
+
+@contextmanager
+def f_increment_variables(modifications: Dict[str,tuple[np.ndarray, Any]]):
+    """
+    Temporarily add values to multiple numpy arrays.
+    Variables are passed in a dictionary so the source variable is updated when this function does an in-place increment
+    This is useful to temporarily modify variable values without modifying all the variable names in the block of code.
+
+    Uses a 'with' block controlled by @contextmanager.
+    This is instead of a function call at the start and end of the block to add and remove the increment
+    After the 'with' block:
+        - the increment is removed
+        - any mutations to variables inside the block (p loop) are preserved,
+          however, mutation of variables inside the block is not recommended.
+
+    Example usage (in sgen):
+        with fun.f_increment_variables(dictionary of tuples that contain the original variable and the increment):
+            # inside this 'with' block, the variables are incremented
+            # and all existing calculations use the original variable names...
+        #Increment is removed and code continues
+    """
+
+    # === Setup: Save originals and apply additions ===
+    for name, (original, increment) in modifications.items():
+        if not isinstance(original, np.ndarray):
+            raise TypeError(f'{name} must be a Numpy arrays')
+
+        # Apply addition in-place to the original variable (broadcasting of 'increment' is allowed)
+        try:
+            original += increment
+        except Exception as e:
+            raise ValueError(f"{name} can't be incremented (shape or dtype issue)") from e
+
+    try:
+        yield  # ← The 'with' block in sgen runs here
+    finally:
+        # === Cleanup: Restore original values ===
+        for name, (original, increment) in modifications.items():
+            # original is a pointer to the variable which includes any mutation in the block
+            # a simple subtraction will only be equaivalent if the mutation was additive
+            original -= increment

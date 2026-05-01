@@ -229,19 +229,19 @@ tree_inputs = {
 
         # crop / pasture production - Parameters represents the relative production by distance from the trees
         "protected_side_production_logistic_params": {
-            "offset": 0.1311,
-            "k": 0.2987,
-            "x0": 3.5821,
-            "a": 0.1098,
-            "mu": 12.4200,
-            "sigma": 2.8331,
+            "offset": 0.5004,
+            "k": 0.3408,
+            "x0": 4.7967,
+            "a": 0.0902,
+            "mu": -74.3956,
+            "sigma": 89.6909,
             "x_anchor": 100
         },
         "nonprotected_side_production_logistic_params": {
             "L": 1.0,
-            "k": 0.4140,
-            "x0": 4.6975,
-            "offset": 0.2699
+            "k": 0.4225,
+            "x0": 4.7694,
+            "offset": 0.5776
         },
 
         # Microclimate - Parameters represents the relative climate by distance from the trees
@@ -281,12 +281,12 @@ tree_inputs = {
     "yr_1_costs": {
         "weed_control": 10.00,  # $/ha
         "fertiliser_base": 0.00,  # $/ha
-        "fertiliser_extra_if_harvested": 82.00,  # $/ha
+        "fertiliser_extra_if_harvested": 0.00,  # $/ha
     },
     "yrs_2_to_100": {
         "weed_control": 0.00,  # $/ha
         "fertiliser_base": 0.00,  # $/ha
-        "fertiliser_extra_if_harvested": 82.00,  # $/ha
+        "fertiliser_extra_if_harvested": 0.00,  # $/ha
     },
 
     ###############
@@ -632,7 +632,7 @@ if __name__ == '__main__':
         "Config 1": np.array([0.24, 0.43, 0.62, 0.81, 1.00, 1.00, 1.00]),
         "Config 2": np.array([0.24, 0.43, 0.62, 0.81, 1.00, 1.00, 1.00]),
         "Config 3": np.array([0.24, 0.43, 0.62, 0.81, 1.00, 1.00, 1.00]),
-        "Config 4": np.array([0.35, 0.52, 0.68, 0.84, 1.00, 1.00, 1.00])
+        "Config 4": np.array([0.62,	0.72, 0.81,	0.91, 1.00, 1.00, 1.00])
     }
 
     # Fit and store results
@@ -655,7 +655,7 @@ if __name__ == '__main__':
         "Config 1": np.array([0.24, 0.43, 0.62, 0.81, 1.00, 1.02, 1.04, 1.04, 1.04, 1.00]),
         "Config 2": np.array([0.24, 0.43, 0.62, 0.81, 1.00, 1.02, 1.04, 1.04, 1.04, 1.00]),
         "Config 3": np.array([0.24, 0.43, 0.62, 0.81, 1.00, 1.02, 1.04, 1.04, 1.04, 1.00]),
-        "Config 4": np.array([0.35, 0.52, 0.68, 0.84, 1.00, 1.02, 1.015, 1.008, 1.008, 1.00])
+        "Config 4": np.array([0.62,	0.72, 0.81,	0.91, 1.00,	1.01, 1.02, 1.02, 1.02, 1.00])
     }
 
     # Fit and store results

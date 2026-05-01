@@ -144,6 +144,8 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         ewe_numbers_summary, wethers_n_crossys_numbers_summary = rfun.f_stock_numbers_summary(r_vals)
         reports["ewe_numbers_summary"] = ewe_numbers_summary
         reports["wethers_n_crossys_numbers_summary"] = wethers_n_crossys_numbers_summary
+    if report_run.loc['run_sheep_summary', 'Run']:
+        reports["sheep_summary"] = rfun.f_sheep_summary(lp_vars, r_vals)
     if report_run.loc['run_emissions', 'Run']:
         option = f_update_default_controls(user_controls, 'emissions', 'option', 1)
         reports["emissions"] = rfun.f_emission_summary(lp_vars, r_vals, option)
@@ -305,7 +307,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         arith = f_update_default_controls(user_controls, 'salevalue_prog', 'arith', 1)
         index = f_update_default_controls(user_controls, 'salevalue_prog', 'index', [6]) #w
         cols = f_update_default_controls(user_controls, 'salevalue_prog', 'cols', [0, 11, 5])    #cashflow period, g2, t
-        axis_slice = f_update_default_controls(user_controls, 'salevalue_prog', 'axis_slice', {})
+        axis_slice = f_update_default_controls(user_controls, 'salevalue_prog', 'axis_slice', {5:[0,1,1]}) #only sale suckers
         reports["salevalue_prog"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
                                                                  na_weights=na_weights, den_weights=den_weights, na_denweights=na_denweights,
                                                                  keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
