@@ -581,7 +581,7 @@ def f_concat_reports(stacked_reports, reports, report_run, trial_name):
         supcon = pd.concat([reports["supcon"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
         stacked_reports["stacked_supcon"] = rfun.f_append_dfs(stacked_reports["stacked_supcon"], supcon)
 
-    if report_run.loc['run_supdsecon', 'Run']:
+    if False:   # report_run.loc['run_supdsecon', 'Run']:   Throwing an error
         supdsecon = pd.concat([reports["supdsecon"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
         stacked_reports["stacked_supdsecon"] = rfun.f_append_dfs(stacked_reports["stacked_supdsecon"], supdsecon)
 
@@ -923,7 +923,7 @@ def f_save_reports(report_run, reports, processor):
         df_settings = rfun.f_df2xl(writer, reports["stacked_poccon"], 'poccon', df_settings, option=xl_display_mode)
     if report_run.loc['run_supcon', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_supcon"], 'supcon', df_settings, option=xl_display_mode)
-    if report_run.loc['run_supdsecon', 'Run']:
+    if False:  # report_run.loc['run_supdsecon', 'Run']:  Throwing an error
         df_settings = rfun.f_df2xl(writer, reports["stacked_supdsecon"], 'supdsecon', df_settings, option=xl_display_mode)
     if report_run.loc['run_stubcon', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_stubcon"], 'stubcon', df_settings, option=xl_display_mode)
