@@ -272,10 +272,11 @@ def f1_RR_propn_logistic(RR_g, cb1, nfoet_b1any, nyatf_b1any, b1_pos, cycles=1):
 
     ## calculate the coefficients of the cubic equation ax3 + bx2 + cx + d = 0
     ### requires some intermediate values y & z calculated from the cut-off coefficients in cb1_cpdams
-    cut1_g = (fun.f_dynamic_slice(cb1, {b1_pos: [2, 3]})
-            - fun.f_dynamic_slice(cb1, {b1_pos: [1, 2]}))
-    cut2_g = (fun.f_dynamic_slice(cb1, {b1_pos: [3, 4]})
-            - fun.f_dynamic_slice(cb1, {b1_pos: [2, 3]}))
+    ###catch cut-off values <0 in case the model inversion selects bad combinations.
+    cut1_g = np.maximum(0, fun.f_dynamic_slice(cb1, {b1_pos: [2, 3]})
+                        - fun.f_dynamic_slice(cb1, {b1_pos: [1, 2]}))
+    cut2_g = np.maximum(0, fun.f_dynamic_slice(cb1, {b1_pos: [3, 4]})
+                        - fun.f_dynamic_slice(cb1, {b1_pos: [2, 3]}))
     ### calculations are done with the exp of the cut-off values
     y = np.exp(cut1_g)
     z = np.exp(cut2_g)
@@ -316,10 +317,11 @@ def f1_LS_propn_logistic(LS_g, cb1, nfoet_b1any, nyatf_b1any, b1_pos, cycles=1):
     ## calculate the coefficients of the cubic equation ax3 + bx2 + cx + d = 0
     ### requires some intermediate values y & z calculated from the cut-off coefficients in cb1_cpdams
     ### requires some intermediate values y & z calculated from the cut-off coefficients in cb1_cpdams
-    cut1_g = (fun.f_dynamic_slice(cb1, {b1_pos: [2, 3]})
-            - fun.f_dynamic_slice(cb1, {b1_pos: [1, 2]}))
-    cut2_g = (fun.f_dynamic_slice(cb1, {b1_pos: [3, 4]})
-            - fun.f_dynamic_slice(cb1, {b1_pos: [2, 3]}))
+    ###catch cut-off values <0 in case the model inversion selects bad combinations.
+    cut1_g = np.maximum(0, fun.f_dynamic_slice(cb1, {b1_pos: [2, 3]})
+                        - fun.f_dynamic_slice(cb1, {b1_pos: [1, 2]}))
+    cut2_g = np.maximum(0, fun.f_dynamic_slice(cb1, {b1_pos: [3, 4]})
+                        - fun.f_dynamic_slice(cb1, {b1_pos: [2, 3]}))
     ### calculations are done with the exp of the cut-off values
     y = np.exp(cut1_g)
     z = np.exp(cut2_g)
@@ -352,10 +354,11 @@ def f1_cp_from_cutoff(cutoff0, cb1, nfoet_b1any, nyatf_b1any, b1_pos, cycles=1):
 
     ## calculate the difference between the cut-off coefficients from cb1_cpdams (remembering the NM slice in cb1)
     ### requires some intermediate values y & z calculated from the cut-off coefficients in cb1_cpdams
-    cut1_g = (fun.f_dynamic_slice(cb1, {b1_pos: [2, 3]})
-            - fun.f_dynamic_slice(cb1, {b1_pos: [1, 2]}))
-    cut2_g = (fun.f_dynamic_slice(cb1, {b1_pos: [3, 4]})
-            - fun.f_dynamic_slice(cb1, {b1_pos: [2, 3]}))
+    ###catch cut-off values <0 in case the model inversion selects bad combinations.
+    cut1_g = np.maximum(0, fun.f_dynamic_slice(cb1, {b1_pos: [2, 3]})
+                        - fun.f_dynamic_slice(cb1, {b1_pos: [1, 2]}))
+    cut2_g = np.maximum(0, fun.f_dynamic_slice(cb1, {b1_pos: [3, 4]})
+                        - fun.f_dynamic_slice(cb1, {b1_pos: [2, 3]}))
 
     ###calculate the cut-off values from the fitted value and the differences
     cutoff1 = cutoff0 + cut1_g
@@ -4894,3 +4897,58 @@ def f1_create_production_param(group, production_vg, a_kcluster_vg_1=1, index_kt
                                   , axis = (sinp.stock['i_d_pos'], sinp.stock['i_b0_pos'], sinp.stock['i_e0_pos']), keepdims=True)
                             , np.sum(numbers_start_vg * (a_kcluster_vg_1 == index_ktvg_1) * (a_kcluster_vg_2 == index_kktvg_2),
                                      axis=(sinp.stock['i_d_pos'], sinp.stock['i_b0_pos'], sinp.stock['i_e0_pos']), keepdims=True), dtype=production_vg.dtype)
+
+def f1_create_pp11_scalar(age_p,age_stages_p11):
+
+def f1_create_pp11_scalar(age_p,age_stage_p11):
+    '''
+    p11 is the age stages for the genetic traits
+    Create a scalar along the p axis that represents the impact of the adjusted coefficient for each age stage.
+    Result has a p axis for generator period and p11 axis for age stage.
+    Values are maximum (1) from 1/4 to 3/4 of this age stage. There is a ramp up from 0 to 1 from 3/4 of previous
+     age stage to 1/4 of this age stage, and ramp down from 3/4 of this age to 1/4 of the following age stage.
+
+    :param age_p: Age in days in each generator period.
+    :param age_stages_p11: Age in days at end of the age stage for the target trait.
+                        (The mid-point of the inputs is taken as the timing for full expression of the trait)
+    :return scalar_pp11: value between 0 and 1 to scale the adjusted coefficient with p11 axis for the generator period.
+    '''
+
+    # calculate the duration and timing required for the age stages
+    start = np.minimum(age_stage_p11, np.roll(age_stage_p11, +1, axis=-1))   #this requires age_stage_p11[0] to be 0 in Structural.xlsx
+    duration = np.maximum(0, age_stage_p11 - start + 1)
+    duration_prev = np.maximum(0, np.roll(duration, +1, axis = -1))
+    duration_next = np.maximum(0, np.roll(duration, -1, axis = -1))
+
+    #Calculate the ramp up from the previous age stage, starting at 0 reaching 1 by first quarter.
+    duration_up = (duration + duration_prev) / 4   #ramp up for last quarter of previous period and first quarter of this period
+    age_1quarter = start + duration / 4
+    days_up = age_1quarter - age_p[..., na]
+    ramp_up = 1 - np.clip(fun.f_divide(days_up, duration_up, option=2) ,0 , 1)
+
+    #Calculate the ramp down from end the third quarter of this age stage, starting at 0 and increasing to 1.
+    duration_down = (duration + duration_next) / 4   #ramp down for last quarter of this period and first quarter of next period
+    age_3quarter = start + duration * 3/4
+    days_down = age_p[..., na] - age_3quarter
+    ramp_down = np.clip(fun.f_divide(days_down, duration_down, option=2), 0, 1)
+
+    scalar_pp11 = ramp_up - ramp_down
+    return scalar_pp11
+
+
+def f1_param_p11_to_p(coeff_adj_p11, scalar_pp11):
+    '''
+    p11 is the age stages for the genetic traits
+    Create a coefficient that varies along the p axis to reflect the desired changes for each age stage.
+    p axis is added if it doesn't exist.
+    Values vary for each age stage and ramp up at the beginning of the age stage and back down at the beginning
+    of the next. The ramping up and down overlaps between age stages i.e. previous age stage is ramping down
+    and this age stage is ramping up.
+
+    :param coeff_adj_p11: Adjustment value (saa) for the coefficient in each age stage (p11)
+    :param scalar_pp11: Scalar in each generator period for ramping up and down of the coefficient in each age stage.
+    :return coeff_adj_p: The adjustment (saa) for the coefficient with p axis reflecting the changes for each age stage. p11 axis collapsed.
+    '''
+
+    coeff_adj_p = np.sum(coeff_adj_p11 * scalar_pp11, axis=-1)
+    return coeff_adj_p
