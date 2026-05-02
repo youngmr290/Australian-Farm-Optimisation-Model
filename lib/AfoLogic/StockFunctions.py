@@ -272,10 +272,11 @@ def f1_RR_propn_logistic(RR_g, cb1, nfoet_b1any, nyatf_b1any, b1_pos, cycles=1):
 
     ## calculate the coefficients of the cubic equation ax3 + bx2 + cx + d = 0
     ### requires some intermediate values y & z calculated from the cut-off coefficients in cb1_cpdams
-    cut1_g = (fun.f_dynamic_slice(cb1, {b1_pos: [2, 3]})
-            - fun.f_dynamic_slice(cb1, {b1_pos: [1, 2]}))
-    cut2_g = (fun.f_dynamic_slice(cb1, {b1_pos: [3, 4]})
-            - fun.f_dynamic_slice(cb1, {b1_pos: [2, 3]}))
+    ###catch cut-off values <0 in case the model inversion selects bad combinations.
+    cut1_g = np.maximum(0, fun.f_dynamic_slice(cb1, {b1_pos: [2, 3]})
+                        - fun.f_dynamic_slice(cb1, {b1_pos: [1, 2]}))
+    cut2_g = np.maximum(0, fun.f_dynamic_slice(cb1, {b1_pos: [3, 4]})
+                        - fun.f_dynamic_slice(cb1, {b1_pos: [2, 3]}))
     ### calculations are done with the exp of the cut-off values
     y = np.exp(cut1_g)
     z = np.exp(cut2_g)
@@ -316,10 +317,11 @@ def f1_LS_propn_logistic(LS_g, cb1, nfoet_b1any, nyatf_b1any, b1_pos, cycles=1):
     ## calculate the coefficients of the cubic equation ax3 + bx2 + cx + d = 0
     ### requires some intermediate values y & z calculated from the cut-off coefficients in cb1_cpdams
     ### requires some intermediate values y & z calculated from the cut-off coefficients in cb1_cpdams
-    cut1_g = (fun.f_dynamic_slice(cb1, {b1_pos: [2, 3]})
-            - fun.f_dynamic_slice(cb1, {b1_pos: [1, 2]}))
-    cut2_g = (fun.f_dynamic_slice(cb1, {b1_pos: [3, 4]})
-            - fun.f_dynamic_slice(cb1, {b1_pos: [2, 3]}))
+    ###catch cut-off values <0 in case the model inversion selects bad combinations.
+    cut1_g = np.maximum(0, fun.f_dynamic_slice(cb1, {b1_pos: [2, 3]})
+                        - fun.f_dynamic_slice(cb1, {b1_pos: [1, 2]}))
+    cut2_g = np.maximum(0, fun.f_dynamic_slice(cb1, {b1_pos: [3, 4]})
+                        - fun.f_dynamic_slice(cb1, {b1_pos: [2, 3]}))
     ### calculations are done with the exp of the cut-off values
     y = np.exp(cut1_g)
     z = np.exp(cut2_g)
@@ -352,10 +354,11 @@ def f1_cp_from_cutoff(cutoff0, cb1, nfoet_b1any, nyatf_b1any, b1_pos, cycles=1):
 
     ## calculate the difference between the cut-off coefficients from cb1_cpdams (remembering the NM slice in cb1)
     ### requires some intermediate values y & z calculated from the cut-off coefficients in cb1_cpdams
-    cut1_g = (fun.f_dynamic_slice(cb1, {b1_pos: [2, 3]})
-            - fun.f_dynamic_slice(cb1, {b1_pos: [1, 2]}))
-    cut2_g = (fun.f_dynamic_slice(cb1, {b1_pos: [3, 4]})
-            - fun.f_dynamic_slice(cb1, {b1_pos: [2, 3]}))
+    ###catch cut-off values <0 in case the model inversion selects bad combinations.
+    cut1_g = np.maximum(0, fun.f_dynamic_slice(cb1, {b1_pos: [2, 3]})
+                        - fun.f_dynamic_slice(cb1, {b1_pos: [1, 2]}))
+    cut2_g = np.maximum(0, fun.f_dynamic_slice(cb1, {b1_pos: [3, 4]})
+                        - fun.f_dynamic_slice(cb1, {b1_pos: [2, 3]}))
 
     ###calculate the cut-off values from the fitted value and the differences
     cutoff1 = cutoff0 + cut1_g
