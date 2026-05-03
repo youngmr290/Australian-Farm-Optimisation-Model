@@ -219,8 +219,8 @@ if __name__=="__main__":
         x_price = np.exp(x_price_blocks / prob_blocks)
         y_price = y_price_blocks / prob_blocks
     elif method==1:
-        w_price = w_price_blocks / prob_blocks #dont need exp() because grain price is not skewed when using moving average.
-        x_price = x_price_blocks / prob_blocks #dont need exp() because grain price is not skewed when using moving average.
+        w_price = w_price_blocks / prob_blocks #don't need exp() because grain price is not skewed when using moving average.
+        x_price = x_price_blocks / prob_blocks #don't need exp() because grain price is not skewed when using moving average.
         y_price = y_price_blocks / prob_blocks
 
     ##convert to c1 by flattening

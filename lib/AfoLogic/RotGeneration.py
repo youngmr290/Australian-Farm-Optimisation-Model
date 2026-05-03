@@ -187,7 +187,7 @@ def f_rot_gen(user_crop_rot=False): #by default it runs the full rotation list
 
         ####add phases with S in yr 3 & 4 so that cont annual pasture can exist (S and A in yr 3 & 4 are the same as
         #### far as production so it doesnt need to exist for all phases but AAAAa is masked out so we need SAAAa).
-        #### all cont pasture phases that dont have S in yr0-3 need to be added with S in yr 3 & 4.
+        #### all cont pasture phases that don't have S in yr0-3 need to be added with S in yr 3 & 4.
         #### posssibly this could be added to generation then use rules to remove unrequired
         cont_annual = np.array([['S', 'A', 'A2', 'A1', 'a']
                                , ['A', 'S', 'A2', 'A1', 'a']
@@ -427,7 +427,7 @@ def f_rot_gen(user_crop_rot=False): #by default it runs the full rotation list
             for i in range(len(hist)):
                 req*=np.isin(rot_phase[i], list(l_hist[i]))  #checks each set in a given rotation for the req part of the equation
                 prov*=np.isin(rot_phase[i+1],list(l_hist[i])) #checks each set in a given rotation for the prov part of the equation
-            if not any(all(hist == h) for h in pnc_hist) or rot_phase[-1]=='a2': #For the error check, ignore pnc histories unless current landuse is a2 - otherwise rotations just provide pnc and we dont catch errors
+            if not any(all(hist == h) for h in pnc_hist) or rot_phase[-1]=='a2': #For the error check, ignore pnc histories unless current landuse is a2 - otherwise rotations just provide pnc and we don't catch errors
                 test+=prov
                 test2+=req
             mps_bool_req.append(req)

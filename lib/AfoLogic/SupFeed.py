@@ -530,7 +530,7 @@ def f1_sup_selectivity():
     Using volume is good because it accounts for the impact of foo and quality on the selectivity e.g. if the
     FOO is low stock won't have to consume as much because the volume is higher.
 
-    This constraint only acts for the green feed periods because we dont want the model to be able to defer pastures
+    This constraint only acts for the green feed periods because we don't want the model to be able to defer pastures
     by feeding supplement to stock that are not in confinement. This is because if there is green feed the sheep will
     eat some green feed even if they are being fed supplement.
 

@@ -404,7 +404,7 @@ def f_sequestration(r_vals, mask_season_p7z):
     
     ##calc average sequestration per year for GHG report
     annual_sequestration_l = np.mean(annual_sequestration_yl, axis=0)
-    co2e_fuel = np.mean(co2e_fuel_y[1:], axis=0) #dont include slice 0 in the average since slice 0 is not a real year. It just exists to account for initial costs etc.
+    co2e_fuel = np.mean(co2e_fuel_y[1:], axis=0) #don't include slice 0 in the average since slice 0 is not a real year. It just exists to account for initial costs etc.
     co2e_sold_l = (annual_sequestration_l - co2e_fuel) * include_carbon_credit
     
     #sequestration income and costs per ha

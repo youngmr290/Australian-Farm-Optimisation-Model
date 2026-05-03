@@ -195,7 +195,7 @@ def f_landuse_sets():
     ##########################################
     landuse['A1']={'a', 'A1'} #annual yr1
     landuse['A2']={'A2', 'A1'} #annual yr2 - A1 and A2 exist so that S can be differentiated from A in those years
-    landuse['A']={'a', 'A', 'A2', 'A1' #this includes A1 because some regions dont have A2 (A2 not required if S and A are not differentiated in yr2)
+    landuse['A']={'a', 'A', 'A2', 'A1' #this includes A1 because some regions don't have A2 (A2 not required if S and A are not differentiated in yr2)
                     , 'S'
                     , 'M'} #annual
     landuse['B']={'B', 'b', 'bd'} #barleys

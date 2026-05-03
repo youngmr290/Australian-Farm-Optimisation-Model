@@ -372,7 +372,7 @@ def f_rot_biomass(for_stub=False, for_insurance=False, r_vals=None):
     keys_q = np.array(['q%s' % i for i in range(len_q)])
     q_crop_yield_scalar_q_k = pd.DataFrame(sen.sam['q_crop_yield_scalar_Qk'][0:len_q, pinp.crop_landuse_mask_k1],
                                             index=keys_q, columns=keys_k)  # have to slice len_q because SAM was initiliased with a big number (because q is unknown because it can be changed by SA)
-    ###mul - bit convoluted because we dont want r and k on different axes because that increase array size a lot.
+    ###mul - bit convoluted because we don't want r and k on different axes because that increase array size a lot.
     biomass_rk_p7zl = biomass_rkl_p7z.unstack(2)
     q_crop_yield_scalar_rkq = q_crop_yield_scalar_q_k.reindex(biomass_rk_p7zl.index, axis=1).fillna(1).unstack()
     biomass_rkq_p7zl = biomass_rk_p7zl.reindex(q_crop_yield_scalar_rkq.index, axis=0)
@@ -700,7 +700,7 @@ def f_fert_cost(r_vals={}, option=1):
     fert_by_soil_nl = fert_by_soil.stack() #read in fert by soil
     fert_rz_nl = base_fert_rz_n.mul(fert_by_soil_nl,axis=1,level=0)
 
-    ##calculate fertiliser on non arable pasture paddocks (non-arable crop paddocks dont get crop (see function docs))
+    ##calculate fertiliser on non arable pasture paddocks (non-arable crop paddocks don't get crop (see function docs))
     nap_fert_rz_nl = fert_rz_nl.mul(nap_fert_scalar_r, axis=0, level=0)
 
     ##account for arable area

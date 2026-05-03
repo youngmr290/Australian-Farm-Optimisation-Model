@@ -93,7 +93,7 @@ def f1_c2g(params_c2, y, a_c2_c0, i_g3_inc, var_pos=None, condition=None, axis=0
     :param y : array - sensitivity array for genetic merit.
     :param a_c2_c0 : association between c2 and c0, i.e. which genotype input (c2) for each sire type (B,M,T)
     :param i_g3_inc : the offspring genotypes that are included in this trial
-    :param var_pos : int - negative position of stock axis (p,a,e,b,n,w,z,i,d,a,e,b,x) when inserted into all axis (dont need to add a position for the param axes or the c2 axis)
+    :param var_pos : int - negative position of stock axis (p,a,e,b,n,w,z,i,d,a,e,b,x) when inserted into all axis (don't need to add a position for the param axes or the c2 axis)
     :param condition : slices to mask in the target axis
     :param axis: the target axis for masking
     :param dtype : A dtype for the return variable
@@ -126,7 +126,7 @@ def f1_c2g(params_c2, y, a_c2_c0, i_g3_inc, var_pos=None, condition=None, axis=0
     y=y[...,uinp.parameters['i_mask_y']]
     params_c0 = np.multiply(params_c0[...,na,:],  y[...,na]) #na here is to account for c0 axis
     ##get axes into correct position
-    if params_c2.ndim==1:     #if only the c2 axis is present than dont need to expand.
+    if params_c2.ndim==1:     #if only the c2 axis is present than don't need to expand.
         extra_axes1 = ()
         extra_axes2 = ()
     elif params_c2.ndim==2:
@@ -4868,7 +4868,8 @@ def f1_lw_distribution(ffcfw_dest_w8g, ffcfw_source_w8g, mask_dest_wg=1, index_w
     return distribution_w8gw9
 
 
-def f1_create_production_param(group, production_vg, a_kcluster_vg_1=1, index_ktvg_1=1, a_kcluster_vg_2=1, index_kktvg_2=1, numbers_start_vg=1, mask_vg=True, pos_offset=0):
+def f1_create_production_param(group, production_vg, a_kcluster_vg_1=1, index_ktvg_1=1, a_kcluster_vg_2=1
+                               , index_kktvg_2=1, numbers_start_vg=1, mask_vg=True, pos_offset=0):
     '''Can convert total production to per animal production including impact of death if numbers have been included.
     Apply the k clustering and collapse the e, b & d axes
     If numbers_start are not included then only applies k clustering - this is usually done if production is already per head'''

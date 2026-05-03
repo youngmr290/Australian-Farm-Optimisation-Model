@@ -144,7 +144,7 @@ def f_germination(i_germination_std_zt, i_germ_scalar_lzt, i_germ_scalar_p6zt, p
     ## add germination on the non-arable area to the first pasture type
     germination_p6lrzt[..., 0] += na_germination_flrz * (1 - arable_l[:,na,na])
 
-    ##check if destocking occurs before the break of season. If so the resown pastures dont get any germination.
+    ##check if destocking occurs before the break of season. If so the resown pastures don't get any germination.
     ###convert destock date from t axis to r axis so that nonarable pasture on resown paddocks doesnt provide foo during the destocked period. r axis is require because nap is allocated to the annual pasture pool but destocking date is related to r.
     i_destock_date_rz = np.sum(i_destock_date_zt*pasture_rt[:,na,:], axis=-1)
     germination_p6lrzt = germination_p6lrzt * (1 - pinp.seeding_freq_r[:,na,na] * (i_destock_date_rz[:,:,na] <= i_break_z[:,na]))

@@ -796,7 +796,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         a_c2_c0 = stubble['a_c2_c0']
         uinp.parameters['i_srw_c2'][...] = stubble['i_srw']
 
-    #only the esential ones used to calc initial stuff. The rest are below so they can be adjusted using age stage SAs
+    #only the essential ones used to calc initial stuff. The rest are below so they can be adjusted using age stage SAs
     ce_cpsire, ce_cpdams, ce_cpyatf, ce_cpoffs = sfun.f1_c2g(uinp.parameters['i_ce_c2'], uinp.parameters['i_ce_y']
                                 , a_c2_c0, i_g3_inc, d_pos, condition=mask_o_dams, axis=d_pos)
     cf_cpsire, cf_cpdams, cf_cpyatf, cf_cpoffs = sfun.f1_c2g(uinp.parameters['i_cf_c2'], uinp.parameters['i_cf_y']
@@ -1682,9 +1682,6 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     ############################
     ### sim param arrays 2      #
     ############################
-
-
-
 
     ##convert input params from c to g
     ###genotype & production params
@@ -2650,7 +2647,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                           date_start_pa1e1b1nwzida0e0b0xyg, date_prebirth_pa1e1b1nwzida0e0b0xyg1, date_end_pa1e1b1nwzida0e0b0xyg)
 
     ##dvp
-    if stubble: #if generating for stubble then dvps dont matter and we dont want to trigger condensing/collapsing axes
+    if stubble: #if generating for stubble then dvps don't matter and we don't want to trigger condensing/collapsing axes
         period_is_startdvp_pa1e1b1nwzida0e0b0xyg1 = np.full_like(date_start_pa1e1b1nwzida0e0b0xyg, False)
         period_is_startdvp_pa1e1b1nwzida0e0b0xyg3 = np.full_like(date_start_pa1e1b1nwzida0e0b0xyg, False)[mask_p_offs_p]
         period_is_condense_pa1e1b1nwzida0e0b0xyg1[...] = False
@@ -6446,7 +6443,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                         index_unique_w_sire = np.array([np.nan]) #empty array so f_start_prod still works in the early periods.
 
                 ###dams & yatf
-                #yaft dont need their own pointer they use dams since they never exist as a seperate variable. Thus also no lw distribution required.
+                #yaft don't need their own pointer they use dams since they never exist as a seperate variable. Thus also no lw distribution required.
                 if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
 
 
@@ -7103,7 +7100,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         ### Index the now singleton t axis to remove
         sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3 = t3_sfw_ltwadj_t1pa1e1b1nwzida0e0b0xyg3[0]
         sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3 = t3_sfd_ltwadj_t1pa1e1b1nwzida0e0b0xyg3[0]
-        ### no active w so dont need to adjust like for dams above.
+        ### no active w so don't need to adjust like for dams above.
 
         ##This is the end of the LTW loop
 
@@ -7672,7 +7669,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     ####association between dvp and shearing - this is required because in the last dvp that the animal exist (ie when the generator ends) the sheep did not exist at shearing.
     ##the main practical difference between the prev & next association is for the DVP prior to the first shearing opportunity
     a_prev_s_va1e1b1nwzida0e0b0xyg3 = np.take_along_axis(a_prev_s_pa1e1b1nwzida0e0b0xyg3, a_p_va1e1b1nwzida0e0b0xyg3, axis=0)   #used for masking
-    a_next_s_va1e1b1nwzida0e0b0xyg3 = np.take_along_axis(a_next_s_pa1e1b1nwzida0e0b0xyg3, a_p_va1e1b1nwzida0e0b0xyg3, axis=0)   # used for bounds #todo error in the final DVP which points to the previous opportunity (MRY 18/12/23: i dont think that is an error I think that is what we want)
+    a_next_s_va1e1b1nwzida0e0b0xyg3 = np.take_along_axis(a_next_s_pa1e1b1nwzida0e0b0xyg3, a_p_va1e1b1nwzida0e0b0xyg3, axis=0)   # used for bounds #todo error in the final DVP which points to the previous opportunity (MRY 18/12/23: i don't think that is an error I think that is what we want)
     a_sw_pa1e1b1nwzida0e0b0xyg3 = np.apply_along_axis(fun.f_next_prev_association,0, date_wean_shearing_sa1e1b1nwzida0e0b0xyg3
                                                       , offs_date_end_p, 1, 'right')  #shearing opp with weaning included.
     ###cluster
@@ -7803,7 +7800,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     max_age_wether_sale_g3 = fun.f_sa(np.array([sim_years*364]), sen.sav['bnd_max_sale_age_wether_g3'][mask_offs_inc_g3], 5)
     wether_sale_mask_pa1e1b1nwzida0e0b0xyg3 = np.logical_or((gender_xyg[mask_x] != 2),
         np.logical_and(age_start_pa1e1b1nwzida0e0b0xyg3[mask_p_offs_p,...,-1:,:,:,:,:] > min_age_wether_sale_g3,
-                       age_start_pa1e1b1nwzida0e0b0xyg3[mask_p_offs_p,...,0:1,:,:,:,:] < max_age_wether_sale_g3)) #min bnd using e[-1] and max using e[0] so we dont end up with one e being sold and the other not.
+                       age_start_pa1e1b1nwzida0e0b0xyg3[mask_p_offs_p,...,0:1,:,:,:,:] < max_age_wether_sale_g3)) #min bnd using e[-1] and max using e[0] so we don't end up with one e being sold and the other not.
     period_is_sale_tpa1e1b1nwzida0e0b0xyg3 = np.logical_and(period_is_sale_tpa1e1b1nwzida0e0b0xyg3, wether_sale_mask_pa1e1b1nwzida0e0b0xyg3)
     ###bound female sale age - this sets the minimum age a ewe offs can be sold. Default is no min age e.g. can be sold anytime.
     min_age_female_sale_dg3 = fun.f_sa(np.array([0]), sen.sav['bnd_min_sale_age_female_dg3'], 5)
@@ -7812,14 +7809,14 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     max_age_female_sale_g3 = fun.f_sa(np.array([sim_years*365]), sen.sav['bnd_max_sale_age_female_g3'][mask_offs_inc_g3], 5)
     off_sale_mask_pa1e1b1nwzida0e0b0xyg3 = np.logical_or((gender_xyg[mask_x] != 1)
                 , np.logical_and(age_start_pa1e1b1nwzida0e0b0xyg3[mask_p_offs_p,...,-1:,:,:,:,:] > min_age_female_sale_da0e0b0xyg3
-                               , age_start_pa1e1b1nwzida0e0b0xyg3[mask_p_offs_p,...,0:1,:,:,:,:] < max_age_female_sale_g3)) #min bnd using e[-1] and max using e[0] so we dont end up with one e being sold and the other not.
+                               , age_start_pa1e1b1nwzida0e0b0xyg3[mask_p_offs_p,...,0:1,:,:,:,:] < max_age_female_sale_g3)) #min bnd using e[-1] and max using e[0] so we don't end up with one e being sold and the other not.
     period_is_sale_tpa1e1b1nwzida0e0b0xyg3 = np.logical_and(period_is_sale_tpa1e1b1nwzida0e0b0xyg3, off_sale_mask_pa1e1b1nwzida0e0b0xyg3)
 
     ###bound offspring sale weights
     min_ffcfw_sale_g3 = fun.f_sa(np.array([0]), sen.sav['bnd_min_sale_ffcfw_g3'][mask_offs_inc_g3], 5)
     max_ffcfw_sale_g3 = fun.f_sa(np.array([9999]), sen.sav['bnd_max_sale_ffcfw_g3'][mask_offs_inc_g3], 5)
     offs_sale_mask_pa1e1b1nwzida0e0b0xyg3 = np.logical_and(o_ffcfw_tpoffs[...,0:1,:,:,:,:] > min_ffcfw_sale_g3,
-                       o_ffcfw_tpoffs[...,0:1,:,:,:,:] < max_ffcfw_sale_g3) #min bnd using e[0] so we dont end up with one e being sold and the other not.
+                       o_ffcfw_tpoffs[...,0:1,:,:,:,:] < max_ffcfw_sale_g3) #min bnd using e[0] so we don't end up with one e being sold and the other not.
     period_is_sale_tpa1e1b1nwzida0e0b0xyg3 = np.logical_and(period_is_sale_tpa1e1b1nwzida0e0b0xyg3, offs_sale_mask_pa1e1b1nwzida0e0b0xyg3)
 
     ###shearing - one true per dvp when shearing actually occurs
@@ -7854,7 +7851,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     period_is_sale_tpa1e1b1nwzida0e0b0xyg1[1] = period_is_sale_t1_pa1e1b1nwzida0e0b0xyg1
     ###bound female sale age - this sets the minimum age dams can be sold. Default is no min age e.g. can be sold anytime.
     min_age_female_sale_g1 = fun.f_sa(np.array([0]), sen.sav['bnd_min_sale_age_female_g1'][mask_dams_inc_g1], 5)
-    ewe_sale_mask_pa1e1b1nwzida0e0b0xyg1 = age_start_pa1e1b1nwzida0e0b0xyg1[:,:,-1:,...] > min_age_female_sale_g1 #min bnd using e[-1] and max using e[0] so we dont end up with one e being sold and the other not.
+    ewe_sale_mask_pa1e1b1nwzida0e0b0xyg1 = age_start_pa1e1b1nwzida0e0b0xyg1[:,:,-1:,...] > min_age_female_sale_g1 #min bnd using e[-1] and max using e[0] so we don't end up with one e being sold and the other not.
     period_is_sale_tpa1e1b1nwzida0e0b0xyg1 = np.logical_and(period_is_sale_tpa1e1b1nwzida0e0b0xyg1, ewe_sale_mask_pa1e1b1nwzida0e0b0xyg1)
     ####transfer - calculate period_is_finish when the dams are transferred from the current g slice to the destination g slice
     period_is_transfer_tpa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(nextperiod_is_prejoin_pa1e1b1nwzida0e0b0xyg1[na, ...], a_g1_tpa1e1b1nwzida0e0b0xyg1, -1) * transfer_exists_tpa1e1b1nwzida0e0b0xyg1
@@ -7885,7 +7882,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     ###bound wether sale age - default is to allow all ages to be sold. User can change this using wether sale SAV.
     min_age_castrate_sale_g2 = fun.f_sa(np.array([0]), sen.sav['bnd_min_sale_age_wether_g3'][mask_yatf_inc_g2], 5)
     yatf_castrate_sale_mask_pa1e1b1nwzida0e0b0xyg2 = np.logical_or((gender_xyg[mask_x] != 2)
-                                            , age_start_pa1e1b1nwzida0e0b0xyg2[:,:,-1:,...] > min_age_castrate_sale_g2) #min bnd using e[-1] and max using e[0] so we dont end up with one e being sold and the other not.
+                                            , age_start_pa1e1b1nwzida0e0b0xyg2[:,:,-1:,...] > min_age_castrate_sale_g2) #min bnd using e[-1] and max using e[0] so we don't end up with one e being sold and the other not.
     ###bound female sale age - this sets the minimum age a female prog can be sold. Default is no min age e.g. can be sold anytime.
     min_age_female_sale_dg2 = fun.f_sa(np.array([0]), sen.sav['bnd_min_sale_age_female_dg3'], 5)
     min_age_female_sale_oa1e1b1nwzida0e0b0xyg2 = fun.f_expand(min_age_female_sale_dg2, left_pos=p_pos, right_pos=-1
@@ -7893,7 +7890,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     min_age_female_sale_pa1e1b1nwzida0e0b0xyg2 = np.take_along_axis(min_age_female_sale_oa1e1b1nwzida0e0b0xyg2
                                                         , a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1,0)
     yatf_female_sale_mask_pa1e1b1nwzida0e0b0xyg2 = np.logical_or((gender_xyg[mask_x] != 1)
-                                                , age_start_pa1e1b1nwzida0e0b0xyg2[:,:,-1:,...] > min_age_female_sale_pa1e1b1nwzida0e0b0xyg2) #min bnd using e[-1] and max using e[0] so we dont end up with one e being sold and the other not.
+                                                , age_start_pa1e1b1nwzida0e0b0xyg2[:,:,-1:,...] > min_age_female_sale_pa1e1b1nwzida0e0b0xyg2) #min bnd using e[-1] and max using e[0] so we don't end up with one e being sold and the other not.
     ###combine the male and female yatf masks
     yatf_sale_mask_pa1e1b1nwzida0e0b0xyg2 = np.logical_and(yatf_castrate_sale_mask_pa1e1b1nwzida0e0b0xyg2, yatf_female_sale_mask_pa1e1b1nwzida0e0b0xyg2)
     period_is_sale_t0_pa1e1b1nwzida0e0b0xyg2 = np.logical_and(period_is_sale_t0_pa1e1b1nwzida0e0b0xyg2, yatf_sale_mask_pa1e1b1nwzida0e0b0xyg2)
@@ -10208,7 +10205,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     dvp_start_k2tva1e1b1nwzida0e0b0xyg1 = sfun.f1_create_production_param('dams', dvp_start_va1e1b1nwzida0e0b0xyg1, a_k2cluster_va1e1b1nwzida0e0b0xyg1, index_k2tva1e1b1nwzida0e0b0xyg1)
     t_dvp_start_k2tva1e1b1nwzida0e0b0xyg1 = np.broadcast_to(dvp_start_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...], dvp_start_k2tva1e1b1nwzida0e0b0xyg1.shape)
     dvp_start_k2tva1e1b1nwzida0e0b0xyg1[dvp_start_k2tva1e1b1nwzida0e0b0xyg1==0] = t_dvp_start_k2tva1e1b1nwzida0e0b0xyg1[dvp_start_k2tva1e1b1nwzida0e0b0xyg1==0]
-    ###cluster dvp dates to remove d axis (note dvp dates dont vary by d unless separately clustered).
+    ###cluster dvp dates to remove d axis (note dvp dates don't vary by d unless separately clustered).
     dvp_start_k3k5tva1e1b1nwzida0e0b0xyg3 = sfun.f1_create_production_param('offs', dvp_start_va1e1b1nwzida0e0b0xyg3, a_k3cluster_da0e0b0xyg3, index_k3k5tva1e1b1nwzida0e0b0xyg3)
     ###create p7 allocation
     alloc_p7k2tva1e1b1nwzida0e0b0xyg1 = zfun.f1_z_period_alloc(dvp_start_k2tva1e1b1nwzida0e0b0xyg1[na, ...], z_pos=z_pos)
@@ -11339,8 +11336,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
     ###sale weight for emission intensity report
     fun.f1_make_r_val(r_vals,sale_ffcfw_s7k2tva1e1b1nwzida0e0b0xyg1,'sale_ffcfw_s7k2tva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1,z_pos, s7k2tva1nwziyg1_shape)
-    fun.f1_make_r_val(r_vals,sale_ffcfw_prog_s7k3k5tva1e1b1nwzida0e0b0xyg2,'sale_ffcfw_s7k3k5twziaxyg2',None,z_pos, s7k3k5twziaxyg2_shape) #no v axis so dont need to uncluster z
-    fun.f1_make_r_val(r_vals,sale_ffcfw_prog_k3k5tva1e1b1nwzida0e0b0xyg2,'sale_ffcfw_k3k5twziaxyg2',None,z_pos, k3k5twziaxyg2_shape) #no v axis so dont need to uncluster z
+    fun.f1_make_r_val(r_vals,sale_ffcfw_prog_s7k3k5tva1e1b1nwzida0e0b0xyg2,'sale_ffcfw_s7k3k5twziaxyg2',None,z_pos, s7k3k5twziaxyg2_shape) #no v axis so don't need to uncluster z
+    fun.f1_make_r_val(r_vals,sale_ffcfw_prog_k3k5tva1e1b1nwzida0e0b0xyg2,'sale_ffcfw_k3k5twziaxyg2',None,z_pos, k3k5twziaxyg2_shape) #no v axis so don't need to uncluster z
     fun.f1_make_r_val(r_vals,sale_ffcfw_s7k3k5tva1e1b1nwzida0e0b0xyg3,'sale_ffcfw_s7k3k5tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3,z_pos, s7k3k5tvnwziaxyg3_shape)
     fun.f1_make_r_val(r_vals,sale_ffcfw_k3k5tva1e1b1nwzida0e0b0xyg3,'sale_ffcfw_k3k5tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3,z_pos, k3k5tvnwziaxyg3_shape)
 
