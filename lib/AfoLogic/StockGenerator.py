@@ -2353,9 +2353,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                         * age_p0_pa1e1b1nwzida0e0b0xyg0p0)), weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg0p0, axis = -1)
     mr_age_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(np.maximum(cm_cpdams[4, ..., na], np.exp(-cm_cpdams[3, ..., na]
                                         * age_p0_pa1e1b1nwzida0e0b0xyg1p0)), weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg1p0, axis = -1)
-    mr_age_pa1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(np.maximum(cm_cpoffs[4, ..., na], np.exp(-cm_cpoffs[3, ..., na]
+    mr_age_pa1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(np.maximum(cm_cpyatf[4, ..., na], np.exp(-cm_cpyatf[3, ..., na]
                                         * age_p0_pa1e1b1nwzida0e0b0xyg2p0)), weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg2p0, axis = -1)
-    mr_age_pa1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(np.maximum(cm_cpyatf[4, ..., na], np.exp(-cm_cpyatf[3, ..., na]
+    mr_age_pa1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(np.maximum(cm_cpoffs[4, ..., na], np.exp(-cm_cpoffs[3, ..., na]
                                         * age_p0_pa1e1b1nwzida0e0b0xyg3p0)), weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg3p0, axis = -1)
 
     ##Pattern of maintenance with age Graham etal 1974 lean equations
@@ -2363,15 +2363,15 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                         * age_p0_pa1e1b1nwzida0e0b0xyg0p0)), weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg0p0, axis=-1)
     mr_agegraham_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(np.maximum(cm_cpdams[4, ..., na], np.exp(-cm_cpdams[25, ..., na]
                                         * age_p0_pa1e1b1nwzida0e0b0xyg1p0)), weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg1p0, axis=-1)
-    mr_agegraham_pa1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(np.maximum(cm_cpoffs[4, ..., na], np.exp(-cm_cpoffs[25, ..., na]
+    mr_agegraham_pa1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(np.maximum(cm_cpyatf[4, ..., na], np.exp(-cm_cpyatf[25, ..., na]
                                         * age_p0_pa1e1b1nwzida0e0b0xyg2p0)), weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg2p0, axis=-1)
-    mr_agegraham_pa1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(np.maximum(cm_cpyatf[4, ..., na], np.exp(-cm_cpyatf[25, ..., na]
+    mr_agegraham_pa1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(np.maximum(cm_cpoffs[4, ..., na], np.exp(-cm_cpoffs[25, ..., na]
                                         * age_p0_pa1e1b1nwzida0e0b0xyg3p0)), weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg3p0, axis=-1)
     ##Impact of rainfall on 'cold' intake increment
     rain_intake_pa1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(np.maximum(0, 1 - rain_pa1e1b1nwzida0e0b0xygp0 / ci_cpsire[18, ..., na]),  weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg0p0, axis = -1)
     rain_intake_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(np.maximum(0, 1 - rain_pa1e1b1nwzida0e0b0xygp0 / ci_cpdams[18, ..., na]),  weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg1p0, axis = -1)
-    rain_intake_pa1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(np.maximum(0, 1 - rain_pa1e1b1nwzida0e0b0xygp0 / ci_cpoffs[18, ..., na]),  weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg2p0, axis = -1)
-    rain_intake_pa1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(np.maximum(0, 1 - rain_pa1e1b1nwzida0e0b0xygp0[mask_p_offs_p] / ci_cpyatf[18, ..., na]),  weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg3p0, axis = -1)
+    rain_intake_pa1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(np.maximum(0, 1 - rain_pa1e1b1nwzida0e0b0xygp0 / ci_cpyatf[18, ..., na]),  weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg2p0, axis = -1)
+    rain_intake_pa1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(np.maximum(0, 1 - rain_pa1e1b1nwzida0e0b0xygp0[mask_p_offs_p] / ci_cpoffs[18, ..., na]),  weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg3p0, axis = -1)
     ##Proportion of peak intake due to time from birth
     pi_age_y_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(cb1_cpdams[19, ..., na] * np.maximum(0,pimi_pa1e1b1nwzida0e0b0xyg1p0) ** ci_cpdams[9, ..., na] * np.exp(ci_cpdams[9, ..., na] * (1 - pimi_pa1e1b1nwzida0e0b0xyg1p0)), weights=age_y_adj_weights_pa1e1b1nwzida0e0b0xyg1p0, axis = -1) #maximum to stop error in power (not sure why the negatives were causing a problem)
     ##Peak milk production pattern (time from birth). Average for the days that the dam is lactating
