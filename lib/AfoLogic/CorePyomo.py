@@ -741,7 +741,7 @@ def f_con_totalcap_between(model):
         l_q = list(model.s_sequence_year_between_con)
         ###adjust q_prev for multi-period model
         if sinp.structuralsa['model_is_MP']:
-            ####yr0 is SE so q_prev is q. Note dont need to use lp_var in this between constraint because it is not a production constraint.
+            ####yr0 is SE so q_prev is q. Note don't need to use lp_var in this between constraint because it is not a production constraint.
             if q == l_q[0]:
                 q_prev = q
             ####the final year is provided by both the previous year and itself (the final year is in equilibrium). Therefore the final year needs two constraints. This is achieved by making the q set 1 year longer than the modeled period (len_MP + 1). Then adjusting q and q_prev for the final q so that the final year is also in equilibrium.

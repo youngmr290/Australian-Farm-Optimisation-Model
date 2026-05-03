@@ -154,7 +154,7 @@ def crop_residue_all(params, r_vals, nv, cat_propn_s1_ks2):
     period_is_harvest_p6zk = np.logical_and(fp_end_p6z[...,na] >= harv_date_zk, fp_start_p6z[...,na] <= harv_date_zk)
     idx_fp_start_stub_zk = fun.searchsort_multiple_dim(feed_period_dates_p6z, harv_date_zk, 1, 0, side='right') - 1
 
-    ##stubble is destocked X days before early break - you dont know the type of season in advanced therefore must destock all z before the early break just in case
+    ##stubble is destocked X days before early break - you don't know the type of season in advanced therefore must destock all z before the early break just in case
     season_break_z = zfun.f_seasonal_inp(pinp.general['i_break'], numpy=True)
     destock_days_prior_brk = pinp.stubble['i_destock_stub']
     date_destocked = np.min(season_break_z) + 364 - destock_days_prior_brk #incremented to the next yr.

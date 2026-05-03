@@ -450,7 +450,7 @@ def f_n2o_leach_runoff(N, FracWET, FracLEACH):
     '''
     Cg = uinp.emissions['i_cf_n2o']  # 44/28 - weight conversion factor of Nitrogen (molecular weight 28) to Nitrous oxide (molecular weight 44)
     ef = uinp.emissions['i_ef_leach_runoff']  # emission factor for leaching and runoff of N.
-    property_leach_factor = pinp.emissions['i_leach_factor']  # factor based on rainfall to scale leaching. Typically zones under 600mm annual rainfall dont leach.
+    property_leach_factor = pinp.emissions['i_leach_factor']  # factor based on rainfall to scale leaching. Typically zones under 600mm annual rainfall don't leach.
 
     n2o = N * FracWET * FracLEACH * property_leach_factor * ef * Cg
 

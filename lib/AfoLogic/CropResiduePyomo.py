@@ -91,7 +91,7 @@ def f1_stubpyomo_local(params, model, MP_lp_vars):
         suffix_sets=[model.s_stub_cat, model.s_biomass_uses],
     )
 
-    ###special set use in the constraints when summing the z8 axis - this stops summing z8 that dont exist. The alternative would be to
+    ###special set use in the constraints when summing the z8 axis - this stops summing z8 that don't exist. The alternative would be to
     def f1_init_z_by_p6k(model, p6, k):
         return params['stub_z8_by_p6k'].get((p6, k), [])
     model.s_stub_z8_by_p6k = pe.Set(model.s_feed_periods, model.s_crops, initialize=f1_init_z_by_p6k)
