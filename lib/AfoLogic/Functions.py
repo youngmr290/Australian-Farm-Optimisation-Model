@@ -994,17 +994,17 @@ def f1_get_caller_info(skip=1, levels=1):
         return ("unknown_file", 0) if levels == 1 else [("unknown_file", 0)] * levels
 
 
-def f_dynamic_slice_idx(arr, slice_specs):
+def f_slice_idx(arr, slice_specs):
     '''
     Build the slice index tuple from slice_specs, ignoring any boolean masks.
-    Use for assignment: arr[fun.f_dynamic_slice_idx(arr, specs) = value
+    Use for assignment: arr[fun.f_slice_idx(arr, specs) = value
     Note1: boolean masks are not supported for assignment use case.
-    Note2: can't assign to fun.f_dynamic_slice(arr, specs) = value
+    Note2: can't assign to fun.f_slice(arr, specs) = value
 
-    See f_dynamic_slice for more description
+    See f_slice for more description
 
     :param arr: numpy array to slice
-    :param slice_specs: dict of {axis: args} - see f_dynamic_slice for full description
+    :param slice_specs: dict of {axis: args} - see f_slice for full description
     :return: tuple of slices, one per axis
     '''
     ##check if arr is int - this is the case for the first loop because arr may be initialised as 0
@@ -1027,7 +1027,7 @@ def f_dynamic_slice_idx(arr, slice_specs):
                       f'in {" and ".join(locations)}')
         else:
             if isinstance(args, np.ndarray) and args.dtype == bool:  # Boolean mask → ignore
-                pass  # masks ignored — only supported in f_dynamic_slice
+                pass  # masks ignored — only supported in f_slice
             elif isinstance(args, int):  # Int rather than a list can be single position shorthand
                 sl_slices[axis] = slice(args, args + 1)
             elif len(args) == 1:
@@ -1039,7 +1039,7 @@ def f_dynamic_slice_idx(arr, slice_specs):
     return tuple(sl_slices)
 
 
-def f_dynamic_slice(arr, slice_specs):
+def f_slice(arr, slice_specs):
     '''
     Calling this function with both mask array and slice args can cause erratic behaviour and is not recommended
     Slice a numpy array over multiple axes in a single call.
@@ -1047,9 +1047,9 @@ def f_dynamic_slice(arr, slice_specs):
     if stop is not specified it is start + 1 (rather than None). Default step is +1
 
     Example:
-        f_dynamic_slice(arr, {b1_pos: [1, 5], e1_pos: [0]})
+        f_slice(arr, {b1_pos: [1, 5], e1_pos: [0]})
             would return b1: dry, single, twin and triplet and e1: first cycle using slicing.
-        f_dynamic_slice(arr, {x_pos: np.array([False, True, False])})
+        f_slice(arr, {x_pos: np.array([False, True, False])})
             would return second element of x axis using fancy indexing
 
     :param arr: numpy array to slice
@@ -1066,8 +1066,8 @@ def f_dynamic_slice(arr, slice_specs):
     if type(arr) == int:
         return arr
 
-    # Build and apply slices first via f_dynamic_slice_idx (returns a view, ignoring masks)
-    result = arr[f_dynamic_slice_idx(arr, slice_specs)]
+    # Build and apply slices first via f_slice_idx (returns a view, ignoring masks)
+    result = arr[f_slice_idx(arr, slice_specs)]
 
     # Build a list of slice(None) — i.e. [:] — for every axis, as the default
     sl_masks = [slice(None)] * arr.ndim
@@ -1075,7 +1075,7 @@ def f_dynamic_slice(arr, slice_specs):
     for axis, args in slice_specs.items():
         # Single value → interpret as start, with stop = start + 1 (preserves dimension)
         # Multi value  → unpack directly into slice(start, stop) or slice(start, stop, step)
-        if arr.shape[axis] == 1:  #don't mask if singleton axis, warning will show up in f_dynamic_slice_idx()
+        if arr.shape[axis] == 1:  #don't mask if singleton axis, warning will show up in f_slice_idx()
             pass
         else:
             if isinstance(args, np.ndarray) and args.dtype == bool:  # Boolean mask → apply directly (fancy indexing, reduces axis to number of True values)
@@ -1412,7 +1412,7 @@ def f1_make_pyomo_dict(param, index, loop_axis_pos=None, index_loop_axis_pos=Non
         index_masked = np.array([])
         for i in range(param.shape[loop_axis_pos]):
             ###mask out values=0
-            param_cut = f_dynamic_slice(param, {loop_axis_pos: [i, i+1]})
+            param_cut = f_slice(param, {loop_axis_pos: [i, i+1]})
             mask = param_cut != 0
             param_masked = np.concatenate([param_masked,param_cut[mask]],0).astype(dtype)  # applying the mask does the raveling and squeezing of singleton axis
             mask = mask.ravel() #needs to be 1d to mask the index
