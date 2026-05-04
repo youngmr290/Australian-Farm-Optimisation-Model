@@ -197,8 +197,8 @@ def f1_DSTw_adjust(propn_source_b1, cycles_source, cycles_destination, axis_b1, 
 
     '''
     ##create slices for the b1 axis
-    slc0 = fun.f_dynamic_slice_idx(propn_source_b1, {axis_b1: [0,1]})
-    slc1 = fun.f_dynamic_slice_idx(propn_source_b1, {axis_b1: [1,None]})
+    slc0 = fun.f_slice_idx(propn_source_b1, {axis_b1: [0,1]})
+    slc1 = fun.f_slice_idx(propn_source_b1, {axis_b1: [1,None]})
     ##store the proportion in slice 0 for reset later if there is a NM slice (because NM shouldn't change with cycles)
     nm_propn = propn_source_b1[slc0]
     ##roll the b1 axis so that the dry slice is in [0:1]
@@ -273,10 +273,10 @@ def f1_RR_propn_logistic(RR_g, cb1, nfoet_b1any, nyatf_b1any, b1_pos, cycles=1):
     ## calculate the coefficients of the cubic equation ax3 + bx2 + cx + d = 0
     ### requires some intermediate values y & z calculated from the cut-off coefficients in cb1_cpdams
     ###catch cut-off values <0 in case the model inversion selects bad combinations.
-    cut1_g = np.maximum(0, fun.f_dynamic_slice(cb1, {b1_pos: [2, 3]})
-                        - fun.f_dynamic_slice(cb1, {b1_pos: [1, 2]}))
-    cut2_g = np.maximum(0, fun.f_dynamic_slice(cb1, {b1_pos: [3, 4]})
-                        - fun.f_dynamic_slice(cb1, {b1_pos: [2, 3]}))
+    cut1_g = np.maximum(0, fun.f_slice(cb1, {b1_pos: [2, 3]})
+                        - fun.f_slice(cb1, {b1_pos: [1, 2]}))
+    cut2_g = np.maximum(0, fun.f_slice(cb1, {b1_pos: [3, 4]})
+                        - fun.f_slice(cb1, {b1_pos: [2, 3]}))
     ### calculations are done with the exp of the cut-off values
     y = np.exp(cut1_g)
     z = np.exp(cut2_g)
@@ -318,10 +318,10 @@ def f1_LS_propn_logistic(LS_g, cb1, nfoet_b1any, nyatf_b1any, b1_pos, cycles=1):
     ### requires some intermediate values y & z calculated from the cut-off coefficients in cb1_cpdams
     ### requires some intermediate values y & z calculated from the cut-off coefficients in cb1_cpdams
     ###catch cut-off values <0 in case the model inversion selects bad combinations.
-    cut1_g = np.maximum(0, fun.f_dynamic_slice(cb1, {b1_pos: [2, 3]})
-                        - fun.f_dynamic_slice(cb1, {b1_pos: [1, 2]}))
-    cut2_g = np.maximum(0, fun.f_dynamic_slice(cb1, {b1_pos: [3, 4]})
-                        - fun.f_dynamic_slice(cb1, {b1_pos: [2, 3]}))
+    cut1_g = np.maximum(0, fun.f_slice(cb1, {b1_pos: [2, 3]})
+                        - fun.f_slice(cb1, {b1_pos: [1, 2]}))
+    cut2_g = np.maximum(0, fun.f_slice(cb1, {b1_pos: [3, 4]})
+                        - fun.f_slice(cb1, {b1_pos: [2, 3]}))
     ### calculations are done with the exp of the cut-off values
     y = np.exp(cut1_g)
     z = np.exp(cut2_g)
@@ -355,15 +355,15 @@ def f1_cp_from_cutoff(cutoff0, cb1, nfoet_b1any, nyatf_b1any, b1_pos, cycles=1):
     ## calculate the difference between the cut-off coefficients from cb1_cpdams (remembering the NM slice in cb1)
     ### requires some intermediate values y & z calculated from the cut-off coefficients in cb1_cpdams
     ###catch cut-off values <0 in case the model inversion selects bad combinations.
-    cut1_g = np.maximum(0, fun.f_dynamic_slice(cb1, {b1_pos: [2, 3]})
-                        - fun.f_dynamic_slice(cb1, {b1_pos: [1, 2]}))
-    cut2_g = np.maximum(0, fun.f_dynamic_slice(cb1, {b1_pos: [3, 4]})
-                        - fun.f_dynamic_slice(cb1, {b1_pos: [2, 3]}))
+    cut1_g = np.maximum(0, fun.f_slice(cb1, {b1_pos: [2, 3]})
+                        - fun.f_slice(cb1, {b1_pos: [1, 2]}))
+    cut2_g = np.maximum(0, fun.f_slice(cb1, {b1_pos: [3, 4]})
+                        - fun.f_slice(cb1, {b1_pos: [2, 3]}))
 
     ###calculate the cut-off values from the fitted value and the differences
     cutoff1 = cutoff0 + cut1_g
     cutoff2 = cutoff1 + cut2_g
-    cutoff3 = fun.f_dynamic_slice(cb1, {b1_pos: [4, 5]})  #cutoff3 is a high number to ensure that all dams are less than or equal to the maximum number of foetuses
+    cutoff3 = fun.f_slice(cb1, {b1_pos: [4, 5]})  #cutoff3 is a high number to ensure that all dams are less than or equal to the maximum number of foetuses
 
     boundaries = np.zeros_like(cb1)
     boundaries = fun.f_update(boundaries, cutoff0, nfoet_b1any == 0)
@@ -722,7 +722,7 @@ def f1_rev_sa(value, sa, age, sa_type):
     This is used for REVs.
     '''
     target_age_stage = fun.f_sa(0, sen.sav['rev_age_stage'], 5) #default is 0 which means apply the rev to all age stages
-    age = fun.f_dynamic_slice(age, {sinp.stock['i_e1_pos']: [0, 1]
+    age = fun.f_slice(age, {sinp.stock['i_e1_pos']: [0, 1]
                                            , sinp.stock['i_e0_pos']: [0, 1]})   #slice age for e[0] (keep dims) - just means age stage is based on first drop.
     a_startage_agestage = sinp.structuralsa['i_rev_age_stage'][0] #start age of each age stage.
     a_endage_agestage = sinp.structuralsa['i_rev_age_stage'][1]   #end age of each age stage.
@@ -1355,7 +1355,7 @@ def f_milk_cs(cl, srw, relsize_start, rc_birth_start, mei, meme, rc_start, ffcfw
                                                         - cl[23, ...] * rc_start * (milk_ratio - cl[24, ...] * rc_start))
         ##Milk production (per animal) based on suckling volume	(milk production per day of lactation)
         ### Based on the standard parameter values 'Suckling volume of young' is very rarely limiting milk production.
-        mp2 = np.minimum(mp1, np.mean(fun.f_dynamic_slice(ffcfw75_exp_yatf, {i_x_pos: [1, None]}), axis=i_x_pos, keepdims=True) * mp2_age_y)   # averages female and castrates weight, ffcfw75 is metabolic weight
+        mp2 = np.minimum(mp1, np.mean(fun.f_slice(ffcfw75_exp_yatf, {i_x_pos: [1, None]}), axis=i_x_pos, keepdims=True) * mp2_age_y)   # averages female and castrates weight, ffcfw75 is metabolic weight
         ##Process the milk production REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
         mp2 = f1_rev_update('milk', mp2, rev_trait_value)
     else:
@@ -1392,7 +1392,7 @@ def f_milk_nfs(cl, srw, relsize_start, rc_birth_start, mei, hp_maint, rc_start, 
                                                         - cl[23, ...] * rc_start * (milk_ratio - cl[24, ...] * rc_start))
         ##Milk production (per animal) based on suckling volume	(milk production per day of lactation)
         ### Based on the standard parameter values 'Suckling volume of young' is very rarely limiting milk production.
-        mp2 = np.minimum(mp1, np.mean(fun.f_dynamic_slice(ffcfw75_exp_yatf, {i_x_pos: [1, None]}), axis = i_x_pos, keepdims=True) * mp2_age_y)   # averages female and castrates weight, ffcfw75 is metabolic weight
+        mp2 = np.minimum(mp1, np.mean(fun.f_slice(ffcfw75_exp_yatf, {i_x_pos: [1, None]}), axis = i_x_pos, keepdims=True) * mp2_age_y)   # averages female and castrates weight, ffcfw75 is metabolic weight
         ##Process the milk production REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
         mp2 = f1_rev_update('milk', mp2, rev_trait_value)
     else:
@@ -2400,7 +2400,7 @@ def f_conception_mu2(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, doj, d
         cb1_sliced = fun.f_update(cb1_sliced, cb1[25, ...], np.logical_and(364 <= age, age < 728))
         cu2_sliced = fun.f_update(cu2_sliced, cu2[25, ...], np.logical_and(364 <= age, age < 728))
         ##Calculate the transformed estimates of proportion empty (slice cu2 allowing for active i axis)
-        cutoff0 = (fun.f_dynamic_slice(cb1_sliced, {b1_pos: [1,2]})
+        cutoff0 = (fun.f_slice(cb1_sliced, {b1_pos: [1,2]})
                                      + cu2_sliced[-1, ...]
                                      + cu2_sliced[0, ...] * maternallw_mating
                                      + cu2_sliced[1, ...] * maternallw_mating ** 2
@@ -2435,9 +2435,9 @@ def f_conception_mu2(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, doj, d
         cp = f1_RR_propn_logistic(repro_rate_adj, cb1_sliced, nfoet_b1any, nyatf_b1any, b1_pos, cycles=1)
 
         ##Store values for the SA
-        slc_empty = fun.f_dynamic_slice_idx(cp, {b1_pos: [1]})
+        slc_empty = fun.f_slice_idx(cp, {b1_pos: [1]})
         empty = cp[slc_empty].copy()
-        slc_preg = fun.f_dynamic_slice_idx(cp, {b1_pos: [2, None]})
+        slc_preg = fun.f_slice_idx(cp, {b1_pos: [2, None]})
 
         ##Apply litter size sa to adjust the probability of the number of foetuses using logistic function.
         ### Carried out here prior to conception saa so that the proportions are still consistent with the logistic function
@@ -2504,7 +2504,7 @@ def f_conception_mu2(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, doj, d
         ### not representing this source of dry ewes.
         ### Disabled by setting the value of propn_pregnant to 0 rather remove the code because the proportion
         ###of empty needs to be set to 0 anyway (and the problem may be fixable)
-        cp[fun.f_dynamic_slice_idx(cp, {b1_pos: [1]})] = cf[5, ...] * fun.f_dynamic_slice(cp, {b1_pos: [1]})
+        cp[fun.f_slice_idx(cp, {b1_pos: [1]})] = cf[5, ...] * fun.f_slice(cp, {b1_pos: [1]})
 
         ##If the period is mating then set conception = temporary probability array
         conception = cp * period_is_mating
@@ -2534,7 +2534,7 @@ def f1_convert_propn_to_2cycleRR(dst_propn, nfoet_b1any, cycles = 1):
     repro_rate = np.sum(dst_propn * nfoet_b1any, axis = sinp.stock['i_b1_pos'], keepdims = True)
 
     ##convert number of cycles by scaling the proportion of drys (holding litter size constant)
-    dry_propn = fun.f_dynamic_slice(dst_propn, {sinp.stock['i_b1_pos']: [1, 2]})
+    dry_propn = fun.f_slice(dst_propn, {sinp.stock['i_b1_pos']: [1, 2]})
     dry_propn_cal = dry_propn ** (calibration_cycles / cycles)
     litter_size = fun.f_divide(repro_rate, 1 - dry_propn)
     repro_rate_cal = litter_size * (1 - dry_propn_cal)
@@ -2558,7 +2558,7 @@ def f1_convert_propn_to_LS(dst_propn, nfoet_b1any):
     '''
     ##calculate litter size from repro rate and proportion empty
     repro_rate = np.sum(dst_propn * nfoet_b1any, axis = sinp.stock['i_b1_pos'], keepdims = True)
-    empty_propn = fun.f_dynamic_slice(dst_propn, {sinp.stock['i_b1_pos']: [1, 2]})
+    empty_propn = fun.f_slice(dst_propn, {sinp.stock['i_b1_pos']: [1, 2]})
     litter_size = fun.f_divide(repro_rate, 1 - empty_propn)
 
     return litter_size
@@ -3551,7 +3551,7 @@ def f1_adjust_pkl_condensed_axis_len(temporary, i_w_len, i_t_len):
     ####handle when the current trial has a different number of w slices than the create trial
     if i_w_len!=temporary.shape[sinp.stock['i_w_pos']]:
         #####cut back to 3 w slices that represent the start animals
-        temporary = fun.f_dynamic_slice(temporary, {sinp.stock['i_w_pos']:
+        temporary = fun.f_slice(temporary, {sinp.stock['i_w_pos']:
                             [0, None, int(temporary.shape[sinp.stock['i_w_pos']]/sinp.structuralsa['i_w_start_len1'])]})
         #####expand back to the number of w in the current trial
         a_s_w = (np.arange(i_w_len)/(i_w_len/sinp.structuralsa['i_w_start_len1'])).astype(int)
