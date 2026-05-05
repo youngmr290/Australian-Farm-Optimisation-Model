@@ -1618,14 +1618,6 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     date_d90_pa1e1b1nwzida0e0b0xyg1 = date_mated_pa1e1b1nwzida0e0b0xyg1 + np.array([90])
     ##pre-lambing assessment in MU trials (135 days after mating (for use in the LTW calculations))
     date_prebirth_pa1e1b1nwzida0e0b0xyg1 = date_mated_pa1e1b1nwzida0e0b0xyg1 + np.array([135])
-    ##Age of dam when first lamb is born
-    agedam_lamb1st_a1e1b1nwzida0e0b0xyg3 = np.swapaxes(date_born1st_oa1e1b1nwzida0e0b0xyg2 - date_born1st_i_pa1e1b1nwzida0e0b0xyg1,0,d_pos)[0,...] #replace the d axis with the o axis then remove the d axis by taking slice 0 (note the d axis was not active)
-    if np.count_nonzero(pinp.sheep['i_mask_i']) > 1: #complicated by the fact that sire tol is not necessarily the same as dams and off
-        agedam_lamb1st_a1e1b1nwzida0e0b0xyg0 = np.compress(pinp.sheep['i_masksire_i'], agedam_lamb1st_a1e1b1nwzida0e0b0xyg3[...,a_g3_g0], i_pos) #don't mask if both tol are included
-    else:
-        agedam_lamb1st_a1e1b1nwzida0e0b0xyg0 = np.compress(pinp.sheep['i_masksire_i'][pinp.sheep['i_masksire_i']], agedam_lamb1st_a1e1b1nwzida0e0b0xyg3[...,a_g3_g0], i_pos) #have to mask masksire_i  because it needs to be the same length as i
-    agedam_lamb1st_a1e1b1nwzida0e0b0xyg1 = agedam_lamb1st_a1e1b1nwzida0e0b0xyg3[...,a_g3_g1]
-    agedam_lamb1st_a1e1b1nwzida0e0b0xyg3 = np.compress(mask_d_offs, agedam_lamb1st_a1e1b1nwzida0e0b0xyg3, d_pos) #mask d axis (compress function masks a specific axis)
 
     ##wean date (weaning input is counting from the date of the first lamb (not the date of the average lamb in the first cycle))
     date_weaned_pa1e1b1nwzida0e0b0xyg2 = date_born1st_pa1e1b1nwzida0e0b0xyg2 + age_wean1st_pa1e1b1nwzida0e0b0xyg2 #use offs wean age input and has the same birth day (offset by a yr) therefore it will automatically align with a period start
@@ -1823,10 +1815,10 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     ###Note: there will be a clash of naming with _p if ce is subject to a saa_p11
     ce_p_cpdams = np.take_along_axis(ce_d_cpdams,a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1[na,...],d_pos)
     ce_p_cpyatf = np.take_along_axis(ce_d_cpyatf, a_prevbirth_d_pa1e1b1nwzida0e0b0xyg2[na,...], d_pos)
-    ce_cpsire = np.sum(ce_d_cpsire * agedam_propn_da0e0b0xyg0, axis = d_pos)
-    ce_cpdams = np.sum(ce_d_cpdams * agedam_propn_da0e0b0xyg1, axis = d_pos)
-    ce_cpyatf = np.sum(ce_d_cpyatf * agedam_propn_da0e0b0xyg2, axis = d_pos)
-    ce_cpoffs = np.sum(ce_d_cpoffs * agedam_propn_da0e0b0xyg3, axis = d_pos)
+    ce_cpsire = np.sum(ce_d_cpsire * agedam_propn_da0e0b0xyg0, axis = d_pos, keepdims=True)
+    ce_cpdams = np.sum(ce_d_cpdams * agedam_propn_da0e0b0xyg1, axis = d_pos, keepdims=True)
+    ce_cpyatf = np.sum(ce_d_cpyatf * agedam_propn_da0e0b0xyg2, axis = d_pos, keepdims=True)
+    ce_cpoffs = np.sum(ce_d_cpoffs * agedam_propn_da0e0b0xyg3, axis = d_pos, keepdims=True)
 
     ################################################################################
     ### activate p axis for sim parameter arrays to include changes for age stages #
@@ -2762,6 +2754,17 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     #######################
     ##Age, date, timing 2 #
     #######################
+    ##Age of dam when first lamb is born
+    agedam_lamb1st_a1e1b1nwzida0e0b0xyg3 = \
+    np.swapaxes(date_born1st_oa1e1b1nwzida0e0b0xyg2 - date_born1st_i_pa1e1b1nwzida0e0b0xyg1, 0, d_pos)[0, ...]  #replace the d axis with the o axis then remove the d axis by taking slice 0 (note the d axis was not active)
+    if np.count_nonzero(pinp.sheep['i_mask_i']) > 1:  #complicated by the fact that sire tol is not necessarily the same as dams and off
+        agedam_lamb1st_a1e1b1nwzida0e0b0xyg0 = np.compress(pinp.sheep['i_masksire_i'], agedam_lamb1st_a1e1b1nwzida0e0b0xyg3[..., a_g3_g0], i_pos)  #don't mask if both tol are included
+    else:
+        agedam_lamb1st_a1e1b1nwzida0e0b0xyg0 = np.compress(pinp.sheep['i_masksire_i'][pinp.sheep['i_masksire_i']], agedam_lamb1st_a1e1b1nwzida0e0b0xyg3[..., a_g3_g0], i_pos)  #have to mask masksire_i  because it needs to be the same length as i
+    agedam_lamb1st_a1e1b1nwzida0e0b0xyg0 = np.sum(agedam_lamb1st_a1e1b1nwzida0e0b0xyg0 * agedam_propn_da0e0b0xyg0, axis=d_pos, keepdims=True)  #average the d axis
+    agedam_lamb1st_a1e1b1nwzida0e0b0xyg1 = agedam_lamb1st_a1e1b1nwzida0e0b0xyg3[..., a_g3_g1]
+    agedam_lamb1st_a1e1b1nwzida0e0b0xyg1 = np.sum(agedam_lamb1st_a1e1b1nwzida0e0b0xyg1 * agedam_propn_da0e0b0xyg1, axis=d_pos, keepdims=True)  #average the d axis
+    agedam_lamb1st_a1e1b1nwzida0e0b0xyg3 = np.compress(mask_d_offs, agedam_lamb1st_a1e1b1nwzida0e0b0xyg3, d_pos)  #mask d axis (compress function masks a specific axis)
     ##Days per period in the simulation - foetus
     days_period_f_pa1e1b1nwzida0e0b0xyg1 = np.maximum(0,(age_f_end_pa1e1b1nwzida0e0b0xyg1 +1 - age_f_start_pa1e1b1nwzida0e0b0xyg1).astype(int))
 
