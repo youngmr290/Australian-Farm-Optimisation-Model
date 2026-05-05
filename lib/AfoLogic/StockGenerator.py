@@ -769,7 +769,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     date_shear_sida0e0b0xyg3 = date_shear_sida0e0b0xyg3[mask_shear_s3]
     len_s3 = np.count_nonzero(mask_shear_s3)
     ####adjust shearing dates if they occur before birth (this is incase user input the wrong year on the shearing dates)
-    date_shear_sida0e0b0xyg3 = date_shear_sida0e0b0xyg3 + np.maximum(0, np.ceil((np.max(date_born1st_ida0e0b0xyg3,axis=d_pos) - date_shear_sida0e0b0xyg3[0])/364)) * 364 #max across d axis means shearing cant occur before the youngest animal is born (we don't want to add a d axis to shearing date).
+    date_shear_sida0e0b0xyg3 = date_shear_sida0e0b0xyg3 + np.maximum(0, np.ceil((np.max(date_born1st_ida0e0b0xyg3, axis=d_pos, keepdims=True) - date_shear_sida0e0b0xyg3[0])/364)) * 364 #max across d axis means shearing cant occur before the youngest animal is born (we don't want to add a d axis to shearing date).
     ####Note: shearing date is adjusted below to stop it occurring before weaning.
 
     ##if generating for stubble then overwrite some of these inputs to match the stubble trial
@@ -1711,10 +1711,10 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     agedam_propn_da0e0b0xyg0, agedam_propn_da0e0b0xyg1, agedam_propn_da0e0b0xyg2, agedam_propn_da0e0b0xyg3 = \
         sfun.f1_c2g(uinp.parameters['i_agedam_propn_std_dc2'], uinp.parameters['i_agedam_propn_y'], a_c2_c0, i_g3_inc,
                     d_pos, condition=mask_o_dams, axis=d_pos) #yatf and off never used
-    agedam_propn_da0e0b0xyg0 = agedam_propn_da0e0b0xyg0 / np.sum(agedam_propn_da0e0b0xyg0, axis=d_pos) #scale unmasked slices to a total of 1
-    agedam_propn_da0e0b0xyg1 = agedam_propn_da0e0b0xyg1 / np.sum(agedam_propn_da0e0b0xyg1, axis=d_pos) #scale unmasked slices to a total of 1
-    agedam_propn_da0e0b0xyg2 = agedam_propn_da0e0b0xyg2 / np.sum(agedam_propn_da0e0b0xyg2, axis=d_pos) #scale unmasked slices to a total of 1
-    agedam_propn_da0e0b0xyg3 = agedam_propn_da0e0b0xyg3 / np.sum(agedam_propn_da0e0b0xyg3, axis=d_pos) #scale unmasked slices to a total of 1
+    agedam_propn_da0e0b0xyg0 = agedam_propn_da0e0b0xyg0 / np.sum(agedam_propn_da0e0b0xyg0, axis=d_pos, keepdims=True) #scale unmasked slices to a total of 1
+    agedam_propn_da0e0b0xyg1 = agedam_propn_da0e0b0xyg1 / np.sum(agedam_propn_da0e0b0xyg1, axis=d_pos, keepdims=True) #scale unmasked slices to a total of 1
+    agedam_propn_da0e0b0xyg2 = agedam_propn_da0e0b0xyg2 / np.sum(agedam_propn_da0e0b0xyg2, axis=d_pos, keepdims=True) #scale unmasked slices to a total of 1
+    agedam_propn_da0e0b0xyg3 = agedam_propn_da0e0b0xyg3 / np.sum(agedam_propn_da0e0b0xyg3, axis=d_pos, keepdims=True) #scale unmasked slices to a total of 1
     # fat_propn_wean_yg0, fat_propn_wean_yg1, fat_propn_wean_yg2, fat_propn_wean_yg3 = sfun.f1_c2g(uinp.parameters['i_fat_propn_wean_c2']
     #                             , uinp.parameters['i_fat_wean_y'], a_c2_c0, i_g3_inc)
     # muscle_propn_wean_yg0, muscle_propn_wean_yg1, muscle_propn_wean_yg2, muscle_propn_wean_yg3 = sfun.f1_c2g(uinp.parameters['i_muscle_propn_wean_c2']
@@ -6546,7 +6546,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 ###print warning if min mort is greater than 10% since the previous condense
                 ###this is to ensure we are condensing to an animal that the lp will select (ie not point having an animal that has more than 10% mort)
                 ### Note 1: if ewe lambs FS is not set up for mating and it is estimated that ewe lambs are mated then a warning is likely to be triggered. No warning will be triggered if estimate mating propn is 0 because only a very small number of animals will be in the mated b slices and therefore because the b axis is summed to build surv_dams mort won't be significantly effected by them.
-                min_mort = 1 - np.max(surv_dams, axis=w_pos)
+                min_mort = 1 - np.max(surv_dams, axis=w_pos, keepdims=True)
                 ####only use the retained t slice (animals that have multiple fvps per dvp and are sold in the first fvp only get medium fs in following fvps due to lw clustering e.g. w9 is high-medium-medium, so this can trigger unwanted mort warning)
                 if len_gen_t1 > 1:
                     min_mort = min_mort[a_t_g1]
@@ -6695,7 +6695,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 ### The logic behind this is that the model will not want to select animals with greater than 10% mort so not point using them to determine condensed weights
                 ### and animals that have been in the feed lot will have been sold therefore it is not useful to include these animal in the condensing because
                 ### this will increase the condensing weight but all the heavy animals were sold so the high condense weight becomes too high for many animals to distribute into and hence is a waste.
-                no_confinement_offs = np.all(np.logical_not(confinementw_tpa1e1b1nwzida0e0b0xyg3[:,0:p]), axis=p_pos)  # True if animal has never been in feedlot
+                no_confinement_offs = np.all(np.logical_not(confinementw_tpa1e1b1nwzida0e0b0xyg3[:,0:p]), axis=p_pos, keepdims=True)  # True if animal has never been in feedlot
                 ###if all nut spread options include confinement then confinement w must be included in condensing.
                 ### ie if all n is confinement then overwrite no_confinement to True
                 no_confinement_offs = np.logical_or(np.all(bool_confinement_g3_n), no_confinement_offs)
@@ -6708,7 +6708,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 mort_mask_offs = surv_offs >= threshold
 
                 ###print warning if min mort is greater than 10% since the previous condense
-                min_mort = 1 - np.max(surv_offs, axis=w_pos)
+                min_mort = 1 - np.max(surv_offs, axis=w_pos, keepdims=True)
                 ####only use the retained t slice because if there is a dvp that spans two fvp and the animal is sold in
                 #### the first fvp then the fs may not be good in the second fvp (because the w are clustered e.g. w9 is high fs in the first fvp followed by medium)
                 if len_gen_t3 > 1:
