@@ -67,7 +67,7 @@ from . import Trees as tre
 # from memory_profiler import profile
 # @profile
 def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pkl_fs={}, stubble=None
-              , gepep=None, calibration_weights_p=None, calibration_targets_p=None, calibration=None, plots = False):
+              , model_inversion=None, calibration_weights_p=None, calibration_targets_p=None, calibration=None, plots = False):
     """
     A function to wrap the generator and post-processing that can be called by SheepPyomo.
 
@@ -83,49 +83,120 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     print("starting generator")
     generator_start = time.time()
 
-    ######################
-    ##GEPEP coefficients #
-    ######################
-    ##set the genotype to calibrate. This is the genotype in Universal.xlsx
-    genotype = pinp.sheep['a_c2_c0'][0]    #2 is CFS for MLP & GEPEP traditional, 3 is GFS for GEPEP
-    if gepep:
-        ##Comment any coefficients that aren't being calibrated
+    ################################
+    ##Model inversion coefficients #
+    ################################
+    # ##set the genotype to calibrate. This is the genotype of the c2 axis in Universal.xlsx
+    # genotype = pinp.sheep['a_c2_c0'][0]    #2 is CFS for MLP & GEPEP traditional, 3 is GFS for GEPEP
+    if model_inversion:
         n_coeff = coefficients_c.size
         n_traits = calibration_weights_p.size
+
+        ##Comment any coefficients that aren't being calibrated
         j = 0
-        uinp.parameters['i_sfw_c2'][genotype] = coefficients_c[j]           #sfw
-        j += 1
-        uinp.parameters['i_cw_c2'][25, genotype] = coefficients_c[j]        #ycfw scalar
-        j += 1
-        uinp.parameters['i_sfd_c2'][genotype]  = coefficients_c[j]          #sfd
-        j += 1
-        uinp.parameters['i_cw_c2'][26, genotype] = coefficients_c[j]        #yfd scalar
-        j += 1
-        # uinp.parameters['i_cw_c2'][16, genotype] = coefficients_c[j]        #iSS
-        # j += 1
-        uinp.parameters['i_cw_c2'][11, genotype] = coefficients_c[j]        #Density
-        j += 1
-        uinp.parameters['i_cl0_c2'][25, 0, genotype] = coefficients_c[j]   #% preg (Con)
-        j += 1
-        uinp.parameters['i_cl0_c2'][25, 1, genotype] = coefficients_c[j]    #Litter size
-        j += 1
-        uinp.parameters['i_cu2_c2'][8, -1, genotype] = coefficients_c[j]    #Lamb survival (ERA)
-        j += 1
-        SRW_coeff = j   #This pointer is used in the printout (line 7355) and removes need for manual updating.
-        uinp.parameters['i_srw_c2'][genotype] = coefficients_c[j]           #SRW
-        j += 1
-        # uinp.parameters['i_ci_c2'][1, genotype] = coefficients_c[j]         #Potential Intake
-        # j += 1
-        # cg[9] calculated from the deviation in cg[8]
-        # uinp.parameters['i_cg_c2'][9, genotype] += (coefficients_c[j] - uinp.parameters['i_cg_c2'][8, genotype])
-        # uinp.parameters['i_cg_c2'][8, genotype] = coefficients_c[j]         #Fatness (EVG)
-        # j += 1
-        uinp.parameters['i_cd_c2'][1, genotype] = coefficients_c[j]        #Basal mortality
-        j += 1
-        # uinp.parameters['i_cl_c2'][0, genotype] = coefficients_c[j]        #Wwt, by milk production and intake scalar
-        # j += 1
-        # uinp.parameters['i_cn_c2'][1, genotype] = coefficients_c[j]        #YWT, normal growth curve coefficient
-        # j += 1
+        #Standard fleece weight, SFW parameter
+        w = np.nan   #fleece growth prior to weaning is not carried forward to shearing
+        p = coefficients_c[j]; j += 1
+        y = coefficients_c[j]; j += 1
+        h = coefficients_c[j]; j += 1
+        a = coefficients_c[j]; j += 1
+        sen.saa['sfw_p11'] = sfun.f1_create_saa_param_p11(w, p, y, h, a)
+
+        #Standard fibre diameter, SFD parameter
+        w = np.nan  #fleece growth prior to weaning is not carried forward to shearing
+        p = coefficients_c[j]; j += 1
+        y = coefficients_c[j]; j += 1
+        h = coefficients_c[j]; j += 1
+        a = coefficients_c[j]; j += 1
+        sen.saa['sfd_p11'] = sfun.f1_create_saa_param_p11(w, p, y, h, a)
+
+        # #Intrinsic staple strength, cw[16] parameter
+        # w = np.nan  #fleece growth prior to weaning is not carried forward to shearing
+        # p = coefficients_c[j]; j += 1
+        # y = coefficients_c[j]; j += 1
+        # h = coefficients_c[j]; j += 1
+        # a = coefficients_c[j]; j += 1
+        # sen.saa['iss_p11'] = sfun.f1_create_param_p11(w, p, y, h, a)
+
+        # #Follicle number, cw[11] parameter
+        # w = np.nan  #fleece growth prior to weaning is not carried forward to shearing
+        # p = coefficients_c[j]; j += 1
+        # y = coefficients_c[j]; j += 1
+        # h = coefficients_c[j]; j += 1
+        # a = coefficients_c[j]; j += 1
+        # sen.saa['follicles_p11'] = sfun.f1_create_param_p11(w, p, y, h, a)
+
+        #Conception, cb1[24,25&26, 1] parameter
+        # w =
+        # p = np.nan
+        # y = coefficients_c[j]; j += 1
+        h = np.nan    #hogget is not a reproducing age group
+        a = coefficients_c[j]; j += 1
+        sen.saa['con_p11'] = sfun.f1_create_saa_param_p11(h, a)
+
+        #Litter size, cb1[24,25&26, 2&3] parameter
+        # w =
+        # p = np.nan
+        # y = coefficients_c[j]; j += 1
+        h = np.nan    #hogget is not a reproducing age group
+        a = coefficients_c[j]; j += 1
+        sen.saa['ls_p11'] = sfun.f1_create_saa_param_p11(h, a)
+
+        #Ewe rearing ability/lamb survival, cu6[8, -1] & cu2[8, -1] parameters
+        # w =
+        # p = np.nan
+        # y = coefficients_c[j]; j += 1
+        h = np.nan    #hogget is not a reproducing age group
+        a = coefficients_c[j]; j += 1
+        sen.saa['era_p11'] = sfun.f1_create_saa_param_p11(h, a)
+
+        #Standard reference weight, SRW parameter
+        w = np.nan    #wwt is changed with a separate coefficient
+        p = coefficients_c[j]; j += 1
+        y = coefficients_c[j]; j += 1
+        h = coefficients_c[j]; j += 1
+        a = coefficients_c[j]; j += 1
+        sen.saa['srw_p11'] = sfun.f1_create_saa_param_p11(w, p, y, h, a)
+
+        #Weaning weight, cl_yatf[0] parameter
+        w = coefficients_c[j]; j += 1
+        # p =
+        # y =
+        # h =
+        a = np.nan    #wwt is a trait of the young at foot
+        sen.saa['wwt_p11'] = sfun.f1_create_saa_param_p11(w, a)
+
+        #Carcase fatness & WBE from intake, ci[1] parameter
+        w = np.nan   #intake pre-weaning is handled with the cl[0] parameter, which is intake of milk
+        p = coefficients_c[j]; j += 1
+        y = coefficients_c[j]; j += 1
+        # h = np.nan    #no hfat
+        a = np.nan # coefficients_c[j]; j += 1  #included when WBE is included
+        sen.saa['pi_p11'] = sfun.f1_create_saa_param_p11(w, p, y, a)
+
+        #Whole body energy, cg[8&9] parameters
+        # w =
+        # p =
+        # y =
+        h = np.nan   #WBE is currently only an adult trait. Note: hogget could be changed by the same
+        a = coefficients_c[j]; j += 1
+        sen.saa['evg_p11'] = sfun.f1_create_saa_param_p11(h, a)
+
+        #Basal survival, cd[1] parameter
+        # w = np.nan   #survival of yatf is represented through ewe rearing ability (era)
+        # p = coefficients_c[j]; j += 1
+        # y = coefficients_c[j]; j += 1
+        # h = coefficients_c[j]; j += 1
+        # a = np.nan # coefficients_c[j]; j += 1  #adult survival is represented in peri-natal survival
+        # sen.saa['bsurv_p11'] = sfun.f1_create_saa_param_p11(w, p, y, h, a)
+
+        #Perin-natal survival, cu2[23, -1] parameter
+        # w =
+        # p =
+        # y =
+        h = np.nan   #WBE is currently only an adult trait. Note: hogget could be changed by the same
+        a = coefficients_c[j]; j += 1
+        sen.saa['pnsurv_p11'] = sfun.f1_create_saa_param_p11(h, a)
 
         # ##Build and apply sar variable based on the next 44 coefficients
         # indicelist = [(slice(3, 4, None), slice(None, None, None), slice(40, 57, None))    #00   Ewes
@@ -178,42 +249,43 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         # pinp.feedsupply['i_feedsupply_options_r1j2p'] = fun.f_sa(pinp.feedsupply['i_feedsupply_options_r1j2p']
         #                                             , sen.sar['feedsupply_r1jp'], 4, value_min=0.0, target=13.0)
 
-    else:
-        n_coeff = 15
-        n_traits = 14
-        coefficients_c = np.zeros(n_coeff)
-        j = 0
-        coefficients_c[j] = uinp.parameters['i_sfw_c2'][genotype]           #cfw
-        j += 1
-        coefficients_c[j] = uinp.parameters['i_cw_c2'][25, genotype]        #ycfw scalar
-        j += 1
-        coefficients_c[j] = uinp.parameters['i_sfd_c2'][genotype]          #fd
-        j += 1
-        coefficients_c[j] = uinp.parameters['i_cw_c2'][26, genotype]        #yfd scalar
-        j += 1
-        coefficients_c[j] = uinp.parameters['i_cw_c2'][16, genotype]        #SS
-        j += 1
-        coefficients_c[j] = uinp.parameters['i_cw_c2'][11, genotype]        #SL
-        j += 1
-        coefficients_c[j] = uinp.parameters['i_cl0_c2'][25, 0, genotype]   #% preg (Con)
-        j += 1
-        coefficients_c[j] = uinp.parameters['i_cl0_c2'][25, 1, genotype]    #Litter size
-        j += 1
-        coefficients_c[j] = uinp.parameters['i_cu2_c2'][8, -1, genotype]    #Lamb survival (ERA)
-        j += 1
-        coefficients_c[j] = uinp.parameters['i_srw_c2'][genotype]           #Adult LW
-        j += 1
-        coefficients_c[j] = uinp.parameters['i_ci_c2'][1, genotype]         #Intake
-        j += 1
-        # cg[9] calculated from the deviation in cg[8]
-        coefficients_c[j] = uinp.parameters['i_cg_c2'][8, genotype]         #Fatness EVG
-        j += 1
-        coefficients_c[j] = uinp.parameters['i_cd_c2'][1, genotype]        #Basal mortality
-        j += 1
-        coefficients_c[j] = uinp.parameters['i_cl_c2'][0, genotype]        #Wwt, by milk production and intake scalar
-        j += 1
-        coefficients_c[j] = uinp.parameters['i_cn_c2'][1, genotype]        #YWT, normal growth curve coefficient
-
+    # else:   #not model_inversion, assign the parameter values to the coefficients (for printing later).
+    #     p_srw0 = True
+    #     n_coeff = 15
+    #     n_traits = 14
+    #     coefficients_c = np.zeros(n_coeff)
+    #     j = 0
+    #     coefficients_c[j] = uinp.parameters['i_sfw_c2'][genotype]           #cfw
+    #     j += 1
+    #     coefficients_c[j] = uinp.parameters['i_cw_c2'][25, genotype]        #ycfw scalar
+    #     j += 1
+    #     coefficients_c[j] = uinp.parameters['i_sfd_c2'][genotype]          #fd
+    #     j += 1
+    #     coefficients_c[j] = uinp.parameters['i_cw_c2'][26, genotype]        #yfd scalar
+    #     j += 1
+    #     coefficients_c[j] = uinp.parameters['i_cw_c2'][16, genotype]        #SS
+    #     j += 1
+    #     coefficients_c[j] = uinp.parameters['i_cw_c2'][11, genotype]        #SL
+    #     j += 1
+    #     coefficients_c[j] = uinp.parameters['i_cl0_c2'][25, 0, genotype]   #% preg (Con)
+    #     j += 1
+    #     coefficients_c[j] = uinp.parameters['i_cl0_c2'][25, 1, genotype]    #Litter size
+    #     j += 1
+    #     coefficients_c[j] = uinp.parameters['i_cu2_c2'][8, -1, genotype]    #Lamb survival (ERA)
+    #     j += 1
+    #     coefficients_c[j] = uinp.parameters['i_srw_c2'][genotype]           #Adult LW
+    #     j += 1
+    #     coefficients_c[j] = uinp.parameters['i_ci_c2'][1, genotype]         #Intake
+    #     j += 1
+    #     # cg[9] calculated from the deviation in cg[8]
+    #     coefficients_c[j] = uinp.parameters['i_cg_c2'][8, genotype]         #Fatness EVG
+    #     j += 1
+    #     coefficients_c[j] = uinp.parameters['i_cd_c2'][1, genotype]        #Basal mortality
+    #     j += 1
+    #     coefficients_c[j] = uinp.parameters['i_cl_c2'][0, genotype]        #Wwt, by milk production and intake scalar
+    #     j += 1
+    #     coefficients_c[j] = uinp.parameters['i_cn_c2'][1, genotype]        #YWT, normal growth curve coefficient
+    #
 
     ######################
     ##background vars    #
@@ -7481,7 +7553,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     if stubble:
         return r_intake_f_tpdams, r_intake_f_tpoffs, o_ebg_tpdams, o_ebg_tpoffs
 
-    if gepep:
+    if model_inversion or calibration is not None:
         ##store the calibration variables for each production trait (p)
         ##Comment any traits that don't have target values
         calibration_values_p = np.zeros_like(calibration_targets_p)
@@ -7642,7 +7714,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         # objective = np.max((fun.f_divide(calibration_values_p - calibration_targets_p, calibration_targets_p) ** 2)
         #                     / np.maximum(0.0001, np.abs(coefficients_c)))
 
-        print(f"obj: {calibration_objective} trait & (coefficient) Team SRW:{coefficients_c[SRW_coeff]}")
+        print(f"obj: {calibration_objective} trait & (coefficient) Team SRW:")  # {coefficients_c[SRW_coeff]}")
         i = 0; j = 0
         print(f"ACFW this {calibration_values_p[i]} with ({coefficients_c[j]}) target {calibration_targets_p[i]}")  #ACFW of single ewes at 3.5yo
         i += 1; j += 1
