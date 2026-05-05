@@ -558,7 +558,20 @@ def create_sa():
     saa['lss'] = 0.0                    #lamb survival of singles. This SA alters the BTRT of the initial animals, it does not alter the calculation of lamb mortality. Therefore, both need to be used.
     saa['lstw'] = 0.0                    #lamb survival of twins. This SA alters the BTRT of the initial animals, it does not alter the calculation of lamb mortality. Therefore, both need to be used.
     saa['lstr'] = 0.0                    #lamb survival of triplets. This SA alters the BTRT of the initial animals, it does not alter the calculation of lamb mortality. Therefore, both need to be used.
-
+    ##SAA on slices of the livestock parameters using the age stage axis
+    saa['sfw_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')  #SA value with age stages for clean fleece weight (sfw)
+    saa['sfd_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')  #SA value with age stages for fibre diameter (sfd)
+    saa['iss_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')  #SA value with age stages for staple strength (cw[16])
+    saa['follicles_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')  #SA value with age stages for staple length (cw[11])
+    saa['srw_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')  #SA value with age stages for weight (srw)
+    saa['wwt_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')  #SA value with age stages for weaning weight (cl[0])
+    saa['pi_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')  #SA value with age stages for potential intake (ci[1])
+    saa['evg_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')  #SA value with age stages for fatness (cg[8] & cg[9])
+    saa['bsurv_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')  #SA value with age stages for basal survival (cd[1])
+    saa['pnsurv_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')  #SA value with age stages for peri-natal survival (cu2[23,-1])
+    saa['con_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')  #SA value with age stages for conception (cb1[24, 25 & 26, 1]).
+    saa['ls_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')  #SA value with age stages for litter size (cb1[24, 25 & 26, 2 & 3])
+    saa['era_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')  #SA value with age stages for ewe rearing ability / lamb survival (cu6[8,-1] & cu2[8,-1])
     ##SAT
     sat['cb0_c2'] = np.zeros(uinp.parameters['i_cb0_c2'].shape, dtype='float64')  #BTRT params for genotypes
     ##SAR
