@@ -1907,9 +1907,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
 
     ###Calculate lw_initial from the initial lw input which is a proportion of srw
     ### Uses srw_xyg to remove the randomness that would occur with srw_b0xyg when using a RR SA (because BTRT alters SRW)
-    lw_initial_a1e1b1nwzida0e0b0xyg0 = (lw_initial_yg0 * (1 + adjp_lw_initial_wzida0e0b0xyg0)) * srw_Pa1e1b1nwzida0e0b0xyg0
-    lw_initial_a1e1b1nwzida0e0b0xyg1 = (lw_initial_yg1 * (1 + adjp_lw_initial_wzida0e0b0xyg1)) * srw_Pa1e1b1nwzida0e0b0xyg1
-    lw_initial_a1e1b1nwzida0e0b0xyg3 = (lw_initial_yg3 * (1 + adjp_lw_initial_wzida0e0b0xyg3)) * srw_Pa1e1b1nwzida0e0b0xyg3
+    lw_initial_a1e1b1nwzida0e0b0xyg0 = (lw_initial_yg0 * (1 + adjp_lw_initial_wzida0e0b0xyg0)) * srw_female_pa1e1b1nwzida0e0b0xyg0
+    lw_initial_a1e1b1nwzida0e0b0xyg1 = (lw_initial_yg1 * (1 + adjp_lw_initial_wzida0e0b0xyg1)) * srw_female_pa1e1b1nwzida0e0b0xyg1
+    lw_initial_a1e1b1nwzida0e0b0xyg3 = (lw_initial_yg3 * (1 + adjp_lw_initial_wzida0e0b0xyg3)) * srw_female_pa1e1b1nwzida0e0b0xyg3
     ###the initial cfw input is a proportion of sfw
     cfw_initial_wzida0e0b0xyg0 = (cfw_initial_yg0 * (1 + adjp_cfw_initial_wzida0e0b0xyg0)) * sfw_yg0
     cfw_initial_wzida0e0b0xyg1 = (cfw_initial_yg1 * (1 + adjp_cfw_initial_wzida0e0b0xyg1)) * sfw_yg1
