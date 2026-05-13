@@ -3134,7 +3134,7 @@ def f_sheep_summary(lp_vars, r_vals):
         wether_crossy_numbers = sale_numbers_xg.values.sum() - female_numbers.values.sum()
         wether_crossy_dollars = (sale_price_xg.values * sale_numbers_xg.values).sum() - (female_prices.values * female_numbers.values).sum()
         wether_crossy_price = fun.f_divide_float(wether_crossy_dollars, wether_crossy_numbers)
-        return female_price, wether_crossy_price
+        return female_price, wether_crossy_price, female_numbers.values.sum()
 
     def f_qsz_expected_total(qsz):
         keys_q = r_vals['zgen']['keys_q']
@@ -3187,7 +3187,8 @@ def f_sheep_summary(lp_vars, r_vals):
                    + machinery_cost + labour_cost)
 
     numbers_dams, numbers_wethers_crossys = f_stock_numbers_summary(r_vals)
-    female_prog_price, wether_crossy_prog_price = f_sale_price_prog()
+    female_prog_price, wether_crossy_prog_price, female_prog_sold = f_sale_price_prog()
+    female_prog_sold = round(female_prog_sold, 0)
 
     dams = numbers_dams.rename(columns={'Open Numbers': 'Open', 'Sales': 'Sell'})
     dams = dams.loc[:, ['Open', 'Births', 'Sell']]
@@ -3218,6 +3219,13 @@ def f_sheep_summary(lp_vars, r_vals):
                                                 keys='dams_keys_p7qsk2tyvanwziy1g1', arith=1, index=[5],
                                                 cols=[])
     sale_price_dams_y = sale_price_dams_y.squeeze().reindex(numbers_dams.index).fillna(0)
+    # Lamb sale price blends dam sales with prog sucker sales.
+    female_total_lamb_sold = numbers_dams['Sales'].iloc[0]
+    sale_price_dams_y.iloc[0] = fun.f_divide_float(
+        sale_price_dams_y.iloc[0] * (female_total_lamb_sold - female_prog_sold)
+        + female_prog_price * female_prog_sold,
+        female_total_lamb_sold
+    )
 
     cfw_dams_y = f_stock_pasture_summary(r_vals, type='stock', prod='cfw_hdmob_k2tva1nwziyg1',
                                          na_prod=[0, 1, 4], weights='dams_numbers_qsk2tvanwziy1g1',
@@ -3248,7 +3256,6 @@ def f_sheep_summary(lp_vars, r_vals):
 
     dams.insert(2, 'Mated', mated_dams_y)
     dams.insert(4, '$/hd', sale_price_dams_y)
-    dams.loc['Lambs', '$/hd'] = female_prog_price
     dams.loc[np.isclose(dams['Sell'], 0), '$/hd'] = 0
     dams['cfw/hd'] = cfw_dams_y
     dams['fd'] = fd_dams_y
@@ -3274,7 +3281,14 @@ def f_sheep_summary(lp_vars, r_vals):
                                                            keys='offs_keys_p7qsk3k5tyvnwziaxyg3',
                                                            arith=1, index=[6], cols=[])
     sale_price_wethers_crossys_y = sale_price_wethers_crossys_y.squeeze().reindex(numbers_wethers_crossys.index).fillna(0)
-    sale_price_wethers_crossys_y.iloc[0] = wether_crossy_prog_price
+    # Lamb sale price blends offs sales with prog sucker sales.
+    wether_crossy_total_lamb_sold = numbers_wethers_crossys['Sales (months of age)'].sum(axis=1).iloc[0]
+    wether_crossy_prog_sold = numbers_wethers_crossys[('Sales (months of age)', 'Weaning')].iloc[0]
+    sale_price_wethers_crossys_y.iloc[0] = fun.f_divide_float(
+        sale_price_wethers_crossys_y.iloc[0] * (wether_crossy_total_lamb_sold - wether_crossy_prog_sold)
+        + wether_crossy_prog_price * wether_crossy_prog_sold,
+        wether_crossy_total_lamb_sold
+    )
 
     cfw_wethers_crossys_y = f_stock_pasture_summary(r_vals, type='stock', prod='cfw_hdmob_k3k5tvnwziaxyg3',
                                                     na_prod=[0, 1, 5],
@@ -3402,7 +3416,7 @@ def f_stock_numbers_summary(r_vals):
     ###dams sold each year
     sale_numbers_dams_y = sale_numbers_dams_y_tv.sum(axis=1)
     #add female prog that were sold
-    sale_numbers_dams_y.iloc[0] = female_prog_sold
+    sale_numbers_dams_y.iloc[0] += female_prog_sold
     
     ###concat open, birth and sale
     numbers_dams = pd.DataFrame()
@@ -3867,7 +3881,7 @@ def mp_report(lp_vars, r_vals, option=1):
     sale_numbers_dams_y_qsz = sale_numbers_dams_qszy.unstack().T
     sale_numbers_dams_y_qsz = sale_numbers_dams_y_qsz.reindex(sale_numbers_dams_qszy.index.unique(-1)) #put "lambs" back at the top of the y axis.
     ####add female prog that were sold
-    sale_numbers_dams_y_qsz.iloc[0] = female_prog_sold_qsz
+    sale_numbers_dams_y_qsz.iloc[0] += female_prog_sold_qsz
     sale_numbers_dams_y_qsz = round(sale_numbers_dams_y_qsz, 0)
 
     ##sale offs numbers
