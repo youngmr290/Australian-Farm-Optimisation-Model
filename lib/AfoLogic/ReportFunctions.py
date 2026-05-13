@@ -1391,12 +1391,13 @@ def f_stock_cash_summary(lp_vars, r_vals):
     return stocksale_qszp7, wool_qszp7, husbcost_qszp7, supcost_qsz_p7, purchasecost_qszp7, trade_value_qszp7
 
 
-def f_labour_summary(lp_vars, r_vals, option=0):
+def f_labour_summary(lp_vars, r_vals, option=0, pasture_area_propn=1):
     '''
     :param option:
 
         #. return total labour cost
         #. return amount for each enterprise
+        #. return estimated stock labour cost
 
     '''
     ##mask to uncluster lp_vars
@@ -1448,6 +1449,76 @@ def f_labour_summary(lp_vars, r_vals, option=0):
         casual_fixed_qsp5z_w = f_vars2df(lp_vars, 'v_fixed_labour_casual', maskz8_p5z[:,na,:], z_pos=-1).unstack(-2)
         fixed_labour = pd.concat([manager_fixed_qsp5z_w, prem_fixed_qsp5z_w, casual_fixed_qsp5z_w], axis=1).sum(axis=1, level=0)
         return sheep_labour, crop_labour, fixed_labour
+
+    ##estimated stock labour cost
+    if option == 2:
+        index_qsz = pd.MultiIndex.from_product([keys_q, keys_s, keys_z])
+        index_qsp5z = pd.MultiIndex.from_product([keys_q, keys_s, keys_p5, keys_z])
+        z_prob_qsz = pd.Series(r_vals['zgen']['z_prob_qsz'].ravel(), index=index_qsz)
+
+        def f_labour_hours(var_key):
+            labour = f_vars2df(lp_vars, var_key, maskz8_p5z[:,na,:], z_pos=-1)
+            return labour.groupby(level=[0, 1, 2, 4]).sum()
+
+        def f_add(series_a, series_b):
+            return series_a.add(series_b, fill_value=0)
+
+        def f_stock_hours(sheep_hours, crop_hours, fixed_hours):
+            # Crop labour includes operations that also occur on pasture paddocks, mainly fertiliser and
+            # reseeding. Allocate 20% of the pasture-area share of crop labour to stock because pasture
+            # paddocks require less labour per hectare than crop paddocks.
+            return f_add(sheep_hours, f_add(fixed_hours * pasture_area_propn,
+                                            crop_hours * pasture_area_propn * 0.2))
+
+        def f_alloc_cost(cost, stock_hours, total_hours):
+            # Permanent and manager costs are annual staff costs for all work. Allocate their cost to
+            # stock using the stock share of manager/permanent hours used across the year.
+            propn = stock_hours.div(total_hours).replace([np.inf, -np.inf], 0).fillna(0)
+            return cost.mul(propn, fill_value=0)
+
+        def f_expected_total(qsz):
+            return qsz.reindex(index_qsz).mul(z_prob_qsz).sum()
+
+        ###manager
+        manager_sheep_qsp5z = f_labour_hours('v_sheep_labour_manager')
+        manager_crop_qsp5z = f_labour_hours('v_phase_labour_manager')
+        manager_fixed_qsp5z = f_labour_hours('v_fixed_labour_manager')
+        manager_stock_hours_qsz = f_stock_hours(manager_sheep_qsp5z, manager_crop_qsp5z, manager_fixed_qsp5z).groupby(level=[0, 1, 3]).sum()
+        manager_total_hours_qsz = f_add(f_add(manager_sheep_qsp5z, manager_crop_qsp5z),
+                                        manager_fixed_qsp5z).groupby(level=[0, 1, 3]).sum()
+        quantity_manager_qs = f_vars2np(lp_vars, 'v_quantity_manager', qs)
+        manager_cost_z = r_vals['lab']['manager_cost_p7z'].sum(axis=0)
+        manager_cost_qsz = pd.Series((quantity_manager_qs[:,:,na] * manager_cost_z[na,na,:]
+                                      * r_vals['zgen']['mask_qs'][:,:,na]).ravel(), index=index_qsz)
+        manager_stock_cost_qsz = f_alloc_cost(manager_cost_qsz, manager_stock_hours_qsz, manager_total_hours_qsz)
+
+        ###permanent
+        prem_sheep_qsp5z = f_labour_hours('v_sheep_labour_permanent')
+        prem_crop_qsp5z = f_labour_hours('v_phase_labour_permanent')
+        prem_fixed_qsp5z = f_labour_hours('v_fixed_labour_permanent')
+        prem_stock_hours_qsz = f_stock_hours(prem_sheep_qsp5z, prem_crop_qsp5z, prem_fixed_qsp5z).groupby(level=[0, 1, 3]).sum()
+        prem_total_hours_qsz = f_add(f_add(prem_sheep_qsp5z, prem_crop_qsp5z),
+                                     prem_fixed_qsp5z).groupby(level=[0, 1, 3]).sum()
+        quantity_perm_qs = f_vars2np(lp_vars, 'v_quantity_perm', qs)
+        perm_cost_z = r_vals['lab']['perm_cost_p7z'].sum(axis=0)
+        prem_cost_qsz = pd.Series((quantity_perm_qs[:,:,na] * perm_cost_z[na,na,:]
+                                   * r_vals['zgen']['mask_qs'][:,:,na]).ravel(), index=index_qsz)
+        prem_stock_cost_qsz = f_alloc_cost(prem_cost_qsz, prem_stock_hours_qsz, prem_total_hours_qsz)
+
+        ###casual
+        casual_sheep_qsp5z = f_labour_hours('v_sheep_labour_casual')
+        casual_crop_qsp5z = f_labour_hours('v_phase_labour_casual')
+        casual_fixed_qsp5z = f_labour_hours('v_fixed_labour_casual')
+        casual_stock_hours_qsp5z = f_stock_hours(casual_sheep_qsp5z, casual_crop_qsp5z, casual_fixed_qsp5z)
+        quantity_casual_qsp5z = f_vars2np(lp_vars, 'v_quantity_casual', qsp5z, maskz8_p5z, z_pos=-1)
+        casual_cost_p5z = r_vals['lab']['casual_cost_p7zp5'].sum(axis=0).T
+        casual_cost_qsp5z = pd.Series((quantity_casual_qsp5z * casual_cost_p5z[na,na,:,:]).ravel(),
+                                      index=index_qsp5z)
+        casual_total_hours_qsp5z = f_add(f_add(casual_sheep_qsp5z, casual_crop_qsp5z), casual_fixed_qsp5z)
+        casual_stock_cost_qsz = f_alloc_cost(casual_cost_qsp5z, casual_stock_hours_qsp5z,
+                                                    casual_total_hours_qsp5z).groupby(level=[0, 1, 3]).sum()
+
+        return f_expected_total(f_add(f_add(manager_stock_cost_qsz, prem_stock_cost_qsz), casual_stock_cost_qsz))
 
 
 def f_dep_summary(lp_vars, r_vals):
@@ -3181,7 +3252,7 @@ def f_sheep_summary(lp_vars, r_vals):
     pasture_cost = (pnl.loc[('Expense', 'pasture'), 'Full year']
                     + pnl.loc[('Expense', 'salt land pasture'), 'Full year'])
     machinery_cost = f_sheep_machinery_cost()
-    labour_cost = pnl.loc[('Expense', 'labour'), 'Full year'] * pasture_area_propn
+    labour_cost = f_labour_summary(lp_vars, r_vals, option=2, pasture_area_propn=pasture_area_propn)
     total_income = wool_income + sheep_trading_income
     total_costs = (fixed_cost + husbandry_cost + supplement_cost + purchase_cost + pasture_cost
                    + machinery_cost + labour_cost)
