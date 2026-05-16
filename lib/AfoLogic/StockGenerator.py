@@ -7309,15 +7309,23 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ###sale based on user inputted number of sale times spaced evenly within each DVP
     if sinp.structuralsa['i_offs_sale_method'] == 1:
         ###t0 - retained
-        ###t1 - sale at the end of the dvp. For dsp (and when nodes are included) this gets shifted to the start of the dvp
-        ###>=t2 - sale even spread within the dvp
-        dvp_end_va1e1b1nwzida0e0b0xyg3 = np.roll(dvp_start_va1e1b1nwzida0e0b0xyg3, shift=-1, axis=0) - step
-        dvp_end_va1e1b1nwzida0e0b0xyg3[-1,...] = date_start_pa1e1b1nwzida0e0b0xyg3[-1,...] #set end of last dvp to final generator period
+        ###t1 - sale at the end of the dvp for steady state, or the start of the dvp for dsp or node periods inc
+        ###>=t2 - sale evenly spread within the dvp
+        dvp_end_period_start_va1e1b1nwzida0e0b0xyg3 = np.roll(dvp_start_va1e1b1nwzida0e0b0xyg3, shift=-1, axis=0) - step
+        dvp_end_period_start_va1e1b1nwzida0e0b0xyg3[-1,...] = date_start_pa1e1b1nwzida0e0b0xyg3[-1,...] #set end of last dvp to final generator period
+        dvp_end_boundary_va1e1b1nwzida0e0b0xyg3 = dvp_end_period_start_va1e1b1nwzida0e0b0xyg3 + step
         offs_sale_opportunities_per_dvp = sinp.structuralsa['i_offs_sale_opportunities_per_dvp']
-        sale_offset_days_vg3 = (dvp_end_va1e1b1nwzida0e0b0xyg3 - np.maximum(
-            date_weaned_i_pa1e1b1nwzida0e0b0xyg3, dvp_start_va1e1b1nwzida0e0b0xyg3))/offs_sale_opportunities_per_dvp
-        sale_offset_days_tvg3 = sale_offset_days_vg3 * fun.f_expand(np.roll(np.arange(len_t3), shift=1, axis=0), p_pos-1) #len t3 includes the retained slice so roll because we want t[1] to be 0 offset so sale occurs at the end of the dvp.
-        sale_date_tvg3 = dvp_end_va1e1b1nwzida0e0b0xyg3 - sale_offset_days_tvg3 #minus 7 to get the last period of previous dvp.
+        if bool_steady_state and not sinp.structuralsa['i_inc_node_periods']:
+            sale_offset_days_vg3 = (dvp_end_boundary_va1e1b1nwzida0e0b0xyg3 - np.maximum(
+                date_weaned_i_pa1e1b1nwzida0e0b0xyg3, dvp_start_va1e1b1nwzida0e0b0xyg3))/offs_sale_opportunities_per_dvp
+            sale_offset_days_tvg3 = sale_offset_days_vg3 * fun.f_expand(np.roll(np.arange(len_t3), shift=1, axis=0), p_pos-1) #len t3 includes the retained slice so roll because t[1] has 0 offset from the end of the dvp.
+            sale_date_tvg3 = dvp_end_period_start_va1e1b1nwzida0e0b0xyg3 - sale_offset_days_tvg3
+        else:
+            sale_start_va1e1b1nwzida0e0b0xyg3 = np.maximum(date_weaned_i_pa1e1b1nwzida0e0b0xyg3,
+                                                           dvp_start_va1e1b1nwzida0e0b0xyg3)
+            sale_offset_days_vg3 = (dvp_end_boundary_va1e1b1nwzida0e0b0xyg3 - sale_start_va1e1b1nwzida0e0b0xyg3) / offs_sale_opportunities_per_dvp
+            sale_offset_days_tvg3 = sale_offset_days_vg3 * fun.f_expand(np.arange(len_t3) - 1, p_pos-1) #len t3 includes the retained slice so t[1] has 0 offset from the start of the dvp.
+            sale_date_tvg3 = sale_start_va1e1b1nwzida0e0b0xyg3 + sale_offset_days_tvg3
         sale_opp_tpa1e1b1nwzida0e0b0xyg3 = np.any(sfun.f1_period_is_('period_is', sale_date_tvg3[:,:,na,...],
                                                                      date_start_pa1e1b1nwzida0e0b0xyg3, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg3), axis=1)
         ####set t0 sale_opp to false because no sale in t[0]
@@ -7342,12 +7350,12 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
         sale_opp_tpa1e1b1nwzida0e0b0xyg3 = np.logical_or(np.logical_and(age_start_pa1e1b1nwzida0e0b0xyg3[mask_p_offs_p] <= sale_age_tpa1e1b1nwzida0e0b0xyg3,
                                                                         sale_age_tpa1e1b1nwzida0e0b0xyg3 <= age_end_pa1e1b1nwzida0e0b0xyg3[mask_p_offs_p]),
                                                          weight_tpa1e1b1nwzida0e0b0xyg3>target_weight_tpa1e1b1nwzida0e0b0xyg3)
-    ###if dsp then t1 gets a sale opportunity at the start of dvp when seasons are identified (this will be first period of dvp so any other sale opportunities in that dvp will be disregarded).
-    if not bool_steady_state or sinp.structuralsa['i_inc_node_periods']:
-        period_is_startseasondvp_ypa1e1b1nwzida0e0b0xyg3m: object = sfun.f1_period_is_('period_is', date_node_ya1e1b1nwzidaebxygm[:,na,...], date_start_pa1e1b1nwzida0e0b0xyg3[...,na], date_end_p = date_end_pa1e1b1nwzida0e0b0xyg3[...,na])
-        period_is_startseasondvp_pa1e1b1nwzida0e0b0xyg3 = np.any(period_is_startseasondvp_ypa1e1b1nwzida0e0b0xyg3m, axis=(0,-1))
-        period_is_startseasondvp_pa1e1b1nwzida0e0b0xyg3 = np.logical_and(period_is_startseasondvp_pa1e1b1nwzida0e0b0xyg3, days_period_cut_pa1e1b1nwzida0e0b0xyg3[...,0:1,:,:,:,:]>0) #only have sale opp if animal exists. slice e axis
-        sale_opp_tpa1e1b1nwzida0e0b0xyg3[1,...] = np.logical_or(sale_opp_tpa1e1b1nwzida0e0b0xyg3[1,...], period_is_startseasondvp_pa1e1b1nwzida0e0b0xyg3)
+        ###if dsp then t1 gets a sale opportunity at the start of dvp when seasons are identified (this will be first period of dvp so any other sale opportunities in that dvp will be disregarded).
+        if not bool_steady_state or sinp.structuralsa['i_inc_node_periods']:
+            period_is_startseasondvp_ypa1e1b1nwzida0e0b0xyg3m: object = sfun.f1_period_is_('period_is', date_node_ya1e1b1nwzidaebxygm[:,na,...], date_start_pa1e1b1nwzida0e0b0xyg3[...,na], date_end_p = date_end_pa1e1b1nwzida0e0b0xyg3[...,na])
+            period_is_startseasondvp_pa1e1b1nwzida0e0b0xyg3 = np.any(period_is_startseasondvp_ypa1e1b1nwzida0e0b0xyg3m, axis=(0,-1))
+            period_is_startseasondvp_pa1e1b1nwzida0e0b0xyg3 = np.logical_and(period_is_startseasondvp_pa1e1b1nwzida0e0b0xyg3, days_period_cut_pa1e1b1nwzida0e0b0xyg3[...,0:1,:,:,:,:]>0) #only have sale opp if animal exists. slice e axis
+            sale_opp_tpa1e1b1nwzida0e0b0xyg3[1,...] = np.logical_or(sale_opp_tpa1e1b1nwzida0e0b0xyg3[1,...], period_is_startseasondvp_pa1e1b1nwzida0e0b0xyg3)
     ###on hand - combine period_is_sale & period_is_transfer then use cumulative max to convert to on_hand
     ### note: animals are on hand in the period they are sold ie sale takes place on the last minute of the period.
     off_hand_tpa1e1b1nwzida0e0b0xyg3 = sfun.f1_cum_dvp(sale_opp_tpa1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3, axis=1,
