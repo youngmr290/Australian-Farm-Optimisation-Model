@@ -957,6 +957,50 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         reports["wbe_poffs"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, prod_weights=prod_weights, na_prodweights=na_prodweights
                                  , weights=weights, na_weights=na_weights, den_weights=den_weights, na_denweights=na_denweights
                                  , keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+    if report_run.loc['run_fat_poffs', 'Run']:
+        ##Average offs fat with p, e & b axis. fat is adjusted for animals that are sold but not adjusted by mortality
+        ## because it adds an extra level of complexity for minimal gain (to include mort both the numerator and denominator need to be adjusted).
+        ##Denom (numbers) also needs to be weighted because of the new axis (p,e&b) being added and then summed in the weighted average.
+        type = 'stock'
+        prod = 'fat_offs_k3k5Tvpnw8zida0e0b0xyg3'
+        na_prod = [0,1] #q,s
+        prod_weights = 'pde0b0_numbers_weights_k3k5tvpnw8zida0e0b0xyg3' #weight prod for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off-hand)
+        na_prodweights = [0,1] #q,s
+        weights = 'offs_numbers_qsk3k5tvnwziaxyg3'
+        na_weights = [6, 11, 13, 14]
+        den_weights = 'pde0b0_numbers_weights_k3k5tvpnw8zida0e0b0xyg3' #weight numbers for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off-hand)
+        na_denweights = [0,1] #q,s
+        keys = 'offs_keys_qsk3k5tvpnwzidaebxyg3'
+        arith = f_update_default_controls(user_controls, 'fat_poffs', 'arith', 1)
+        index = f_update_default_controls(user_controls, 'fat_poffs', 'index', [6])  #p
+        cols = f_update_default_controls(user_controls, 'fat_poffs', 'cols', [])
+        axis_slice = f_update_default_controls(user_controls, 'fat_poffs', 'axis_slice', {})
+        reports["fat_poffs"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, prod_weights=prod_weights, na_prodweights=na_prodweights
+                                 , weights=weights, na_weights=na_weights, den_weights=den_weights, na_denweights=na_denweights
+                                 , keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+
+    if report_run.loc['run_lean_poffs', 'Run']:
+        ##Average offs lean with p, e & b axis. lean is adjusted for animals that are sold but not adjusted by mortality
+        ## because it adds an extra level of complexity for minimal gain (to include mort both the numerator and denominator need to be adjusted).
+        ##Denom (numbers) also needs to be weighted because of the new axis (p,e&b) being added and then summed in the weighted average.
+        type = 'stock'
+        prod = 'lean_offs_k3k5Tvpnw8zida0e0b0xyg3'
+        na_prod = [0,1] #q,s
+        prod_weights = 'pde0b0_numbers_weights_k3k5tvpnw8zida0e0b0xyg3' #weight prod for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off-hand)
+        na_prodweights = [0,1] #q,s
+        weights = 'offs_numbers_qsk3k5tvnwziaxyg3'
+        na_weights = [6, 11, 13, 14]
+        den_weights = 'pde0b0_numbers_weights_k3k5tvpnw8zida0e0b0xyg3' #weight numbers for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off-hand)
+        na_denweights = [0,1] #q,s
+        keys = 'offs_keys_qsk3k5tvpnwzidaebxyg3'
+        arith = f_update_default_controls(user_controls, 'lean_poffs', 'arith', 1)
+        index = f_update_default_controls(user_controls, 'lean_poffs', 'index', [6])  #p
+        cols = f_update_default_controls(user_controls, 'lean_poffs', 'cols', [])
+        axis_slice = f_update_default_controls(user_controls, 'lean_poffs', 'axis_slice', {})
+        reports["lean_poffs"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, prod_weights=prod_weights, na_prodweights=na_prodweights
+                                 , weights=weights, na_weights=na_weights, den_weights=den_weights, na_denweights=na_denweights
+                                 , keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+
     if report_run.loc['run_cs_poffs', 'Run']:
         ##Average offs cs with p, e & b axis. 
         ##Denom (numbers) also needs to be weighted because of the new axis (p,e&b) being added and then summed in the weighted average.
