@@ -158,8 +158,10 @@ def crop_residue_all(params, r_vals, nv, cat_propn_s1_ks2):
     season_break_z = zfun.f_seasonal_inp(pinp.general['i_break'], numpy=True)
     destock_days_prior_brk = pinp.stubble['i_destock_stub']
     date_destocked = np.min(season_break_z) + 364 - destock_days_prior_brk #incremented to the next yr.
-    in_period_p6z = (fp_start_p6z <= date_destocked) & (date_destocked < fp_end_p6z)
-    idx_fp_end_stub_z = np.argmax(in_period_p6z, axis=0).astype(int)
+    # Feed periods are represented as a single 364-day cycle, so map next year's destock date
+    # back onto the period dates before locating the feed period and calculating partial access.
+    date_destocked_fp_z = feed_period_dates_p6z[0] + np.mod(date_destocked - feed_period_dates_p6z[0], 364)
+    idx_fp_end_stub_z = fun.searchsort_multiple_dim(feed_period_dates_p6z, date_destocked_fp_z, 1, 0, side='right') - 1
 
     mask_stubble_exists_p6zk = np.logical_or(np.logical_and(index_p6[:,na,na]>=idx_fp_start_stub_zk, index_p6[:,na,na]<=idx_fp_end_stub_z[:,na]),
                                              np.logical_and(idx_fp_end_stub_z[:,na] < idx_fp_start_stub_zk,
@@ -238,14 +240,14 @@ def crop_residue_all(params, r_vals, nv, cat_propn_s1_ks2):
     stub_preharvest_block_frac_p6zk[stub_preharvest_block_frac_p6zk>=1] = 0
 
     # --- (2) Post-destock block: once sheep are destocked, remainder of period is not grazeable ---
-    # date_destocked is a scalar (same for all z); numpy broadcasts across (p6,z)
-    stub_postdestock_block_frac_p6z  = np.clip(fun.f_divide(fp_len_p6z - (fp_end_p6z - date_destocked), fp_len_p6z),0, 1)
+    # date_destocked_fp_z is aligned to the feed-period date cycle and broadcasts across p6.
+    stub_postdestock_block_frac_p6z  = np.clip(fun.f_divide(fp_len_p6z - (fp_end_p6z - date_destocked_fp_z), fp_len_p6z),0, 1)
     # Convert from "fraction of period before destock" to "fraction of period after destock (not available for grazing)"
     stub_postdestock_block_frac_p6z = 1 - stub_postdestock_block_frac_p6z
     # if destock after the period ends -> no block
-    stub_postdestock_block_frac_p6z[date_destocked >= fp_end_p6z] = 0
+    stub_postdestock_block_frac_p6z[date_destocked_fp_z >= fp_end_p6z] = 0
     # if destock before the period starts -> no blocked (because stubble doesnt exist.
-    stub_postdestock_block_frac_p6z[date_destocked <= fp_start_p6z] = 0
+    stub_postdestock_block_frac_p6z[date_destocked_fp_z <= fp_start_p6z] = 0
 
     ##combine
     stub_unavailable_frac_p6zk  = stub_postdestock_block_frac_p6z[:,:,na] + stub_preharvest_block_frac_p6zk
