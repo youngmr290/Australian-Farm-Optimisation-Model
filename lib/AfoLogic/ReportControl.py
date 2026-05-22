@@ -141,9 +141,10 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
     if report_run.loc['run_feedbudget', 'Run']:
         reports["grazing"] = rfun.f_grazing_summary(lp_vars, r_vals)
     if report_run.loc['run_numbers_summary', 'Run']:
-        ewe_numbers_summary, wethers_n_crossys_numbers_summary = rfun.f_stock_numbers_summary(r_vals)
+        ewe_numbers_summary, wethers_n_crossys_numbers_summary, wethers_n_crossys_weight_summary = rfun.f_stock_numbers_summary(r_vals)
         reports["ewe_numbers_summary"] = ewe_numbers_summary
         reports["wethers_n_crossys_numbers_summary"] = wethers_n_crossys_numbers_summary
+        reports["wethers_n_crossys_weight_summary"] = wethers_n_crossys_weight_summary
     if report_run.loc['run_sheep_summary', 'Run']:
         reports["sheep_summary"] = rfun.f_sheep_summary(lp_vars, r_vals)
     if report_run.loc['run_emissions', 'Run']:

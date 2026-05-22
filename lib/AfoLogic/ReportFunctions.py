@@ -3257,7 +3257,7 @@ def f_sheep_summary(lp_vars, r_vals):
     total_costs = (fixed_cost + husbandry_cost + supplement_cost + purchase_cost + pasture_cost
                    + machinery_cost + labour_cost)
 
-    numbers_dams, numbers_wethers_crossys = f_stock_numbers_summary(r_vals)
+    numbers_dams, numbers_wethers_crossys, _ = f_stock_numbers_summary(r_vals)
     female_prog_price, wether_crossy_prog_price, female_prog_sold = f_sale_price_prog()
     female_prog_sold = round(female_prog_sold, 0)
 
@@ -3451,8 +3451,30 @@ def f_stock_numbers_summary(r_vals):
         female_prog_sold = numbers_prog_g_x.loc[['BBB','BBM'],'F'] #wrapped in try incase BBM are not included in the trial. Note BBT are added with wethers.
     except KeyError:
         female_prog_sold = numbers_prog_g_x.loc['BBB', 'F']
+    female_prog_sold = np.sum(female_prog_sold)
     ###wether & crossy prog sold
     wether_prog_sold = numbers_prog_g_x.values.sum() - female_prog_sold
+
+    ##prog ffcfw sold
+    type = 'stock'
+    prod = 'sale_ffcfw_k3k5twziaxyg2'
+    na_prod = [0,1] #q,s
+    weights = 'prog_numbers_qsk3k5twzia0xg2'
+    na_weights = []
+    keys = 'prog_keys_qsk3k5twzia0xg2'
+    arith = 2
+    index = [10] #g
+    cols = [9] #gender
+    axis_slice = {4:[0,1,1]} #sale suckers
+    ebw_prog_g_x = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod,
+                                            weights=weights, na_weights=na_weights, keys=keys, arith=arith,
+                                            index=index, cols=cols, axis_slice=axis_slice)
+    try:
+        female_prog_ffcfw = ebw_prog_g_x.loc[['BBB','BBM'],'F'] #wrapped in try incase BBM are not included in the trial. Note BBT are added with wethers.
+    except KeyError:
+        female_prog_ffcfw = ebw_prog_g_x.loc['BBB', 'F']
+    female_prog_ffcfw = np.sum(female_prog_ffcfw)
+    wether_prog_ffcfw = fun.f_divide(ebw_prog_g_x.values.sum() - female_prog_ffcfw, wether_prog_sold)
 
     ##dam numbers open
     type = 'stock'
@@ -3526,6 +3548,22 @@ def f_stock_numbers_summary(r_vals):
     cols = [4,6] #v,t
     sale_numbers_offs_y_tv = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
                                                na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols)
+    ##ffcfw at sale for offs.
+    type = 'stock'
+    prod = 'sale_ffcfw_k3k5tvnwziaxyg3'
+    na_prod = [0,1,5] #q,s,y
+    prod_weights = 'dvp_is_sale_tyvzixg3'
+    na_prodweights = [0,1,2,3,7,8,11,13]
+    weights = 'offs_numbers_qsk3k5tvnwziaxyg3'
+    na_weights = [5] #y (year)
+    keys = 'offs_keys_qsk3k5tyvnwziaxyg3'
+    arith = 1
+    index = [5] #y
+    cols = [4,6] #t,v
+    sale_ffcfw_offs_y_tv = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod,
+                                                  prod_weights=prod_weights, na_prodweights=na_prodweights,
+                                                  weights=weights, na_weights=na_weights, keys=keys,
+                                                  arith=arith, index=index, cols=cols)
     ###age at sale
     type = 'stock'
     prod = 'saleage_k3k5tvnwziaxyg3'
@@ -3538,21 +3576,28 @@ def f_stock_numbers_summary(r_vals):
     saleage_offs_tv = f_stock_pasture_summary(r_vals, type=type, prod=prod, weights=weights,na_weights=na_weights,
                                               keys=keys, arith=arith, index=index, cols=cols)
     ###add sale age as headers
-    sale_numbers_offs_y_tv.columns = np.round(saleage_offs_tv.values.squeeze() / 30, 0) #div 30 to convert to months
+    sale_age_cols = np.round(saleage_offs_tv.values.squeeze() / 30, 0) #div 30 to convert to months
+    sale_numbers_offs_y_tv.columns = sale_age_cols
     sale_numbers_offs_y_tv = sale_numbers_offs_y_tv.sort_index(axis=1)
+    sale_ffcfw_offs_y_tv.columns = sale_age_cols
+    sale_ffcfw_offs_y_tv = sale_ffcfw_offs_y_tv.sort_index(axis=1)
     ####add wether and crossy prog that were sold (they need to be included in the number of lambs born)
     sale_numbers_offs_y_tv.insert(0, "Weaning",0)
     sale_numbers_offs_y_tv.iloc[0,0] = wether_prog_sold
+    sale_ffcfw_offs_y_tv.insert(0, "Weaning", 0)
+    sale_ffcfw_offs_y_tv.iloc[0,0] = wether_prog_ffcfw
     ###sum cols with same sale age (to stop error when concat the report with other trials because of duplicate col names)
     sale_numbers_offs_y_tv = sale_numbers_offs_y_tv.groupby(sale_numbers_offs_y_tv.columns, axis=1).sum()
-    
+    sale_ffcfw_offs_y_tv = sale_ffcfw_offs_y_tv.groupby(sale_ffcfw_offs_y_tv.columns, axis=1).sum()
+
     ###concat open, birth and sale
     numbers_offs = pd.concat([sale_numbers_offs_y_tv], keys=['Sales (months of age)'], axis=1)
     numbers_offs.insert(0, "Open Numbers", open_numbers_offs_y)
     numbers_offs.insert(1, "Births", 0) #add empty col
     numbers_offs.iloc[0,1] = wethers_born
+    ffcfw_offs = pd.concat([sale_ffcfw_offs_y_tv], keys=['FFCFW at sale (kg)'], axis=1)
 
-    return numbers_dams.round(0), numbers_offs.round(0)
+    return numbers_dams.round(0), numbers_offs.round(0), ffcfw_offs.round(1)
 
 def f_pasture_area_analysis(lp_vars, r_vals, trial):
     '''Returns a simple 1 row summary of the trial (season results are averaged)'''
