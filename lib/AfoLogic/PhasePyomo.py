@@ -35,13 +35,13 @@ def f1_croppyomo_local(params, model):
     model.v_use_biomass = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, model.s_crops, model.s_lmus, model.s_biomass_uses, bounds=(0,None),
                                 doc='tonnes of biomass in each use category')
 
-    model.v_sell_product = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, model.s_crops, model.s_biomass_uses, model.s_grain_pools, bounds=(0,None),
-                                doc='tonnes of grain/baled product in each pool sold')
+    model.v_sell_product = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, model.s_crops, model.s_biomass_uses, bounds=(0,None),
+                                doc='tonnes of grain/baled product sold')
 
-    model.v_product_debit = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, model.s_crops_and_supp, model.s_biomass_uses, model.s_grain_pools, bounds=(0,None),
+    model.v_product_debit = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, model.s_crops_and_supp, model.s_biomass_uses, bounds=(0,None),
                                 doc='tonnes of grain/baled product in debt (will need to be purchased or provided from harvest)')
 
-    model.v_product_credit = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, model.s_crops_and_supp, model.s_biomass_uses, model.s_grain_pools, bounds=(0,None),
+    model.v_product_credit = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, model.s_crops_and_supp, model.s_biomass_uses, bounds=(0,None),
                                 doc='tonnes of grain/baled product in credit (can be used for sup feeding or sold)')
 
     model.v_biomass_debit = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, model.s_crops, model.s_lmus, bounds=(0,None),
@@ -82,12 +82,10 @@ def f1_croppyomo_local(params, model):
     model.p_biomass2product = pe.Param(model.s_crops, model.s_biomass_uses, initialize=params['biomass2product_ks2'],
                              default = 0.0, mutable=False, doc='conversion of biomass to yield (grain or hay) for each biomass use (harvesting as normal, baling for hay and grazing as fodder)')
 
-    model.p_grainpool_proportion = pe.Param(model.s_crops, model.s_grain_pools, initialize=params['grain_pool_proportions'], default = 0.0, doc='proportion of grain in each pool')
-    
-    model.p_grain_price = pe.Param(model.s_sequence_year, model.s_season_periods, model.s_season_types, model.s_grain_pools, model.s_crops,
+    model.p_grain_price = pe.Param(model.s_sequence_year, model.s_season_periods, model.s_season_types, model.s_crops,
                                    model.s_biomass_uses, model.s_c1, initialize=params['grain_price'],default = 0.0, doc='farm gate price per tonne of each grain')
-    
-    model.p_grain_wc = pe.Param(model.s_sequence_year, model.s_enterprises, model.s_season_periods, model.s_season_types, model.s_grain_pools,
+
+    model.p_grain_wc = pe.Param(model.s_sequence_year, model.s_enterprises, model.s_season_periods, model.s_season_types,
                                 model.s_crops, model.s_biomass_uses, initialize=params['grain_wc'],default = 0.0, doc='farm gate wc per tonne of each grain')
     
     model.p_phasesow_req = pe.Param(model.s_phases, model.s_landuses, model.s_lmus, initialize=params['phase_sow_req'], default = 0.0, doc='ha of sow activity required by each rot phase')
@@ -131,14 +129,14 @@ def f_rotation_biomass(model,q,s,p7,k,l,z):
 ##############
 ##total grain/hay transfer for each crop. This is initially separated from cashflow so it can be combined with untimely sowing and crop grazing penalty.
 
-def f_rotation_product(model,q,s,p7,g,k,s2,z):
+def f_rotation_product(model,q,s,p7,k,s2,z):
     '''
     Calculate the total (kg) of each grain harvested from selected rotation phases.
 
     Used in global constraint (con_grain_transfer). See CorePyomo
     '''
     return sum(model.v_use_biomass[q,s,p7,z,k,l,s2] * 1000 * model.p_biomass2product[k,s2]
-               for l in model.s_lmus) * model.p_grainpool_proportion[k,g]
+               for l in model.s_lmus)
 
 
 ##############
@@ -400,4 +398,3 @@ def f_rot_emissions(model, q, s, p7, z):
     #    model.fert_app_cost_tonne = Param(model.cashflow_periods, model.fert_type, initialize= mac.fert_app_t(), default = 0.0, doc='cost of fert application per tonne of each fert (filling up and driving to paddock cost)')
     #    model.fert_app_cost_ha = Param(model.phases, model.cashflow_periods, model.lmus, initialize= mac.fert_app_ha(), default = 0.0, doc='cost of fert application per ha of each fert (driving around paddock cost)')
     #    model.stubble = Param(model.crops, initialize=phs.stubble_production(), default = 0.0, doc='stubble produced / kg grain harvested')
-    
