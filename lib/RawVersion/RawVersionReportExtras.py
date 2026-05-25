@@ -721,6 +721,12 @@ def f_save_reports(report_run, reports, processor):
     df_settings = rfun.f_df2xl(writer, reports["stacked_non_exist"],'Non-exist',df_settings,option=0,colstart=0)
     if report_run.loc['run_summary', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_summary"], 'summary', df_settings, option=xl_display_mode)
+    if report_run.loc['run_mp_summary', 'Run']:
+        df_settings = rfun.f_df2xl(writer, reports["stacked_mp"], 'MP_summary', df_settings, option=xl_display_mode)
+    if report_run.loc['run_pnl', 'Run']:
+        df_settings = rfun.f_df2xl(writer, reports["stacked_pnl"], 'pnl', df_settings, option=xl_display_mode)
+    if report_run.loc['run_sheep_summary', 'Run']:
+        df_settings = rfun.f_df2xl(writer, reports["stacked_sheep_summary"], 'sheep_summary', df_settings, option=xl_display_mode)
     if report_run.loc['run_areasum', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_areasum"], 'areasum', df_settings, option=xl_display_mode)
     if report_run.loc['run_cropsum', 'Run']:
@@ -731,8 +737,6 @@ def f_save_reports(report_run, reports, processor):
         df_settings = rfun.f_df2xl(writer, reports["stacked_numbers_qsz"], 'numbers_qsz', df_settings, option=xl_display_mode)
     if report_run.loc['run_croparea_qsz', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_croparea_qsz"], 'croparea_qsz', df_settings, option=xl_display_mode)
-    if report_run.loc['run_pnl', 'Run']:
-        df_settings = rfun.f_df2xl(writer, reports["stacked_pnl"], 'pnl', df_settings, option=xl_display_mode)
     if report_run.loc['run_trees', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_trees"], 'trees', df_settings, option=xl_display_mode)
     if report_run.loc['run_mach', 'Run']:
@@ -760,8 +764,6 @@ def f_save_reports(report_run, reports, processor):
         df_settings = rfun.f_df2xl(writer, reports["stacked_feed"], 'feed_budget', df_settings, option=xl_display_mode)
         df_settings = rfun.f_df2xl(writer, reports["stacked_feed2"], 'feed_budget_total', df_settings, option=xl_display_mode)
         df_settings = rfun.f_df2xl(writer, reports["stacked_grazing"], 'grazing_summary', df_settings, option=xl_display_mode)
-    if report_run.loc['run_sheep_summary', 'Run']:
-        df_settings = rfun.f_df2xl(writer, reports["stacked_sheep_summary"], 'sheep_summary', df_settings, option=xl_display_mode)
     if report_run.loc['run_numbers_summary', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_ewe_numbers_summary"], 'ewe_numbers_summary', df_settings, option=xl_display_mode)
         df_settings = rfun.f_df2xl(writer, reports["stacked_wethers_n_crossys_numbers_summary"], 'wethers_n_xb_numbers_summary', df_settings, option=xl_display_mode)
@@ -967,8 +969,7 @@ def f_save_reports(report_run, reports, processor):
         df_settings = rfun.f_df2xl(writer, reports["stacked_fodder"], 'fodder_analysis', df_settings, option=xl_display_mode)
     if report_run.loc['run_perennial', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_perennial"], 'perennial_analysis', df_settings, option=xl_display_mode)
-    if report_run.loc['run_mp_summary', 'Run']:
-        df_settings = rfun.f_df2xl(writer, reports["stacked_mp"], 'MP_summary', df_settings, option=xl_display_mode)
+
 
 
     df_settings.to_excel(writer, 'df_settings')
