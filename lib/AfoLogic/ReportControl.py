@@ -1436,7 +1436,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_supcon', 'Run']:
         #returns consumption in each FP
-        option = f_update_default_controls(user_controls, 'supcon', 'option', 1)
+        option = f_update_default_controls(user_controls, 'supcon', 'option', 6)
         reports["supcon"] = rfun.f_grain_sup_summary(lp_vars, r_vals, option=option)
 
     if report_run.loc['run_supdsecon', 'Run']:

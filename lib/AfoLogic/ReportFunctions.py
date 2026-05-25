@@ -1118,12 +1118,13 @@ def f_grain_sup_summary(lp_vars, r_vals, option=0):
 
     :param option: int:
 
-            #. return dict with sup cost and revenue from grain sales
-            #. return total supplement fed in each feed period
-            #. return total of each grain supplement fed in each feed period in each season
-            #. return total of each grain supplement fed in each feed period for each feed pool in each season
-            #. return total sup fed (weighted by season prob)
-            #. return total grain/hay produced on farm.
+            0. return dict with sup cost and revenue from grain sales
+            1. return total supplement fed in each feed period
+            2. return total of each grain supplement fed in each feed period in each season
+            3. return total of each grain supplement fed in each feed period for each feed pool in each season
+            4. return total sup fed (weighted by season prob)
+            5. return total grain/hay produced on farm.
+            6. return total sup fed by p6 and k (weighted by season prob)
 
     '''
     ##z masks to uncluster lp_vars
@@ -1144,13 +1145,17 @@ def f_grain_sup_summary(lp_vars, r_vals, option=0):
     if option == 3:
         return grain_fed_qszk3fp6
 
-    if option == 4:
+    if option == 4 or option == 6:
         keys_q = r_vals['zgen']['keys_q']
         keys_s = r_vals['zgen']['keys_s']
         keys_z = r_vals['zgen']['keys_z']
         index_qsz = pd.MultiIndex.from_product([keys_q, keys_s, keys_z])
         z_prob_qsz = r_vals['zgen']['z_prob_qsz']
         z_prob_qsz = pd.Series(z_prob_qsz.ravel(), index=index_qsz)
+        if option == 6:
+            grain_fed_qsz_kp6 = grain_fed_qszk3fp6.groupby(level=(0,1,2,3,5)).sum().unstack([-1,-2]) #sum nv pool
+            grain_fed_p6_k = grain_fed_qsz_kp6.mul(z_prob_qsz, axis=0).sum().unstack()
+            return round(grain_fed_p6_k, 1)
         grain_fed_qsz = grain_fed_qszk3fp6.groupby(level=(0,1,2)).sum() #sum all axis except season ones (q,s,z)
         ###stdev and range
         grain_fed_mean = grain_fed_qsz.mul(z_prob_qsz).sum()
