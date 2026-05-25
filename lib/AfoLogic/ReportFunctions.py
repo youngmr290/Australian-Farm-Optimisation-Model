@@ -3329,9 +3329,17 @@ def f_sheep_summary(lp_vars, r_vals):
                                                na_denweights2=[0, 1],
                                                keys='dams_keys_p7qsk2tyvanwziy1g1', arith=1, index=[5],
                                                cols=[]).squeeze().reindex(numbers_dams.index).fillna(0)
+    shorn_dams_y = f_stock_pasture_summary(r_vals, type='stock',
+                                           weights='dams_numbers_qsk2tvanwziy1g1',
+                                           na_weights=[4],
+                                           prod_weights='dvp_is_shearing_k2tyva1nwziyg1',
+                                           na_prodweights=[0, 1],
+                                           keys='dams_keys_qsk2tyvanwziy1g1', arith=2, index=[4],
+                                           cols=[]).squeeze().reindex(numbers_dams.index).fillna(0)
 
     dams.insert(2, 'Mated', mated_dams_y)
-    dams.insert(4, '$/hd', sale_price_dams_y)
+    dams.insert(4, 'Shorn', shorn_dams_y)
+    dams.insert(5, '$/hd', sale_price_dams_y)
     dams.loc[np.isclose(dams['Sell'], 0), '$/hd'] = 0
     dams['cfw/hd'] = cfw_dams_y
     dams['fd'] = fd_dams_y
@@ -3396,7 +3404,16 @@ def f_sheep_summary(lp_vars, r_vals):
                                                           keys='offs_keys_p7qsk3k5tyvnwziaxyg3',
                                                           arith=1, index=[6], cols=[])
     woolvalue_wethers_crossys_y = woolvalue_wethers_crossys_y.squeeze().reindex(numbers_wethers_crossys.index).fillna(0)
+    shorn_wethers_crossys_y = f_stock_pasture_summary(r_vals, type='stock',
+                                                      weights='offs_numbers_qsk3k5tvnwziaxyg3',
+                                                      na_weights=[5],
+                                                      prod_weights='dvp_is_shearing_k3k5tyvnwziaxyg3',
+                                                      na_prodweights=[0, 1],
+                                                      keys='offs_keys_qsk3k5tyvnwziaxyg3',
+                                                      arith=2, index=[5], cols=[]
+                                                      ).squeeze().reindex(numbers_wethers_crossys.index).fillna(0)
 
+    wethers_crossys['Shorn'] = shorn_wethers_crossys_y
     wethers_crossys['$/hd'] = sale_price_wethers_crossys_y
     wethers_crossys.loc[np.isclose(wethers_crossys['Sell'], 0), '$/hd'] = 0
     wethers_crossys['cfw/hd'] = cfw_wethers_crossys_y
@@ -3432,8 +3449,8 @@ def f_sheep_summary(lp_vars, r_vals):
     dollars.loc[('Costs', 'Total Costs'), 'Total $'] = total_costs
     dollars.loc[('Margin', 'Margin'), 'Total $'] = total_income - total_costs
     sheep_summary = pd.concat([sheep_summary, dollars])
-    return sheep_summary.round({'Open': 0, 'Births': 0, 'Mated': 0, 'Sell': 0, '$/hd': 1, 'cfw/hd': 1,
-                                'fd': 1, 'wool $/hd': 1, 'Total $': 0})
+    return sheep_summary.round({'Open': 0, 'Births': 0, 'Mated': 0, 'Sell': 0, 'Shorn': 0, '$/hd': 1,
+                                'cfw/hd': 1, 'fd': 1, 'wool $/hd': 1, 'Total $': 0})
 
 
 ############################
