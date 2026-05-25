@@ -3695,7 +3695,7 @@ def f_lupin_analysis(lp_vars, r_vals, trial):
             legume_area = np.sum(legume_area_qsz * z_prob_qsz.ravel())
             summary_df.loc[trial, '{0} Area'.format(legume_name)] = fun.f_divide(legume_area, total_legume_area)
             ##expected legume income - uses average legume yield in all rotations on the base lmu (this matches the yield graph on web app)
-            legume_price_qp7z = r_vals['crop']['grain_price'].loc[(legume_key,"Harv","firsts"),:]
+            legume_price_qp7z = r_vals['crop']['grain_price'].loc[(legume_key,"Harv"),:]
             legume_price_qz = legume_price_qp7z.groupby(level=(0,2)).sum() #sum p7 - price should only exist in one p7 period
             legume_price = np.sum(legume_price_qz.unstack().values[:,na,:] * z_prob_qsz) #avevrage price across q and z
             expected_yields_k_z = r_vals['crop']['base_yields_k_z']
