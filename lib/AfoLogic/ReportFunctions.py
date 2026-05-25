@@ -3246,13 +3246,50 @@ def f_sheep_summary(lp_vars, r_vals):
         mach_dep = f_qsz_expected_total(variable_dep_qsz + fixed_dep_qsz)
         return pasture_mach + pasture_mach_propn * (mach_insurance + mach_dep)
 
+    def f_supplement_cost_by_stock_class():
+        _, _, _, supcost_qsz_p7, _, _ = f_stock_cash_summary(lp_vars, r_vals)
+        supcost_qsz = supcost_qsz_p7.sum(axis=1)
+
+        mei_sire = f_stock_pasture_summary(r_vals, type='stock', prod='mei_sire_p6fzg0',
+                                           na_prod=[0, 1], weights='sire_numbers_qszg0',
+                                           na_weights=[2, 3], keys='sire_keys_qsp6fzg0',
+                                           arith=2, index=[0, 1, 4, 2, 3],
+                                           cols=[]).squeeze()
+        mei_dams = f_stock_pasture_summary(r_vals, type='stock', prod='mei_dams_k2p6ftva1nw8ziyg1',
+                                           na_prod=[0, 1], weights='dams_numbers_qsk2tvanwziy1g1',
+                                           na_weights=[3, 4], keys='dams_keys_qsk2p6ftvanwziy1g1',
+                                           arith=2, index=[0, 1, 11, 3, 4],
+                                           cols=[]).squeeze()
+        mei_offs = f_stock_pasture_summary(r_vals, type='stock', prod='mei_offs_k3k5p6ftvnw8ziaxyg3',
+                                           na_prod=[0, 1], weights='offs_numbers_qsk3k5tvnwziaxyg3',
+                                           na_weights=[4, 5], keys='offs_keys_qsk3k5p6ftvnwziaxyg3',
+                                           arith=2, index=[0, 1, 11, 4, 5],
+                                           cols=[]).squeeze()
+
+        ewe_mei = mei_sire.add(mei_dams, fill_value=0) #include sire mei in with ewes
+        total_mei = ewe_mei.add(mei_offs, fill_value=0)
+        ewe_share = ewe_mei.divide(total_mei.mask(np.isclose(total_mei, 0))).fillna(0)
+
+        grain_fed_qszk3fp6 = f_grain_sup_summary(lp_vars, r_vals, option=3)
+        grain_fed_qszp6f = grain_fed_qszk3fp6.groupby(level=(0, 1, 2, 5, 4)).sum()
+        ewe_sup_qszp6f = grain_fed_qszp6f.mul(ewe_share, fill_value=0)
+        total_sup_qsz = grain_fed_qszp6f.groupby(level=(0, 1, 2)).sum()
+        ewe_sup_qsz = ewe_sup_qszp6f.groupby(level=(0, 1, 2)).sum()
+        ewe_sup_share_qsz = ewe_sup_qsz.divide(total_sup_qsz.mask(np.isclose(total_sup_qsz, 0))).fillna(0)
+
+        ewe_supcost_qsz = supcost_qsz.mul(ewe_sup_share_qsz, fill_value=0)
+        ewe_supcost = f_qsz_expected_total(ewe_supcost_qsz)
+        total_supcost = f_qsz_expected_total(supcost_qsz)
+        return ewe_supcost, total_supcost - ewe_supcost
+
     pnl = f_profitloss_table(lp_vars, r_vals, option=2)
     pasture_area_propn = round(f_area_summary(lp_vars, r_vals, option=5)[0], 0) / 100
     wool_income = pnl.loc[('Revenue', 'wool'), 'Full year']
     sheep_trading_income = pnl.loc[('Revenue', 'sheep sales'), 'Full year']
     fixed_cost = pnl.loc[('Expense', 'fixed'), 'Full year'] * pasture_area_propn
     husbandry_cost = pnl.loc[('Expense', 'stock husb and infra'), 'Full year']
-    supplement_cost = pnl.loc[('Expense', 'stock sup'), 'Full year']
+    ewe_supplement_cost, wethers_crossys_supplement_cost = f_supplement_cost_by_stock_class()
+    supplement_cost = ewe_supplement_cost + wethers_crossys_supplement_cost
     purchase_cost = pnl.loc[('Expense', 'stock purchase'), 'Full year']
     pasture_cost = (pnl.loc[('Expense', 'pasture'), 'Full year']
                     + pnl.loc[('Expense', 'salt land pasture'), 'Full year'])
@@ -3428,7 +3465,8 @@ def f_sheep_summary(lp_vars, r_vals):
         ('Income', 'TOTAL INCOME'),
         ('Costs', 'Fixed'),
         ('Costs', 'Husbandry'),
-        ('Costs', 'Supplement'),
+        ('Costs', 'Ewe supplement'),
+        ('Costs', 'Wethers & crossbreds supplement'),
         ('Costs', 'Purchases'),
         ('Costs', 'Pasture'),
         ('Costs', 'Machinery'),
@@ -3441,7 +3479,8 @@ def f_sheep_summary(lp_vars, r_vals):
     dollars.loc[('Income', 'TOTAL INCOME'), 'Total $'] = total_income
     dollars.loc[('Costs', 'Fixed'), 'Total $'] = fixed_cost
     dollars.loc[('Costs', 'Husbandry'), 'Total $'] = husbandry_cost
-    dollars.loc[('Costs', 'Supplement'), 'Total $'] = supplement_cost
+    dollars.loc[('Costs', 'Ewe supplement'), 'Total $'] = ewe_supplement_cost
+    dollars.loc[('Costs', 'Wethers & crossbreds supplement'), 'Total $'] = wethers_crossys_supplement_cost
     dollars.loc[('Costs', 'Purchases'), 'Total $'] = purchase_cost
     dollars.loc[('Costs', 'Pasture'), 'Total $'] = pasture_cost
     dollars.loc[('Costs', 'Machinery'), 'Total $'] = machinery_cost

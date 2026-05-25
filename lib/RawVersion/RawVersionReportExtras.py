@@ -760,12 +760,12 @@ def f_save_reports(report_run, reports, processor):
         df_settings = rfun.f_df2xl(writer, reports["stacked_feed"], 'feed_budget', df_settings, option=xl_display_mode)
         df_settings = rfun.f_df2xl(writer, reports["stacked_feed2"], 'feed_budget_total', df_settings, option=xl_display_mode)
         df_settings = rfun.f_df2xl(writer, reports["stacked_grazing"], 'grazing_summary', df_settings, option=xl_display_mode)
+    if report_run.loc['run_sheep_summary', 'Run']:
+        df_settings = rfun.f_df2xl(writer, reports["stacked_sheep_summary"], 'sheep_summary', df_settings, option=xl_display_mode)
     if report_run.loc['run_numbers_summary', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_ewe_numbers_summary"], 'ewe_numbers_summary', df_settings, option=xl_display_mode)
         df_settings = rfun.f_df2xl(writer, reports["stacked_wethers_n_crossys_numbers_summary"], 'wethers_n_xb_numbers_summary', df_settings, option=xl_display_mode)
         df_settings = rfun.f_df2xl(writer, reports["stacked_wethers_n_crossys_weight_summary"], 'wether_n_xb_weight_summary', df_settings, option=xl_display_mode)
-    if report_run.loc['run_sheep_summary', 'Run']:
-        df_settings = rfun.f_df2xl(writer, reports["stacked_sheep_summary"], 'sheep_summary', df_settings, option=xl_display_mode)
     if report_run.loc['run_emissions', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_emissions"], 'emissions', df_settings, option=xl_display_mode)
     if report_run.loc['run_deepflow', 'Run']:
