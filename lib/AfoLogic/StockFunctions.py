@@ -3884,30 +3884,31 @@ def f_wool_value(stb_mpg_w4, wool_price_scalar_c1tpg, cfw_pg, fd_pg, sl_pg, ss_p
     return wool_value_c1qtpg, woolp_stbnib_c1qtpg
 
 
-def f1_condition_score(cn, rc_tpg, z_tpg=1):
+def f1_condition_score(cn, rc_tpg, rs_tpg=1):
     ''' Estimate CS from relative condition. Works with scalars or arrays - provided they are broadcastable into ffcfw.
 
        cn: cn[5] change in LW associated with 1 CS as a proportion of SRW (kg/CS) - for adults
        rc: relative condition = Fleece free, conceptus free liveweight (ffcfw) / normal weight (nw).
-       z: relative size = nw / SRW
+       rs: relative size = nw / SRW
 
        cn[5] is scaled for younger animals to be a higher proportion of SRW for younger animals
        See Freer et al. 2007 printout for derivation #todo improve the derivation with the SVCP data
-       kg_per_CS = cn[5] * (2-z) * SRW i.e. reducing from 2*cn[5] to cn[5] as z increases from 0 to 1.
-       because z = nw / srw
-       kg_per_CS = cn[5] * (2-z) * nw / z (convert to nw to allow cancelling out later)
+       kg_per_CS = cn[5] * (2-rs) * SRW i.e. reducing from 2*cn[5] to cn[5] as rs increases from 0 to 1.
+       because rs = nw / srw
+       kg_per_CS = cn[5] * (2-rs) * nw / rs (convert to nw to allow cancelling out later)
+       then invert rs to the numerator (to stop div0 error when 0)
 
        Derivation of the CS formula
        CS = 3 + (ffcfw - nw) / (kg_per_CS * srw)
        and ffcfw - nw = (rc - 1) * nw
-       and z = nw/srw
+       and rs = nw/srw
        so, substituting and removing nw from numerator and denominator
-       CS = 3 + (rc - 1) / (cn5 * (2 - z) / z)
+       CS = 3 + (rc - 1) / (cn5 * (2 - rs) / rs)
 
        Returns: condition score : float
        '''
 
-    cs_tpg = 3 + (rc_tpg - 1) / (cn[5, ...] * (2 - z_tpg) / z_tpg)
+    cs_tpg = 3 + (rc_tpg - 1) * rs_tpg / (cn[5, ...] * (2 - rs_tpg))
     return np.maximum(1, cs_tpg) #a minimum value of CS=1 is used to remove errors caused by low CS. A CS below 1 is unlikely because the animal would be dead
 
 

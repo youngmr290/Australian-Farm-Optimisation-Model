@@ -375,8 +375,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     o_ss_tpsire = np.zeros(tpg0, dtype =dtype)
     o_fd_tpsire = np.zeros(tpg0, dtype =dtype)
     o_fd_min_tpsire = np.zeros(tpg0, dtype =dtype)
-    o_rc_start_tpsire = np.zeros(tpg0, dtype =dtype)
-    o_z_start_tpsire = np.zeros(tpg0, dtype =dtype)
+    o_rc_start_tpsire = np.ones(tpg0, dtype =dtype)
+    o_relsize_start_tpsire = np.ones(tpg0, dtype =dtype)
     o_ebg_tpsire = np.zeros(tpg0, dtype =dtype)
     ###arrays for report variables
     r_ebw_tpsire = np.zeros(tpg0, dtype =dtype)
@@ -411,8 +411,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     o_ss_tpdams = np.zeros(tpg1, dtype =dtype)
     o_fd_tpdams = np.zeros(tpg1, dtype =dtype)
     o_fd_min_tpdams = np.zeros(tpg1, dtype =dtype)
-    o_rc_start_tpdams = np.zeros(tpg1, dtype =dtype)
-    o_z_start_tpdams = np.zeros(tpg1, dtype =dtype)
+    o_rc_start_tpdams = np.ones(tpg1, dtype =dtype)
+    o_relsize_start_tpdams = np.ones(tpg1, dtype =dtype)
     o_ebg_tpdams = np.zeros(tpg1, dtype =dtype)
     o_cfw_ltwadj_tpdams = np.zeros(tpg1, dtype =dtype)
     o_fd_ltwadj_tpdams = np.zeros(tpg1, dtype =dtype)
@@ -456,8 +456,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     # o_ss_tpyatf = np.zeros(tpg2, dtype =dtype)
     # o_fd_tpyatf = np.zeros(tpg2, dtype =dtype)
     # o_fd_min_tpyatf = np.zeros(tpg2, dtype =dtype)
-    o_rc_start_tpyatf = np.zeros(tpg2, dtype =dtype)
-    o_z_start_tpyatf = np.zeros(tpg2, dtype =dtype)
+    o_rc_start_tpyatf = np.ones(tpg2, dtype =dtype)
+    o_relsize_start_tpyatf = np.ones(tpg2, dtype =dtype)
     ###arrays for report variables
     r_ebw_start_tpyatf = np.zeros(tpg2, dtype =dtype)   # requires a variable separate from o_ffcfw_start_tpyatf so that it is only stored when days_period > 0
     r_wean_ebw_tpyatf = np.zeros(tpg2, dtype =dtype)
@@ -504,8 +504,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     o_ss_tpoffs = np.zeros(tpg3, dtype =dtype)
     o_fd_tpoffs = np.zeros(tpg3, dtype =dtype)
     o_fd_min_tpoffs = np.zeros(tpg3, dtype =dtype)
-    o_rc_start_tpoffs = np.zeros(tpg3, dtype =dtype)
-    o_z_start_tpoffs = np.zeros(tpg3, dtype =dtype)
+    o_rc_start_tpoffs = np.ones(tpg3, dtype =dtype)
+    o_relsize_start_tpoffs = np.ones(tpg3, dtype =dtype)
     o_ebg_tpoffs = np.zeros(tpg3, dtype =dtype)
     ###arrays for report variables
     r_intake_f_tpoffs = np.zeros(tpg3, dtype = dtype)   #not used as a report var but in stubble. Used name consistent with dams
@@ -2125,14 +2125,19 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     lmm_pa1e1b1nwzida0e0b0xyg1p0 = (age_p0_pa1e1b1nwzida0e0b0xyg2p0 + cl_cpdams[1, ..., na]) / cl_cpdams[2, ..., na]
 
     ##Proportion of SRW with age
-    srw_age_pa1e1b1nwzida0e0b0xyg0 = 1 - fun.f_weighted_average(1 - np.exp(-cn_cpsire[1, ..., na] * age_p0_pa1e1b1nwzida0e0b0xyg0p0
-                            / srw_pa1e1b1nwzida0e0b0xyg0[..., na] ** cn_cpsire[2, ..., na]), weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg0p0, axis = -1)
-    srw_age_pa1e1b1nwzida0e0b0xyg1 = 1 - fun.f_weighted_average(1 - np.exp(-cn_cpdams[1, ..., na] * age_p0_pa1e1b1nwzida0e0b0xyg1p0
-                            / srw_pa1e1b1nwzida0e0b0xyg1[..., na] ** cn_cpdams[2, ..., na]), weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg1p0, axis = -1)
-    srw_age_pa1e1b1nwzida0e0b0xyg2 = 1 - fun.f_weighted_average(1 - np.exp(-cn_cpyatf[1, ..., na] * age_p0_pa1e1b1nwzida0e0b0xyg2p0
-                            / srw_pa1e1b1nwzida0e0b0xyg2[..., na] ** cn_cpyatf[2, ..., na]), weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg2p0, axis = -1)
-    srw_age_pa1e1b1nwzida0e0b0xyg3 = 1 - fun.f_weighted_average(1 - np.exp(-cn_cpoffs[1, ..., na] * age_p0_pa1e1b1nwzida0e0b0xyg3p0
-                            / srw_pa1e1b1nwzida0e0b0xyg3[..., na] ** cn_cpoffs[2, ..., na]), weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg3p0, axis = -1)
+    srw_age_pa1e1b1nwzida0e0b0xyg0 = 1 - fun.f_weighted_average(1 - np.exp(-cn_cpsire[1, ..., na]
+                    * age_p0_pa1e1b1nwzida0e0b0xyg0p0 / srw_pa1e1b1nwzida0e0b0xyg0[..., na] ** cn_cpsire[2, ..., na])
+                    , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg0p0, axis = -1)
+    srw_age_pa1e1b1nwzida0e0b0xyg1 = 1 - fun.f_weighted_average(1 - np.exp(-cn_cpdams[1, ..., na]
+                    * age_p0_pa1e1b1nwzida0e0b0xyg1p0 / srw_pa1e1b1nwzida0e0b0xyg1[..., na] ** cn_cpdams[2, ..., na])
+                    , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg1p0, axis = -1)
+    srw_age_pa1e1b1nwzida0e0b0xyg2 = (1 - fun.f_weighted_average(1 - np.exp(-cn_cpyatf[1, ..., na]
+                    * age_p0_pa1e1b1nwzida0e0b0xyg2p0 / srw_pa1e1b1nwzida0e0b0xyg2[..., na] ** cn_cpyatf[2, ..., na])
+                    , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg2p0, axis = -1)
+                    * (nyatf_b1nwzida0e0b0xyg > 0))
+    srw_age_pa1e1b1nwzida0e0b0xyg3 = 1 - fun.f_weighted_average(1 - np.exp(-cn_cpoffs[1, ..., na]
+                    * age_p0_pa1e1b1nwzida0e0b0xyg3p0 / srw_pa1e1b1nwzida0e0b0xyg3[..., na] ** cn_cpoffs[2, ..., na])
+                    , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg3p0, axis = -1)
 
     #srw_age_pa1e1b1nwzida0e0b0xyg0 = np.nanmean(np.exp(-cn_cpsire[1, ..., na] * age_p0_pa1e1b1nwzida0e0b0xyg0p0 / srw_b0xyg0[..., na] ** cn_cpsire[2, ..., na]), axis = -1)
     #srw_age_pa1e1b1nwzida0e0b0xyg1 = np.nanmean(np.exp(-cn_cpdams[1, ..., na] * age_p0_pa1e1b1nwzida0e0b0xyg1p0 / srw_b0xyg1[..., na] ** cn_cpdams[2, ..., na]), axis = -1)
@@ -2958,9 +2963,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
 
         ##yatf
         d_cfw_history_start_p2g2[...] = np.nan
-        nw_start_yatf = 0.0
-        rc_start_yatf = 0.0
-        z_start_yatf = 0.0
+        nw_start_yatf = 0.1 * srw_Pa1e1b1nwzida0e0b0xyg2   #srw_P is averaged across p
+        rc_start_yatf = 1.0
+        relsize_start_yatf = 0.1   #birth weight is approx 10% of SRW. Requires a value to stop div0 error
         ffcfw_start_yatf = w_b_std_y_pa1e1b1nwzida0e0b0xyg1[0].copy() #slice 0 is the same as the first day the animal exists - this is just an estimate, it is updated with the real weight at birth - needed to calc milk production in birth period because milk prod is calculated before yatf weight is updated
         ffcfw_max_start_yatf = ffcfw_start_yatf
         mortality_birth_yatf=0.0 #required for dam numbers before progeny born
@@ -3016,7 +3021,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
             ffcfw_max_start_yatf = ffcfw_start_yatf
             nw_start_yatf = ffcfw_start_yatf
             rc_start_yatf = 1
-            z_start_yatf = 0.1   #birth weight approx 10% of SRW
+            relsize_start_yatf = 0.1   #birth weight is approx 10% of SRW. Requires a value to stop div0 error
             cfw_start_yatf = stubble['i_gfw_yatf'] * cw_cpyatf[3, ...]
             fl_start_yatf = stubble['i_fl_yatf']
             fd_start_yatf = stubble['i_fd_yatf'] #not used for anything so just use the same one as adult
@@ -3212,16 +3217,14 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     nw_start_sire = np.minimum(nw_max_pa1e1b1nwzida0e0b0xyg0[p:p+1], np.maximum(nw_start_sire, ffcfw_start_sire + cn_cpsire[3, ...] * (nw_max_pa1e1b1nwzida0e0b0xyg0[p:p+1]  - ffcfw_start_sire)))
                     ###Relative condition (start)
                     rc_start_sire = fun.f_divide(ffcfw_start_sire, nw_start_sire)
-                    ###Relative size (start)
-                    z_start_sire = fun.f_divide(nw_start_sire, srw_a1e1b1nwzida0e0b0xyg0)
-                    ##Condition score at  start of p
-                    cs_start_sire = sfun.f1_condition_score(cn_cpsire, rc_start_sire, z_start_sire)
                     ###staple length
                     sl_start_sire = fl_start_sire * cw_cpsire[15,...]
                     ###Relative size (start) - dams & sires
                     relsize_start_sire = np.minimum(1, nw_start_sire / srw_a1e1b1nwzida0e0b0xyg0)
                     ###Relative size for LWG (start). Capped by current LW
                     relsize1_start_sire = np.minimum(ffcfw_max_start_sire, nw_max_pa1e1b1nwzida0e0b0xyg0[p:p+1]) / srw_a1e1b1nwzida0e0b0xyg0
+                    ##Condition score at  start of p
+                    cs_start_sire = sfun.f1_condition_score(cn_cpsire, rc_start_sire, relsize_start_sire)
                     ###PI Size factor (for cattle)
                     zf_sire = np.maximum(1, 1 + cr_cpsire[7, ...] - relsize_start_sire)
                     ###EVG Size factor (decreases as z increases)
@@ -3248,10 +3251,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     nw_start_dams = np.minimum(nw_max_pa1e1b1nwzida0e0b0xyg1[p:p+1], np.maximum(nw_start_dams, ffcfw_start_dams + cn_cpdams[3, ...] * (nw_max_pa1e1b1nwzida0e0b0xyg1[p:p+1]  - ffcfw_start_dams)))
                     ###Relative condition (start)
                     rc_start_dams = fun.f_divide(ffcfw_start_dams, nw_start_dams)
-                    ###Relative size (start)
-                    z_start_dams = fun.f_divide(nw_start_dams, srw_a1e1b1nwzida0e0b0xyg1)
-                    ##Condition score of the dam at  start of p
-                    cs_start_dams = sfun.f1_condition_score(cn_cpdams, rc_start_dams, z_start_dams)
                     ###Relative condition of dam at parturition - needs to be remembered between loops (milk production) - Loss of potential milk due to consistent under production
                     rc_birth_dams = fun.f_update(rc_birth_start_dams, rc_start_dams, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p:p+1])
                     ###staple length
@@ -3260,6 +3259,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     relsize_start_dams = np.minimum(1, nw_start_dams / srw_a1e1b1nwzida0e0b0xyg1)
                     ###Relative size for LWG (start). Capped by current LW
                     relsize1_start_dams = np.minimum(ffcfw_max_start_dams, nw_max_pa1e1b1nwzida0e0b0xyg1[p:p+1]) / srw_a1e1b1nwzida0e0b0xyg1
+                    ##Condition score of the dam at  start of p
+                    cs_start_dams = sfun.f1_condition_score(cn_cpdams, rc_start_dams, relsize_start_dams)
                     ###PI Size factor (for cattle)
                     zf_dams = np.maximum(1, 1 + cr_cpdams[7, ...] - relsize_start_dams)
                     ###EVG Size factor (decreases as z increases)
@@ -3338,16 +3339,14 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     nw_start_offs = np.minimum(nw_max_pa1e1b1nwzida0e0b0xyg3[p:p+1], np.maximum(nw_start_offs, ffcfw_start_offs + cn_cpoffs[3, ...] * (nw_max_pa1e1b1nwzida0e0b0xyg3[p:p+1]  - ffcfw_start_offs)))
                     ###Relative condition (start)
                     rc_start_offs = fun.f_divide(ffcfw_start_offs, nw_start_offs)
-                    ###Relative size (start)
-                    z_start_offs = fun.f_divide(nw_start_offs, srw_a1e1b1nwzida0e0b0xyg3)
-                    ##Condition score at  start of p
-                    cs_start_offs = sfun.f1_condition_score(cn_cpoffs, rc_start_offs, z_start_offs)
                     ###staple length
                     sl_start_offs = fl_start_offs * cw_cpoffs[15,...]
                     ###Relative size (start) - dams & sires
                     relsize_start_offs = np.minimum(1, nw_start_offs / srw_a1e1b1nwzida0e0b0xyg3)
                     ###Relative size for LWG (start). Capped by current LW
                     relsize1_start_offs = np.minimum(ffcfw_max_start_offs, nw_max_pa1e1b1nwzida0e0b0xyg3[p:p+1]) / srw_a1e1b1nwzida0e0b0xyg3
+                    ##Condition score at  start of p
+                    cs_start_offs = sfun.f1_condition_score(cn_cpoffs, rc_start_offs, relsize_start_offs)
                     ###PI Size factor (for cattle)
                     zf_offs = np.maximum(1, 1 + cr_cpoffs[7, ...] - relsize_start_offs)
                     ###EVG Size factor (decreases as z increases)
@@ -4759,18 +4758,17 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     ###Normal weight (start)
                     nw_start_yatf = np.minimum(nw_max_yatf, np.maximum(nw_start_yatf, ffcfw_start_yatf + cn_cpyatf[3, ...] * (nw_max_yatf  - ffcfw_start_yatf)))
                     ###Relative condition (start) - use update function so that when 0 days/period we keep the rc of the last period because it is used to calc sale value which is period_is_weaning which has 0 days because sold at beginning.
-                    temp_rc_start_yatf = fun.f_divide(ffcfw_start_yatf, nw_start_yatf)
-                    rc_start_yatf = fun.f_update(rc_start_yatf, temp_rc_start_yatf, days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...] >0)
+                    t_rc_start_yatf = fun.f_divide(ffcfw_start_yatf, nw_start_yatf)
+                    rc_start_yatf = fun.f_update(rc_start_yatf, t_rc_start_yatf, days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...] >0)
                     ###Relative size (start)
-                    z_start_yatf = fun.f_divide(nw_start_yatf, srw_a1e1b1nwzida0e0b0xyg2)
+                    t_relsize_start_yatf = np.minimum(1, nw_start_yatf / srw_a1e1b1nwzida0e0b0xyg2)
+                    relsize_start_yatf = fun.f_update(relsize_start_yatf, t_relsize_start_yatf, days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...] >0)
+                    ###Relative size for LWG (start). Using lesser of max LW to date and nw_max
+                    relsize1_start_yatf = np.minimum(ffcfw_max_start_yatf, nw_max_yatf) / srw_a1e1b1nwzida0e0b0xyg2
                     ##Condition score of the dam at  start of p
-                    cs_start_yatf = sfun.f1_condition_score(cn_cpyatf, rc_start_yatf, z_start_yatf)
+                    cs_start_yatf = sfun.f1_condition_score(cn_cpyatf, rc_start_yatf, relsize_start_yatf)
                     ###staple length
                     sl_start_yatf = fl_start_yatf * cw_cpyatf[15,...]
-                    ###Relative size (start) - dams & sires
-                    relsize_start_yatf = np.minimum(1, nw_start_yatf / srw_a1e1b1nwzida0e0b0xyg2)
-                    ###Relative size for LWG (start). Capped by current LW
-                    relsize1_start_yatf = np.minimum(ffcfw_max_start_yatf, nw_max_yatf) / srw_a1e1b1nwzida0e0b0xyg2
                     ###PI Size factor (for cattle)
                     zf_yatf = np.maximum(1, 1 + cr_cpyatf[7, ...] - relsize_start_yatf)
                     ###EVG Size factor (decreases as z increases)
@@ -6054,7 +6052,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     o_fd_min_tpsire[:, p:p+1] = fd_min_sire
                     o_ss_tpsire[:, p:p+1] = ss_sire
                     o_rc_start_tpsire[:, p:p+1] = rc_start_sire
-                    o_z_start_tpsire[:, p:p+1] = z_start_sire
+                    o_relsize_start_tpsire[:, p:p+1] = relsize_start_sire
                     o_ebg_tpsire[:, p:p+1] = ebg_sire
 
                     ###store report variables for dams - individual variables can be deleted if not needed - store in report dictionary in the report section at end of this module
@@ -6126,7 +6124,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     o_ss_tpdams[:, p:p+1] = ss_dams
                     o_n_sire_tpa1e1b1nwzida0e0b0xyg1g0p8[:, p:p+1] = n_sire_a1e1b1nwzida0e0b0xyg1g0p8
                     o_rc_start_tpdams[:, p:p+1] = rc_start_dams
-                    o_z_start_tpdams[:, p:p+1] = z_start_dams
+                    o_relsize_start_tpdams[:, p:p+1] = relsize_start_dams
                     o_ebg_tpdams[:, p:p+1] = ebg_dams
                     o_cfw_ltwadj_tpdams[:, p:p+1] = cfw_ltwadj_dams
                     o_fd_ltwadj_tpdams[:, p:p+1] = fd_ltwadj_dams
@@ -6154,7 +6152,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 o_ffcfw_start_tpyatf[:, p:p+1] = ffcfw_start_yatf #use ffcfw_start because weaning is at the start of period. Not inside the 'if' because days per period = 0 when weaning occurs (because once they are weaned they are not yatf). But we need to know the start ffcfw.
                 o_numbers_start_tpyatf[:, p:p+1] = numbers_start_yatf #used for prog calculations - use numbers start because weaning is start of period. Not inside the 'if' because there is 0 days in the period when weaning occurs but we still want to store the start numbers
                 o_rc_start_tpyatf[:, p:p+1] = rc_start_yatf #used for sale value which is weaning which has 0 yatf days per period because weaning is first day (this means the rc at weaning is actually the rc at the start of the previous period because it doesn't recalculate once days per period goes to 0)
-                o_z_start_tpyatf[:, p:p+1] = z_start_yatf #used for sale value which is weaning which has 0 yatf days per period because weaning is first day (this means the rc at weaning is actually the rc at the start of the previous period because it doesn't recalculate once days per period goes to 0)
+                o_relsize_start_tpyatf[:, p:p+1] = relsize_start_yatf #used for sale value which is weaning which has 0 yatf days per period because weaning is first day (this means the relsize at weaning is actually the relsize at the start of the previous period because it doesn't recalculate once days per period goes to 0)
                 r_wean_ebw_tpyatf[:, p:p+1] = ebw_w_yatf  #outside the if statement because the days_period_yatf are 0 in the weaning period because weaning is at the start of the period
                 o_wean_w_tpyatf[:, p:p+1] = w_w_yatf #outside the if statement because the days_period_yatf are 0 in the weaning period because weaning is at the start of the period
                 if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...] >0):
@@ -6272,7 +6270,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     o_fd_min_tpoffs[:, p:p+1] = fd_min_offs
                     o_ss_tpoffs[:, p:p+1] = ss_offs
                     o_rc_start_tpoffs[:, p:p+1] = rc_start_offs
-                    o_z_start_tpoffs[:, p:p+1] = z_start_offs
+                    o_relsize_start_tpoffs[:, p:p+1] = relsize_start_offs
                     o_ebg_tpoffs[:, p:p+1] = ebg_offs
 
                     ###store report variables - individual variables can be deleted if not needed - store in report dictionary in the report section at end of this module
@@ -7623,10 +7621,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     rc_start_dams_tp9g = o_rc_start_tpdams[:,sale_mask_p1]
     rc_start_yatf_tp9g = o_rc_start_tpyatf[:,sale_mask_p2]
     rc_start_offs_tp9g = o_rc_start_tpoffs[:,sale_mask_p3]
-    z_start_sire_tp9g = o_z_start_tpsire[:,sale_mask_p0]
-    z_start_dams_tp9g = o_z_start_tpdams[:,sale_mask_p1]
-    z_start_yatf_tp9g = o_z_start_tpyatf[:,sale_mask_p2]
-    z_start_offs_tp9g = o_z_start_tpoffs[:,sale_mask_p3]
+    relsize_start_sire_tp9g = o_relsize_start_tpsire[:,sale_mask_p0]
+    relsize_start_dams_tp9g = o_relsize_start_tpdams[:,sale_mask_p1]
+    relsize_start_yatf_tp9g = o_relsize_start_tpyatf[:,sale_mask_p2]
+    relsize_start_offs_tp9g = o_relsize_start_tpoffs[:,sale_mask_p3]
     age_end_p9a1e1b1nwzida0e0b0xyg0 = age_end_pa1e1b1nwzida0e0b0xyg0[sale_mask_p0]
     age_end_p9a1e1b1nwzida0e0b0xyg1 = age_end_pa1e1b1nwzida0e0b0xyg1[sale_mask_p1]
     age_end_p9a1e1b1nwzida0e0b0xyg2 = age_end_pa1e1b1nwzida0e0b0xyg2[sale_mask_p2]
@@ -7638,7 +7636,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
 
     salevalue_c1qtpa1e1b1nwzida0e0b0xyg0[:,:,:,sale_mask_p0], r_salegrid_c1tpa1e1b1nwzida0e0b0xyg0[:,:,sale_mask_p0] = sfun.f_sale_value(
         cn_cpsire.astype(dtype), cx_cpsire[...,0:1,:,:].astype(dtype), rc_start_sire_tp9g, ffcfw_tp9a1e1b1nwzida0e0b0xyg0
-        , z_start_sire_tp9g
+        , relsize_start_sire_tp9g
         , dresspercent_adj_yg0, dresspercent_adj_s6tpa1e1b1nwzida0e0b0xyg, dresspercent_adj_s7tpa1e1b1nwzida0e0b0xyg
         , grid_price_s7s5s6tpa1e1b1nwzida0e0b0xyg, sale_price_scalar_c1s7tpg, month_scalar_s7tp9a1e1b1nwzida0e0b0xyg0
         , month_discount_s7tp9a1e1b1nwzida0e0b0xyg0, price_type_s7tpa1e1b1nwzida0e0b0xyg, cvlw_s7s5tpa1e1b1nwzida0e0b0xyg
@@ -7650,7 +7648,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
         , rev_trait_values['sire'], dtype)
     salevalue_c1qtpa1e1b1nwzida0e0b0xyg1[:,:,:,sale_mask_p1], r_salegrid_c1tpa1e1b1nwzida0e0b0xyg1[:,:,sale_mask_p1] = sfun.f_sale_value(
         cn_cpdams.astype(dtype), cx_cpdams[...,1:2,:,:].astype(dtype), rc_start_dams_tp9g, ffcfw_tp9a1e1b1nwzida0e0b0xyg1
-        , z_start_dams_tp9g
+        , relsize_start_dams_tp9g
         , dresspercent_adj_yg1, dresspercent_adj_s6tpa1e1b1nwzida0e0b0xyg,dresspercent_adj_s7tpa1e1b1nwzida0e0b0xyg
         , grid_price_s7s5s6tpa1e1b1nwzida0e0b0xyg, sale_price_scalar_c1s7tpg, month_scalar_s7tp9a1e1b1nwzida0e0b0xyg1
         , month_discount_s7tp9a1e1b1nwzida0e0b0xyg1, price_type_s7tpa1e1b1nwzida0e0b0xyg, cvlw_s7s5tpa1e1b1nwzida0e0b0xyg
@@ -7662,7 +7660,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
         , rev_trait_values['dams'], dtype)
     salevalue_c1qtp9a1e1b1nwzida0e0b0xyg2, r_salegrid_c1tpa1e1b1nwzida0e0b0xyg2[:,:,sale_mask_p2] = sfun.f_sale_value(                                                #keep it as a condensed p axis
         cn_cpyatf.astype(dtype), cx_cpyatf[...,mask_x,:,:].astype(dtype), rc_start_yatf_tp9g, ffcfw_tp9a1e1b1nwzida0e0b0xyg2
-        , z_start_yatf_tp9g
+        , relsize_start_yatf_tp9g
         , dresspercent_adj_yg2, dresspercent_adj_s6tpa1e1b1nwzida0e0b0xyg,dresspercent_adj_s7tpa1e1b1nwzida0e0b0xyg
         , grid_price_s7s5s6tpa1e1b1nwzida0e0b0xyg, sale_price_scalar_c1s7tpg, month_scalar_s7tp9a1e1b1nwzida0e0b0xyg2
         , month_discount_s7tp9a1e1b1nwzida0e0b0xyg2, price_type_s7tpa1e1b1nwzida0e0b0xyg, cvlw_s7s5tpa1e1b1nwzida0e0b0xyg
@@ -7674,7 +7672,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
         , rev_trait_values['yatf'], dtype)
     salevalue_c1qtpa1e1b1nwzida0e0b0xyg3[:,:,:,sale_mask_p3], r_salegrid_c1tpa1e1b1nwzida0e0b0xyg3[:,:,sale_mask_p3] = sfun.f_sale_value(
         cn_cpoffs, cx_cpoffs[...,mask_x,:,:].astype(dtype), rc_start_offs_tp9g, ffcfw_tp9a1e1b1nwzida0e0b0xyg3
-        , z_start_offs_tp9g
+        , relsize_start_offs_tp9g
         , dresspercent_adj_yg3, dresspercent_adj_s6tpa1e1b1nwzida0e0b0xyg,dresspercent_adj_s7tpa1e1b1nwzida0e0b0xyg
         , grid_price_s7s5s6tpa1e1b1nwzida0e0b0xyg, sale_price_scalar_c1s7tpg, month_scalar_s7tp9a1e1b1nwzida0e0b0xyg3
         , month_discount_s7tp9a1e1b1nwzida0e0b0xyg3, price_type_s7tpa1e1b1nwzida0e0b0xyg, cvlw_s7s5tpa1e1b1nwzida0e0b0xyg
@@ -9645,9 +9643,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
 
     ##cs - need to add v and k2 axis but still keep p, e and b so that we can graph the desired patterns. This is a big array so only stored if user wants. t is not required because it doesn't affect NV
     if sinp.rep['i_store_cs_rep']:
-        cs_tpg0 = sfun.f1_condition_score(cn_cpsire.astype(dtype), o_rc_start_tpsire, o_z_start_tpsire)
-        cs_tpg1 = sfun.f1_condition_score(cn_cpdams.astype(dtype), o_rc_start_tpdams, o_z_start_tpdams)
-        cs_tpg3 = sfun.f1_condition_score(cn_cpoffs.astype(dtype), o_rc_start_tpoffs, o_z_start_tpoffs)
+        cs_tpg0 = sfun.f1_condition_score(cn_cpsire.astype(dtype), o_rc_start_tpsire, o_relsize_start_tpsire)
+        cs_tpg1 = sfun.f1_condition_score(cn_cpdams.astype(dtype), o_rc_start_tpdams, o_relsize_start_tpdams)
+        cs_tpg3 = sfun.f1_condition_score(cn_cpoffs.astype(dtype), o_rc_start_tpoffs, o_relsize_start_tpoffs)
         r_cs_psire = cs_tpg0
         r_cs_k2Tvpdams = (cs_tpg1[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
                           * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
@@ -9657,9 +9655,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
 
     ##fs - need to add v and k2 axis but still keep p, e and b so that we can graph the desired patterns. This is a big array so only stored if user wants. t is not required because it doesn't affect NV
     if sinp.rep['i_store_fs_rep']:
-        fs_tpg0 = sfun.f1_fat_score(cn_cpsire.astype(dtype), o_rc_start_tpsire, o_z_start_tpsire)   #Note: these don't include saa[rev_cfat] - difficult to include with rev_trait_values
-        fs_tpg1 = sfun.f1_fat_score(cn_cpdams.astype(dtype), o_rc_start_tpdams, o_z_start_tpdams)   #Note: these don't include saa[rev_cfat] - difficult to include with rev_trait_values
-        fs_tpg3 = sfun.f1_fat_score(cn_cpoffs.astype(dtype), o_rc_start_tpoffs, o_z_start_tpoffs)   #Note: these don't include saa[rev_cfat] - difficult to include with rev_trait_values
+        fs_tpg0 = sfun.f1_fat_score(cn_cpsire.astype(dtype), o_rc_start_tpsire, o_relsize_start_tpsire)   #Note: these don't include saa[rev_cfat] - difficult to include with rev_trait_values
+        fs_tpg1 = sfun.f1_fat_score(cn_cpdams.astype(dtype), o_rc_start_tpdams, o_relsize_start_tpdams)   #Note: these don't include saa[rev_cfat] - difficult to include with rev_trait_values
+        fs_tpg3 = sfun.f1_fat_score(cn_cpoffs.astype(dtype), o_rc_start_tpoffs, o_relsize_start_tpoffs)   #Note: these don't include saa[rev_cfat] - difficult to include with rev_trait_values
         r_fs_psire = fs_tpg0
         r_fs_k2Tvpdams = (fs_tpg1[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
                           * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
