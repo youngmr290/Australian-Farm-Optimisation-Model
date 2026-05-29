@@ -562,7 +562,9 @@ def f_price_summary(lp_vars, r_vals, option, grid, weight, score):
 def f_summary(lp_vars, r_vals, trial):
     '''Returns a simple 1 row summary of the trial (season results are averaged)'''
     summary_df = pd.DataFrame(index=[trial], columns=['profit', 'profit max', 'profit min', 'profit stdev', 'risk neutral obj', 'utility',
-                                                      'SR', 'SR max', 'SR min', 'SR stdev', 'Pas %', 'Pas % max', 'Pas % min', 'Pas % stdev',
+                                                      'SR NW', 'SR NW max', 'SR NW min', 'SR NW stdev',
+                                                      'SR MJ', 'SR MJ max', 'SR MJ min', 'SR MJ stdev',
+                                                      'Pas %', 'Pas % max', 'Pas % min', 'Pas % stdev',
                                                       'Ewes mated',
                                                       'Cereal %', 'Cereal % max', 'Cereal % min', 'Cereal % stdev',
                                                       'Canola %', 'Canola % max', 'Canola % min', 'Canola % stdev',
@@ -580,13 +582,22 @@ def f_summary(lp_vars, r_vals, trial):
     summary_df.loc[trial, 'risk neutral obj'] = f_profit(lp_vars, r_vals, option=1)
     ##utility
     summary_df.loc[trial, 'utility'] = f_profit(lp_vars, r_vals, option=2)
-    ##total dse/ha in fp0
-    summary_df.loc[trial, 'SR'] = round(f_dse(lp_vars, r_vals, method=r_vals['stock']['dse_type'], per_ha=True, summary1=True)[0],1)
-    SR_max = round(f_dse(lp_vars, r_vals, method=r_vals['stock']['dse_type'], per_ha=True, summary1=True)[1],1)
-    SR_min = round(f_dse(lp_vars, r_vals, method=r_vals['stock']['dse_type'], per_ha=True, summary1=True)[2],1)
-    summary_df.loc[trial, 'SR max'] = SR_max * np.logical_not(SR_min==SR_max) #sets min/max to 0 if range is 0 so the cols get hidden
-    summary_df.loc[trial, 'SR min'] = SR_min * np.logical_not(SR_min==SR_max) #sets min/max to 0 if range is 0 so the cols get hidden
-    summary_df.loc[trial, 'SR stdev'] = f_dse(lp_vars, r_vals, method=r_vals['stock']['dse_type'], per_ha=True, summary1=True)[3]
+    ##total dse/ha in fp0 (DSE type 0 - NW)
+    sr_mean, sr_max, sr_min, sr_stdev = f_dse(lp_vars, r_vals, method=0, per_ha=True, summary1=True)
+    summary_df.loc[trial, 'SR NW'] = round(sr_mean,1)
+    SR_max = round(sr_max,1)
+    SR_min = round(sr_min,1)
+    summary_df.loc[trial, 'SR NW max'] = SR_max * np.logical_not(SR_min==SR_max) #sets min/max to 0 if range is 0 so the cols get hidden
+    summary_df.loc[trial, 'SR NW min'] = SR_min * np.logical_not(SR_min==SR_max) #sets min/max to 0 if range is 0 so the cols get hidden
+    summary_df.loc[trial, 'SR NW stdev'] = round(sr_stdev,1)
+    ##total dse/ha in fp0 (DSE type 1 - MJ)
+    sr_mean, sr_max, sr_min, sr_stdev = f_dse(lp_vars, r_vals, method=1, per_ha=True, summary1=True)
+    summary_df.loc[trial, 'SR MJ'] = round(sr_mean,1)
+    SR_max = round(sr_max,1)
+    SR_min = round(sr_min,1)
+    summary_df.loc[trial, 'SR MJ max'] = SR_max * np.logical_not(SR_min==SR_max) #sets min/max to 0 if range is 0 so the cols get hidden
+    summary_df.loc[trial, 'SR MJ min'] = SR_min * np.logical_not(SR_min==SR_max) #sets min/max to 0 if range is 0 so the cols get hidden
+    summary_df.loc[trial, 'SR MJ stdev'] = round(sr_stdev,1)
     ##total dams mated
     type = 'stock'
     prod = 'dvp_is_mating_vzig1'
