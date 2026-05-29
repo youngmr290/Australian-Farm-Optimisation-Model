@@ -3567,7 +3567,7 @@ def f1_period_start_nums(numbers, prejoin_tup, z_pos, period_is_startseason, sea
                 , propn_dams_mated=1, animal_mated_b1g1=True):
 
     #a)if generating with t axis reset the sale slices to the retained slice at the start of each dvp
-    if np.any(period_is_startdvp) and len_gen_t>1:
+    if np.any(period_is_startdvp) and len_gen_t>1 and np.ndim(numbers) > 0: #check that numbers exists (wont exist if start dvp is also birth period)
         a_t_g = np.broadcast_to(a_t_g, numbers.shape)
         temporary = np.take_along_axis(numbers, a_t_g, axis=sinp.stock['i_p_pos']-1)
         numbers = fun.f_update(numbers, temporary, period_is_startdvp)
