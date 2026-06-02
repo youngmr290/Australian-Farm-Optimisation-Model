@@ -580,7 +580,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     o_ss_tpsire = np.zeros(tpg0, dtype =dtype)
     o_fd_tpsire = np.zeros(tpg0, dtype =dtype)
     o_fd_min_tpsire = np.zeros(tpg0, dtype =dtype)
-    o_rc_start_tpsire = np.zeros(tpg0, dtype =dtype)
+    o_rc_start_tpsire = np.ones(tpg0, dtype =dtype)
+    o_relsize_start_tpsire = np.ones(tpg0, dtype =dtype)
     o_ebg_tpsire = np.zeros(tpg0, dtype =dtype)
     ###arrays for report variables
     r_ebw_tpsire = np.zeros(tpg0, dtype =dtype)
@@ -615,7 +616,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     o_ss_tpdams = np.zeros(tpg1, dtype =dtype)
     o_fd_tpdams = np.zeros(tpg1, dtype =dtype)
     o_fd_min_tpdams = np.zeros(tpg1, dtype =dtype)
-    o_rc_start_tpdams = np.zeros(tpg1, dtype =dtype)
+    o_rc_start_tpdams = np.ones(tpg1, dtype =dtype)
+    o_relsize_start_tpdams = np.ones(tpg1, dtype =dtype)
     o_ebg_tpdams = np.zeros(tpg1, dtype =dtype)
     o_cfw_ltwadj_tpdams = np.zeros(tpg1, dtype =dtype)
     o_fd_ltwadj_tpdams = np.zeros(tpg1, dtype =dtype)
@@ -659,7 +661,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     # o_ss_tpyatf = np.zeros(tpg2, dtype =dtype)
     # o_fd_tpyatf = np.zeros(tpg2, dtype =dtype)
     # o_fd_min_tpyatf = np.zeros(tpg2, dtype =dtype)
-    o_rc_start_tpyatf = np.zeros(tpg2, dtype =dtype)
+    o_rc_start_tpyatf = np.ones(tpg2, dtype =dtype)
+    o_relsize_start_tpyatf = np.ones(tpg2, dtype =dtype)
     ###arrays for report variables
     r_ebw_start_tpyatf = np.zeros(tpg2, dtype =dtype)   # requires a variable separate from o_ffcfw_start_tpyatf so that it is only stored when days_period > 0
     r_wean_ebw_tpyatf = np.zeros(tpg2, dtype =dtype)
@@ -706,7 +709,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     o_ss_tpoffs = np.zeros(tpg3, dtype =dtype)
     o_fd_tpoffs = np.zeros(tpg3, dtype =dtype)
     o_fd_min_tpoffs = np.zeros(tpg3, dtype =dtype)
-    o_rc_start_tpoffs = np.zeros(tpg3, dtype =dtype)
+    o_rc_start_tpoffs = np.ones(tpg3, dtype =dtype)
+    o_relsize_start_tpoffs = np.ones(tpg3, dtype =dtype)
     o_ebg_tpoffs = np.zeros(tpg3, dtype =dtype)
     ###arrays for report variables
     r_intake_f_tpoffs = np.zeros(tpg3, dtype = dtype)   #not used as a report var but in stubble. Used name consistent with dams
@@ -2349,7 +2353,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     adjp_fl_initial_wzida0e0b0xyg3 = fun.f_expand(sinp.structuralsa['i_adjp_fl_initial_w3'][np.trunc(index_w3/step_w3).astype(int)], w_pos)
 
     ###Calculate lw_initial from the initial lw input which is a proportion of srw
-    ### Uses srw_xyg to remove the randomness that would occur with srw_b0xyg when using a RR SA (because BTRT alters SRW)
+    ### Uses srw_b0xyg so may cause randomness when using a RR SA (because BTRT alters SRW, changing the starting animal)
     lw_initial_pa1e1b1nwzida0e0b0xyg0 = (lw_initial_yg0 * (1 + adjp_lw_initial_wzida0e0b0xyg0)) * srw_pa1e1b1nwzida0e0b0xyg0
     lw_initial_pa1e1b1nwzida0e0b0xyg1 = (lw_initial_yg1 * (1 + adjp_lw_initial_wzida0e0b0xyg1)) * srw_pa1e1b1nwzida0e0b0xyg1
     lw_initial_pa1e1b1nwzida0e0b0xyg3 = (lw_initial_yg3 * (1 + adjp_lw_initial_wzida0e0b0xyg3)) * srw_pa1e1b1nwzida0e0b0xyg3
@@ -2585,14 +2589,19 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     lmm_pa1e1b1nwzida0e0b0xyg1p0 = (age_p0_pa1e1b1nwzida0e0b0xyg2p0 + cl_cpdams[1, ..., na]) / cl_cpdams[2, ..., na]
 
     ##Proportion of SRW with age
-    srw_age_pa1e1b1nwzida0e0b0xyg0 = 1 - fun.f_weighted_average(1 - np.exp(-cn_cpsire[1, ..., na] * age_p0_pa1e1b1nwzida0e0b0xyg0p0
-                            / srw_p_pa1e1b1nwzida0e0b0xyg0[..., na] ** cn_cpsire[2, ..., na]), weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg0p0, axis = -1)
-    srw_age_pa1e1b1nwzida0e0b0xyg1 = 1 - fun.f_weighted_average(1 - np.exp(-cn_cpdams[1, ..., na] * age_p0_pa1e1b1nwzida0e0b0xyg1p0
-                            / srw_p_pa1e1b1nwzida0e0b0xyg1[..., na] ** cn_cpdams[2, ..., na]), weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg1p0, axis = -1)
-    srw_age_pa1e1b1nwzida0e0b0xyg2 = 1 - fun.f_weighted_average(1 - np.exp(-cn_cpyatf[1, ..., na] * age_p0_pa1e1b1nwzida0e0b0xyg2p0
-                            / srw_p_pa1e1b1nwzida0e0b0xyg2[..., na] ** cn_cpyatf[2, ..., na]), weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg2p0, axis = -1)
-    srw_age_pa1e1b1nwzida0e0b0xyg3 = 1 - fun.f_weighted_average(1 - np.exp(-cn_cpoffs[1, ..., na] * age_p0_pa1e1b1nwzida0e0b0xyg3p0
-                            / srw_p_pa1e1b1nwzida0e0b0xyg3[..., na] ** cn_cpoffs[2, ..., na]), weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg3p0, axis = -1)
+    srw_age_pa1e1b1nwzida0e0b0xyg0 = 1 - fun.f_weighted_average(1 - np.exp(-cn_cpsire[1, ..., na]
+                    * age_p0_pa1e1b1nwzida0e0b0xyg0p0 / srw_p_pa1e1b1nwzida0e0b0xyg0[..., na] ** cn_cpsire[2, ..., na])
+                    , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg0p0, axis = -1)
+    srw_age_pa1e1b1nwzida0e0b0xyg1 = 1 - fun.f_weighted_average(1 - np.exp(-cn_cpdams[1, ..., na]
+                    * age_p0_pa1e1b1nwzida0e0b0xyg1p0 / srw_p_pa1e1b1nwzida0e0b0xyg1[..., na] ** cn_cpdams[2, ..., na])
+                    , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg1p0, axis = -1)
+    srw_age_pa1e1b1nwzida0e0b0xyg2 = (1 - fun.f_weighted_average(1 - np.exp(-cn_cpyatf[1, ..., na]
+                    * age_p0_pa1e1b1nwzida0e0b0xyg2p0 / srw_p_pa1e1b1nwzida0e0b0xyg2[..., na] ** cn_cpyatf[2, ..., na])
+                    , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg2p0, axis = -1)
+                    * (nyatf_b1nwzida0e0b0xyg > 0))
+    srw_age_pa1e1b1nwzida0e0b0xyg3 = 1 - fun.f_weighted_average(1 - np.exp(-cn_cpoffs[1, ..., na]
+                    * age_p0_pa1e1b1nwzida0e0b0xyg3p0 / srw_p_pa1e1b1nwzida0e0b0xyg3[..., na] ** cn_cpoffs[2, ..., na])
+                    , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg3p0, axis = -1)
 
     #srw_age_pa1e1b1nwzida0e0b0xyg0 = np.nanmean(np.exp(-cn_cpsire[1, ..., na] * age_p0_pa1e1b1nwzida0e0b0xyg0p0 / srw_b0xyg0[..., na] ** cn_cpsire[2, ..., na]), axis = -1)
     #srw_age_pa1e1b1nwzida0e0b0xyg1 = np.nanmean(np.exp(-cn_cpdams[1, ..., na] * age_p0_pa1e1b1nwzida0e0b0xyg1p0 / srw_b0xyg1[..., na] ** cn_cpdams[2, ..., na]), axis = -1)
@@ -3437,8 +3446,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
         ##yatf
         d_cfw_history_start_p2g2[...] = np.nan
-        nw_start_yatf = 0.0
-        rc_start_yatf = 0.0
+        nw_start_yatf = 0.1 * srw_pa1e1b1nwzida0e0b0xyg2   #srw_P is averaged across p
+        rc_start_yatf = 1.0
+        relsize_start_yatf = 0.1   #birth weight is approx 10% of SRW. Requires a value to stop div0 error
         ffcfw_start_yatf = w_b_std_y_p_pa1e1b1nwzida0e0b0xyg1[0].copy() #slice 0 is the same as the first day the animal exists - this is just an estimate, it is updated with the real weight at birth - needed to calc milk production in birth period because milk prod is calculated before yatf weight is updated
         ffcfw_max_start_yatf = ffcfw_start_yatf
         mortality_birth_yatf=0.0 #required for dam numbers before progeny born
@@ -3494,6 +3504,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             ffcfw_max_start_yatf = ffcfw_start_yatf
             nw_start_yatf = ffcfw_start_yatf
             rc_start_yatf = 1
+            relsize_start_yatf = 0.1   #birth weight is approx 10% of SRW. Requires a value to stop div0 error
             cfw_start_yatf = stubble['i_gfw_yatf'] * cw_cpyatf[3, ...]
             fl_start_yatf = stubble['i_fl_yatf']
             fd_start_yatf = stubble['i_fd_yatf'] #not used for anything so just use the same one as adult
@@ -3696,7 +3707,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
             ##dams
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
-            ##Reproduction - reset repro value at joining
+                ##Reproduction - reset repro value at joining
                 ###Lagged DR (lactation deficit)
                 ldr_start_dams = fun.f_update(ldr_start_dams, 1, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p:p+1])
                 ###Loss of potential milk due to consistent under production
@@ -3726,7 +3737,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 fd_ltwadj_start_dams = fun.f_update(fd_ltwadj_start_dams, 0, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p:p+1])
                 cf_fdltw_start_dams = fun.f_update(cf_fdltw_start_dams, 0, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p:p+1])
 
-            ##Wool Production
+                ##Wool Production
                 ###cfw
                 cfw_start_dams = fun.f_update(cfw_start_dams, 0, period_is_mainshearing_pa1e1b1nwzida0e0b0xyg1[p-1:p]) #reset if previous period is shearing (shearing occurs at the end of a period)
                 ###fl
@@ -3760,14 +3771,14 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 nw_start_sire = np.minimum(nw_max_pa1e1b1nwzida0e0b0xyg0[p:p+1], np.maximum(nw_start_sire, ffcfw_start_sire + cn_cpsire[3, ...] * (nw_max_pa1e1b1nwzida0e0b0xyg0[p:p+1]  - ffcfw_start_sire)))
                 ###Relative condition (start)
                 rc_start_sire = fun.f_divide(ffcfw_start_sire, nw_start_sire)
-                ##Condition score at  start of p
-                cs_start_sire = sfun.f1_condition_score(cn_cpsire, rc_start_sire)
                 ###staple length
                 sl_start_sire = fl_start_sire * cw_cpsire[15,...]
                 ###Relative size (start) - dams & sires
                 relsize_start_sire = np.minimum(1, nw_start_sire / srw_pa1e1b1nwzida0e0b0xyg0)
                 ###Relative size for LWG (start). Capped by current LW
                 relsize1_start_sire = np.minimum(ffcfw_max_start_sire, nw_max_pa1e1b1nwzida0e0b0xyg0[p:p+1]) / srw_pa1e1b1nwzida0e0b0xyg0
+                ###Condition score at  start of p
+                cs_start_sire = sfun.f1_condition_score(cn_cpsire, rc_start_sire, relsize_start_sire)
                 ###PI Size factor (for cattle)
                 zf_sire = np.maximum(1, 1 + cr_cpsire[7, ...] - relsize_start_sire)
                 ###EVG Size factor (decreases as z increases)
@@ -3794,8 +3805,6 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 nw_start_dams = np.minimum(nw_max_pa1e1b1nwzida0e0b0xyg1[p:p+1], np.maximum(nw_start_dams, ffcfw_start_dams + cn_cpdams[3, ...] * (nw_max_pa1e1b1nwzida0e0b0xyg1[p:p+1]  - ffcfw_start_dams)))
                 ###Relative condition (start)
                 rc_start_dams = fun.f_divide(ffcfw_start_dams, nw_start_dams)
-                ##Condition score of the dam at  start of p
-                cs_start_dams = sfun.f1_condition_score(cn_cpdams, rc_start_dams)
                 ###Relative condition of dam at parturition - needs to be remembered between loops (milk production) - Loss of potential milk due to consistent under production
                 rc_birth_dams = fun.f_update(rc_birth_start_dams, rc_start_dams, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p:p+1])
                 ###staple length
@@ -3804,6 +3813,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 relsize_start_dams = np.minimum(1, nw_start_dams / srw_pa1e1b1nwzida0e0b0xyg1)
                 ###Relative size for LWG (start). Capped by current LW
                 relsize1_start_dams = np.minimum(ffcfw_max_start_dams, nw_max_pa1e1b1nwzida0e0b0xyg1[p:p+1]) / srw_pa1e1b1nwzida0e0b0xyg1
+                ###Condition score of the dam at  start of p
+                cs_start_dams = sfun.f1_condition_score(cn_cpdams, rc_start_dams, relsize_start_dams)
                 ###PI Size factor (for cattle)
                 zf_dams = np.maximum(1, 1 + cr_cpdams[7, ...] - relsize_start_dams)
                 ###EVG Size factor (decreases as z increases)
@@ -3882,14 +3893,14 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 nw_start_offs = np.minimum(nw_max_pa1e1b1nwzida0e0b0xyg3[p:p+1], np.maximum(nw_start_offs, ffcfw_start_offs + cn_cpoffs[3, ...] * (nw_max_pa1e1b1nwzida0e0b0xyg3[p:p+1]  - ffcfw_start_offs)))
                 ###Relative condition (start)
                 rc_start_offs = fun.f_divide(ffcfw_start_offs, nw_start_offs)
-                ##Condition score at  start of p
-                cs_start_offs = sfun.f1_condition_score(cn_cpoffs, rc_start_offs)
                 ###staple length
                 sl_start_offs = fl_start_offs * cw_cpoffs[15,...]
                 ###Relative size (start) - dams & sires
                 relsize_start_offs = np.minimum(1, nw_start_offs / srw_pa1e1b1nwzida0e0b0xyg3)
                 ###Relative size for LWG (start). Capped by current LW
                 relsize1_start_offs = np.minimum(ffcfw_max_start_offs, nw_max_pa1e1b1nwzida0e0b0xyg3[p:p+1]) / srw_pa1e1b1nwzida0e0b0xyg3
+                ###Condition score at  start of p
+                cs_start_offs = sfun.f1_condition_score(cn_cpoffs, rc_start_offs, relsize_start_offs)
                 ###PI Size factor (for cattle)
                 zf_offs = np.maximum(1, 1 + cr_cpoffs[7, ...] - relsize_start_offs)
                 ###EVG Size factor (decreases as z increases)
@@ -4404,6 +4415,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 eqn_group = 7
                 eqn_system = 0 # CSIRO = 0
                 if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
+                    ### sire
                     eqn_used = (eqn_used_g0_q1p[eqn_group, p:p+1] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1,...] >0):
                         temp0, temp1, temp2, temp3, temp4 = sfun.f_fibre_cs(cw_cpsire, cc_cpsire, ffcfw_start_sire
@@ -4424,6 +4436,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             r_compare7_q0q2tpsire[eqn_system, 12, :, p:p+1, ...] = temp1
                             r_compare7_q0q2tpsire[eqn_system, 13, :, p:p+1, ...] = temp4
 
+                    ### dams
                     eqn_used = (eqn_used_g1_q1p[eqn_group, p:p+1] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1, ...] > 0):
                         temp0, temp1, temp2, temp3, temp4 = sfun.f_fibre_cs(cw_cpdams, cc_cpdams, ffcfw_start_dams
@@ -4446,6 +4459,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             r_compare7_q0q2tpdams[eqn_system, 12, :, p:p+1, ...] = temp1
                             r_compare7_q0q2tpdams[eqn_system, 13, :, p:p+1, ...] = temp4
 
+                    ### offs
                     eqn_used = (eqn_used_g3_q1p[eqn_group, p:p+1] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1, ...] > 0):
                         temp0, temp1, temp2, temp3, temp4 = sfun.f_fibre_cs(cw_cpoffs, cc_cpoffs, ffcfw_start_offs
@@ -4469,6 +4483,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
                 eqn_system = 1 # MU = 1
                 if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
+                    ### sire
                     eqn_used = (eqn_used_g0_q1p[eqn_group, p:p+1] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1,...] >0):
                         temp0, temp1, temp2, temp3, temp4 = sfun.f_fibre_mu(cw_cpsire, cc_cpsire
@@ -4490,6 +4505,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             r_compare7_q0q2tpsire[eqn_system, 12, :, p:p+1, ...] = temp1
                             r_compare7_q0q2tpsire[eqn_system, 13, :, p:p+1, ...] = temp4
 
+                    ### dams
                     eqn_used = (eqn_used_g1_q1p[eqn_group, p:p+1] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1, ...] > 0):
                         temp0, temp1, temp2, temp3, temp4 = sfun.f_fibre_mu(cw_cpdams, cc_cpdams
@@ -4514,6 +4530,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             r_compare7_q0q2tpdams[eqn_system, 12, :, p:p+1, ...] = temp1
                             r_compare7_q0q2tpdams[eqn_system, 13, :, p:p+1, ...] = temp4
 
+                    ### offs
                     eqn_used = (eqn_used_g3_q1p[eqn_group, p:p+1] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1, ...] > 0):
                         temp0, temp1, temp2, temp3, temp4 = sfun.f_fibre_mu(cw_cpoffs, cc_cpoffs
@@ -4538,6 +4555,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
                 eqn_system = 2 # New Feeding Standards = 2
                 if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
+                    ###sire
                     eqn_used = (eqn_used_g0_q1p[eqn_group, p:p+1] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1,...] >0):
                         temp0, temp1, temp2, temp3, temp4 = sfun.f_fibre_nfs(cw_cpsire, cc_cpsire, cg_cpsire, ck_cpsire
@@ -4558,6 +4576,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             r_compare7_q0q2tpsire[eqn_system, 12, :, p:p+1, ...] = temp1     # temp1  using the fibre_cs values because fibre_nfs is not used
                             r_compare7_q0q2tpsire[eqn_system, 13, :, p:p+1, ...] = temp4      # temp4  using the fibre_cs values because fibre_nfs is not used
 
+                    ### dams
                     eqn_used = (eqn_used_g1_q1p[eqn_group, p:p+1] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1, ...] > 0):
                         temp0, temp1, temp2, temp3, temp4 = sfun.f_fibre_nfs(cw_cpdams, cc_cpdams, cg_cpdams, ck_cpdams
@@ -4581,6 +4600,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             r_compare7_q0q2tpdams[eqn_system, 12, :, p:p+1, ...] = temp1     # temp1  using the fibre_cs values because fibre_nfs is not used
                             r_compare7_q0q2tpdams[eqn_system, 13, :, p:p+1, ...] = temp4      # temp4  using the fibre_cs values because fibre_nfs is not used
 
+                    ###offs
                     eqn_used = (eqn_used_g3_q1p[eqn_group, p:p+1] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1, ...] > 0):
                         temp0, temp1, temp2, temp3, temp4 = sfun.f_fibre_nfs(cw_cpoffs, cc_cpoffs, cg_cpoffs, ck_cpoffs
@@ -5127,7 +5147,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
                 ###end target fs loops
                 if (dams_fs_target_done or np.all(target_ebg_pb1dams[p:p+1] == 9999)) and (offs_fs_target_done or np.all(target_ebg_pb0offs[p:p+1] == 9999)):
-                        break
+                    break
 
             ##dam weight at a given time during period - used for special events like mating, birth & weaning.
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
@@ -5155,10 +5175,10 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 lwc_mating_dams = fun.f_update(lwc_mating_dams, ebg_e1b1sliced * cg_cpdams[18, ...], period_is_mating_pa1e1b1nwzida0e0b0xyg1[p:p+1])
                 ##Relative condition of the dam at mating - required to determine milk production
                 rc_mating_dams = ffcfw_mating_dams / nw_start_dams_e1b1sliced
-                ##Condition score of the dams at mating
-                cs_mating_dams = sfun.f1_condition_score(cn_cpdams, rc_mating_dams)
                 ##Relative size of the dams at mating
                 relsize_mating_dams = relsize_start_dams_e1b1sliced
+                ###Condition score of the dams at mating
+                cs_mating_dams = sfun.f1_condition_score(cn_cpdams, rc_mating_dams, relsize_mating_dams)
 
                 ##Dam weight at birth ^probs don't need this since birth is first day of period - just need to pass in ffcfw_start to function
                 # t_w_birth = ffcfw_start_dams + ebg_dams * cg_cpdams[18, ...] * days_period_pa1e1b1nwzida0e0b0xyg1[p] * gest_propn_pa1e1b1nwzida0e0b0xyg1[p]
@@ -5301,16 +5321,17 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 ###Normal weight (start)
                 nw_start_yatf = np.minimum(nw_max_yatf, np.maximum(nw_start_yatf, ffcfw_start_yatf + cn_cpyatf[3, ...] * (nw_max_yatf  - ffcfw_start_yatf)))
                 ###Relative condition (start) - use update function so that when 0 days/period we keep the rc of the last period because it is used to calc sale value which is period_is_weaning which has 0 days because sold at beginning.
-                temp_rc_start_yatf = fun.f_divide(ffcfw_start_yatf, nw_start_yatf)
-                rc_start_yatf = fun.f_update(rc_start_yatf, temp_rc_start_yatf, days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...] >0)
-                ##Condition score of the dam at  start of p
-                cs_start_yatf = sfun.f1_condition_score(cn_cpyatf, rc_start_yatf)
-                ###staple length
-                sl_start_yatf = fl_start_yatf * cw_cpyatf[15,...]
-                ###Relative size (start) - dams & sires
-                relsize_start_yatf = np.minimum(1, nw_start_yatf / srw_pa1e1b1nwzida0e0b0xyg2)
+                t_rc_start_yatf = fun.f_divide(ffcfw_start_yatf, nw_start_yatf)
+                rc_start_yatf = fun.f_update(rc_start_yatf, t_rc_start_yatf, days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...] >0)
+                ###Relative size (start)
+                t_relsize_start_yatf = np.minimum(1, nw_start_yatf / srw_pa1e1b1nwzida0e0b0xyg2)
+                relsize_start_yatf = fun.f_update(relsize_start_yatf, t_relsize_start_yatf, days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...] > 0)
                 ###Relative size for LWG (start). Capped by current LW
                 relsize1_start_yatf = np.minimum(ffcfw_max_start_yatf, nw_max_yatf) / srw_pa1e1b1nwzida0e0b0xyg2
+                ##Condition score of the dam at  start of p
+                cs_start_yatf = sfun.f1_condition_score(cn_cpyatf, rc_start_yatf, relsize_start_yatf)
+                ###staple length
+                sl_start_yatf = fl_start_yatf * cw_cpyatf[15,...]
                 ###PI Size factor (for cattle)
                 zf_yatf = np.maximum(1, 1 + cr_cpyatf[7, ...] - relsize_start_yatf)
                 ###EVG Size factor (decreases as z increases)
@@ -5399,16 +5420,16 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                 = sfun.f_intake(pi_yatf, ri_yatf, md_herb_yatf, False
                                                 , intake_s_yatf, pinp.sheep['i_md_supp'], mp2_yatf)   #same feedsupply as dams
 
-            ##energy - yatf
-            if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1, ...] > 0):
-                km_yatf = sfun.f1_km(ck_cpyatf, md_solid_yatf, mei_propn_milk_yatf)
-                kg_fodd_cs_yatf, kg_supp_cs_yatf, temp3 = sfun.f1_efficiency_cs(ck_cpyatf, md_solid_yatf
-                                        , pinp.sheep['i_md_supp'], md_herb_yatf, lgf_eff_pa1e1b1nwzida0e0b0xyg2[p:p+1]
-                                        , dlf_eff_pa1e1b1nwzida0e0b0xyg[p:p+1], sam_kg=sam_kg_yatf)  #same feedsupply as dams
-                ##Calculate partial efficiency (PE) for wool & conceptus for MU functions
-                ##The variables are called kc & kw but are PE and used where HAF above maintenance has been calculated
-                temp3, kw_mu_yg2 = sfun.f1_efficiency_mu(ck_cpyatf, md_solid_yatf, km_yatf)
-                # kl (temp3) is not used for yatf
+                ##energy - yatf
+                if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1, ...] > 0):
+                    km_yatf = sfun.f1_km(ck_cpyatf, md_solid_yatf, mei_propn_milk_yatf)
+                    kg_fodd_cs_yatf, kg_supp_cs_yatf, temp3 = sfun.f1_efficiency_cs(ck_cpyatf, md_solid_yatf
+                                            , pinp.sheep['i_md_supp'], md_herb_yatf, lgf_eff_pa1e1b1nwzida0e0b0xyg2[p:p+1]
+                                            , dlf_eff_pa1e1b1nwzida0e0b0xyg[p:p+1], sam_kg=sam_kg_yatf)  #same feedsupply as dams
+                    ##Calculate partial efficiency (PE) for wool & conceptus for MU functions
+                    ##The variables are called kc & kw but are PE and used where HAF above maintenance has been calculated
+                    temp3, kw_mu_yg2 = sfun.f1_efficiency_mu(ck_cpyatf, md_solid_yatf, km_yatf)
+                    # kl (temp3) is not used for yatf
 
 
             ##Maintenance heat production
@@ -6594,6 +6615,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 o_fd_min_tpsire[:, p:p+1] = fd_min_sire
                 o_ss_tpsire[:, p:p+1] = ss_sire
                 o_rc_start_tpsire[:, p:p+1] = rc_start_sire
+                o_relsize_start_tpsire[:, p:p+1] = relsize_start_sire
                 o_ebg_tpsire[:, p:p+1] = ebg_sire
 
                 ###store report variables for dams - individual variables can be deleted if not needed - store in report dictionary in the report section at end of this module
@@ -6665,6 +6687,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 o_ss_tpdams[:, p:p+1] = ss_dams
                 o_n_sire_tpa1e1b1nwzida0e0b0xyg1g0p8[:, p:p+1] = n_sire_a1e1b1nwzida0e0b0xyg1g0p8
                 o_rc_start_tpdams[:, p:p+1] = rc_start_dams
+                o_relsize_start_tpdams[:, p:p+1] = relsize_start_dams
                 o_ebg_tpdams[:, p:p+1] = ebg_dams
                 o_cfw_ltwadj_tpdams[:, p:p+1] = cfw_ltwadj_dams
                 o_fd_ltwadj_tpdams[:, p:p+1] = fd_ltwadj_dams
@@ -6692,6 +6715,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             o_ffcfw_start_tpyatf[:, p:p+1] = ffcfw_start_yatf #use ffcfw_start because weaning is at the start of period. Not inside the 'if' because days per period = 0 when weaning occurs (because once they are weaned they are not yatf). But we need to know the start ffcfw.
             o_numbers_start_tpyatf[:, p:p+1] = numbers_start_yatf #used for prog calculations - use numbers start because weaning is start of period. Not inside the 'if' because there is 0 days in the period when weaning occurs but we still want to store the start numbers
             o_rc_start_tpyatf[:, p:p+1] = rc_start_yatf #used for sale value which is weaning which has 0 yatf days per period because weaning is first day (this means the rc at weaning is actually the rc at the start of the previous period because it doesn't recalculate once days per period goes to 0)
+            o_relsize_start_tpyatf[:, p:p+1] = relsize_start_yatf  #used for sale value which is weaning which has 0 yatf days per period because weaning is first day (this means the relsize at weaning is actually the relsize at the start of the previous period because it doesn't recalculate once days per period goes to 0)
             r_wean_ebw_tpyatf[:, p:p+1] = ebw_w_yatf  #outside the if statement because the days_period_yatf are 0 in the weaning period because weaning is at the start of the period
             o_wean_w_tpyatf[:, p:p+1] = w_w_yatf #outside the if statement because the days_period_yatf are 0 in the weaning period because weaning is at the start of the period
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...] >0):
@@ -6809,6 +6833,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 o_fd_min_tpoffs[:, p:p+1] = fd_min_offs
                 o_ss_tpoffs[:, p:p+1] = ss_offs
                 o_rc_start_tpoffs[:, p:p+1] = rc_start_offs
+                o_relsize_start_tpoffs[:, p:p+1] = relsize_start_offs
                 o_ebg_tpoffs[:, p:p+1] = ebg_offs
 
                 ###store report variables - individual variables can be deleted if not needed - store in report dictionary in the report section at end of this module
@@ -6861,7 +6886,6 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     pointers_sire, index_unique_w_sire = sfun.f1_collapse_pointers(p, ebw_sire, numbers_end_sire, n_startw_unique_next,
                                                               False, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2],
                                                               lw_initial_pa1e1b1nwzida0e0b0xyg0)
-
                 else:
                     pointers_sire = np.array([np.nan]) #empty array so f_start_prod still works in the early periods.
                     index_unique_w_sire = np.array([np.nan]) #empty array so f_start_prod still works in the early periods.
@@ -6878,12 +6902,12 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     n_startw_unique_next = w_start_len1 * (n_fs_dams ** exp)
 
                     pointers_dams, index_unique_w_dams = sfun.f1_collapse_pointers(p, ebw_dams, numbers_end_dams, n_startw_unique_next,
-                                                              period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2],
-                                                              period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2],
-                                                              lw_initial_pa1e1b1nwzida0e0b0xyg1, period_is_prejoin=
-                                                              period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1:p+2] *
-                                                              include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1:p+2],
-                                                              prejoin_tup=prejoin_tup)
+                                                          period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2],
+                                                          period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2],
+                                                          lw_initial_pa1e1b1nwzida0e0b0xyg1, period_is_prejoin=
+                                                          period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1:p+2] *
+                                                          include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1:p+2],
+                                                          prejoin_tup=prejoin_tup)
 
                     #store for lw dist
                     o_ebw_lw_dist_tpdams[:, p:p+1] = sfun.f1_collapse(pointers_dams, index_unique_w_dams, ebw_dams, numbers_end_dams,
@@ -6904,8 +6928,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     n_startw_unique_next_offs = w_start_len3 * (n_fs_offs ** exp)
 
                     pointers_offs, index_unique_w_offs = sfun.f1_collapse_pointers(p, ebw_offs, numbers_end_offs, n_startw_unique_next_offs,
-                          period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1:p+2], period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2],
-                          lw_initial_pa1e1b1nwzida0e0b0xyg3)
+                      period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1:p+2], period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2],
+                      lw_initial_pa1e1b1nwzida0e0b0xyg3)
 
                     #store for lw dist
                     o_ebw_lw_dist_tpoffs[:, p:p+1] = sfun.f1_collapse(pointers_offs, index_unique_w_offs, ebw_offs, numbers_end_offs,
@@ -7396,7 +7420,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 if np.any(period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1:p+2]) and sinp.structuralsa['i_fs_create_pkl']:
                     pkl_condensed_values['offs'][p]['ebw_offs'] = ebw_start_offs #start of next period ie this is condensed ebw
 
-                ###The LTW adjustments do not include the age stage saa adjustments.
+            ###The LTW adjustments do not include the age stage saa adjustments.
             ## This is the end of the p loop
 
         ## Calculate LTW sfw multiplier & sfd addition then repeat the generator loops with updated LTW adjuster
@@ -8165,15 +8189,23 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     ###sale based on user inputted number of sale times spaced evenly within each DVP
     if sinp.structuralsa['i_offs_sale_method'] == 1:
         ###t0 - retained
-        ###t1 - sale at the end of the dvp. For dsp (and when nodes are included) this gets shifted to the start of the dvp
-        ###>=t2 - sale even spread within the dvp
-        dvp_end_va1e1b1nwzida0e0b0xyg3 = np.roll(dvp_start_va1e1b1nwzida0e0b0xyg3, shift=-1, axis=0) - step
-        dvp_end_va1e1b1nwzida0e0b0xyg3[-1,...] = date_start_pa1e1b1nwzida0e0b0xyg3[-1,...] #set end of last dvp to final generator period
+        ###t1 - sale at the end of the dvp for steady state, or the start of the dvp for dsp or node periods inc
+        ###>=t2 - sale evenly spread within the dvp
+        dvp_end_period_start_va1e1b1nwzida0e0b0xyg3 = np.roll(dvp_start_va1e1b1nwzida0e0b0xyg3, shift=-1, axis=0) - step
+        dvp_end_period_start_va1e1b1nwzida0e0b0xyg3[-1,...] = date_start_pa1e1b1nwzida0e0b0xyg3[-1,...] #set end of last dvp to final generator period
+        dvp_end_boundary_va1e1b1nwzida0e0b0xyg3 = dvp_end_period_start_va1e1b1nwzida0e0b0xyg3 + step
         offs_sale_opportunities_per_dvp = sinp.structuralsa['i_offs_sale_opportunities_per_dvp']
-        sale_offset_days_vg3 = (dvp_end_va1e1b1nwzida0e0b0xyg3 - np.maximum(
-            date_weaned_i_pa1e1b1nwzida0e0b0xyg3, dvp_start_va1e1b1nwzida0e0b0xyg3))/offs_sale_opportunities_per_dvp
-        sale_offset_days_tvg3 = sale_offset_days_vg3 * fun.f_expand(np.roll(np.arange(len_t3), shift=1, axis=0), p_pos-1) #len t3 includes the retained slice so roll because we want t[1] to be 0 offset so sale occurs at the end of the dvp.
-        sale_date_tvg3 = dvp_end_va1e1b1nwzida0e0b0xyg3 - sale_offset_days_tvg3 #minus 7 to get the last period of previous dvp.
+        if bool_steady_state and not sinp.structuralsa['i_inc_node_periods']:
+            sale_offset_days_vg3 = (dvp_end_boundary_va1e1b1nwzida0e0b0xyg3 - np.maximum(
+                date_weaned_i_pa1e1b1nwzida0e0b0xyg3, dvp_start_va1e1b1nwzida0e0b0xyg3))/offs_sale_opportunities_per_dvp
+            sale_offset_days_tvg3 = sale_offset_days_vg3 * fun.f_expand(np.roll(np.arange(len_t3), shift=1, axis=0), p_pos-1) #len t3 includes the retained slice so roll because t[1] has 0 offset from the end of the dvp.
+            sale_date_tvg3 = dvp_end_period_start_va1e1b1nwzida0e0b0xyg3 - sale_offset_days_tvg3
+        else:
+            sale_start_va1e1b1nwzida0e0b0xyg3 = np.maximum(date_weaned_i_pa1e1b1nwzida0e0b0xyg3,
+                                                           dvp_start_va1e1b1nwzida0e0b0xyg3)
+            sale_offset_days_vg3 = (dvp_end_boundary_va1e1b1nwzida0e0b0xyg3 - sale_start_va1e1b1nwzida0e0b0xyg3) / offs_sale_opportunities_per_dvp
+            sale_offset_days_tvg3 = sale_offset_days_vg3 * fun.f_expand(np.arange(len_t3) - 1, p_pos-1) #len t3 includes the retained slice so t[1] has 0 offset from the start of the dvp.
+            sale_date_tvg3 = sale_start_va1e1b1nwzida0e0b0xyg3 + sale_offset_days_tvg3
         sale_opp_tpa1e1b1nwzida0e0b0xyg3 = np.any(sfun.f1_period_is_('period_is', sale_date_tvg3[:,:,na,...],
                                                                      date_start_pa1e1b1nwzida0e0b0xyg3, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg3), axis=1)
         ####set t0 sale_opp to false because no sale in t[0]
@@ -8198,12 +8230,12 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         sale_opp_tpa1e1b1nwzida0e0b0xyg3 = np.logical_or(np.logical_and(age_start_pa1e1b1nwzida0e0b0xyg3[mask_p_offs_p] <= sale_age_tpa1e1b1nwzida0e0b0xyg3,
                                                                         sale_age_tpa1e1b1nwzida0e0b0xyg3 <= age_end_pa1e1b1nwzida0e0b0xyg3[mask_p_offs_p]),
                                                          weight_tpa1e1b1nwzida0e0b0xyg3>target_weight_tpa1e1b1nwzida0e0b0xyg3)
-    ###if dsp then t1 gets a sale opportunity at the start of dvp when seasons are identified (this will be first period of dvp so any other sale opportunities in that dvp will be disregarded).
-    if not bool_steady_state or sinp.structuralsa['i_inc_node_periods']:
-        period_is_startseasondvp_ypa1e1b1nwzida0e0b0xyg3m: object = sfun.f1_period_is_('period_is', date_node_ya1e1b1nwzidaebxygm[:,na,...], date_start_pa1e1b1nwzida0e0b0xyg3[...,na], date_end_p = date_end_pa1e1b1nwzida0e0b0xyg3[...,na])
-        period_is_startseasondvp_pa1e1b1nwzida0e0b0xyg3 = np.any(period_is_startseasondvp_ypa1e1b1nwzida0e0b0xyg3m, axis=(0,-1))
-        period_is_startseasondvp_pa1e1b1nwzida0e0b0xyg3 = np.logical_and(period_is_startseasondvp_pa1e1b1nwzida0e0b0xyg3, days_period_cut_pa1e1b1nwzida0e0b0xyg3[...,0:1,:,:,:,:]>0) #only have sale opp if animal exists. slice e axis
-        sale_opp_tpa1e1b1nwzida0e0b0xyg3[1,...] = np.logical_or(sale_opp_tpa1e1b1nwzida0e0b0xyg3[1,...], period_is_startseasondvp_pa1e1b1nwzida0e0b0xyg3)
+        ###if dsp then t1 gets a sale opportunity at the start of dvp when seasons are identified (this will be first period of dvp so any other sale opportunities in that dvp will be disregarded).
+        if not bool_steady_state or sinp.structuralsa['i_inc_node_periods']:
+            period_is_startseasondvp_ypa1e1b1nwzida0e0b0xyg3m: object = sfun.f1_period_is_('period_is', date_node_ya1e1b1nwzidaebxygm[:,na,...], date_start_pa1e1b1nwzida0e0b0xyg3[...,na], date_end_p = date_end_pa1e1b1nwzida0e0b0xyg3[...,na])
+            period_is_startseasondvp_pa1e1b1nwzida0e0b0xyg3 = np.any(period_is_startseasondvp_ypa1e1b1nwzida0e0b0xyg3m, axis=(0,-1))
+            period_is_startseasondvp_pa1e1b1nwzida0e0b0xyg3 = np.logical_and(period_is_startseasondvp_pa1e1b1nwzida0e0b0xyg3, days_period_cut_pa1e1b1nwzida0e0b0xyg3[...,0:1,:,:,:,:]>0) #only have sale opp if animal exists. slice e axis
+            sale_opp_tpa1e1b1nwzida0e0b0xyg3[1,...] = np.logical_or(sale_opp_tpa1e1b1nwzida0e0b0xyg3[1,...], period_is_startseasondvp_pa1e1b1nwzida0e0b0xyg3)
     ###on hand - combine period_is_sale & period_is_transfer then use cumulative max to convert to on_hand
     ### note: animals are on hand in the period they are sold ie sale takes place on the last minute of the period.
     off_hand_tpa1e1b1nwzida0e0b0xyg3 = sfun.f1_cum_dvp(sale_opp_tpa1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3, axis=1,
@@ -8453,6 +8485,10 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     rc_start_dams_tp9g = o_rc_start_tpdams[:,sale_mask_p1]
     rc_start_yatf_tp9g = o_rc_start_tpyatf[:,sale_mask_p2]
     rc_start_offs_tp9g = o_rc_start_tpoffs[:,sale_mask_p3]
+    relsize_start_sire_tp9g = o_relsize_start_tpsire[:,sale_mask_p0]
+    relsize_start_dams_tp9g = o_relsize_start_tpdams[:,sale_mask_p1]
+    relsize_start_yatf_tp9g = o_relsize_start_tpyatf[:,sale_mask_p2]
+    relsize_start_offs_tp9g = o_relsize_start_tpoffs[:,sale_mask_p3]
     age_end_p9a1e1b1nwzida0e0b0xyg0 = age_end_pa1e1b1nwzida0e0b0xyg0[sale_mask_p0]
     age_end_p9a1e1b1nwzida0e0b0xyg1 = age_end_pa1e1b1nwzida0e0b0xyg1[sale_mask_p1]
     age_end_p9a1e1b1nwzida0e0b0xyg2 = age_end_pa1e1b1nwzida0e0b0xyg2[sale_mask_p2]
@@ -8464,6 +8500,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
     salevalue_c1qtpa1e1b1nwzida0e0b0xyg0[:,:,:,sale_mask_p0], r_salegrid_c1tpa1e1b1nwzida0e0b0xyg0[:,:,sale_mask_p0] = sfun.f_sale_value(
         cn_cpsire.astype(dtype), cx_cpsire[...,0:1,:,:].astype(dtype), rc_start_sire_tp9g, ffcfw_tp9a1e1b1nwzida0e0b0xyg0
+        , relsize_start_sire_tp9g
         , dresspercent_adj_yg0, dresspercent_adj_s6tpa1e1b1nwzida0e0b0xyg, dresspercent_adj_s7tpa1e1b1nwzida0e0b0xyg
         , grid_price_s7s5s6tpa1e1b1nwzida0e0b0xyg, sale_price_scalar_c1s7tpg, month_scalar_s7tp9a1e1b1nwzida0e0b0xyg0
         , month_discount_s7tp9a1e1b1nwzida0e0b0xyg0, price_type_s7tpa1e1b1nwzida0e0b0xyg, cvlw_s7s5tpa1e1b1nwzida0e0b0xyg
@@ -8475,6 +8512,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         , rev_trait_values['sire'], dtype)
     salevalue_c1qtpa1e1b1nwzida0e0b0xyg1[:,:,:,sale_mask_p1], r_salegrid_c1tpa1e1b1nwzida0e0b0xyg1[:,:,sale_mask_p1] = sfun.f_sale_value(
         cn_cpdams.astype(dtype), cx_cpdams[...,1:2,:,:].astype(dtype), rc_start_dams_tp9g, ffcfw_tp9a1e1b1nwzida0e0b0xyg1
+        , relsize_start_dams_tp9g
         , dresspercent_adj_yg1, dresspercent_adj_s6tpa1e1b1nwzida0e0b0xyg,dresspercent_adj_s7tpa1e1b1nwzida0e0b0xyg
         , grid_price_s7s5s6tpa1e1b1nwzida0e0b0xyg, sale_price_scalar_c1s7tpg, month_scalar_s7tp9a1e1b1nwzida0e0b0xyg1
         , month_discount_s7tp9a1e1b1nwzida0e0b0xyg1, price_type_s7tpa1e1b1nwzida0e0b0xyg, cvlw_s7s5tpa1e1b1nwzida0e0b0xyg
@@ -8486,6 +8524,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         , rev_trait_values['dams'], dtype)
     salevalue_c1qtp9a1e1b1nwzida0e0b0xyg2, r_salegrid_c1tpa1e1b1nwzida0e0b0xyg2[:,:,sale_mask_p2] = sfun.f_sale_value(                                                #keep it as a condensed p axis
         cn_cpyatf.astype(dtype), cx_cpyatf[...,mask_x,:,:].astype(dtype), rc_start_yatf_tp9g, ffcfw_tp9a1e1b1nwzida0e0b0xyg2
+        , relsize_start_yatf_tp9g
         , dresspercent_adj_yg2, dresspercent_adj_s6tpa1e1b1nwzida0e0b0xyg,dresspercent_adj_s7tpa1e1b1nwzida0e0b0xyg
         , grid_price_s7s5s6tpa1e1b1nwzida0e0b0xyg, sale_price_scalar_c1s7tpg, month_scalar_s7tp9a1e1b1nwzida0e0b0xyg2
         , month_discount_s7tp9a1e1b1nwzida0e0b0xyg2, price_type_s7tpa1e1b1nwzida0e0b0xyg, cvlw_s7s5tpa1e1b1nwzida0e0b0xyg
@@ -8497,6 +8536,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         , rev_trait_values['yatf'], dtype)
     salevalue_c1qtpa1e1b1nwzida0e0b0xyg3[:,:,:,sale_mask_p3], r_salegrid_c1tpa1e1b1nwzida0e0b0xyg3[:,:,sale_mask_p3] = sfun.f_sale_value(
         cn_cpoffs, cx_cpoffs[...,mask_x,:,:].astype(dtype), rc_start_offs_tp9g, ffcfw_tp9a1e1b1nwzida0e0b0xyg3
+        , relsize_start_offs_tp9g
         , dresspercent_adj_yg3, dresspercent_adj_s6tpa1e1b1nwzida0e0b0xyg,dresspercent_adj_s7tpa1e1b1nwzida0e0b0xyg
         , grid_price_s7s5s6tpa1e1b1nwzida0e0b0xyg, sale_price_scalar_c1s7tpg, month_scalar_s7tp9a1e1b1nwzida0e0b0xyg3
         , month_discount_s7tp9a1e1b1nwzida0e0b0xyg3, price_type_s7tpa1e1b1nwzida0e0b0xyg, cvlw_s7s5tpa1e1b1nwzida0e0b0xyg
@@ -10457,14 +10497,20 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                              * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,na,...]))
         r_fat_k2Tvpdams = (r_fat_tpdams[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
                            * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
+        r_fat_k3k5Tvpoffs = (r_fat_tpoffs[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg3 == index_vpa1e1b1nwzida0e0b0xyg3)
+                             * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...])
+                             * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,na,...]))
         r_lean_k2Tvpdams = (r_lean_tpdams[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
                             * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
+        r_lean_k3k5Tvpoffs = (r_lean_tpoffs[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg3 == index_vpa1e1b1nwzida0e0b0xyg3)
+                             * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...])
+                             * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,na,...]))
 
     ##cs - need to add v and k2 axis but still keep p, e and b so that we can graph the desired patterns. This is a big array so only stored if user wants. t is not required because it doesn't affect NV
     if sinp.rep['i_store_cs_rep']:
-        cs_tpg0 = sfun.f1_condition_score(cn_cpsire.astype(dtype), o_rc_start_tpsire)
-        cs_tpg1 = sfun.f1_condition_score(cn_cpdams.astype(dtype), o_rc_start_tpdams)
-        cs_tpg3 = sfun.f1_condition_score(cn_cpoffs.astype(dtype), o_rc_start_tpoffs)
+        cs_tpg0 = sfun.f1_condition_score(cn_cpsire.astype(dtype), o_rc_start_tpsire, o_relsize_start_tpsire)
+        cs_tpg1 = sfun.f1_condition_score(cn_cpdams.astype(dtype), o_rc_start_tpdams, o_relsize_start_tpdams)
+        cs_tpg3 = sfun.f1_condition_score(cn_cpoffs.astype(dtype), o_rc_start_tpoffs, o_relsize_start_tpoffs)
         r_cs_psire = cs_tpg0
         r_cs_k2Tvpdams = (cs_tpg1[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
                           * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
@@ -10474,9 +10520,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
     ##fs - need to add v and k2 axis but still keep p, e and b so that we can graph the desired patterns. This is a big array so only stored if user wants. t is not required because it doesn't affect NV
     if sinp.rep['i_store_fs_rep']:
-        fs_tpg0 = sfun.f1_fat_score(cn_cpsire.astype(dtype), o_rc_start_tpsire)   #Note: these don't include saa[rev_cfat] - difficult to include with rev_trait_values
-        fs_tpg1 = sfun.f1_fat_score(cn_cpdams.astype(dtype), o_rc_start_tpdams)   #Note: these don't include saa[rev_cfat] - difficult to include with rev_trait_values
-        fs_tpg3 = sfun.f1_fat_score(cn_cpoffs.astype(dtype), o_rc_start_tpoffs)   #Note: these don't include saa[rev_cfat] - difficult to include with rev_trait_values
+        fs_tpg0 = sfun.f1_fat_score(cn_cpsire.astype(dtype), o_rc_start_tpsire, o_relsize_start_tpsire)   #Note: these don't include saa[rev_cfat] - difficult to include with rev_trait_values
+        fs_tpg1 = sfun.f1_fat_score(cn_cpdams.astype(dtype), o_rc_start_tpdams, o_relsize_start_tpdams)   #Note: these don't include saa[rev_cfat] - difficult to include with rev_trait_values
+        fs_tpg3 = sfun.f1_fat_score(cn_cpoffs.astype(dtype), o_rc_start_tpoffs, o_relsize_start_tpoffs)   #Note: these don't include saa[rev_cfat] - difficult to include with rev_trait_values
         r_fs_psire = fs_tpg0
         r_fs_k2Tvpdams = (fs_tpg1[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
                           * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
@@ -11955,7 +12001,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         fun.f1_make_r_val(r_vals,r_wbe_k2Tvpyatf,'wbe_yatf_k2Tvpa1e1b1nw8zixyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2Tvpa1e1b1nwzixyg1_shape)
         fun.f1_make_r_val(r_vals,r_wbe_k3k5Tvpoffs,'wbe_offs_k3k5Tvpnw8zida0e0b0xyg3', mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...],z_pos,k3k5Tvpnwzidae0b0xyg3_shape)
         fun.f1_make_r_val(r_vals,r_fat_k2Tvpdams,'fat_dams_k2Tvpa1e1b1nw8ziyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2Tvpa1e1b1nwziyg1_shape)
+        fun.f1_make_r_val(r_vals,r_fat_k3k5Tvpoffs,'fat_offs_k3k5Tvpnw8zida0e0b0xyg3', mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...],z_pos,k3k5Tvpnwzidae0b0xyg3_shape)
         fun.f1_make_r_val(r_vals,r_lean_k2Tvpdams,'lean_dams_k2Tvpa1e1b1nw8ziyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2Tvpa1e1b1nwziyg1_shape)
+        fun.f1_make_r_val(r_vals,r_lean_k3k5Tvpoffs,'lean_offs_k3k5Tvpnw8zida0e0b0xyg3', mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...],z_pos,k3k5Tvpnwzidae0b0xyg3_shape)
 
     ###condition score - with p, e, b
     if sinp.rep['i_store_cs_rep']:

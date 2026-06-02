@@ -118,9 +118,6 @@ def sets(model, nv, params):
     #######################
     #cropping related     #
     #######################
-    #grain pools ie firsts and seconds
-    model.s_grain_pools = Set(initialize=sinp.general['grain_pools'], doc='grain pools')
-
     ##biomass uses
     model.s_biomass_uses = Set(initialize=uinp.stubble['i_idx_s2'], doc='uses of phase biomass')
 

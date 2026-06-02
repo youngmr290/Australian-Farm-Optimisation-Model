@@ -3889,24 +3889,40 @@ def f_wool_value(stb_mpg_w4, wool_price_scalar_c1tpg, cfw_pg, fd_pg, sl_pg, ss_p
     return wool_value_c1qtpg, woolp_stbnib_c1qtpg
 
 
-def f1_condition_score(cn, rc_tpg):
-    ''' Estimate CS from LW. Works with scalars or arrays - provided they are broadcastable into ffcfw.
+def f1_condition_score(cn, rc_tpg, rs_tpg=1):
+    ''' Estimate CS from relative condition. Works with scalars or arrays - provided they are broadcastable into ffcfw.
 
-       ffcfw: (kg) Fleece free, conceptus free liveweight. normal_weight: (kg). cs_propn: (0.19) change in LW
-       associated with 1 CS as a proportion of normal_weight.
+       cn: cn[5] change in LW associated with 1 CS as a proportion of SRW (kg/CS) - for adults
+       rc: relative condition = Fleece free, conceptus free liveweight (ffcfw) / normal weight (nw).
+       rs: relative size = nw / SRW
 
-       long version of the formula (use rc instead of using to following): 3 + (ffcfw - normal_weight) / (cs_propn * normal_weight)
-       Returns: condition score - float
+       cn[5] is scaled for younger animals to be a higher proportion of SRW for younger animals
+       See Freer et al. 2007 printout for derivation #todo improve the derivation with the SVCP data
+       kg_per_CS = cn[5] * (2-rs) * SRW i.e. reducing from 2*cn[5] to cn[5] as rs increases from 0 to 1.
+       because rs = nw / srw
+       kg_per_CS = cn[5] * (2-rs) * nw / rs (convert to nw to allow cancelling out later)
+       then invert rs to the numerator (to stop div0 error when 0)
+
+       Derivation of the CS formula
+       CS = 3 + (ffcfw - nw) / (kg_per_CS * srw)
+       and ffcfw - nw = (rc - 1) * nw
+       and rs = nw/srw
+       so, substituting and removing nw from numerator and denominator
+       CS = 3 + (rc - 1) / (cn5 * (2 - rs) / rs)
+
+       Returns: condition score : float
        '''
-    return np.maximum(1, 3 + (rc_tpg - 1) / cn[5, ...]) #a minimum value of CS=1 is used to remove errors caused by low CS. A CS below 1 is unlikely because the animal would be dead
+
+    cs_tpg = 3 + (rc_tpg - 1) * rs_tpg / (cn[5, ...] * (2 - rs_tpg))
+    return np.maximum(1, cs_tpg) #a minimum value of CS=1 is used to remove errors caused by low CS. A CS below 1 is unlikely because the animal would be dead
 
 
-def f1_fat_score(cn, rc_tpg, age=0, rev_trait_value=0):
+def f1_fat_score(cn, rc_tpg, z_tpg=1, age=0, rev_trait_value=0):
     ''' Calculate fat score from relative condition using relationship from van Burgel et al. 2011.
     Steps 1. calculate CS
           2. estimate GR tissue depth using relationship from van Burgel CS = 2.5 + 0.06 GR
           3. convert to fat score. FS1 = <5mm, FS2 6-10mm, FS3 11-15mm, FS4 16-20mm, FS5 >21mm'''
-    condition_score = f1_condition_score(cn, rc_tpg)
+    condition_score = f1_condition_score(cn, rc_tpg, z_tpg)
     gr_depth = np.maximum(0, (condition_score - 2.5) / 0.06)
     gr_depth = fun.f_sa(gr_depth, sen.saa['fat_depth'], sa_type=2, value_min=0)
     #todo make the coefficients inputs in Universal (use cn) - See Universal Master 23Nov23
@@ -4050,16 +4066,16 @@ def f1_salep_mob(weight_s7tpg, scores_s7s6tpg, cvlw_s7s5tpg, cvscore_s7s6tpg,
     return saleprice_mobaverage_s7tpg
 
 
-def f_sale_value(cn, cx, o_rc_tpg, o_ffcfw_tpg, dressp_adj_yg, dresspercent_adj_s6tpg,
+def f_sale_value(cn, cx, o_rc_tpg, o_ffcfw_tpg, o_z_tpg, dressp_adj_yg, dresspercent_adj_s6tpg,
                  dresspercent_adj_s7tpg, grid_price_s7s5s6tpg, price_scalar_c1s7tpg, month_scalar_s7tpg,
                  month_discount_s7tpg, price_type_s7tpg, cvlw_s7s5tpg, cvscore_s7s6tpg,
                  grid_weightrange_s7s5tpg, grid_scorerange_s7s6tpg, age_end_pg1, discount_age_s7tpg,sale_cost_pc_s7tpg,
                  sale_cost_hd_s7tpg, mask_s7x_s7tpg, sale_agemax_s7tpg1, sale_agemin_s7tpg1, sale_ffcfw_min_s7tpg,
                  sale_ffcfw_max_s7tpg, mask_s7g_s7tpg, rev_trait_value, dtype=None):
-    ##Calculate condition score from relative condition
-    cs_tpg = f1_condition_score(cn, o_rc_tpg)
-    ##Calculate fat score from relative condition (includes REV adjustments)
-    fs_tpg = f1_fat_score(cn, o_rc_tpg, age_end_pg1, rev_trait_value)
+    ##Calculate condition score from relative condition and relative size
+    cs_tpg = f1_condition_score(cn, o_rc_tpg, o_z_tpg)
+    ##Calculate fat score from condition score (includes REV adjustments)
+    fs_tpg = f1_fat_score(cn, o_rc_tpg, o_z_tpg, age_end_pg1, rev_trait_value)
     ##Combine the scores into single array
     scores_s8tpg = np.stack([fs_tpg, cs_tpg], axis=0)
     ##Select the quality scores (s8) for each price grid (s7)
