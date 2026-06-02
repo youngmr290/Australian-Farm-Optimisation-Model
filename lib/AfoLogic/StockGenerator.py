@@ -4882,15 +4882,15 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             r_compare7_q0q2tpoffs[eqn_system, 5, :, p:p+1, ...] = temp4
                             r_compare7_q0q2tpoffs[eqn_system, 6, :, p:p+1, ...] = temp0
 
-                            temp0 = sfun.f1_level_nfs(mei_offs, hp_maint_nfs_offs, km_offs)
-                            if eqn_used:
-                                level_offs = temp0
-                            temp0, temp1 = sfun.f_templc(cc_cpoffs, ffcfw_start_offs, rc_start_offs, sl_start_offs, hp_total_nfs_offs
-                                                       , temp_ave_pa1e1b1nwzida0e0b0xyg[p:p+1], temp_max_pa1e1b1nwzida0e0b0xyg[p:p+1]
-                                                       , temp_min_pa1e1b1nwzida0e0b0xyg[p:p+1], ws_pa1e1b1nwzida0e0b0xyg[p:p+1]
-                                                       , rain_pa1e1b1nwzida0e0b0xygp0[p:p+1], index_m0)
-                            if eqn_used:
-                                temp_lc_offs = temp0  #temp1 not required here
+                        temp0 = sfun.f1_level_nfs(mei_offs, hp_maint_nfs_offs, km_offs)
+                        if eqn_used:
+                            level_offs = temp0
+                        temp0, temp1 = sfun.f_templc(cc_cpoffs, ffcfw_start_offs, rc_start_offs, sl_start_offs, hp_total_nfs_offs
+                                                   , temp_ave_pa1e1b1nwzida0e0b0xyg[p:p+1], temp_max_pa1e1b1nwzida0e0b0xyg[p:p+1]
+                                                   , temp_min_pa1e1b1nwzida0e0b0xyg[p:p+1], ws_pa1e1b1nwzida0e0b0xyg[p:p+1]
+                                                   , rain_pa1e1b1nwzida0e0b0xygp0[p:p+1], index_m0)
+                        if eqn_used:
+                            temp_lc_offs = temp0  #temp1 not required here
 
                 ###if there is a target then adjust feedsupply, if not break out of feedsupply loop
                 if np.all(target_ebg_pb1dams[p:p+1] == 9999) and np.all(target_ebg_pb0offs[p:p+1] == 9999):
@@ -5509,15 +5509,15 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                         r_compare7_q0q2tpyatf[eqn_system, 5, :, p:p+1, ...] = temp4
                         r_compare7_q0q2tpyatf[eqn_system, 6, :, p:p+1, ...] = temp0
 
-                        temp0 = sfun.f1_level_nfs(mei_yatf, hp_maint_nfs_yatf, km_yatf)
-                        if eqn_used:
-                            level_yatf = temp0
-                        temp0, temp1 = sfun.f_templc(cc_cpyatf, ffcfw_start_yatf, rc_start_yatf, sl_start_yatf, hp_total_nfs_yatf
-                                                   , temp_ave_pa1e1b1nwzida0e0b0xyg[p:p+1], temp_max_pa1e1b1nwzida0e0b0xyg[p:p+1]
-                                                   , temp_min_pa1e1b1nwzida0e0b0xyg[p:p+1], ws_a1e1b1nwzida0e0b0xyg1
-                                                   , rain_pa1e1b1nwzida0e0b0xygp0[p:p+1], index_m0)
-                        if eqn_used:
-                            temp_lc_yatf = temp0  #temp1 not required here
+                    temp0 = sfun.f1_level_nfs(mei_yatf, hp_maint_nfs_yatf, km_yatf)
+                    if eqn_used:
+                        level_yatf = temp0
+                    temp0, temp1 = sfun.f_templc(cc_cpyatf, ffcfw_start_yatf, rc_start_yatf, sl_start_yatf, hp_total_nfs_yatf
+                                               , temp_ave_pa1e1b1nwzida0e0b0xyg[p:p+1], temp_max_pa1e1b1nwzida0e0b0xyg[p:p+1]
+                                               , temp_min_pa1e1b1nwzida0e0b0xyg[p:p+1], ws_a1e1b1nwzida0e0b0xyg1
+                                               , rain_pa1e1b1nwzida0e0b0xygp0[p:p+1], index_m0)
+                    if eqn_used:
+                        temp_lc_yatf = temp0  #temp1 not required here
 
 
             ##weaning weight yatf - called when dams days per period greater than 0 - calculates the weight at the start of the period
