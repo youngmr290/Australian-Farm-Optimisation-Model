@@ -2515,7 +2515,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     pi_age_y_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(cb1_cpdams[19, ..., na] * np.maximum(0,pimi_pa1e1b1nwzida0e0b0xyg1p0) ** ci_cpdams[9, ..., na]
                         * np.exp(ci_cpdams[9, ..., na] * (1 - pimi_pa1e1b1nwzida0e0b0xyg1p0)), weights=age_y_adj_weights_pa1e1b1nwzida0e0b0xyg1p0, axis = -1) #maximum to stop error in power (not sure why the negatives were causing a problem)
     ##Peak milk production pattern (time from birth). Average for the days that the dam is lactating
-    ## Includes genotype scalar for milk yield (cl_cpyatf[0]), using yatf so that age is controlled by the age of yatf
+    ## Includes genotype scalar for milk yield (cl_cpyatf[0]), using yatf so that saa_p11 is controlled by the age of yatf
     mp_age_y_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(cl_p_cpyatf[0, ..., na] * cb1_cpdams[0, ..., na]
                                         * lmm_pa1e1b1nwzida0e0b0xyg1p0 ** cl_cpdams[3, ..., na]
                                         * np.exp(cl_cpdams[3, ..., na] * (1 - lmm_pa1e1b1nwzida0e0b0xyg1p0))
@@ -4882,15 +4882,15 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             r_compare7_q0q2tpoffs[eqn_system, 5, :, p:p+1, ...] = temp4
                             r_compare7_q0q2tpoffs[eqn_system, 6, :, p:p+1, ...] = temp0
 
-                            temp0 = sfun.f1_level_nfs(mei_offs, hp_maint_nfs_offs, km_offs)
-                            if eqn_used:
-                                level_offs = temp0
-                            temp0, temp1 = sfun.f_templc(cc_cpoffs, ffcfw_start_offs, rc_start_offs, sl_start_offs, hp_total_nfs_offs
-                                                       , temp_ave_pa1e1b1nwzida0e0b0xyg[p:p+1], temp_max_pa1e1b1nwzida0e0b0xyg[p:p+1]
-                                                       , temp_min_pa1e1b1nwzida0e0b0xyg[p:p+1], ws_pa1e1b1nwzida0e0b0xyg[p:p+1]
-                                                       , rain_pa1e1b1nwzida0e0b0xygp0[p:p+1], index_m0)
-                            if eqn_used:
-                                temp_lc_offs = temp0  #temp1 not required here
+                        temp0 = sfun.f1_level_nfs(mei_offs, hp_maint_nfs_offs, km_offs)
+                        if eqn_used:
+                            level_offs = temp0
+                        temp0, temp1 = sfun.f_templc(cc_cpoffs, ffcfw_start_offs, rc_start_offs, sl_start_offs, hp_total_nfs_offs
+                                                   , temp_ave_pa1e1b1nwzida0e0b0xyg[p:p+1], temp_max_pa1e1b1nwzida0e0b0xyg[p:p+1]
+                                                   , temp_min_pa1e1b1nwzida0e0b0xyg[p:p+1], ws_pa1e1b1nwzida0e0b0xyg[p:p+1]
+                                                   , rain_pa1e1b1nwzida0e0b0xygp0[p:p+1], index_m0)
+                        if eqn_used:
+                            temp_lc_offs = temp0  #temp1 not required here
 
                 ###if there is a target then adjust feedsupply, if not break out of feedsupply loop
                 if np.all(target_ebg_pb1dams[p:p+1] == 9999) and np.all(target_ebg_pb0offs[p:p+1] == 9999):
@@ -5019,44 +5019,44 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                         r_compare10_q0q2tpyatf[eqn_system, 0, :, p:p+1, ...] = temp0
 
 
-                ##progeny fleece prodn adjustment due to dam profile (LTW adjustment)
-                eqn_group = 14
-                eqn_system = 0 # CSIRO = 0 - doesn't exist for LTW impacts on progeny
-                if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
-                    eqn_used = (eqn_used_g1_q1p[eqn_group, p:p+1] == eqn_system)
-                    # if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
-                    #     temp0 = sfun.f_progenycfw_cs(cx_cpyatf[...,mask_x,:,:], w_b_start_yatf, w_f_start_dams, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p]) #pass in wf_start because animal is born on first day of period
-                    #     if eqn_used:
-                    #         cfw_ltwadj_dams = temp0
-                    #         fd_ltwadj_dams = temp1
-                    #     if eqn_compare:
-                    #         r_compare14_q0q2tpyatf[eqn_system, 0, :, p:p+1, ...] = temp0
-                    #         r_compare14_q0q2tpyatf[eqn_system, 1, :, p:p+1, ...] = temp1
-                eqn_system = 1 # MU = 1
-                if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
-                    eqn_used = (eqn_used_g1_q1p[eqn_group, p:p+1] == eqn_system)
-                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
-                        temp0, temp1 = sfun.f_progenycfw_mu(cu1_cpyatf, cg_cpyatf, cfw_ltwadj_start_dams, cf_cfwltw_start_dams
-                                                , ffcfw_start_dams, nw_start_dams, ebg_dams
-                                                , days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1], gest_propn_pa1e1b1nwzida0e0b0xyg1[p:p+1]
-                                                , period_between_mated90_pa1e1b1nwzida0e0b0xyg1[p:p+1]
-                                                , period_between_d90birth_pa1e1b1nwzida0e0b0xyg1[p:p+1]
-                                                , period_is_birth_pa1e1b1nwzida0e0b0xyg1[p:p+1])
-                        temp2, temp3 = sfun.f_progenyfd_mu(cu1_cpyatf, cg_cpyatf, fd_ltwadj_start_dams, cf_fdltw_start_dams
-                                                , ffcfw_start_dams, nw_start_dams, ebg_dams
-                                                , days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1], gest_propn_pa1e1b1nwzida0e0b0xyg1[p:p+1]
-                                                , period_between_mated90_pa1e1b1nwzida0e0b0xyg1[p:p+1]
-                                                , period_between_d90birth_pa1e1b1nwzida0e0b0xyg1[p:p+1]
-                                                , period_is_birth_pa1e1b1nwzida0e0b0xyg1[p:p+1])
-                        ## these variables all need to be stored even if the equation system is not used so that the equations can be compared
-                        cfw_ltwadj_dams = temp0
-                        cf_cfwltw_dams = temp1
-                        fd_ltwadj_dams = temp2
-                        cf_fdltw_dams = temp3
-                        #if eqn_used:
-                        if eqn_compare:
-                            r_compare14_q0q2tpyatf[eqn_system, 0, :, p:p+1, ...] = temp0
-                            r_compare14_q0q2tpyatf[eqn_system, 1, :, p:p+1, ...] = temp2
+            ##progeny fleece prodn adjustment due to dam profile (LTW adjustment)
+            eqn_group = 14
+            eqn_system = 0 # CSIRO = 0 - doesn't exist for LTW impacts on progeny
+            if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
+                eqn_used = (eqn_used_g1_q1p[eqn_group, p:p+1] == eqn_system)
+                # if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
+                #     temp0 = sfun.f_progenycfw_cs(cx_cpyatf[...,mask_x,:,:], w_b_start_yatf, w_f_start_dams, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p]) #pass in wf_start because animal is born on first day of period
+                #     if eqn_used:
+                #         cfw_ltwadj_dams = temp0
+                #         fd_ltwadj_dams = temp1
+                #     if eqn_compare:
+                #         r_compare14_q0q2tpyatf[eqn_system, 0, :, p:p+1, ...] = temp0
+                #         r_compare14_q0q2tpyatf[eqn_system, 1, :, p:p+1, ...] = temp1
+            eqn_system = 1 # MU = 1
+            if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
+                eqn_used = (eqn_used_g1_q1p[eqn_group, p:p+1] == eqn_system)
+                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
+                    temp0, temp1 = sfun.f_progenycfw_mu(cu1_cpyatf, cg_cpyatf, cfw_ltwadj_start_dams, cf_cfwltw_start_dams
+                                            , ffcfw_start_dams, nw_start_dams, ebg_dams
+                                            , days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1], gest_propn_pa1e1b1nwzida0e0b0xyg1[p:p+1]
+                                            , period_between_mated90_pa1e1b1nwzida0e0b0xyg1[p:p+1]
+                                            , period_between_d90birth_pa1e1b1nwzida0e0b0xyg1[p:p+1]
+                                            , period_is_birth_pa1e1b1nwzida0e0b0xyg1[p:p+1])
+                    temp2, temp3 = sfun.f_progenyfd_mu(cu1_cpyatf, cg_cpyatf, fd_ltwadj_start_dams, cf_fdltw_start_dams
+                                            , ffcfw_start_dams, nw_start_dams, ebg_dams
+                                            , days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1], gest_propn_pa1e1b1nwzida0e0b0xyg1[p:p+1]
+                                            , period_between_mated90_pa1e1b1nwzida0e0b0xyg1[p:p+1]
+                                            , period_between_d90birth_pa1e1b1nwzida0e0b0xyg1[p:p+1]
+                                            , period_is_birth_pa1e1b1nwzida0e0b0xyg1[p:p+1])
+                    ## these variables all need to be stored even if the equation system is not used so that the equations can be compared
+                    cfw_ltwadj_dams = temp0
+                    cf_cfwltw_dams = temp1
+                    fd_ltwadj_dams = temp2
+                    cf_fdltw_dams = temp3
+                    #if eqn_used:
+                    if eqn_compare:
+                        r_compare14_q0q2tpyatf[eqn_system, 0, :, p:p+1, ...] = temp0
+                        r_compare14_q0q2tpyatf[eqn_system, 1, :, p:p+1, ...] = temp2
 
             ##yatf birth & dependent start updates
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...] >0):
@@ -5159,121 +5159,121 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     if eqn_compare:
                         r_compare4_q0q2tpyatf[eqn_system, 0, :, p:p+1, ...] = temp0
 
-                ##feedsupply
-                if not stubble:
-                    if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...] >0):
-                        mei_yatf,foo_yatf,dmd_yatf,mei_solid_yatf, md_solid_yatf, md_herb_yatf, intake_f_yatf, intake_s_yatf\
-                            , mei_propn_milk_yatf, mei_propn_supp_yatf, mei_propn_herb_yatf \
-                            = sfun.f1_feedsupply(feedsupplyw_tpa1e1b1nwzida0e0b0xyg1[:, p:p+1], confinementw_tpa1e1b1nwzida0e0b0xyg1[:, p:p+1]
-                                                 , nv_a1e1b1j1wzida0e0b0xyg1, foo_a1e1b1j1wzida0e0b0xyg1
-                                                 , dmd_a1e1b1j1wzida0e0b0xyg1, supp_a1e1b1j1wzida0e0b0xyg1, pi_yatf, mp2_yatf)
-                ###if generating for stubble then nv doesn't exist so need to calc a bit differently.
-                else:
-                    ##use ra=1 for stubble
-                    # ##relative availability - yatf
-                    # eqn_group = 5
-                    # eqn_system = 0 # CSIRO = 0
-                    # if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
-                    #     eqn_used = (eqn_used_g2_q1p[eqn_group, p:p+1] == eqn_system)
-                    #     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...] >0):
-                    #         temp0 = fsfun.f_ra_cs(foo_yatf, hf_yatf, cr_cpyatf, zf_yatf)
-                    #         if eqn_used:
-                    #             ra_yatf = temp0
-                    #         if eqn_compare:
-                    #             r_compare5_q0q2tpyatf[eqn_system, 0, :, p:p+1, ...] = temp0
-                    # eqn_system = 1 # Mu = 1
-                    # if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
-                    #     eqn_used = (eqn_used_g2_q1p[eqn_group, p:p+1] == eqn_system)
-                    #     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...] >0):
-                    #         temp0 = fsfun.f_ra_mu(foo_yatf, hf_yatf, zf_yatf, cu0_cpyatf)
-                    #         if eqn_used:
-                    #             ra_yatf = temp0
-                    #         if eqn_compare:
-                    #             r_compare5_q0q2tpyatf[eqn_system, 0, :, p:p+1, ...] = temp0
+            ##feedsupply
+            if not stubble:
+                if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...] >0):
+                    mei_yatf,foo_yatf,dmd_yatf,mei_solid_yatf, md_solid_yatf, md_herb_yatf, intake_f_yatf, intake_s_yatf\
+                        , mei_propn_milk_yatf, mei_propn_supp_yatf, mei_propn_herb_yatf \
+                        = sfun.f1_feedsupply(feedsupplyw_tpa1e1b1nwzida0e0b0xyg1[:, p:p+1], confinementw_tpa1e1b1nwzida0e0b0xyg1[:, p:p+1]
+                                             , nv_a1e1b1j1wzida0e0b0xyg1, foo_a1e1b1j1wzida0e0b0xyg1
+                                             , dmd_a1e1b1j1wzida0e0b0xyg1, supp_a1e1b1j1wzida0e0b0xyg1, pi_yatf, mp2_yatf)
+            ###if generating for stubble then nv doesn't exist so need to calc a bit differently.
+            else:
+                ##use ra=1 for stubble
+                # ##relative availability - yatf
+                # eqn_group = 5
+                # eqn_system = 0 # CSIRO = 0
+                # if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
+                #     eqn_used = (eqn_used_g2_q1p[eqn_group, p:p+1] == eqn_system)
+                #     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...] >0):
+                #         temp0 = fsfun.f_ra_cs(foo_yatf, hf_yatf, cr_cpyatf, zf_yatf)
+                #         if eqn_used:
+                #             ra_yatf = temp0
+                #         if eqn_compare:
+                #             r_compare5_q0q2tpyatf[eqn_system, 0, :, p:p+1, ...] = temp0
+                # eqn_system = 1 # Mu = 1
+                # if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
+                #     eqn_used = (eqn_used_g2_q1p[eqn_group, p:p+1] == eqn_system)
+                #     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...] >0):
+                #         temp0 = fsfun.f_ra_mu(foo_yatf, hf_yatf, zf_yatf, cu0_cpyatf)
+                #         if eqn_used:
+                #             ra_yatf = temp0
+                #         if eqn_compare:
+                #             r_compare5_q0q2tpyatf[eqn_system, 0, :, p:p+1, ...] = temp0
 
-                    ###calc dmd and md_herb - done within if statement because dmd & md_herb are calculated differently for stubble sim.
-                    dmd_yatf = dmd_pwg[p:p+1]
-                    md_herb_yatf = fsfun.f1_dmd_to_md(dmd_yatf)
-
-
-                    ##relative ingestibility (quality) - yatf
-                    eqn_group = 6
-                    eqn_system = 0 # CSIRO = 0
-                    if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
-                        eqn_used = (eqn_used_g2_q1p[eqn_group, p:p+1] == eqn_system)
-                        if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...] >0):
-                            temp0 = fsfun.f_rq_cs(dmd_yatf, legume_pa1e1b1nwzida0e0b0xyg[p:p+1], cr_cpyatf, pinp.sheep['i_sf'])
-                            if eqn_used:
-                                rq_yatf = temp0
-                            if eqn_compare:
-                                r_compare6_q0q2tpyatf[eqn_system, 0, :, p:p+1, ...] = temp0
-
-                    ##intake - yatf - use RA=1 for stubble
-                    if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...] >0):
-                        ri_yatf = fsfun.f_rel_intake(1, rq_yatf, legume_pa1e1b1nwzida0e0b0xyg[p:p+1], cr_cpyatf) #use ra=1 for stubble
-                        mei_yatf, mei_solid_yatf, intake_f_yatf, md_solid_yatf, mei_propn_milk_yatf, mei_propn_herb_yatf, mei_propn_supp_yatf \
-                                    = sfun.f_intake(pi_yatf, ri_yatf, md_herb_yatf, False
-                                                    , intake_s_yatf, pinp.sheep['i_md_supp'], mp2_yatf)   #same feedsupply as dams
-
-                ##energy - yatf
-                if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1, ...] > 0):
-                    km_yatf = sfun.f1_km(ck_cpyatf, md_solid_yatf, mei_propn_milk_yatf)
-                    kg_fodd_cs_yatf, kg_supp_cs_yatf, temp3 = sfun.f1_efficiency_cs(ck_cpyatf, md_solid_yatf
-                                            , pinp.sheep['i_md_supp'], md_herb_yatf, lgf_eff_pa1e1b1nwzida0e0b0xyg2[p:p+1]
-                                            , dlf_eff_pa1e1b1nwzida0e0b0xyg[p:p+1], sam_kg=sam_kg_yatf)  #same feedsupply as dams
-                    ##Calculate partial efficiency (PE) for wool & conceptus for MU functions
-                    ##The variables are called kc & kw but are PE and used where HAF above maintenance has been calculated
-                    temp3, kw_mu_yg2 = sfun.f1_efficiency_mu(ck_cpyatf, md_solid_yatf, km_yatf)
-                    # kl (temp3) is not used for yatf
+                ###calc dmd and md_herb - done within if statement because dmd & md_herb are calculated differently for stubble sim.
+                dmd_yatf = dmd_pwg[p:p+1]
+                md_herb_yatf = fsfun.f1_dmd_to_md(dmd_yatf)
 
 
-                ##Maintenance heat production
-                eqn_group = 7
+                ##relative ingestibility (quality) - yatf
+                eqn_group = 6
                 eqn_system = 0 # CSIRO = 0
                 if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                     eqn_used = (eqn_used_g2_q1p[eqn_group, p:p+1] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...] >0):
-                        temp0 = sfun.f_energy_cs(cx_cpyatf[...,mask_x,:,:], cm_cpyatf, lw_start_yatf, ffcfw_start_yatf
-                                                 , mr_age_pa1e1b1nwzida0e0b0xyg2[p:p+1], mei_yatf, km_yatf
-                                                 , pinp.sheep['i_steepness'], densityw_pa1e1b1nwzida0e0b0xyg2[p:p+1], foo_yatf
-                                                 , confinementw_tpa1e1b1nwzida0e0b0xyg1[:, p:p+1], intake_f_yatf, dmd_yatf
-                                                 , mei_propn_milk_yatf, sam_mr = sam_mr_yatf)  #same feedsupply as dams
-                        meme_cs_yatf = temp0
-                        # if eqn_used:
+                        temp0 = fsfun.f_rq_cs(dmd_yatf, legume_pa1e1b1nwzida0e0b0xyg[p:p+1], cr_cpyatf, pinp.sheep['i_sf'])
+                        if eqn_used:
+                            rq_yatf = temp0
                         if eqn_compare:
-                            r_compare7_q0q2tpyatf[eqn_system, 0, :, p:p+1, ...] = temp0  # more of the return variable could be retained
+                            r_compare6_q0q2tpyatf[eqn_system, 0, :, p:p+1, ...] = temp0
 
-                eqn_system = 1 # MU = 1
-                if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
-                    eqn_used = (eqn_used_g2_q1p[eqn_group, p:p+1] == eqn_system)
-                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...] >0):
-                        lean_weight = muscle_start_yatf + viscera_start_yatf
-                        temp0, temp1, temp2 = sfun.f_energy_mu(cx_cpyatf[...,mask_x,:,:], cm_cpyatf, lw_start_yatf, lean_weight
-                                                        , mr_agegraham_pa1e1b1nwzida0e0b0xyg2[p:p+1], mei_yatf, km_yatf
-                                                        , pinp.sheep['i_steepness'], densityw_pa1e1b1nwzida0e0b0xyg2[p:p+1]
-                                                        , foo_yatf, confinementw_tpa1e1b1nwzida0e0b0xyg1[:, p:p+1]
-                                                        , intake_f_yatf, dmd_yatf, mei_propn_milk_yatf)  #same feedsupply as dams
-                        neme_mu_yatf = temp0
-                        hp_mei_mu_yatf = temp1
-                        # if eqn_used:
-                        if eqn_compare:
-                            r_compare7_q0q2tpyatf[eqn_system, 0, :, p:p+1, ...] = temp2
+                ##intake - yatf - use RA=1 for stubble
+                if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...] >0):
+                    ri_yatf = fsfun.f_rel_intake(1, rq_yatf, legume_pa1e1b1nwzida0e0b0xyg[p:p+1], cr_cpyatf) #use ra=1 for stubble
+                    mei_yatf, mei_solid_yatf, intake_f_yatf, md_solid_yatf, mei_propn_milk_yatf, mei_propn_herb_yatf, mei_propn_supp_yatf \
+                                = sfun.f_intake(pi_yatf, ri_yatf, md_herb_yatf, False
+                                                , intake_s_yatf, pinp.sheep['i_md_supp'], mp2_yatf)   #same feedsupply as dams
 
-                eqn_system = 2  # New Feeding Standards = 2
-                if uinp.sheep['i_eqn_exists_q0q1'][
-                    eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
-                    eqn_used = (eqn_used_g2_q1p[eqn_group, p:p+1] == eqn_system)
-                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1, ...] > 0):
-                        temp0, temp1, temp2 = sfun.f_energy_nfs(cm_cpyatf, cg_cpyatf, lw_start_yatf, fat_start_yatf
-                                                                , muscle_start_yatf, viscera_start_yatf, mei_yatf, km_yatf
-                                                                , pinp.sheep['i_steepness'], densityw_pa1e1b1nwzida0e0b0xyg2[p:p+1]
-                                                                , foo_yatf, confinementw_tpa1e1b1nwzida0e0b0xyg1[:, p:p+1]
-                                                                , intake_f_yatf, dmd_yatf, mei_propn_milk_yatf)  #same feedsupply as dams
-                        hp_maint_nfs_yatf = temp0
-                        hp_mei_nfs_yatf = temp1
-                        # if eqn_used:
-                        if eqn_compare:
-                            r_compare7_q0q2tpyatf[eqn_system, 0, :, p:p+1,...] = temp2
+            ##energy - yatf
+            if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1, ...] > 0):
+                km_yatf = sfun.f1_km(ck_cpyatf, md_solid_yatf, mei_propn_milk_yatf)
+                kg_fodd_cs_yatf, kg_supp_cs_yatf, temp3 = sfun.f1_efficiency_cs(ck_cpyatf, md_solid_yatf
+                                        , pinp.sheep['i_md_supp'], md_herb_yatf, lgf_eff_pa1e1b1nwzida0e0b0xyg2[p:p+1]
+                                        , dlf_eff_pa1e1b1nwzida0e0b0xyg[p:p+1], sam_kg=sam_kg_yatf)  #same feedsupply as dams
+                ##Calculate partial efficiency (PE) for wool & conceptus for MU functions
+                ##The variables are called kc & kw but are PE and used where HAF above maintenance has been calculated
+                temp3, kw_mu_yg2 = sfun.f1_efficiency_mu(ck_cpyatf, md_solid_yatf, km_yatf)
+                # kl (temp3) is not used for yatf
+
+
+            ##Maintenance heat production
+            eqn_group = 7
+            eqn_system = 0 # CSIRO = 0
+            if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
+                eqn_used = (eqn_used_g2_q1p[eqn_group, p:p+1] == eqn_system)
+                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...] >0):
+                    temp0 = sfun.f_energy_cs(cx_cpyatf[...,mask_x,:,:], cm_cpyatf, lw_start_yatf, ffcfw_start_yatf
+                                             , mr_age_pa1e1b1nwzida0e0b0xyg2[p:p+1], mei_yatf, km_yatf
+                                             , pinp.sheep['i_steepness'], densityw_pa1e1b1nwzida0e0b0xyg2[p:p+1], foo_yatf
+                                             , confinementw_tpa1e1b1nwzida0e0b0xyg1[:, p:p+1], intake_f_yatf, dmd_yatf
+                                             , mei_propn_milk_yatf, sam_mr = sam_mr_yatf)  #same feedsupply as dams
+                    meme_cs_yatf = temp0
+                    # if eqn_used:
+                    if eqn_compare:
+                        r_compare7_q0q2tpyatf[eqn_system, 0, :, p:p+1, ...] = temp0  # more of the return variable could be retained
+
+            eqn_system = 1 # MU = 1
+            if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
+                eqn_used = (eqn_used_g2_q1p[eqn_group, p:p+1] == eqn_system)
+                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...] >0):
+                    lean_weight = muscle_start_yatf + viscera_start_yatf
+                    temp0, temp1, temp2 = sfun.f_energy_mu(cx_cpyatf[...,mask_x,:,:], cm_cpyatf, lw_start_yatf, lean_weight
+                                                    , mr_agegraham_pa1e1b1nwzida0e0b0xyg2[p:p+1], mei_yatf, km_yatf
+                                                    , pinp.sheep['i_steepness'], densityw_pa1e1b1nwzida0e0b0xyg2[p:p+1]
+                                                    , foo_yatf, confinementw_tpa1e1b1nwzida0e0b0xyg1[:, p:p+1]
+                                                    , intake_f_yatf, dmd_yatf, mei_propn_milk_yatf)  #same feedsupply as dams
+                    neme_mu_yatf = temp0
+                    hp_mei_mu_yatf = temp1
+                    # if eqn_used:
+                    if eqn_compare:
+                        r_compare7_q0q2tpyatf[eqn_system, 0, :, p:p+1, ...] = temp2
+
+            eqn_system = 2  # New Feeding Standards = 2
+            if uinp.sheep['i_eqn_exists_q0q1'][
+                eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
+                eqn_used = (eqn_used_g2_q1p[eqn_group, p:p+1] == eqn_system)
+                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1, ...] > 0):
+                    temp0, temp1, temp2 = sfun.f_energy_nfs(cm_cpyatf, cg_cpyatf, lw_start_yatf, fat_start_yatf
+                                                    , muscle_start_yatf, viscera_start_yatf, mei_yatf, km_yatf
+                                                    , pinp.sheep['i_steepness'], densityw_pa1e1b1nwzida0e0b0xyg2[p:p+1]
+                                                    , foo_yatf, confinementw_tpa1e1b1nwzida0e0b0xyg1[:, p:p+1]
+                                                    , intake_f_yatf, dmd_yatf, mei_propn_milk_yatf)  #same feedsupply as dams
+                    hp_maint_nfs_yatf = temp0
+                    hp_mei_nfs_yatf = temp1
+                    # if eqn_used:
+                    if eqn_compare:
+                        r_compare7_q0q2tpyatf[eqn_system, 0, :, p:p+1,...] = temp2
 
 
             ##wool production - yatf
@@ -5509,15 +5509,15 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                         r_compare7_q0q2tpyatf[eqn_system, 5, :, p:p+1, ...] = temp4
                         r_compare7_q0q2tpyatf[eqn_system, 6, :, p:p+1, ...] = temp0
 
-                        temp0 = sfun.f1_level_nfs(mei_yatf, hp_maint_nfs_yatf, km_yatf)
-                        if eqn_used:
-                            level_yatf = temp0
-                        temp0, temp1 = sfun.f_templc(cc_cpyatf, ffcfw_start_yatf, rc_start_yatf, sl_start_yatf, hp_total_nfs_yatf
-                                                   , temp_ave_pa1e1b1nwzida0e0b0xyg[p:p+1], temp_max_pa1e1b1nwzida0e0b0xyg[p:p+1]
-                                                   , temp_min_pa1e1b1nwzida0e0b0xyg[p:p+1], ws_a1e1b1nwzida0e0b0xyg1
-                                                   , rain_pa1e1b1nwzida0e0b0xygp0[p:p+1], index_m0)
-                        if eqn_used:
-                            temp_lc_yatf = temp0  #temp1 not required here
+                    temp0 = sfun.f1_level_nfs(mei_yatf, hp_maint_nfs_yatf, km_yatf)
+                    if eqn_used:
+                        level_yatf = temp0
+                    temp0, temp1 = sfun.f_templc(cc_cpyatf, ffcfw_start_yatf, rc_start_yatf, sl_start_yatf, hp_total_nfs_yatf
+                                               , temp_ave_pa1e1b1nwzida0e0b0xyg[p:p+1], temp_max_pa1e1b1nwzida0e0b0xyg[p:p+1]
+                                               , temp_min_pa1e1b1nwzida0e0b0xyg[p:p+1], ws_a1e1b1nwzida0e0b0xyg1
+                                               , rain_pa1e1b1nwzida0e0b0xygp0[p:p+1], index_m0)
+                    if eqn_used:
+                        temp_lc_yatf = temp0  #temp1 not required here
 
 
             ##weaning weight yatf - called when dams days per period greater than 0 - calculates the weight at the start of the period
@@ -6035,16 +6035,16 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1,...] >0):
                 numbers_end_sire, temp1 = sfun.f1_period_end_nums(numbers_start_sire, mortality_sire, group=0)
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
-                numbers_end_dams, numbers_available_mating_dams = sfun.f1_period_end_nums(numbers_start_dams,
-                            mortality_dams, numbers_available_mating_dams, mortality_yatf=mortality_birth_yatf,
-                            nfoet_b1=nfoet_b1nwzida0e0b0xyg, nyatf_b1=nyatf_b1nwzida0e0b0xyg, group=1,
-                            prejoin_tup=prejoin_tup, conception=conception_dams, gender_propn_x=gender_propn_xyg,
-                            period_is_join = period_is_join_pa1e1b1nwzida0e0b0xyg1[p:p+1]
-                               * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p:p+1],
-                            period_is_mating = period_is_mating_pa1e1b1nwzida0e0b0xyg1[p:p+1],
-                            period_is_matingend=period_is_matingend_pa1e1b1nwzida0e0b0xyg1[p:p+1], period_is_birth = period_is_birth_pa1e1b1nwzida0e0b0xyg1[p:p+1],
-                            period_isbetween_prejoinmatingend=period_isbetween_prejoinmatingend_pa1e1b1nwzida0e0b0xyg1[p:p+1],
-                            propn_dams_mated=est_prop_dams_mated_pa1e1b1nwzida0e0b0xyg1[p:p+1])
+                numbers_end_dams, numbers_available_mating_dams = sfun.f1_period_end_nums(numbers_start_dams
+                            , mortality_dams, numbers_available_mating_dams, mortality_yatf=mortality_birth_yatf
+                            , nfoet_b1=nfoet_b1nwzida0e0b0xyg, nyatf_b1=nyatf_b1nwzida0e0b0xyg, group=1
+                            , prejoin_tup=prejoin_tup, conception=conception_dams, gender_propn_x=gender_propn_xyg
+                            , period_is_join = period_is_join_pa1e1b1nwzida0e0b0xyg1[p:p+1]
+                               * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p:p+1]
+                            , period_is_mating = period_is_mating_pa1e1b1nwzida0e0b0xyg1[p:p+1]
+                            , period_is_matingend=period_is_matingend_pa1e1b1nwzida0e0b0xyg1[p:p+1], period_is_birth = period_is_birth_pa1e1b1nwzida0e0b0xyg1[p:p+1]
+                            , period_isbetween_prejoinmatingend=period_isbetween_prejoinmatingend_pa1e1b1nwzida0e0b0xyg1[p:p+1]
+                            , propn_dams_mated=est_prop_dams_mated_pa1e1b1nwzida0e0b0xyg1[p:p+1])
 
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...] >0):
                 numbers_end_yatf, temp1 = sfun.f1_period_end_nums(numbers_start_yatf, mortality_yatf, group=2)
@@ -6690,25 +6690,28 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
 
 
-                if np.any(np.logical_or(np.logical_or(period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2], period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2]),
-                                        period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1:p+2])):
+                if np.any(np.logical_or(np.logical_or(period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
+                                                    , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2])
+                                                    , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1:p+2])):
                     #add 1 if not first period of fvp because the start animals branch out.
                     exp = n_prior_fvps_pa1e1b1nwzida0e0b0xyg1[p+1:p+2] + np.where(period_is_startfvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2], 0, 1)
                     n_startw_unique_next = w_start_len1 * (n_fs_dams ** exp)
 
-                    pointers_dams, index_unique_w_dams = sfun.f1_collapse_pointers(p, ebw_dams, numbers_end_dams, n_startw_unique_next,
-                                                          period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2],
-                                                          period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2],
-                                                          lw_initial_pa1e1b1nwzida0e0b0xyg1, period_is_prejoin=
-                                                          period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1:p+2] *
-                                                          include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1:p+2],
-                                                          prejoin_tup=prejoin_tup)
+                    pointers_dams, index_unique_w_dams = sfun.f1_collapse_pointers(p, ebw_dams, numbers_end_dams
+                                                , n_startw_unique_next, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
+                                                , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2]
+                                                , lw_initial_pa1e1b1nwzida0e0b0xyg1
+                                                , period_is_prejoin=period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
+                                                  * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
+                                                , prejoin_tup=prejoin_tup)
 
                     #store for lw dist
-                    o_ebw_lw_dist_tpdams[:, p:p+1] = sfun.f1_collapse(pointers_dams, index_unique_w_dams, ebw_dams, numbers_end_dams,
-                         period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2], period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2],
-                         w_pos, z_pos, period_is_prejoin=period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1:p+2] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1:p+2],
-                         prejoin_tup=prejoin_tup)
+                    o_ebw_lw_dist_tpdams[:, p:p+1] = sfun.f1_collapse(pointers_dams, index_unique_w_dams, ebw_dams
+                                                , numbers_end_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
+                                                , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], w_pos, z_pos
+                                                , period_is_prejoin=period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
+                                                    * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
+                                                , prejoin_tup=prejoin_tup)
 
                 else:
                     pointers_dams = np.array([np.nan]) #empty array so f_start_prod still works in the early periods.
@@ -6722,9 +6725,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     exp = n_prior_fvps_pa1e1b1nwzida0e0b0xyg3[p+1:p+2] + np.where(period_is_startfvp_pa1e1b1nwzida0e0b0xyg3[p+1:p+2], 0, 1)
                     n_startw_unique_next_offs = w_start_len3 * (n_fs_offs ** exp)
 
-                    pointers_offs, index_unique_w_offs = sfun.f1_collapse_pointers(p, ebw_offs, numbers_end_offs, n_startw_unique_next_offs,
-                      period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1:p+2], period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2],
-                      lw_initial_pa1e1b1nwzida0e0b0xyg3)
+                    pointers_offs, index_unique_w_offs = sfun.f1_collapse_pointers(p, ebw_offs, numbers_end_offs, n_startw_unique_next_offs
+                                                        , period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1:p+2]
+                                                        , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2]
+                                                        , lw_initial_pa1e1b1nwzida0e0b0xyg3)
 
                     #store for lw dist
                     o_ebw_lw_dist_tpoffs[:, p:p+1] = sfun.f1_collapse(pointers_offs, index_unique_w_offs, ebw_offs, numbers_end_offs,
@@ -7176,17 +7180,17 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                         fs_w_reallocation_tpa1e1b1nw8zida0e0b0xyg1s9 = fun.f_update(fs_w_reallocation_tpa1e1b1nw8zida0e0b0xyg1s9,
                                                             t_fs_w_reallocation_tpa1e1b1nw8zida0e0b0xyg1s9,
                                                             period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2,...,na])
-                ###adjust the fs - every period
-                ####add start w axis
-                temp_feedsupplyw_ta1e1b1nwzida0e0b0xyg1s = np.moveaxis(fun.f_split_axis(feedsupplyw_tpa1e1b1nwzida0e0b0xyg1[:, p+1:p+2, ...], w_start_len1, w_pos), w_pos - 1, -1)
-                fs_w_allocation_s8ta1e1b1nw8zida0e0b0xyg1s9 = np.moveaxis(fun.f_split_axis(fs_w_reallocation_tpa1e1b1nw8zida0e0b0xyg1s9, w_start_len1, w_pos - 1), w_pos - 2, 0)
-                temp_feedsupplyw_s8ta1e1b1nwzida0e0b0xyg1 = np.sum(temp_feedsupplyw_ta1e1b1nwzida0e0b0xyg1s * fs_w_allocation_s8ta1e1b1nw8zida0e0b0xyg1s9, axis=-1)
-                ####remove start w axis
-                temp_feedsupplyw_ta1e1b1nwzida0e0b0xyg1 = fun.f_merge_axis(temp_feedsupplyw_s8ta1e1b1nwzida0e0b0xyg1, 0, w_pos)
-                feedsupplyw_tpa1e1b1nwzida0e0b0xyg1[:, p+1:p+2, ...] = temp_feedsupplyw_ta1e1b1nwzida0e0b0xyg1
-            ###save the condensed ebw for the next trial
-            if np.any(period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]) and sinp.structuralsa['i_fs_create_pkl']:
-                pkl_condensed_values['dams'][p]['ebw_dams'] = ebw_start_dams #start of next period ie this is condensed ebw
+                    ###adjust the fs - every period
+                    ####add start w axis
+                    temp_feedsupplyw_ta1e1b1nwzida0e0b0xyg1s = np.moveaxis(fun.f_split_axis(feedsupplyw_tpa1e1b1nwzida0e0b0xyg1[:, p+1:p+2, ...], w_start_len1, w_pos), w_pos - 1, -1)
+                    fs_w_allocation_s8ta1e1b1nw8zida0e0b0xyg1s9 = np.moveaxis(fun.f_split_axis(fs_w_reallocation_tpa1e1b1nw8zida0e0b0xyg1s9, w_start_len1, w_pos - 1), w_pos - 2, 0)
+                    temp_feedsupplyw_s8ta1e1b1nwzida0e0b0xyg1 = np.sum(temp_feedsupplyw_ta1e1b1nwzida0e0b0xyg1s * fs_w_allocation_s8ta1e1b1nw8zida0e0b0xyg1s9, axis=-1)
+                    ####remove start w axis
+                    temp_feedsupplyw_ta1e1b1nwzida0e0b0xyg1 = fun.f_merge_axis(temp_feedsupplyw_s8ta1e1b1nwzida0e0b0xyg1, 0, w_pos)
+                    feedsupplyw_tpa1e1b1nwzida0e0b0xyg1[:, p+1:p+2, ...] = temp_feedsupplyw_ta1e1b1nwzida0e0b0xyg1
+                ###save the condensed ebw for the next trial
+                if np.any(period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]) and sinp.structuralsa['i_fs_create_pkl']:
+                    pkl_condensed_values['dams'][p]['ebw_dams'] = ebw_start_dams #start of next period ie this is condensed ebw
 
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1, ...] > 0):
                 if sinp.structuralsa['i_fs_use_pkl']:
@@ -7687,47 +7691,57 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
         dvp_end_period_start_va1e1b1nwzida0e0b0xyg3[-1,...] = date_start_pa1e1b1nwzida0e0b0xyg3[-1,...] #set end of last dvp to final generator period
         dvp_end_boundary_va1e1b1nwzida0e0b0xyg3 = dvp_end_period_start_va1e1b1nwzida0e0b0xyg3 + step
         offs_sale_opportunities_per_dvp = sinp.structuralsa['i_offs_sale_opportunities_per_dvp']
-        if bool_steady_state and not sinp.structuralsa['i_inc_node_periods']:
-            sale_offset_days_vg3 = (dvp_end_boundary_va1e1b1nwzida0e0b0xyg3 - np.maximum(
-                date_weaned_i_pa1e1b1nwzida0e0b0xyg3, dvp_start_va1e1b1nwzida0e0b0xyg3))/offs_sale_opportunities_per_dvp
-            sale_offset_days_tvg3 = sale_offset_days_vg3 * fun.f_expand(np.roll(np.arange(len_t3), shift=1, axis=0), p_pos-1) #len t3 includes the retained slice so roll because t[1] has 0 offset from the end of the dvp.
+        if bool_steady_state and not sinp.structuralsa['i_inc_node_periods']:  #SE with no nodes has sale opp at end of DVP & not at start
+            sale_offset_days_vg3 = (dvp_end_boundary_va1e1b1nwzida0e0b0xyg3
+                                    - np.maximum(date_weaned_i_pa1e1b1nwzida0e0b0xyg3, dvp_start_va1e1b1nwzida0e0b0xyg3)
+                                    )/offs_sale_opportunities_per_dvp
+            sale_offset_days_tvg3 = sale_offset_days_vg3 * fun.f_expand(np.roll(np.arange(len_t3)
+                                    , shift=1, axis=0), p_pos-1) #len t3 includes the retained slice so roll because t[1] has 0 offset from the end of the dvp.
             sale_date_tvg3 = dvp_end_period_start_va1e1b1nwzida0e0b0xyg3 - sale_offset_days_tvg3
-        else:
+        else:  #DSP has sale opp at start of the DVP & not at end  #todo consider DSP having sales at start and end. Planned sale at end or tactical sale next day at start
             sale_start_va1e1b1nwzida0e0b0xyg3 = np.maximum(date_weaned_i_pa1e1b1nwzida0e0b0xyg3,
                                                            dvp_start_va1e1b1nwzida0e0b0xyg3)
-            sale_offset_days_vg3 = (dvp_end_boundary_va1e1b1nwzida0e0b0xyg3 - sale_start_va1e1b1nwzida0e0b0xyg3) / offs_sale_opportunities_per_dvp
+            sale_offset_days_vg3 = (dvp_end_boundary_va1e1b1nwzida0e0b0xyg3 - sale_start_va1e1b1nwzida0e0b0xyg3
+                                    ) / offs_sale_opportunities_per_dvp
             sale_offset_days_tvg3 = sale_offset_days_vg3 * fun.f_expand(np.arange(len_t3) - 1, p_pos-1) #len t3 includes the retained slice so t[1] has 0 offset from the start of the dvp.
             sale_date_tvg3 = sale_start_va1e1b1nwzida0e0b0xyg3 + sale_offset_days_tvg3
         sale_opp_tpa1e1b1nwzida0e0b0xyg3 = np.any(sfun.f1_period_is_('period_is', sale_date_tvg3[:,:,na,...],
-                                                                     date_start_pa1e1b1nwzida0e0b0xyg3, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg3), axis=1)
+                            date_start_pa1e1b1nwzida0e0b0xyg3, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg3), axis=1)
         ####set t0 sale_opp to false because no sale in t[0]
         sale_opp_tpa1e1b1nwzida0e0b0xyg3[0] = False
 
-    ###sale based on user inputted number of sale times spaced evenly within each DVP
+    ###sale based on target age or target weight. Sold at end if target not hit during period
     else:
         ###t0 - retained
         ###t1 - For dsp (and when nodes are included) sold when seasons first identified (if dvp is not a node then sale is as per SE). For SE sold target age or target weight or sold on the last day of dvp (not much value selling at start of dvp for SE model because there is only 1 dvp)
         ###t2 - sold target age or target weight or sold on the last day of dvp
         ###sale - at age
-        sale_age_tpa1e1b1nwzida0e0b0xyg3=np.take_along_axis(sale_age_tsa1e1b1nwzida0e0b0xyg3,a_sw_pa1e1b1nwzida0e0b0xyg3[na],1)
+        sale_age_tpa1e1b1nwzida0e0b0xyg3 = np.take_along_axis(sale_age_tsa1e1b1nwzida0e0b0xyg3
+                                                              ,a_sw_pa1e1b1nwzida0e0b0xyg3[na],1)
         ###sale - weight target
         ####convert from shearing/dvp to p array. Increments at dvp ie point to previous sale opp until new dvp then point at next dvp.
-        target_weight_tpa1e1b1nwzida0e0b0xyg3=np.take_along_axis(target_weight_tsa1e1b1nwzida0e0b0xyg3, a_sw_pa1e1b1nwzida0e0b0xyg3[na],1) #gets the target weight for each gen period
+        target_weight_tpa1e1b1nwzida0e0b0xyg3 = np.take_along_axis(target_weight_tsa1e1b1nwzida0e0b0xyg3
+                                                    , a_sw_pa1e1b1nwzida0e0b0xyg3[na],1) #gets the target weight for each gen period
         ####adjust generator lw to reflect the cumulative max per period
         #####lw could go above target then drop back below, but it is already sold so the on hand bool shouldn't change. therefore need to use a cumulative max and reset each dvp
-        weight_tpa1e1b1nwzida0e0b0xyg3= sfun.f1_cum_dvp(o_ffcfw_tpoffs,a_v_pa1e1b1nwzida0e0b0xyg3, axis=p_pos)
+        weight_tpa1e1b1nwzida0e0b0xyg3 = sfun.f1_cum_dvp(o_ffcfw_tpoffs,a_v_pa1e1b1nwzida0e0b0xyg3, axis=p_pos)
         ###period is sale
         #### t0 slice = False - this is handled by the inputs ie weight and date are high therefore not reached therefore on hand == true
         #### t1 & t2 slice date_p<sale_date or weight<target weight (these slices are also sold on the last period of a dvp if there is no other sale opp, see code below)
-        sale_opp_tpa1e1b1nwzida0e0b0xyg3 = np.logical_or(np.logical_and(age_start_pa1e1b1nwzida0e0b0xyg3[mask_p_offs_p] <= sale_age_tpa1e1b1nwzida0e0b0xyg3,
-                                                                        sale_age_tpa1e1b1nwzida0e0b0xyg3 <= age_end_pa1e1b1nwzida0e0b0xyg3[mask_p_offs_p]),
-                                                         weight_tpa1e1b1nwzida0e0b0xyg3>target_weight_tpa1e1b1nwzida0e0b0xyg3)
-        ###if dsp then t1 gets a sale opportunity at the start of dvp when seasons are identified (this will be first period of dvp so any other sale opportunities in that dvp will be disregarded).
-        if not bool_steady_state or sinp.structuralsa['i_inc_node_periods']:
-            period_is_startseasondvp_ypa1e1b1nwzida0e0b0xyg3m: object = sfun.f1_period_is_('period_is', date_node_ya1e1b1nwzidaebxygm[:,na,...], date_start_pa1e1b1nwzida0e0b0xyg3[...,na], date_end_p = date_end_pa1e1b1nwzida0e0b0xyg3[...,na])
-            period_is_startseasondvp_pa1e1b1nwzida0e0b0xyg3 = np.any(period_is_startseasondvp_ypa1e1b1nwzida0e0b0xyg3m, axis=(0,-1))
-            period_is_startseasondvp_pa1e1b1nwzida0e0b0xyg3 = np.logical_and(period_is_startseasondvp_pa1e1b1nwzida0e0b0xyg3, days_period_cut_pa1e1b1nwzida0e0b0xyg3[...,0:1,:,:,:,:]>0) #only have sale opp if animal exists. slice e axis
-            sale_opp_tpa1e1b1nwzida0e0b0xyg3[1,...] = np.logical_or(sale_opp_tpa1e1b1nwzida0e0b0xyg3[1,...], period_is_startseasondvp_pa1e1b1nwzida0e0b0xyg3)
+        sale_opp_tpa1e1b1nwzida0e0b0xyg3 = np.logical_or(np.logical_and
+                                    (age_start_pa1e1b1nwzida0e0b0xyg3[mask_p_offs_p] <= sale_age_tpa1e1b1nwzida0e0b0xyg3
+                                    , sale_age_tpa1e1b1nwzida0e0b0xyg3 <= age_end_pa1e1b1nwzida0e0b0xyg3[mask_p_offs_p])
+                            , weight_tpa1e1b1nwzida0e0b0xyg3>target_weight_tpa1e1b1nwzida0e0b0xyg3)
+    ###if dsp then t1 gets a sale opportunity at the start of dvp when seasons are identified (this will be first period of dvp so any other sale opportunities in that dvp will be disregarded).
+    if not bool_steady_state or sinp.structuralsa['i_inc_node_periods']:
+        period_is_startseasondvp_ypa1e1b1nwzida0e0b0xyg3m: object = sfun.f1_period_is_('period_is'
+                                , date_node_ya1e1b1nwzidaebxygm[:,na,...], date_start_pa1e1b1nwzida0e0b0xyg3[...,na]
+                                , date_end_p = date_end_pa1e1b1nwzida0e0b0xyg3[...,na])
+        period_is_startseasondvp_pa1e1b1nwzida0e0b0xyg3 = np.any(period_is_startseasondvp_ypa1e1b1nwzida0e0b0xyg3m, axis=(0,-1))
+        period_is_startseasondvp_pa1e1b1nwzida0e0b0xyg3 = np.logical_and(period_is_startseasondvp_pa1e1b1nwzida0e0b0xyg3
+                                , days_period_cut_pa1e1b1nwzida0e0b0xyg3[...,0:1,:,:,:,:]>0) #only have sale opp if animal exists. slice e axis
+        sale_opp_tpa1e1b1nwzida0e0b0xyg3[1,...] = np.logical_or(sale_opp_tpa1e1b1nwzida0e0b0xyg3[1,...]
+                                                              , period_is_startseasondvp_pa1e1b1nwzida0e0b0xyg3)
     ###on hand - combine period_is_sale & period_is_transfer then use cumulative max to convert to on_hand
     ### note: animals are on hand in the period they are sold ie sale takes place on the last minute of the period.
     off_hand_tpa1e1b1nwzida0e0b0xyg3 = sfun.f1_cum_dvp(sale_opp_tpa1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3, axis=1,
