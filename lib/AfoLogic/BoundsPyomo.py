@@ -232,11 +232,13 @@ def f1_boundarypyomo_local(params, model):
                 if p7 == l_p7[-1] and pe.value(model.p_wyear_inc_qs[q, s]):
                     return (sum(sum(model.v_phase_area[q, s, p7, z, r, l] * model.p_landuse_area[r, k1] for r in model.s_phases)
                             * model.p_propn_area_grazed_kl[k1,l] * tonnes_crop_consume_ha
-                            for l in model.s_lmus for k1 in model.s_crops)
-                            == sum(model.v_tonnes_crop_consumed[q,s,f,k1,p6,p5,z,l] for f in model.s_feed_pools
-                                   for p6 in model.s_feed_periods for p5 in model.s_labperiods
-                                   for l in model.s_lmus for k1 in model.s_crops
-                                   if pe.value(model.p_crop_DM_required[k1,p6,p5,z])!=0)) #skip if grazing doesnt occur
+                            for k1, l in model.s_cropgraze_base_kl)
+                            == sum(model.v_tonnes_crop_consumed[q1,s1,f,k1,p6,p5,z1,l]
+                                   for q1, s1, f, k1, p6, p5, z1, l in model.s_cropgraze_base_qsfkp6p5zl
+                                   if q1 == q and s1 == s and z1 == z
+                                   and pe.value(model.p_crop_DM_required[k1,p6,p5,z1])!=0)) #skip if grazing doesnt occur
+                else:
+                    return pe.Constraint.Skip
             model.con_crop_grazing_intensity = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods,
                                                              model.s_season_types, rule=f_crop_grazing_intensity,
                                                              doc='crop consumed per hectare of grazable crop')
