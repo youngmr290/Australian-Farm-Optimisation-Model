@@ -1481,7 +1481,7 @@ def f_fibre_mu(cw_g, cc_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_p
     d_wb_nolag_g = f1_rev_update('cfw', d_wb_nolag_g, rev_trait_value)
     ##Wool growth (protein weight as shorn) with lag and updated history (needs to be stored as CFW for r_compare)
     d_cfw_nolag_g = d_wb_nolag_g * cw_g[22, ...]
-    d_cfw_g, d_cfw_history_p2g = f1_history(d_cfw_history_start_p2g, d_cfw_nolag_g, days_period_g)
+    d_cfw_g = d_cfw_history_p2g = d_cfw_nolag_g
     d_wb_g = d_cfw_g / cw_g[22, ...]
     ##Net energy required for wool (above basal growth rate converted to WB)
     ###can be negative because mem assumes 4g of clean wool is grown. If less is grown then new 'returns' the energy.

@@ -105,27 +105,29 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         # j += 1
         uinp.parameters['i_cw_c2'][11, genotype] = coefficients_c[j]        #Density
         j += 1
-        uinp.parameters['i_cl0_c2'][25, 0, genotype] = coefficients_c[j]   #% preg (Con)
+        uinp.parameters['i_cl0_c2'][25, 0, genotype] += (coefficients_c[j] - uinp.parameters['i_cl0_c2'][26, 0, genotype])
+        uinp.parameters['i_cl0_c2'][26, 0, genotype] = coefficients_c[j]   #% preg (Con)
         j += 1
-        uinp.parameters['i_cl0_c2'][25, 1, genotype] = coefficients_c[j]    #Litter size
+        uinp.parameters['i_cl0_c2'][25, 1, genotype] += (coefficients_c[j] - uinp.parameters['i_cl0_c2'][26, 1, genotype])
+        uinp.parameters['i_cl0_c2'][26, 1, genotype] = coefficients_c[j]    #Litter size
         j += 1
         uinp.parameters['i_cu2_c2'][8, -1, genotype] = coefficients_c[j]    #Lamb survival (ERA)
         j += 1
         SRW_coeff = j   #This pointer is used in the printout (line 7355) and removes need for manual updating.
         uinp.parameters['i_srw_c2'][genotype] = coefficients_c[j]           #SRW
         j += 1
-        # uinp.parameters['i_ci_c2'][1, genotype] = coefficients_c[j]         #Potential Intake
-        # j += 1
+        uinp.parameters['i_ci_c2'][1, genotype] = coefficients_c[j]         #Potential Intake
+        j += 1
         # cg[9] calculated from the deviation in cg[8]
-        # uinp.parameters['i_cg_c2'][9, genotype] += (coefficients_c[j] - uinp.parameters['i_cg_c2'][8, genotype])
-        # uinp.parameters['i_cg_c2'][8, genotype] = coefficients_c[j]         #Fatness (EVG)
-        # j += 1
+        uinp.parameters['i_cg_c2'][9, genotype] += (coefficients_c[j] - uinp.parameters['i_cg_c2'][8, genotype])
+        uinp.parameters['i_cg_c2'][8, genotype] = coefficients_c[j]         #Fatness (EVG)
+        j += 1
         uinp.parameters['i_cd_c2'][1, genotype] = coefficients_c[j]        #Basal mortality
         j += 1
-        # uinp.parameters['i_cl_c2'][0, genotype] = coefficients_c[j]        #Wwt, by milk production and intake scalar
-        # j += 1
-        # uinp.parameters['i_cn_c2'][1, genotype] = coefficients_c[j]        #YWT, normal growth curve coefficient
-        # j += 1
+        uinp.parameters['i_cl_c2'][0, genotype] = coefficients_c[j]        #Wwt, by milk production and intake scalar
+        j += 1
+        uinp.parameters['i_cn_c2'][1, genotype] = coefficients_c[j]        #YWT, normal growth curve coefficient
+        j += 1
 
         # ##Build and apply sar variable based on the next 44 coefficients
         # indicelist = [(slice(3, 4, None), slice(None, None, None), slice(40, 57, None))    #00   Ewes
@@ -195,9 +197,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         j += 1
         coefficients_c[j] = uinp.parameters['i_cw_c2'][11, genotype]        #SL
         j += 1
-        coefficients_c[j] = uinp.parameters['i_cl0_c2'][25, 0, genotype]   #% preg (Con)
+        coefficients_c[j] = uinp.parameters['i_cl0_c2'][26, 0, genotype]   #% preg (Con)
         j += 1
-        coefficients_c[j] = uinp.parameters['i_cl0_c2'][25, 1, genotype]    #Litter size
+        coefficients_c[j] = uinp.parameters['i_cl0_c2'][26, 1, genotype]    #Litter size
         j += 1
         coefficients_c[j] = uinp.parameters['i_cu2_c2'][8, -1, genotype]    #Lamb survival (ERA)
         j += 1
@@ -7540,16 +7542,16 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         i += 1
         calibration_values_p[i] = o_ffcfw_tpdams[0,215,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #Adult weight of ewes at 3.5yo prior to prejoining BTRT 11 in previous year
         i += 1
-        # calibration_values_p[i] = fun.f_divide(r_fat_tpdams[0,215,0,0,2,0,0,0,0,0,0,0,0,0,0,0]
-        #                                      , r_ebw_tpdams[0,215,0,0,2,0,0,0,0,0,0,0,0,0,0,0])  #% of fat for the dams at 3yo joining
-        # i += 1
+        calibration_values_p[i] = fun.f_divide(r_fat_tpdams[0,215,0,0,2,0,0,0,0,0,0,0,0,0,0,0]
+                                             , r_ebw_tpdams[0,215,0,0,2,0,0,0,0,0,0,0,0,0,0,0])  #% of fat for the dams at 3yo joining
+        i += 1
         calibration_values_p[i] = fun.f_divide(np.sum(o_numbers_start_tpdams[0,312,0,:,:,0,0,0,0,0,0,0,0,0,0,0])           #Cumulative mortality of ewes from yearling shearing to 5.5yo BTRT 11
                                              , np.sum(o_numbers_start_tpdams[0,104,0,:,:,0,0,0,0,0,0,0,0,0,0,0]))
         i += 1
-        # calibration_values_p[i] = o_wean_w_tpyatf[0,199,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #Weaning weight of 1st cycle single born ewes
-        # i += 1
-        # calibration_values_p[i] = o_ffcfw_tpdams[0,85,0,0,0,0,0,0,0,0,0,0,0,0,0]    #Yearling weight of ewes at 1.5yo prior to prejoining, NM in previous year
-        # i += 1
+        calibration_values_p[i] = o_wean_w_tpyatf[0,199,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #Weaning weight of 1st cycle single born ewes
+        i += 1
+        calibration_values_p[i] = o_ffcfw_tpdams[0,85,0,0,0,0,0,0,0,0,0,0,0,0,0]    #Yearling weight of ewes at 1.5yo prior to prejoining, NM in previous year
+        i += 1
         # calibration_values_p[i] = o_ffcfw_tpdams[0, 57, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]  #Ewe LW targets
         # i += 1
         # calibration_values_p[i] = o_ffcfw_tpdams[0, 64, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -7668,14 +7670,14 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         if n_coeff > n_traits: j += 1   # n_coeff > n_traits means that SRW was passed as a fixed trait so skip in the reporting
         print(f"Dam weight 3yo joining this {calibration_values_p[i]} with ({coefficients_c[j]}) target {calibration_targets_p[i]}")  #Adult weight of ewes at 3.5yo prior to prejoining BTRT 11 in previous year
         i += 1; j += 1
-        # print(f"Proportion fat this {calibration_values_p[i]} with ({coefficients_c[j]}) target {calibration_targets_p[i]}")
-        # i += 1; j += 1
+        print(f"Proportion fat this {calibration_values_p[i]} with ({coefficients_c[j]}) target {calibration_targets_p[i]}")
+        i += 1; j += 1
         print(f"Dam survival Y-A5 this {calibration_values_p[i]} with ({coefficients_c[j]}) target {calibration_targets_p[i]}")
         i += 1; j += 1
-        # print(f"Wean weight this {calibration_values_p[i]} with ({coefficients_c[j]}) target {calibration_targets_p[i]}")  #Weaning weight of 1st cycle singles
-        # i += 1; j += 1
-        # print(f"Yearling weight this {calibration_values_p[i]} with ({coefficients_c[j]}) target {calibration_targets_p[i]}")  #Yearling weight of ewes at 1.5yo prior to prejoining, NM in previous year
-        # i += 1; j += 1
+        print(f"Wean weight this {calibration_values_p[i]} with ({coefficients_c[j]}) target {calibration_targets_p[i]}")  #Weaning weight of 1st cycle singles
+        i += 1; j += 1
+        print(f"Yearling weight this {calibration_values_p[i]} with ({coefficients_c[j]}) target {calibration_targets_p[i]}")  #Yearling weight of ewes at 1.5yo prior to prejoining, NM in previous year
+        i += 1; j += 1
         # print("LW targets Ewes (value, sar, target)")
         # for k in range(28):
         #     print(f"({calibration_values_p[i]}, {coefficients_c[j]}, {calibration_targets_p[i]})",end='')

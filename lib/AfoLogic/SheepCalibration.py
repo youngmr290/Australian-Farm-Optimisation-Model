@@ -239,8 +239,8 @@ if __name__ == '__main__':
             disp = True  #False     Display the result each iteration
             polish = False  #True      After the differential evolution carry out some further refining
             population = popsize * n_coef   #adjust popsize so that population fits in with the number of processors
-            max_workers = 28  #28 for T7600 with 14 coefficients         The number of multi-processes, while calculating the population. Relate to size of population
-            workers = min(multiprocessing.cpu_count(), population)   #, max_workers)    removed max workers so there wasn't a limit when using google
+            max_workers = 28  #28 for T7600 with 14 coefficients          The number of multi-processes, while calculating the population. Relate to size of population
+            workers = min(multiprocessing.cpu_count(), population, max_workers)   # remove max workers if using google
             if workers != 1:
                 updating = 'deferred'  #   Use deferred if workers > 1 to suppress warning
             else:
