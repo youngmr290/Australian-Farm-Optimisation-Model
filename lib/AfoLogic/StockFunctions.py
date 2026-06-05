@@ -1922,23 +1922,23 @@ def f_lwc_mu(cg, ck, rc_start, mei_initial, nem_ee, km, hp_mei, new, kw, zf1, zf
     ###Step 10d: Update heat production associated with retained energy (metabolisable energy)
     ##Back calculate MEI if it is required
     mei_adjustment = 0  #set default value if back calculation function isn't called
-    rev_affects_energy = not(np.allclose(evg_prior, evg) and np.allclose(wbec_prior, wbec)
-            and np.allclose(d_fat_prior, d_fat) and np.allclose(d_muscle_prior, d_muscle)
-            and np.allclose(d_viscera_prior, d_viscera)) #any energy component is altered by the REV adjustments
-    # if True:    #uncomment this line to force the back calculation
-    if rev_affects_energy:
-        if sen.sam['heat_loss'] == 1:
-            #The sam on heat_loss has not been activated.
-            raise ValueError('REV trial is being carried out without changing sam[heat_loss]. This causes errors in the back calculation')
-        else:
-            ##Calculate some variables to reduce the args required for f1_back_calculate_mei()
-            hp_wcl = hp_dw + hp_dc * gest_propn + hp_dl * lact_propn
-            ne_wcl = new + nec * gest_propn + nel * lact_propn
-            mei, wbec_ee, surplus_energy_ee, hp_total_ee, chill_increment = f1_back_calculate_mei(ck, cg, nem_ee
-                                            , nefat, nemuscle, neviscera, hp_wcl, ne_wcl, km, heat_loss_m0p1
-                                            , days_period, b_mask, mei_propn_milk, sam_kg)
-            ### Calculate adjustment to mei to reflect the changes made by the REVs
-            mei_adjustment = (mei - mei_initial) * (days_period > 0)
+    # rev_affects_energy = not(np.allclose(evg_prior, evg) and np.allclose(wbec_prior, wbec)
+    #         and np.allclose(d_fat_prior, d_fat) and np.allclose(d_muscle_prior, d_muscle)
+    #         and np.allclose(d_viscera_prior, d_viscera)) #any energy component is altered by the REV adjustments
+    # # if True:    #uncomment this line to force the back calculation
+    # if rev_affects_energy:
+    #     if sen.sam['heat_loss'] == 1:
+    #         #The sam on heat_loss has not been activated.
+    #         raise ValueError('REV trial is being carried out without changing sam[heat_loss]. This causes errors in the back calculation')
+    #     else:
+    #         ##Calculate some variables to reduce the args required for f1_back_calculate_mei()
+    #         hp_wcl = hp_dw + hp_dc * gest_propn + hp_dl * lact_propn
+    #         ne_wcl = new + nec * gest_propn + nel * lact_propn
+    #         mei, wbec_ee, surplus_energy_ee, hp_total_ee, chill_increment = f1_back_calculate_mei(ck, cg, nem_ee
+    #                                         , nefat, nemuscle, neviscera, hp_wcl, ne_wcl, km, heat_loss_m0p1
+    #                                         , days_period, b_mask, mei_propn_milk, sam_kg)
+    #         ### Calculate adjustment to mei to reflect the changes made by the REVs
+    #         mei_adjustment = (mei - mei_initial) * (days_period > 0)
 
     ##Calculate some return variables required independent of whether back calculation is called
     kg_cs = fun.f_divide(wbec_ee, surplus_energy_ee) * km    ###CSIRO equivalent kg for r_compare
