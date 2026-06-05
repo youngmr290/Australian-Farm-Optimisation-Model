@@ -30,7 +30,7 @@ cat_propn_s1_ks2 = dxl.f_load_stubble()
 ##run AFO #
 ###########
 start_loops_time = time.time()    #This excludes the time for reading the inputs and is used to calculate remaining time
-calibration = None    # =None for AFO to run 'normally' ={} to generate the calibration TraitValues.xlsx outputs.
+calibration = {}    # =None for AFO to run 'normally' ={} to generate the calibration TraitValues.xlsx outputs.
 
 run = 0  # counter to work out average time per loop
 for row in dataset:
