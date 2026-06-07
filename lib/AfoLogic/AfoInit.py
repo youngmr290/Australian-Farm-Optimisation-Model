@@ -89,7 +89,8 @@ def exp(solver_method, user_data, property, trial_name, trial_description, sinp_
     pinp.f1_expand_p6()
 
     ##check the rotations and inputs align - this means rotation method can be controlled using a SA
-    d_rot_info = pinp.f1_phases(d_rot_info)
+    if calibration is None:
+        d_rot_info = pinp.f1_phases(d_rot_info)
 
     ##preform inputs tests
     inptest.f_input_logic_test()
