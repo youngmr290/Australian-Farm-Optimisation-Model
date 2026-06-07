@@ -89,7 +89,7 @@ if __name__ == '__main__':
         exp_group = None
 
     reports = relativeFile.find(__file__, "./Output", f"Report*_{exp_group}.xlsx")
-    for f in glob.glob(reports):
+    for f in glob.glob(reports):   #todo this causes an error if the file is in use. Have a try except on writing file, need it here too
         os.remove(f)
 
 
