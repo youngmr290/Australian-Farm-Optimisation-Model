@@ -518,6 +518,7 @@ def create_sa():
     saa['feedsupply_adj_offs_p10'] = np.zeros((3), dtype='float64') #user offs fs adjuster - used in web app (simplified version of feedsupply_adj_r2p)
     saa['rr'] = 0.0                    #reproductive rate/scanning percentage (adjust the standard scanning % for f_conception_ltw and within function for f_conception_cs
     saa['ss'] = 0.0                    #staple strength (adjust SS in sgen end of period)
+    saa['fat_depth'] = 0.0         #Change in carcase fat_depth of all sale animals. Note: no energy cost linked to fat depth - relocate body fat to the carcase.
     ##SAT
     ##SAR
     sar['feedsupply_r1jp'] = np.zeros(pinp.feedsupply['i_feedsupply_options_r1j2p'].shape, dtype='float64')  #SA value for feedsupply.
