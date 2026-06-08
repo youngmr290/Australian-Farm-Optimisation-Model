@@ -4899,8 +4899,54 @@ def f1_create_production_param(group, production_vg, a_kcluster_vg_1=1, index_kt
                             , np.sum(numbers_start_vg * (a_kcluster_vg_1 == index_ktvg_1) * (a_kcluster_vg_2 == index_kktvg_2),
                                      axis=(sinp.stock['i_d_pos'], sinp.stock['i_b0_pos'], sinp.stock['i_e0_pos']), keepdims=True), dtype=production_vg.dtype)
 
-def f1_create_saa_param_p11():
-    return
+
+def f1_create_saa_param_p11(b=None, w=None, p=None, y=None, h=None
+                          , a2=None, a3=None, a4=None, a5=None, a6=None, a=None, whole=None):
+    '''
+    This function is a component of the model inversion calibration
+    Create a 1D array which is a sa variable for the parameters that are the calibration coefficients.
+    The shape is (10,) which is the p0 axis of age stages
+    The sa variable created is scaled with scalar_pp11 and can be applied to param_std using fun.f_sa()
+    Age stage that are np.nan get a default value of 0.
+
+    Priority order:
+        1. `whole` (if provided)
+        2. Individual a2–a6 + a
+        3. Cascading from older to younger stages
+        4. Default based on sa_type for any remaining None/np.nan
+
+    :param b, w, p, y, h, a2-a6: coefficients for birth, weaning, post-weaning, yearling, hogget, adult periods
+    :param a: if provided, overrides all adult age stages with a single value
+    :param whole: if provided, overrides all age stages with a single value
+    :return sa_param_p11: parameter with shape (10), the p11 axis for levels of each age stage
+    '''
+
+    #saa type → default = 0(numeric)
+    default = 0.0
+
+    #Step 1: Assign the expanded age stages to their components (whole takes priority)
+    if whole is not None:
+        b = w = p = y = h = a2 = a3 = a4 = a5 = a6 = whole
+    elif a is not None:
+        a2 = a3 = a4 = a5 = a6 = a
+
+    # Step 2: Cascade values from older to younger stages
+    # if age stages aren't specified then fill them from the older age stage so that the traits can
+    ## start changing earlier if the early stages are not included in the breeding objective.
+    if h is None: h = a2
+    if y is None: y = h
+    if p is None: p = y
+    if w is None: w = p
+    if b is None: b = w
+
+    # Step 3: Build the 12-element list (that includes np.nan). Whole, Adult & the extra slice are not used, so set to default
+    values = [default, b, w, p, y, h, a2, a3, a4, a5, a6, default, default]
+
+    # Step 4: Replace np.nan with default value.
+    saa_param_p11 = np.array([default if (v is None or np.isnan(v)) else v for v in values], dtype=float)
+
+    return saa_param_p11
+
 
 def f1_create_pp11_scalar(age_p, age_stage_p11):
     '''
