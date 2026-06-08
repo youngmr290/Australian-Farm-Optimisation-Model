@@ -6247,7 +6247,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             , period_is_join = period_is_join_pa1e1b1nwzida0e0b0xyg1[p:p+1]
                                * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p:p+1]
                             , period_is_mating = period_is_mating_pa1e1b1nwzida0e0b0xyg1[p:p+1]
-                            , period_is_matingend=period_is_matingend_pa1e1b1nwzida0e0b0xyg1[p:p+1], period_is_birth = period_is_birth_pa1e1b1nwzida0e0b0xyg1[p:p+1]
+                            , period_is_matingend=period_is_matingend_pa1e1b1nwzida0e0b0xyg1[p:p+1]
+                            , period_is_birth = period_is_birth_pa1e1b1nwzida0e0b0xyg1[p:p+1]
                             , period_isbetween_prejoinmatingend=period_isbetween_prejoinmatingend_pa1e1b1nwzida0e0b0xyg1[p:p+1]
                             , propn_dams_mated=est_prop_dams_mated_pa1e1b1nwzida0e0b0xyg1[p:p+1])
 
