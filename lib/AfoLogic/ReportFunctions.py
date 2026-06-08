@@ -3257,41 +3257,100 @@ def f_sheep_summary(lp_vars, r_vals):
         mach_dep = f_qsz_expected_total(variable_dep_qsz + fixed_dep_qsz)
         return pasture_mach + pasture_mach_propn * (mach_insurance + mach_dep)
 
-    def f_supplement_cost_by_stock_class():
+    def f_supplement_cost_by_animal_course():
         _, _, _, supcost_qsz_p7, _, _ = f_stock_cash_summary(lp_vars, r_vals)
         supcost_qsz = supcost_qsz_p7.sum(axis=1)
+
+        def f_expand_to_index(series, target_index, nlevels):
+            align_index = pd.MultiIndex.from_tuples([idx[:nlevels] for idx in target_index])
+            return pd.Series(series.reindex(align_index).fillna(0).to_numpy(), index=target_index)
+
+        def f_expected_cost_by_y(cost_qszp6fy):
+            cost_qszy = cost_qszp6fy.groupby(level=(0, 1, 2, 5)).sum()
+            qsz_index = pd.MultiIndex.from_tuples([idx[:3] for idx in cost_qszy.index])
+            keys_q = r_vals['zgen']['keys_q']
+            keys_s = r_vals['zgen']['keys_s']
+            keys_z = r_vals['zgen']['keys_z']
+            z_prob_qsz = pd.Series(r_vals['zgen']['z_prob_qsz'].ravel(),
+                                   index=pd.MultiIndex.from_product([keys_q, keys_s, keys_z]))
+            z_prob = pd.Series(z_prob_qsz.reindex(qsz_index).to_numpy(), index=cost_qszy.index)
+            return cost_qszy.mul(z_prob).groupby(level=3).sum()
+
+        def f_year_mask_from_anchor(anchor_yv):
+            v_idx = np.arange(anchor_yv.shape[1]).reshape((1, -1) + (1,) * (anchor_yv.ndim - 2))
+            idx_anchor_y = np.argmax(anchor_yv.astype(bool), axis=1)
+            idx_next_anchor_y = np.roll(idx_anchor_y, shift=-1, axis=0)
+            idx_next_anchor_y[-1, ...] = anchor_yv.shape[1]
+            return np.logical_and(v_idx >= idx_anchor_y[:, na, ...], v_idx < idx_next_anchor_y[:, na, ...])
 
         mei_sire = f_stock_pasture_summary(r_vals, type='stock', prod='mei_sire_p6fzg0',
                                            na_prod=[0, 1], weights='sire_numbers_qszg0',
                                            na_weights=[2, 3], keys='sire_keys_qsp6fzg0',
                                            arith=2, index=[0, 1, 4, 2, 3],
                                            cols=[]).squeeze()
-        mei_dams = f_stock_pasture_summary(r_vals, type='stock', prod='mei_dams_k2p6ftva1nw8ziyg1',
-                                           na_prod=[0, 1], weights='dams_numbers_qsk2tvanwziy1g1',
-                                           na_weights=[3, 4], keys='dams_keys_qsk2p6ftvanwziy1g1',
-                                           arith=2, index=[0, 1, 11, 3, 4],
-                                           cols=[]).squeeze()
-        mei_offs = f_stock_pasture_summary(r_vals, type='stock', prod='mei_offs_k3k5p6ftvnw8ziaxyg3',
-                                           na_prod=[0, 1], weights='offs_numbers_qsk3k5tvnwziaxyg3',
-                                           na_weights=[4, 5], keys='offs_keys_qsk3k5p6ftvnwziaxyg3',
-                                           arith=2, index=[0, 1, 11, 4, 5],
-                                           cols=[]).squeeze()
 
-        ewe_mei = mei_sire.add(mei_dams, fill_value=0) #include sire mei in with ewes
-        total_mei = ewe_mei.add(mei_offs, fill_value=0)
-        ewe_share = ewe_mei.divide(total_mei.mask(np.isclose(total_mei, 0))).fillna(0)
+        stock_r_vals = r_vals['stock']
+        dams_p6f_keys = list(stock_r_vals['dams_keys_qsk2p6ftvanwziy1g1'])
+        offs_p6f_keys = list(stock_r_vals['offs_keys_qsk3k5p6ftvnwziaxyg3'])
+        stock_r_vals['dams_keys_qsk2p6ftyvanwziy1g1'] = (
+            dams_p6f_keys[:6]
+            + [stock_r_vals['dams_keys_qsk2tyvanwziy1g1'][4]]
+            + dams_p6f_keys[6:]
+        )
+        stock_r_vals['offs_keys_qsk3k5p6ftyvnwziaxyg3'] = (
+            offs_p6f_keys[:7]
+            + [stock_r_vals['offs_keys_qsk3k5tyvnwziaxyg3'][5]]
+            + offs_p6f_keys[7:]
+        )
+        # The animal-course report anchors on mating/weaning, but MEI needs all DVPs in that course year.
+        stock_r_vals['dvp_is_year_yvzig1'] = f_year_mask_from_anchor(stock_r_vals['dvp_is_mating_or_weaning_yvzig1'])
+        stock_r_vals['dvp_is_year_yvzixg3'] = f_year_mask_from_anchor(stock_r_vals['dvp_is_shear_or_weaning_yvzixg3'])
+        mei_dams_qszp6fy = f_stock_pasture_summary(r_vals, type='stock', prod='mei_dams_k2p6ftva1nw8ziyg1',
+                                                   na_prod=[0, 1, 6], weights='dams_numbers_qsk2tvanwziy1g1',
+                                                   na_weights=[3, 4, 6],
+                                                   prod_weights='dvp_is_year_yvzig1',
+                                                   na_prodweights=[0, 1, 2, 3, 4, 5, 8, 9, 10, 13],
+                                                   keys='dams_keys_qsk2p6ftyvanwziy1g1',
+                                                   arith=2, index=[0, 1, 11, 3, 4, 6],
+                                                   cols=[]).squeeze()
+        mei_offs_qszp6fy = f_stock_pasture_summary(r_vals, type='stock', prod='mei_offs_k3k5p6ftvnw8ziaxyg3',
+                                                   na_prod=[0, 1, 7], weights='offs_numbers_qsk3k5tvnwziaxyg3',
+                                                   na_weights=[4, 5, 7],
+                                                   prod_weights='dvp_is_year_yvzixg3',
+                                                   na_prodweights=[0, 1, 2, 3, 4, 5, 6, 9, 10, 13, 15],
+                                                   keys='offs_keys_qsk3k5p6ftyvnwziaxyg3',
+                                                   arith=2, index=[0, 1, 11, 4, 5, 7],
+                                                   cols=[]).squeeze()
 
         grain_fed_qszk3fp6 = f_grain_sup_summary(lp_vars, r_vals, option=3)
         grain_fed_qszp6f = grain_fed_qszk3fp6.groupby(level=(0, 1, 2, 5, 4)).sum()
-        ewe_sup_qszp6f = grain_fed_qszp6f.mul(ewe_share, fill_value=0)
         total_sup_qsz = grain_fed_qszp6f.groupby(level=(0, 1, 2)).sum()
-        ewe_sup_qsz = ewe_sup_qszp6f.groupby(level=(0, 1, 2)).sum()
-        ewe_sup_share_qsz = ewe_sup_qsz.divide(total_sup_qsz.mask(np.isclose(total_sup_qsz, 0))).fillna(0)
+        total_sup_qszp6f = total_sup_qsz.reindex(pd.MultiIndex.from_tuples([idx[:3] for idx in grain_fed_qszp6f.index])).to_numpy()
+        sup_share_qszp6f = grain_fed_qszp6f.divide(pd.Series(total_sup_qszp6f, index=grain_fed_qszp6f.index)
+                                                   .mask(np.isclose(total_sup_qszp6f, 0))).fillna(0)
+        supcost_qszp6f = sup_share_qszp6f * f_expand_to_index(supcost_qsz, sup_share_qszp6f.index, 3)
 
-        ewe_supcost_qsz = supcost_qsz.mul(ewe_sup_share_qsz, fill_value=0)
-        ewe_supcost = f_qsz_expected_total(ewe_supcost_qsz)
-        total_supcost = f_qsz_expected_total(supcost_qsz)
-        return ewe_supcost, total_supcost - ewe_supcost
+        dams_mei_qszp6f = mei_dams_qszp6fy.groupby(level=(0, 1, 2, 3, 4)).sum()
+        offs_mei_qszp6f = mei_offs_qszp6fy.groupby(level=(0, 1, 2, 3, 4)).sum()
+        ewe_mei_qszp6f = mei_sire.add(dams_mei_qszp6f, fill_value=0) #include sire mei in with ewes
+        total_mei_qszp6f = ewe_mei_qszp6f.add(offs_mei_qszp6f, fill_value=0)
+
+        ewe_share_qszp6f = ewe_mei_qszp6f.divide(total_mei_qszp6f.mask(np.isclose(total_mei_qszp6f, 0))).fillna(0)
+        offs_share_qszp6f = offs_mei_qszp6f.divide(total_mei_qszp6f.mask(np.isclose(total_mei_qszp6f, 0))).fillna(0)
+        ewe_supcost_qszp6f = supcost_qszp6f.mul(ewe_share_qszp6f, fill_value=0)
+        offs_supcost_qszp6f = supcost_qszp6f.mul(offs_share_qszp6f, fill_value=0)
+
+        dams_mei_qszp6f_expanded = f_expand_to_index(dams_mei_qszp6f, mei_dams_qszp6fy.index, 5)
+        dams_mei_share_qszp6fy = mei_dams_qszp6fy.divide(dams_mei_qszp6f_expanded
+                                             .mask(np.isclose(dams_mei_qszp6f_expanded, 0))).fillna(0)
+        dams_supcost_y = f_expected_cost_by_y(dams_mei_share_qszp6fy * f_expand_to_index(ewe_supcost_qszp6f, mei_dams_qszp6fy.index, 5))
+
+        offs_mei_qszp6f_expanded = f_expand_to_index(offs_mei_qszp6f, mei_offs_qszp6fy.index, 5)
+        offs_mei_share_qszp6fy = mei_offs_qszp6fy.divide(offs_mei_qszp6f_expanded
+                                             .mask(np.isclose(offs_mei_qszp6f_expanded, 0))).fillna(0)
+        wethers_crossys_supcost_y = f_expected_cost_by_y(offs_mei_share_qszp6fy * f_expand_to_index(offs_supcost_qszp6f, mei_offs_qszp6fy.index, 5))
+
+        return dams_supcost_y.sum(), wethers_crossys_supcost_y.sum(), dams_supcost_y, wethers_crossys_supcost_y
 
     pnl = f_profitloss_table(lp_vars, r_vals, option=2)
     pasture_area_propn = round(f_area_summary(lp_vars, r_vals, option=5)[0], 0) / 100
@@ -3299,7 +3358,7 @@ def f_sheep_summary(lp_vars, r_vals):
     sheep_trading_income = pnl.loc[('Revenue', 'sheep sales'), 'Full year']
     fixed_cost = pnl.loc[('Expense', 'fixed'), 'Full year'] * pasture_area_propn
     husbandry_cost = pnl.loc[('Expense', 'stock husb and infra'), 'Full year']
-    ewe_supplement_cost, wethers_crossys_supplement_cost = f_supplement_cost_by_stock_class()
+    ewe_supplement_cost, wethers_crossys_supplement_cost, dams_supplement_cost_y, wethers_crossys_supplement_cost_y = f_supplement_cost_by_animal_course()
     supplement_cost = ewe_supplement_cost + wethers_crossys_supplement_cost
     purchase_cost = pnl.loc[('Expense', 'stock purchase'), 'Full year']
     pasture_cost = (pnl.loc[('Expense', 'pasture'), 'Full year']
@@ -3392,6 +3451,7 @@ def f_sheep_summary(lp_vars, r_vals):
     dams['cfw/hd'] = cfw_dams_y
     dams['fd'] = fd_dams_y
     dams['wool $/hd'] = woolvalue_dams_y
+    dams['Sup cost'] = dams_supplement_cost_y.reindex(numbers_dams.index).fillna(0)
 
     wethers_crossys = pd.DataFrame(index=numbers_wethers_crossys.index)
     wethers_crossys['Open'] = numbers_wethers_crossys['Open Numbers']
@@ -3467,6 +3527,7 @@ def f_sheep_summary(lp_vars, r_vals):
     wethers_crossys['cfw/hd'] = cfw_wethers_crossys_y
     wethers_crossys['fd'] = fd_wethers_crossys_y
     wethers_crossys['wool $/hd'] = woolvalue_wethers_crossys_y
+    wethers_crossys['Sup cost'] = wethers_crossys_supplement_cost_y.reindex(numbers_wethers_crossys.index).fillna(0)
 
     sheep_summary = pd.concat([dams, wethers_crossys], keys=['Dams', 'Wethers & crossbreds'])
     sheep_summary = sheep_summary.rename(index=f_sheep_age_label, level=1)
@@ -3500,7 +3561,7 @@ def f_sheep_summary(lp_vars, r_vals):
     dollars.loc[('Margin', 'Margin'), 'Total $'] = total_income - total_costs
     sheep_summary = pd.concat([sheep_summary, dollars])
     return sheep_summary.round({'Open': 0, 'Births': 0, 'Mated': 0, 'Sell': 0, 'Shorn': 0, '$/hd': 1,
-                                'cfw/hd': 1, 'fd': 1, 'wool $/hd': 1, 'Total $': 0})
+                                'cfw/hd': 1, 'fd': 1, 'wool $/hd': 1, 'sup cost': 0, 'Total $': 0})
 
 
 ############################
