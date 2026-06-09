@@ -10570,6 +10570,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
     #### DSE bsed on NW - Using nw doesn't account for the extra MEI of the young growing animals
     #### cumulative total of metabolic nw (unw) over the periods that exist in each p6 (with p6 axis)
+    o_nw_start_tpsire[...]=50
+    o_nw_start_tpdams[...]=50
+    o_nw_start_tpoffs[...]=50
     unw_cum_p6tva1e1b1nwzida0e0b0xyg0 = sfun.f1_p2v_std(o_nw_start_tpsire**0.75, numbers_p=o_numbers_end_tpsire,
                                         on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0, days_period_p=days_period_pa1e1b1nwzida0e0b0xyg0,
                                         a_any1_p=a_p6_pa1e1b1nwzida0e0b0xyg, index_any1tvp=index_p6tpa1e1b1nwzida0e0b0xyg)[:,:,na,...]#add singleton v
@@ -10585,9 +10588,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     unw_ave_p6tva1e1b1nwzida0e0b0xyg1 = fun.f_divide(unw_cum_p6tva1e1b1nwzida0e0b0xyg1, days_p6_p6tva1e1b1nwzida0e0b0xyg)
     unw_ave_p6tva1e1b1nwzida0e0b0xyg3 = fun.f_divide(unw_cum_p6tva1e1b1nwzida0e0b0xyg3, days_p6_p6tva1e1b1nwzida0e0b0xyg)
     ####convert nw to dse based on relative metabolic weight (srw**0.75).
-    dsehd_p6tva1e1b1nwzida0e0b0xyg0 = unw_ave_p6tva1e1b1nwzida0e0b0xyg0 / pinp.sheep['i_dse_srw']**0.75
-    dsehd_p6tva1e1b1nwzida0e0b0xyg1 = unw_ave_p6tva1e1b1nwzida0e0b0xyg1 / pinp.sheep['i_dse_srw']**0.75
-    dsehd_p6tva1e1b1nwzida0e0b0xyg3 = unw_ave_p6tva1e1b1nwzida0e0b0xyg3 / pinp.sheep['i_dse_srw']**0.75
+    dsehd_p6tva1e1b1nwzida0e0b0xyg0 = unw_ave_p6tva1e1b1nwzida0e0b0xyg0 / 50**0.75
+    dsehd_p6tva1e1b1nwzida0e0b0xyg1 = unw_ave_p6tva1e1b1nwzida0e0b0xyg1 / 50**0.75
+    dsehd_p6tva1e1b1nwzida0e0b0xyg3 = unw_ave_p6tva1e1b1nwzida0e0b0xyg3 / 50**0.75
     dsenw_p6tva1e1b1nwzida0e0b0xyg0 = dsehd_p6tva1e1b1nwzida0e0b0xyg0 * dse_group_dp6tva1e1b1nwzida0e0b0xyg[sinp.stock['ia_sire_dsegroup']]
     dsenw_p6tva1e1b1nwzida0e0b0xyg1 = dsehd_p6tva1e1b1nwzida0e0b0xyg1 * np.take_along_axis(dse_group_dp6tva1e1b1nwzida0e0b0xyg
                                                                         , a_dams_dsegroup_b1nwzida0e0b0xyg[na,na,na,na,na,na],0)[0,...] #take along the dse group axis and remove the d axis from the front
