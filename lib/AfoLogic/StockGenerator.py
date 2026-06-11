@@ -582,6 +582,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     o_fd_min_tpsire = np.zeros(tpg0, dtype =dtype)
     o_rc_start_tpsire = np.ones(tpg0, dtype =dtype)
     o_relsize_start_tpsire = np.ones(tpg0, dtype =dtype)
+    o_cfat_start_tpsire = np.zeros(tpg0, dtype =dtype)
     o_ebg_tpsire = np.zeros(tpg0, dtype =dtype)
     ###arrays for report variables
     r_ebw_tpsire = np.zeros(tpg0, dtype =dtype)
@@ -618,6 +619,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     o_fd_min_tpdams = np.zeros(tpg1, dtype =dtype)
     o_rc_start_tpdams = np.ones(tpg1, dtype =dtype)
     o_relsize_start_tpdams = np.ones(tpg1, dtype =dtype)
+    o_cfat_start_tpdams = np.zeros(tpg1, dtype =dtype)
     o_ebg_tpdams = np.zeros(tpg1, dtype =dtype)
     o_cfw_ltwadj_tpdams = np.zeros(tpg1, dtype =dtype)
     o_fd_ltwadj_tpdams = np.zeros(tpg1, dtype =dtype)
@@ -663,6 +665,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     # o_fd_min_tpyatf = np.zeros(tpg2, dtype =dtype)
     o_rc_start_tpyatf = np.ones(tpg2, dtype =dtype)
     o_relsize_start_tpyatf = np.ones(tpg2, dtype =dtype)
+    o_cfat_start_tpyatf = np.zeros(tpg2, dtype =dtype)
     ###arrays for report variables
     r_ebw_start_tpyatf = np.zeros(tpg2, dtype =dtype)   # requires a variable separate from o_ffcfw_start_tpyatf so that it is only stored when days_period > 0
     r_wean_ebw_tpyatf = np.zeros(tpg2, dtype =dtype)
@@ -711,6 +714,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     o_fd_min_tpoffs = np.zeros(tpg3, dtype =dtype)
     o_rc_start_tpoffs = np.ones(tpg3, dtype =dtype)
     o_relsize_start_tpoffs = np.ones(tpg3, dtype =dtype)
+    o_cfat_start_tpoffs = np.zeros(tpg3, dtype =dtype)
     o_ebg_tpoffs = np.zeros(tpg3, dtype =dtype)
     ###arrays for report variables
     r_intake_f_tpoffs = np.zeros(tpg3, dtype = dtype)   #not used as a report var but in stubble. Used name consistent with dams
@@ -3779,6 +3783,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 relsize1_start_sire = np.minimum(ffcfw_max_start_sire, nw_max_pa1e1b1nwzida0e0b0xyg0[p:p+1]) / srw_pa1e1b1nwzida0e0b0xyg0
                 ###Condition score at  start of p
                 cs_start_sire = sfun.f1_condition_score(cn_cpsire, rc_start_sire, relsize_start_sire)
+                ###c-site Fat depth at  start of p
+                cfat_start_sire = sfun.f1_cfat_depth(cn_cpsire, rc_start_sire, relsize_start_sire)
                 ###PI Size factor (for cattle)
                 zf_sire = np.maximum(1, 1 + cr_cpsire[7, ...] - relsize_start_sire)
                 ###EVG Size factor (decreases as z increases)
@@ -3815,6 +3821,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 relsize1_start_dams = np.minimum(ffcfw_max_start_dams, nw_max_pa1e1b1nwzida0e0b0xyg1[p:p+1]) / srw_pa1e1b1nwzida0e0b0xyg1
                 ###Condition score of the dam at  start of p
                 cs_start_dams = sfun.f1_condition_score(cn_cpdams, rc_start_dams, relsize_start_dams)
+                ###c-site Fat depth at  start of p
+                cfat_start_dams = sfun.f1_cfat_depth(cn_cpdams, rc_start_dams, relsize_start_dams)
                 ###PI Size factor (for cattle)
                 zf_dams = np.maximum(1, 1 + cr_cpdams[7, ...] - relsize_start_dams)
                 ###EVG Size factor (decreases as z increases)
@@ -3901,6 +3909,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 relsize1_start_offs = np.minimum(ffcfw_max_start_offs, nw_max_pa1e1b1nwzida0e0b0xyg3[p:p+1]) / srw_pa1e1b1nwzida0e0b0xyg3
                 ###Condition score at  start of p
                 cs_start_offs = sfun.f1_condition_score(cn_cpoffs, rc_start_offs, relsize_start_offs)
+                ###c-site Fat depth at  start of p
+                cfat_start_offs = sfun.f1_cfat_depth(cn_cpoffs, rc_start_offs, relsize_start_offs)
                 ###PI Size factor (for cattle)
                 zf_offs = np.maximum(1, 1 + cr_cpoffs[7, ...] - relsize_start_offs)
                 ###EVG Size factor (decreases as z increases)
@@ -5330,6 +5340,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 relsize1_start_yatf = np.minimum(ffcfw_max_start_yatf, nw_max_yatf) / srw_pa1e1b1nwzida0e0b0xyg2
                 ##Condition score of the dam at  start of p
                 cs_start_yatf = sfun.f1_condition_score(cn_cpyatf, rc_start_yatf, relsize_start_yatf)
+                ###c-site Fat depth at  start of p
+                cfat_start_yatf = sfun.f1_cfat_depth(cn_cpyatf, rc_start_yatf, relsize_start_yatf)
                 ###staple length
                 sl_start_yatf = fl_start_yatf * cw_cpyatf[15,...]
                 ###PI Size factor (for cattle)
@@ -6617,6 +6629,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 o_ss_tpsire[:, p:p+1] = ss_sire
                 o_rc_start_tpsire[:, p:p+1] = rc_start_sire
                 o_relsize_start_tpsire[:, p:p+1] = relsize_start_sire
+                o_cfat_start_tpsire[:, p:p+1] = cfat_start_sire
                 o_ebg_tpsire[:, p:p+1] = ebg_sire
 
                 ###store report variables for dams - individual variables can be deleted if not needed - store in report dictionary in the report section at end of this module
@@ -6689,6 +6702,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 o_n_sire_tpa1e1b1nwzida0e0b0xyg1g0p8[:, p:p+1] = n_sire_a1e1b1nwzida0e0b0xyg1g0p8
                 o_rc_start_tpdams[:, p:p+1] = rc_start_dams
                 o_relsize_start_tpdams[:, p:p+1] = relsize_start_dams
+                o_cfat_start_tpdams[:, p:p+1] = cfat_start_dams
                 o_ebg_tpdams[:, p:p+1] = ebg_dams
                 o_cfw_ltwadj_tpdams[:, p:p+1] = cfw_ltwadj_dams
                 o_fd_ltwadj_tpdams[:, p:p+1] = fd_ltwadj_dams
@@ -6760,6 +6774,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 # o_fd_tpyatf[:, p:p+1] = fd_yatf
                 # o_fd_min_tpyatf[:, p:p+1] = fd_min_yatf
                 # o_ss_tpyatf[:, p:p+1] = ss_yatf
+                o_cfat_start_tpyatf[:, p:p + 1] = cfat_start_yatf  #used for calibrating fat depth
 
                 ###store report variables - individual variables can be deleted if not needed - store in report dictionary in the report section at end of this module
                 #### store a report version of ffcfw_yatf
@@ -6835,6 +6850,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 o_ss_tpoffs[:, p:p+1] = ss_offs
                 o_rc_start_tpoffs[:, p:p+1] = rc_start_offs
                 o_relsize_start_tpoffs[:, p:p+1] = relsize_start_offs
+                o_cfat_start_tpoffs[:, p:p+1] = cfat_start_offs
                 o_ebg_tpoffs[:, p:p+1] = ebg_offs
 
                 ###store report variables - individual variables can be deleted if not needed - store in report dictionary in the report section at end of this module

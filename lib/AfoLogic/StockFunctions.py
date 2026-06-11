@@ -3889,6 +3889,8 @@ def f_wool_value(stb_mpg_w4, wool_price_scalar_c1tpg, cfw_pg, fd_pg, sl_pg, ss_p
 
 def f1_condition_score(cn, rc_tpg, rs_tpg=1):
     ''' Estimate CS from relative condition. Works with scalars or arrays - provided they are broadcastable into ffcfw.
+    Note: conversion from wholebody fat % was also considered as per Freer et al 2007 pg 56.
+    The r2 for fat % was better but there was no information to help with calibrating across ages, so have used LW.
 
        cn: cn[5] change in LW associated with 1 CS as a proportion of SRW (kg/CS) - for adults
        rc: relative condition = Fleece free, conceptus free liveweight (ffcfw) / normal weight (nw).
@@ -3899,30 +3901,43 @@ def f1_condition_score(cn, rc_tpg, rs_tpg=1):
        kg_per_CS = cn[5] * (2-rs) * SRW i.e. reducing from 2*cn[5] to cn[5] as rs increases from 0 to 1.
        because rs = nw / srw
        kg_per_CS = cn[5] * (2-rs) * nw / rs (convert to nw to allow cancelling out later)
-       then invert rs to the numerator (to stop div0 error when 0)
 
        Derivation of the CS formula
-       CS = 3 + (ffcfw - nw) / (kg_per_CS * srw)
+       CS = 3 + (ffcfw - nw) / kg_per_CS
        and ffcfw - nw = (rc - 1) * nw
        and rs = nw/srw
        so, substituting and removing nw from numerator and denominator
        CS = 3 + (rc - 1) / (cn5 * (2 - rs) / rs)
+       then invert rs to the numerator (to stop div0 error when 0)
+       CS = 3 + (rc - 1) * rs / (cn5 * (2 - rs))
 
        Returns: condition score : float
-       '''
-
+    '''
     cs_tpg = 3 + (rc_tpg - 1) * rs_tpg / (cn[5, ...] * (2 - rs_tpg))
     return np.maximum(1, cs_tpg) #a minimum value of CS=1 is used to remove errors caused by low CS. A CS below 1 is unlikely because the animal would be dead
 
 
-def f1_fat_score(cn, rc_tpg, z_tpg=1, age=0, rev_trait_value=0):
-    ''' Calculate fat score from relative condition using relationship from van Burgel et al. 2011.
+def f1_cfat_depth(cn, rc_tpg, z_tpg=1, age=0, rev_trait_value=0):
+    ''' Calculate fat depth at the c-site from condition score using relationship from van Burgel et al. 2011.
     Steps 1. calculate CS
-          2. estimate GR tissue depth using relationship from van Burgel CS = 2.5 + 0.06 GR
-          3. convert to fat score. FS1 = <5mm, FS2 6-10mm, FS3 11-15mm, FS4 16-20mm, FS5 >21mm'''
+          2. estimate depth at the c-site using relationship from van Burgel cFat = 0.295 exp(0.705 CS)
+    '''
+    #todo parameters could be added to Universal.xlsx in the Normal weight section
     condition_score = f1_condition_score(cn, rc_tpg, z_tpg)
-    gr_depth = np.maximum(0, (condition_score - 2.5) / 0.06)
-    gr_depth = fun.f_sa(gr_depth, sen.saa['fat_depth'], sa_type=2, value_min=0)
+    c_fat = 0.295 * np.exp(0.705 * condition_score)
+    return c_fat
+
+
+def f1_fat_score(cn, rc_tpg, z_tpg=1, age=0, rev_trait_value=0):
+    ''' Calculate fat score from relative condition using relationships from van Burgel et al. 2011.
+    Steps 1. calculate fat depth at the c-site (which is calculated from CS)
+          2. estimate GR tissue depth using relationship from van Burgel cFat = 1.2 + 0.22 GR
+          3. convert to fat score. FS1 = <5mm, FS2 6-10mm, FS3 11-15mm, FS4 16-20mm, FS5 >21mm
+    '''
+    #todo parameters could be added to Universal.xlsx in the Normal weight section
+    c_fat = f1_cfat_depth(cn, rc_tpg, z_tpg)
+    gr_depth = np.maximum(0, (c_fat - 1.2) / 0.22)
+    gr_depth = fun.f_sa(gr_depth, sen.saa['gr_depth'], sa_type=2, value_min=0)
     #todo make the coefficients inputs in Universal (use cn) - See Universal Master 23Nov23
     # gr_depth = np.maximum(0, (condition_score - cn[8, ...]) / cn[9, ...])
     ## REV SA on GR depth if age has been passed to the function
