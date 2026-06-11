@@ -10,6 +10,7 @@ import pandas as pd
 from scipy import stats
 import math
 import time
+import warnings
 
 
 # from dateutil.relativedelta import relativedelta
@@ -1716,6 +1717,8 @@ def f_lwc_cs(cg, rc_start, mei, mem, new, zf1, zf2, kg, kw, rev_trait_value, nec
     mew = new / kw
     ## ME requirement to maintain maternal body energy (maintenance). Surplus is available for maternal body gain
     maintenance = mem + mec * gest_propn + mel * lact_propn + mew
+    if np.any(maintenance < 0):
+        warnings.warn(f"Negative maintenance detected: min={np.nanmin(maintenance):.6g}", RuntimeWarning)
     ##Level of feeding (maint = 0). Note: level is calculated elsewhere (differently) for use in Blaxter & Clapperton equations
     level = (mei / maintenance) - 1
     ##Energy intake that is surplus to maintenance
@@ -1854,6 +1857,8 @@ def f_lwc_mu(cg, ck, rc_start, mei_initial, nem_ee, km, hp_mei, new, kw, zf1, zf
     mew = fun.f_divide(new, kw)
     ##Energy intake that is surplus to maintaining maternal body energy. Surplus is available for maternal body gain
     maintenance  = nem_ee + hp_mei + mec * gest_propn + mel * lact_propn + mew
+    if np.any(maintenance < 0):
+        warnings.warn(f"Negative maintenance detected: min={np.nanmin(maintenance):.6g}", RuntimeWarning)
     surplus_energy_ee = mei_initial - maintenance
     below_maintenance = surplus_energy_ee < 0
     ##Level of feeding relative to level that would maintain maternal body tissue (maint = 0)
@@ -1989,7 +1994,7 @@ def f_lwc_nfs(cg, ck, muscle, viscera, muscle_target, mei_initial, km, md, hp_ma
 
     ##Step 1: Calculate viscera values
     ### Step 1a: calculate dv from alpha_v for day 0
-    alpha_v = np.maximum(0, cg[35, ...] * mei_initial + cg[36, ...] * m**0.41 + cg[37, ...] * md)
+    alpha_v = np.maximum(0, cg[35, ...] * mei_initial + cg[36, ...] * m**0.41 + cg[37, ...] * md) #a warning in this line indicates muscle mass is less than 0 (i.e animal dead, this will need fixing).
     # alpha_v = np.maximum(0, (0.5 - 0.02 * md + 0.014 * mei_initial) * m ** 0.75)   #alternative equation proposed & rejected by Hutton 8May24 6:27am
     dv0 = pv * (alpha_v - v)
     ### Step 1b: estimate average dv across the duration of the step (because approaching an asymptote).
@@ -2106,6 +2111,8 @@ def f_lwc_nfs(cg, ck, muscle, viscera, muscle_target, mei_initial, km, md, hp_ma
                                 , retained_energy[..., na, na] + heat_loss_m0p1), axis = (-1,-2))
     ###mem: maintenance energy requirement including heat associated with feeding (will be greater than CSIRO equiv mem)
     mem = mei - (retained_energy + hp_re)
+    if np.any( mem < 0):
+        warnings.warn(f"Negative maintenance detected: min={np.nanmin(mem):.6g}", RuntimeWarning)
     ### Calculate adjustment to mei to reflect the changes made by the REV or post calc SA
     mei_adjustment = mei - mei_initial
 
