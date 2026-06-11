@@ -2273,10 +2273,10 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     srw_p_pa1e1b1nwzida0e0b0xyg2 = srw_female_p_pa1e1b1nwzida0e0b0xyg2 * cb1_cpyatf[11, ...] * fun.f_slice(cx_cpyatf[11], {x_pos: mask_x}) #all gender slices
     srw_p_pa1e1b1nwzida0e0b0xyg3 = srw_female_p_pa1e1b1nwzida0e0b0xyg3 * cb0_cpoffs[11, ...] * fun.f_slice(cx_cpoffs[11], {x_pos: mask_x}) #all gender slices
     ####create a version with an averaged p axis. Note: in the loop this name is used for the sliced version of srw_p_p
-    srw_pa1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(srw_p_pa1e1b1nwzida0e0b0xyg0, axis=p_pos, weights=age_pa1e1b1nwzida0e0b0xyg0>0) #average p for periods when the animal exists
-    srw_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(srw_p_pa1e1b1nwzida0e0b0xyg1, axis=p_pos, weights=age_pa1e1b1nwzida0e0b0xyg1>0) #average p for periods when the animal exists
-    srw_pa1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(srw_p_pa1e1b1nwzida0e0b0xyg2, axis=p_pos, weights=age_pa1e1b1nwzida0e0b0xyg2>0) #average p for periods when the animal exists
-    srw_pa1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(srw_p_pa1e1b1nwzida0e0b0xyg3, axis=p_pos, weights=age_cut_pa1e1b1nwzida0e0b0xyg3>0) #average p for periods when the animal exists
+    srw_female_pa1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(srw_female_p_pa1e1b1nwzida0e0b0xyg0, axis=p_pos, weights=age_pa1e1b1nwzida0e0b0xyg0>0) #average p for periods when the animal exists
+    srw_female_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(srw_female_p_pa1e1b1nwzida0e0b0xyg1, axis=p_pos, weights=age_pa1e1b1nwzida0e0b0xyg1>0) #average p for periods when the animal exists
+    srw_female_pa1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(srw_female_p_pa1e1b1nwzida0e0b0xyg2, axis=p_pos, weights=age_pa1e1b1nwzida0e0b0xyg2>0) #average p for periods when the animal exists
+    srw_female_pa1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(srw_female_p_pa1e1b1nwzida0e0b0xyg3, axis=p_pos, weights=age_cut_pa1e1b1nwzida0e0b0xyg3>0) #average p for periods when the animal exists
     muscle_target_pa1e1b1nwzida0e0b0xyg0 = (muscle_target_female_yg0 * np.sum(cb0_cpsire[11, ...] * btrt_propn_b0xyg0, axis = b0_pos)
                                                                      * fun.f_slice(cx_cpsire[11], {x_pos: [0,1]}))
     muscle_target_pa1e1b1nwzida0e0b0xyg1 = (muscle_target_female_yg1 * np.sum(cb0_cpdams[11, ...] * btrt_propn_b0xyg1, axis = b0_pos)
@@ -2354,9 +2354,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
     ###Calculate lw_initial from the initial lw input which is a proportion of srw
     ### Uses srw_b0xyg so may cause randomness when using a RR SA (because BTRT alters SRW, changing the starting animal)
-    lw_initial_pa1e1b1nwzida0e0b0xyg0 = (lw_initial_yg0 * (1 + adjp_lw_initial_wzida0e0b0xyg0)) * srw_pa1e1b1nwzida0e0b0xyg0
-    lw_initial_pa1e1b1nwzida0e0b0xyg1 = (lw_initial_yg1 * (1 + adjp_lw_initial_wzida0e0b0xyg1)) * srw_pa1e1b1nwzida0e0b0xyg1
-    lw_initial_pa1e1b1nwzida0e0b0xyg3 = (lw_initial_yg3 * (1 + adjp_lw_initial_wzida0e0b0xyg3)) * srw_pa1e1b1nwzida0e0b0xyg3
+    lw_initial_pa1e1b1nwzida0e0b0xyg0 = (lw_initial_yg0 * (1 + adjp_lw_initial_wzida0e0b0xyg0)) * srw_female_pa1e1b1nwzida0e0b0xyg0
+    lw_initial_pa1e1b1nwzida0e0b0xyg1 = (lw_initial_yg1 * (1 + adjp_lw_initial_wzida0e0b0xyg1)) * srw_female_pa1e1b1nwzida0e0b0xyg1
+    lw_initial_pa1e1b1nwzida0e0b0xyg3 = (lw_initial_yg3 * (1 + adjp_lw_initial_wzida0e0b0xyg3)) * srw_female_pa1e1b1nwzida0e0b0xyg3
     ###the initial cfw input is a proportion of sfw
     cfw_initial_wzida0e0b0xyg0 = (cfw_initial_yg0 * (1 + adjp_cfw_initial_wzida0e0b0xyg0)) * sfw_yg0   #sfw w/o saa_p11
     cfw_initial_wzida0e0b0xyg1 = (cfw_initial_yg1 * (1 + adjp_cfw_initial_wzida0e0b0xyg1)) * sfw_yg1   #sfw w/o saa_p11
@@ -2467,41 +2467,41 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     ffcfw_initial_pa1e1b1nwzida0e0b0xyg3 = lw_initial_pa1e1b1nwzida0e0b0xyg3 - cfw_initial_pa1e1b1nwzida0e0b0xyg3 / cw_cpoffs[3, ...]
 
     ##calc initial ebw
-    ebw_initial_pa1e1b1nwzida0e0b0xyg0 = sfun.f1_ffcfw2ebw(cg_cpsire, cn_cpsire, ffcfw_initial_pa1e1b1nwzida0e0b0xyg0, srw_pa1e1b1nwzida0e0b0xyg0
+    ebw_initial_pa1e1b1nwzida0e0b0xyg0 = sfun.f1_ffcfw2ebw(cg_cpsire, cn_cpsire, ffcfw_initial_pa1e1b1nwzida0e0b0xyg0, srw_female_pa1e1b1nwzida0e0b0xyg0
                                                    , eqn_system = eqn_used_g0_q1p[7,0])
-    ebw_initial_pa1e1b1nwzida0e0b0xyg1 = sfun.f1_ffcfw2ebw(cg_cpdams, cn_cpdams, ffcfw_initial_pa1e1b1nwzida0e0b0xyg1, srw_pa1e1b1nwzida0e0b0xyg1
+    ebw_initial_pa1e1b1nwzida0e0b0xyg1 = sfun.f1_ffcfw2ebw(cg_cpdams, cn_cpdams, ffcfw_initial_pa1e1b1nwzida0e0b0xyg1, srw_female_pa1e1b1nwzida0e0b0xyg1
                                                           , eqn_system = eqn_used_g1_q1p[7,0])
-    ebw_initial_pa1e1b1nwzida0e0b0xyg3 = sfun.f1_ffcfw2ebw(cg_cpoffs, cn_cpoffs, ffcfw_initial_pa1e1b1nwzida0e0b0xyg3, srw_pa1e1b1nwzida0e0b0xyg3
+    ebw_initial_pa1e1b1nwzida0e0b0xyg3 = sfun.f1_ffcfw2ebw(cg_cpoffs, cn_cpoffs, ffcfw_initial_pa1e1b1nwzida0e0b0xyg3, srw_female_pa1e1b1nwzida0e0b0xyg3
                                                    , eqn_system = eqn_used_g3_q1p[7,0])
 
 
     ##calc fat, muscle and viscera weight. No b axis on srw so that initial doesn't have a random effect from RR SA.
     fat_initial_pa1e1b1nwzida0e0b0xyg0, muscle_initial_pa1e1b1nwzida0e0b0xyg0, muscle_initial_pa1e1b1nwzida0e0b0xyg0 \
         = sfun.f1_body_composition(cg_cpsire, cn_cpsire, fun.f_slice(cx_cpsire, {x_pos: [0,1]})
-                                   , ebw_initial_pa1e1b1nwzida0e0b0xyg0, srw_pa1e1b1nwzida0e0b0xyg0
+                                   , ebw_initial_pa1e1b1nwzida0e0b0xyg0, srw_female_pa1e1b1nwzida0e0b0xyg0
                                    , eqn_system = eqn_used_g0_q1p[7,0])
     fat_initial_pa1e1b1nwzida0e0b0xyg1, muscle_initial_pa1e1b1nwzida0e0b0xyg1, muscle_initial_pa1e1b1nwzida0e0b0xyg1 \
         = sfun.f1_body_composition(cg_cpdams, cn_cpdams, fun.f_slice(cx_cpdams, {x_pos: [1,2]})
-                                   , ebw_initial_pa1e1b1nwzida0e0b0xyg1, srw_pa1e1b1nwzida0e0b0xyg1
+                                   , ebw_initial_pa1e1b1nwzida0e0b0xyg1, srw_female_pa1e1b1nwzida0e0b0xyg1
                                    , eqn_system = eqn_used_g1_q1p[7,0])
     fat_initial_pa1e1b1nwzida0e0b0xyg3, muscle_initial_pa1e1b1nwzida0e0b0xyg3, muscle_initial_pa1e1b1nwzida0e0b0xyg3 \
         = sfun.f1_body_composition(cg_cpoffs, cn_cpoffs, fun.f_slice(cx_cpoffs, {x_pos: mask_x})
-                                   , ebw_initial_pa1e1b1nwzida0e0b0xyg3, srw_pa1e1b1nwzida0e0b0xyg3
+                                   , ebw_initial_pa1e1b1nwzida0e0b0xyg3, srw_female_pa1e1b1nwzida0e0b0xyg3
                                    , eqn_system = eqn_used_g3_q1p[7,0])
 
     ##if stubble update fat, muscle and viscera weight   Stubble is using the same functions but with a custom m/d and b axis on srw
     if stubble:
         fat_initial_pa1e1b1nwzida0e0b0xyg0, muscle_initial_pa1e1b1nwzida0e0b0xyg0, muscle_initial_pa1e1b1nwzida0e0b0xyg0 \
             = sfun.f1_body_composition(cg_cpsire, cn_cpsire, fun.f_slice(cx_cpsire, {x_pos: [0,1]})
-                                       , ebw_initial_pa1e1b1nwzida0e0b0xyg0, srw_pa1e1b1nwzida0e0b0xyg0
+                                       , ebw_initial_pa1e1b1nwzida0e0b0xyg0, srw_female_pa1e1b1nwzida0e0b0xyg0
                                        , stubble['i_md'], eqn_system = eqn_used_g0_q1p[7,0])
         fat_initial_pa1e1b1nwzida0e0b0xyg1, muscle_initial_pa1e1b1nwzida0e0b0xyg1, muscle_initial_pa1e1b1nwzida0e0b0xyg1 \
             = sfun.f1_body_composition(cg_cpdams, cn_cpdams, fun.f_slice(cx_cpdams, {x_pos: [1,2]})
-                                       , ebw_initial_pa1e1b1nwzida0e0b0xyg1, srw_pa1e1b1nwzida0e0b0xyg1
+                                       , ebw_initial_pa1e1b1nwzida0e0b0xyg1, srw_female_pa1e1b1nwzida0e0b0xyg1
                                        , stubble['i_md'], eqn_system = eqn_used_g1_q1p[7,0])
         fat_initial_pa1e1b1nwzida0e0b0xyg3, muscle_initial_pa1e1b1nwzida0e0b0xyg3, muscle_initial_pa1e1b1nwzida0e0b0xyg3 \
             = sfun.f1_body_composition(cg_cpoffs, cn_cpoffs, fun.f_slice(cx_cpoffs, {x_pos: mask_x})
-                                       , ebw_initial_pa1e1b1nwzida0e0b0xyg3, srw_pa1e1b1nwzida0e0b0xyg3
+                                       , ebw_initial_pa1e1b1nwzida0e0b0xyg3, srw_female_pa1e1b1nwzida0e0b0xyg3
                                        , stubble['i_md'], eqn_system = eqn_used_g3_q1p[7,0])
 
     ##numbers
@@ -3446,7 +3446,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
         ##yatf
         d_cfw_history_start_p2g2[...] = np.nan
-        nw_start_yatf = 0.1 * srw_pa1e1b1nwzida0e0b0xyg2   #srw_P is averaged across p
+        nw_start_yatf = 0.1 * srw_female_pa1e1b1nwzida0e0b0xyg2   #srw_female because p axis is averaged
         rc_start_yatf = 1.0
         relsize_start_yatf = 0.1   #birth weight is approx 10% of SRW. Requires a value to stop div0 error
         ffcfw_start_yatf = w_b_std_y_p_pa1e1b1nwzida0e0b0xyg1[0].copy() #slice 0 is the same as the first day the animal exists - this is just an estimate, it is updated with the real weight at birth - needed to calc milk production in birth period because milk prod is calculated before yatf weight is updated
@@ -3515,10 +3515,10 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             muscle_start_yatf = ffcfw_start_yatf * stubble['i_muscle_yatf']
             viscera_start_yatf = ffcfw_start_yatf * stubble['i_viscera_yatf']
 
-        ##Calculate the beginning ebw for yatf for either main model or stubble - use p[0] (p axis can be active due to rev)
-        ebw_start_yatf = sfun.f1_ffcfw2ebw(cg_cpyatf, cn_cpyatf, ffcfw_start_yatf, srw_pa1e1b1nwzida0e0b0xyg2, md_solid_yatf
+        ##Calculate the beginning ebw for yatf for either main model or stubble - use srw_female which has averaged p axis.
+        ebw_start_yatf = sfun.f1_ffcfw2ebw(cg_cpyatf, cn_cpyatf, ffcfw_start_yatf, srw_female_pa1e1b1nwzida0e0b0xyg2, md_solid_yatf
                                            , eqn_used_g2_q1p[7,0])
-        ebw_max_start_yatf = sfun.f1_ffcfw2ebw(cg_cpyatf, cn_cpyatf, ffcfw_max_start_yatf, srw_pa1e1b1nwzida0e0b0xyg2, md_solid_yatf
+        ebw_max_start_yatf = sfun.f1_ffcfw2ebw(cg_cpyatf, cn_cpyatf, ffcfw_max_start_yatf, srw_female_pa1e1b1nwzida0e0b0xyg2, md_solid_yatf
                                                , eqn_used_g2_q1p[7,0])
 
 
