@@ -3917,7 +3917,7 @@ def f1_condition_score(cn, rc_tpg, rs_tpg=1):
     return np.maximum(1, cs_tpg) #a minimum value of CS=1 is used to remove errors caused by low CS. A CS below 1 is unlikely because the animal would be dead
 
 
-def f1_cfat_depth(cn, rc_tpg, z_tpg=1, age=0, rev_trait_value=0):
+def f1_cfat_depth(cn, rc_tpg, z_tpg=1):
     ''' Calculate fat depth at the c-site from condition score using relationship from van Burgel et al. 2011.
     Steps 1. calculate CS
           2. estimate depth at the c-site using relationship from van Burgel cFat = 0.295 exp(0.705 CS)
@@ -4955,7 +4955,7 @@ def f1_create_saa_param_p11(b=None, w=None, p=None, y=None, h=None
     if w is None: w = p
     if b is None: b = w
 
-    # Step 3: Build the 12-element list (that includes np.nan). Whole, Adult & the extra slice are not used, so set to default
+    # Step 3: Build the 13-element list (that includes np.nan). Whole, Adult & the extra slice are not used, so set to default
     values = [default, b, w, p, y, h, a2, a3, a4, a5, a6, default, default]
 
     # Step 4: Replace np.nan with default value.
