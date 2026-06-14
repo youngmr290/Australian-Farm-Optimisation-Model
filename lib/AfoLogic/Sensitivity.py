@@ -549,16 +549,22 @@ def create_sa():
     sam['muscle_target_c2'] = np.ones(uinp.parameters['i_muscle_target_c2'].shape, dtype='float64')   #std muscle mass target genotype params
     ##SAP
     ##SAA
-    saa['sfd_c2'] = 0.0                     #std fibre diameter genotype params
-    saa['srw_c2'] = 0.0                     #std reference weight genotype params
+    saa['sfd_c2'] = 0.0              #std fibre diameter genotype params
+    saa['srw_c2'] = 0.0              #std reference weight genotype params
     saa['cg_c1c2'] = np.zeros(uinp.parameters['i_cg_c2'].shape, dtype='float64')  #SA value for weight gain params.
     saa['ck_c1c2'] = np.zeros(uinp.parameters['i_ck_c2'].shape, dtype='float64')  #SA value for energy efficiency params.
     saa['cl0_c1c2'] = np.zeros(uinp.parameters['i_cl0_c2'].shape, dtype='float64')  #SA value for litter size genotype params.
-    saa['scan_std_c2'] = 0.0                #std scanning percentage of a genotype. Controls the MU repro, initial propn of sing/twin/trip prog required to replace the dams, the lifetime productivity of the dams as affected by their BTRT.
-    saa['nlb_c2'] = 0.0                #std scanning percentage of a genotype. Controls the MU repro, initial propn of sing/twin/trip prog required to replace the dams, the lifetime productivity of the dams as affected by their BTRT.
-    saa['lss'] = 0.0                    #lamb survival of singles. This SA alters the BTRT of the initial animals, it does not alter the calculation of lamb mortality. Therefore, both need to be used.
-    saa['lstw'] = 0.0                    #lamb survival of twins. This SA alters the BTRT of the initial animals, it does not alter the calculation of lamb mortality. Therefore, both need to be used.
-    saa['lstr'] = 0.0                    #lamb survival of triplets. This SA alters the BTRT of the initial animals, it does not alter the calculation of lamb mortality. Therefore, both need to be used.
+    saa['scan_std_c2'] = 0.0         #std scanning percentage of a genotype. Controls the MU repro, initial propn of sing/twin/trip prog required to replace the dams, the lifetime productivity of the dams as affected by their BTRT.
+    saa['nlb_c2'] = 0.0              #std scanning percentage of a genotype. Controls the MU repro, initial propn of sing/twin/trip prog required to replace the dams, the lifetime productivity of the dams as affected by their BTRT.
+    saa['lss'] = 0.0                 #lamb survival of singles. This SA alters the BTRT of the initial animals, it does not alter the calculation of lamb mortality. Therefore, both need to be used.
+    saa['lstw'] = 0.0                #lamb survival of twins. This SA alters the BTRT of the initial animals, it does not alter the calculation of lamb mortality. Therefore, both need to be used.
+    saa['lstr'] = 0.0                #lamb survival of triplets. This SA alters the BTRT of the initial animals, it does not alter the calculation of lamb mortality. Therefore, both need to be used.
+    saa['ycfw_scalar'] = 0.0         #Genotype calibration: Adjust scalar for ycfw genotype params
+    saa['yfd_scalar'] = 0.0          #Genotype calibration: Adjust scalar for yfd genotype params
+    saa['milk_yield'] = 0.0          #Genotype calibration: Adjust cl_yatf[0] parameter which alters milk production, lamb milk intake and ewe PI during lactation
+    saa['growth_constant'] = 0.0     #Genotype calibration: Adjust growth constant (k) param
+    saa['srw'] = 0.0                 #Genotype calibration: Adjust SRW
+
     ##SAA on slices of the livestock parameters using the age stage axis
     saa['sfw_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')  #SA value with age stages for clean fleece weight (sfw)
     saa['sfd_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')  #SA value with age stages for fibre diameter (sfd)
