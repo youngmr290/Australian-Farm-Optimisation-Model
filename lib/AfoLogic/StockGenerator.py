@@ -582,6 +582,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     o_fd_min_tpsire = np.zeros(tpg0, dtype =dtype)
     o_rc_start_tpsire = np.ones(tpg0, dtype =dtype)
     o_relsize_start_tpsire = np.ones(tpg0, dtype =dtype)
+    o_cs_start_tpsire = np.ones(tpg0, dtype =dtype) * 3
     o_cfat_start_tpsire = np.zeros(tpg0, dtype =dtype)
     o_ebg_tpsire = np.zeros(tpg0, dtype =dtype)
     ###arrays for report variables
@@ -619,6 +620,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     o_fd_min_tpdams = np.zeros(tpg1, dtype =dtype)
     o_rc_start_tpdams = np.ones(tpg1, dtype =dtype)
     o_relsize_start_tpdams = np.ones(tpg1, dtype =dtype)
+    o_cs_start_tpdams = np.ones(tpg1, dtype =dtype) * 3
     o_cfat_start_tpdams = np.zeros(tpg1, dtype =dtype)
     o_ebg_tpdams = np.zeros(tpg1, dtype =dtype)
     o_cfw_ltwadj_tpdams = np.zeros(tpg1, dtype =dtype)
@@ -665,6 +667,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     # o_fd_min_tpyatf = np.zeros(tpg2, dtype =dtype)
     o_rc_start_tpyatf = np.ones(tpg2, dtype =dtype)
     o_relsize_start_tpyatf = np.ones(tpg2, dtype =dtype)
+    o_cs_start_tpyatf = np.ones(tpg2, dtype =dtype) * 3
     o_cfat_start_tpyatf = np.zeros(tpg2, dtype =dtype)
     ###arrays for report variables
     r_ebw_start_tpyatf = np.zeros(tpg2, dtype =dtype)   # requires a variable separate from o_ffcfw_start_tpyatf so that it is only stored when days_period > 0
@@ -714,6 +717,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     o_fd_min_tpoffs = np.zeros(tpg3, dtype =dtype)
     o_rc_start_tpoffs = np.ones(tpg3, dtype =dtype)
     o_relsize_start_tpoffs = np.ones(tpg3, dtype =dtype)
+    o_cs_start_tpoffs = np.ones(tpg3, dtype =dtype) * 3
     o_cfat_start_tpoffs = np.zeros(tpg3, dtype =dtype)
     o_ebg_tpoffs = np.zeros(tpg3, dtype =dtype)
     ###arrays for report variables
@@ -6628,6 +6632,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 o_ss_tpsire[:, p:p+1] = ss_sire
                 o_rc_start_tpsire[:, p:p+1] = rc_start_sire
                 o_relsize_start_tpsire[:, p:p+1] = relsize_start_sire
+                o_cs_start_tpsire[:, p:p+1] = cs_start_sire
                 o_cfat_start_tpsire[:, p:p+1] = cfat_start_sire
                 o_ebg_tpsire[:, p:p+1] = ebg_sire
 
@@ -6701,6 +6706,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 o_n_sire_tpa1e1b1nwzida0e0b0xyg1g0p8[:, p:p+1] = n_sire_a1e1b1nwzida0e0b0xyg1g0p8
                 o_rc_start_tpdams[:, p:p+1] = rc_start_dams
                 o_relsize_start_tpdams[:, p:p+1] = relsize_start_dams
+                o_cs_start_tpdams[:, p:p+1] = cs_start_dams
                 o_cfat_start_tpdams[:, p:p+1] = cfat_start_dams
                 o_ebg_tpdams[:, p:p+1] = ebg_dams
                 o_cfw_ltwadj_tpdams[:, p:p+1] = cfw_ltwadj_dams
@@ -6773,6 +6779,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 # o_fd_tpyatf[:, p:p+1] = fd_yatf
                 # o_fd_min_tpyatf[:, p:p+1] = fd_min_yatf
                 # o_ss_tpyatf[:, p:p+1] = ss_yatf
+                o_cs_start_tpyatf[:, p:p + 1] = cs_start_yatf
                 o_cfat_start_tpyatf[:, p:p + 1] = cfat_start_yatf  #used for calibrating fat depth
 
                 ###store report variables - individual variables can be deleted if not needed - store in report dictionary in the report section at end of this module
@@ -6849,6 +6856,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 o_ss_tpoffs[:, p:p+1] = ss_offs
                 o_rc_start_tpoffs[:, p:p+1] = rc_start_offs
                 o_relsize_start_tpoffs[:, p:p+1] = relsize_start_offs
+                o_cs_start_tpoffs[:, p:p+1] = cs_start_offs
                 o_cfat_start_tpoffs[:, p:p+1] = cfat_start_offs
                 o_ebg_tpoffs[:, p:p+1] = ebg_offs
 
@@ -10539,13 +10547,13 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
     ##cs - need to add v and k2 axis but still keep p, e and b so that we can graph the desired patterns. This is a big array so only stored if user wants. t is not required because it doesn't affect NV
     if sinp.rep['i_store_cs_rep']:
-        cs_tpg0 = sfun.f1_condition_score(cn_cpsire.astype(dtype), o_rc_start_tpsire, o_relsize_start_tpsire)
-        cs_tpg1 = sfun.f1_condition_score(cn_cpdams.astype(dtype), o_rc_start_tpdams, o_relsize_start_tpdams)
-        cs_tpg3 = sfun.f1_condition_score(cn_cpoffs.astype(dtype), o_rc_start_tpoffs, o_relsize_start_tpoffs)
-        r_cs_psire = cs_tpg0
-        r_cs_k2Tvpdams = (cs_tpg1[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
+        # cs_tpg0 = sfun.f1_condition_score(cn_cpsire.astype(dtype), o_rc_start_tpsire, o_relsize_start_tpsire)
+        # cs_tpg1 = sfun.f1_condition_score(cn_cpdams.astype(dtype), o_rc_start_tpdams, o_relsize_start_tpdams)
+        # cs_tpg3 = sfun.f1_condition_score(cn_cpoffs.astype(dtype), o_rc_start_tpoffs, o_relsize_start_tpoffs)
+        r_cs_psire = o_cs_start_tpsire
+        r_cs_k2Tvpdams = (o_cs_start_tpdams[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
                           * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
-        r_cs_k3k5Tvpoffs = (cs_tpg3[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg3 == index_vpa1e1b1nwzida0e0b0xyg3)
+        r_cs_k3k5Tvpoffs = (o_cs_start_tpoffs[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg3 == index_vpa1e1b1nwzida0e0b0xyg3)
                             * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...])
                             * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,na,...]))
 
