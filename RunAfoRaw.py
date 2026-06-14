@@ -1,4 +1,5 @@
 import time
+import pandas as pd
 
 #report the clock time that the experiment was started
 print(f'Experiment commenced at: {time.ctime()}')
@@ -14,7 +15,7 @@ from lib.RawVersion import SaveOutputs as out
 ##controls #
 ############
 force_run = True #set to True if you want to force all trials to run even if they are up to date.
-solver_method = 'CPLEX'     #options CPLEX, glpk, cbc, ipopt, HiGHS (default)
+solver_method = 'HiGHS'     #options CPLEX, glpk, cbc, ipopt, HiGHS (default)
 print_debug_output = False
 
 ########################################

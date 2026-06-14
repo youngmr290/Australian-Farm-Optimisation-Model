@@ -93,22 +93,30 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         ##Comment any coefficients that aren't being calibrated
         j = 0
         #Standard fleece weight, SFW parameter
+        ##LiveEx: CFW is calibrated for A for whole of life. Y is by the scalar
+        w = p = y = h = a = None
         w = np.nan  #fleece growth prior to weaning is not carried forward to shearing
-        p = coefficients_c[j]; j += 1
-        y = coefficients_c[j]; j += 1
-        h = coefficients_c[j]; j += 1
+        # p = coefficients_c[j]; j += 1
+        # y = coefficients_c[j]; j += 1
+        sen.saa['ycfw_scalar'] = coefficients_c[j]; j += 1    #YCFW scalar, cw_dams[25] parameter which scales SFW
+        # h = coefficients_c[j]; j += 1
         a = coefficients_c[j]; j += 1
         sen.saa['sfw_p11'] = sfun.f1_create_saa_param_p11(w, p, y, h, a)
 
         #Standard fibre diameter, SFD parameter
+        ##LiveEx: CFW is calibrated for A for whole of life. Y is by the scalar
+        w = p = y = h = a = None
         w = np.nan  #fleece growth prior to weaning is not carried forward to shearing
-        p = coefficients_c[j]; j += 1
-        y = coefficients_c[j]; j += 1
-        h = coefficients_c[j]; j += 1
+        # p = coefficients_c[j]; j += 1
+        # y = coefficients_c[j]; j += 1
+        sen.saa['yfd_scalar'] = coefficients_c[j]; j += 1    #YFD scalar, cw_dams[26] parameter which scales SFD
+        # h = coefficients_c[j]; j += 1
         a = coefficients_c[j]; j += 1
         sen.saa['sfd_p11'] = sfun.f1_create_saa_param_p11(w, p, y, h, a)
 
         # #Intrinsic staple strength, cw[16] parameter
+        # ##SS is calibrated manually to reduce the number of coefficients in the DE. It does not interact with other traits.
+        w = p = y = h = a = None
         # w = np.nan  #fleece growth prior to weaning is not carried forward to shearing
         # p = coefficients_c[j]; j += 1
         # y = coefficients_c[j]; j += 1
@@ -116,85 +124,101 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         # a = coefficients_c[j]; j += 1
         # sen.saa['iss_p11'] = sfun.f1_create_param_p11(w, p, y, h, a)
 
-        # #Follicle number, cw[11] parameter
-        # w = np.nan  #fleece growth prior to weaning is not carried forward to shearing
+        #Follicle number to calibrate staple length
+        # , cw[11] parameter
+        ##LiveEx: SL is calibrated for A and carried back.
+        w = p = y = h = a = None
+        w = np.nan  #fleece growth prior to weaning is not carried forward to shearing
         # p = coefficients_c[j]; j += 1
         # y = coefficients_c[j]; j += 1
         # h = coefficients_c[j]; j += 1
-        # a = coefficients_c[j]; j += 1
-        # sen.saa['follicles_p11'] = sfun.f1_create_param_p11(w, p, y, h, a)
+        a = coefficients_c[j]; j += 1
+        sen.saa['follicles_p11'] = sfun.f1_create_param_p11(w, p, y, h, a)
 
         #Conception, cb1[24,25&26, 1] parameter
+        ##LiveEx: Conception only for adult stage
+        w = p = y = h = a = None
         # w =
-        # p = np.nan
+        # p = np.nan  #post-wean is not a reproducing age group
         # y = coefficients_c[j]; j += 1
         h = np.nan  #hogget is not a reproducing age group
         a = coefficients_c[j]; j += 1
-        sen.saa['con_p11'] = sfun.f1_create_saa_param_p11(h, a)
+        sen.saa['con_p11'] = sfun.f1_create_saa_param_p11(w, p, y, h, a)
 
         #Litter size, cb1[24,25&26, 2&3] parameter
+        ##LiveEx: Litter size only for adult stage
+        w = p = y = h = a = None
         # w =
-        # p = np.nan
+        # p = np.nan  #post-wean is not a reproducing age group
         # y = coefficients_c[j]; j += 1
         h = np.nan  #hogget is not a reproducing age group
         a = coefficients_c[j]; j += 1
-        sen.saa['ls_p11'] = sfun.f1_create_saa_param_p11(h, a)
+        sen.saa['ls_p11'] = sfun.f1_create_saa_param_p11(w, p, y, h, a)
 
         #Ewe rearing ability/lamb survival, cu6[8, -1] & cu2[8, -1] parameters
+        ##LiveEx: Ewe rearing ability only for adult stage
+        w = p = y = h = a = None
         # w =
-        # p = np.nan
+        # p = np.nan  #post-wean is not a reproducing age group
         # y = coefficients_c[j]; j += 1
         h = np.nan  #hogget is not a reproducing age group
         a = coefficients_c[j]; j += 1
-        sen.saa['era_p11'] = sfun.f1_create_saa_param_p11(h, a)
+        sen.saa['era_p11'] = sfun.f1_create_saa_param_p11(w, p, y, h, a)
 
-        #Standard reference weight, SRW parameter
+        #Standard reference weight to calibrate LW. Can also be used to match SRW calculated from ALW & Fat %
+        ##LiveEx: SRW being altered for all age groups with a fixed growth constant and YWT is being calibrated using PI
+        w = p = y = h = a = None
+        saa_srw = 0   # stored for reporting of the genotype later.
+        # sen.saa['birth_weight'] = coefficients_c[j]; j += 1    #Birth weight, #todo still to decide how to control BWT
         w = np.nan  #wwt is changed with a separate coefficient
-        p = coefficients_c[j]; j += 1
-        y = coefficients_c[j]; j += 1
-        h = coefficients_c[j]; j += 1
-        a = coefficients_c[j]; j += 1
+        # sen.saa['milk_yield'] = coefficients_c[j]; j += 1    #Weaning weight, cl_yatf[0] parameter which alters milk production, lamb milk intake and ewe PI during lactation
+        # p = coefficients_c[j]; j += 1
+        # y = coefficients_c[j]; j += 1   #ywt can be changed using the growth constant
+        sen.saa['growth_constant'] = coefficients_c[j]; j += 1    #Yearling weight, cn_dams[1] parameter which alters the growth path
+        # h = np.nan
+        # a = saa_srw = coefficients_c[j]; j += 1
         sen.saa['srw_p11'] = sfun.f1_create_saa_param_p11(w, p, y, h, a)
+        sen.saa['srw'] = saa_srw = coefficients_c[j]; j += 1  #included when WBE is included
 
-        #Weaning weight, cl_yatf[0] parameter
-        w = coefficients_c[j]; j += 1
-        # p =
-        # y =
-        # h =
-        a = np.nan  #wwt is a trait of the young at foot
-        sen.saa['wwt_p11'] = sfun.f1_create_saa_param_p11(w, a)
-
-        #Carcase fatness & WBE from intake, ci[1] parameter
+        #Potential intake to calibrate Carcase fatness & WBE, ci[1] parameter
+        ##LiveEx: Fit YWT and YFAT volunteers
+        w = p = y = h = a = None
         w = np.nan  #intake pre-weaning is handled with the cl[0] parameter, which is intake of milk
-        p = coefficients_c[j]; j += 1
+        # p = coefficients_c[j]; j += 1
         y = coefficients_c[j]; j += 1
         # h = np.nan  #no hfat
-        a = np.nan  # coefficients_c[j]; j += 1  #included when WBE is included
-        sen.saa['pi_p11'] = sfun.f1_create_saa_param_p11(w, p, y, a)
+        a = coefficients_c[j]; j += 1  #np.nan when SRW is included
+        sen.saa['pi_p11'] = sfun.f1_create_saa_param_p11(w, p, y, h, a)
 
-        #Whole body energy, cg[8&9] parameters
+        #EVG to calibrate Whole body energy, cg[8&9] parameters
+        ##LiveEx: Only using the calibrated coefficients for H & A because it is an adult trait.
+        w = p = y = h = a = None
         # w =
         # p =
-        # y =
-        h = np.nan  #WBE is currently only an adult trait. Note: hogget could be changed by the same
+        y = np.nan  #WBE is currently only an adult trait, but hogget is also changed.
+        # h =
         a = coefficients_c[j]; j += 1
-        sen.saa['evg_p11'] = sfun.f1_create_saa_param_p11(h, a)
+        sen.saa['evg_p11'] = sfun.f1_create_saa_param_p11(w, p, y, h, a)
 
         #Basal survival, cd[1] parameter
-        # w = np.nan  #survival of yatf is represented through ewe rearing ability (era)
+        ##LiveEx: Not altering basal survival coefficient.
+        w = p = y = h = a = None
+        w = np.nan  #survival of yatf is represented through ewe rearing ability (era)
         # p = coefficients_c[j]; j += 1
         # y = coefficients_c[j]; j += 1
         # h = coefficients_c[j]; j += 1
-        # a = np.nan # coefficients_c[j]; j += 1  #adult survival is represented in peri-natal survival
-        # sen.saa['bsurv_p11'] = sfun.f1_create_saa_param_p11(w, p, y, h, a)
+        a = coefficients_c[j]; j += 1  #adult survival can also be represented in peri-natal survival
+        sen.saa['bsurv_p11'] = sfun.f1_create_saa_param_p11(w, p, y, h, a)
 
-        #Perin-natal survival, cu2[23, -1] parameter
+        #Peri-natal survival, cu2[23, -1] parameter
+        ##LiveEx: Only doing Adult age stage
+        # w = p = y = h = a = None
         # w =
         # p =
-        # y =
-        h = np.nan  #WBE is currently only an adult trait. Note: hogget could be changed by the same
-        a = coefficients_c[j]; j += 1
-        sen.saa['pnsurv_p11'] = sfun.f1_create_saa_param_p11(h, a)
+        # y = coefficients_c[j]; j += 1
+        # h = np.nan  #ERA is a Y & A trait
+        # a = coefficients_c[j]; j += 1
+        # sen.saa['pnsurv_p11'] = sfun.f1_create_saa_param_p11(w, p, y, h, a)
 
         # ##Build and apply sar variable based on the next 44 coefficients
         # indicelist = [(slice(3, 4, None), slice(None, None, None), slice(40, 57, None))    #00   Ewes
@@ -247,13 +271,13 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         # pinp.feedsupply['i_feedsupply_options_r1j2p'] = fun.f_sa(pinp.feedsupply['i_feedsupply_options_r1j2p']
         #                                             , sen.sar['feedsupply_r1jp'], 4, value_min=0.0, target=13.0)
 
-    # else:   #not model_inversion, assign the parameter values to the coefficients (for printing later).
-    #     ##set the genotype to report. This is the genotype of the c2 axis in Universal.xlsx
-    #     genotype = pinp.sheep['a_c2_c0'][0]    #2 is CFS for MLP & GEPEP traditional, 3 is GFS for GEPEP
-    #     p_srw0 = True
-    #     n_coeff = 15
-    #     n_traits = 14
-    #     coefficients_c = np.zeros(n_coeff)
+    else:   #not model_inversion, assign the zero values to the saa coefficients (for printing later).
+        # ##set the genotype to report. This is the genotype of the c2 axis in Universal.xlsx
+        # genotype = pinp.sheep['a_c2_c0'][0]    #2 is CFS for MLP & GEPEP traditional, 3 is GFS for GEPEP
+        n_coeff = 14
+        n_traits = 11
+        coefficients_c = np.zeros(n_coeff)
+        calibration_targets_p = np.zeros (n_traits)
     #     j = 0
     #     coefficients_c[j] = uinp.parameters['i_sfw_c2'][genotype]           #cfw
     #     j += 1
@@ -3453,7 +3477,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
         ##yatf
         d_cfw_history_start_p2g2[...] = np.nan
-        nw_start_yatf = 0.1 * srw_pa1e1b1nwzida0e0b0xyg2   #srw_P is averaged across p
+        nw_start_yatf = 0.1 * srw_pa1e1b1nwzida0e0b0xyg2   #srw_p is averaged across p
         rc_start_yatf = 1.0
         relsize_start_yatf = 0.1   #birth weight is approx 10% of SRW. Requires a value to stop div0 error
         ffcfw_start_yatf = w_b_std_y_p_pa1e1b1nwzida0e0b0xyg1[0].copy() #slice 0 is the same as the first day the animal exists - this is just an estimate, it is updated with the real weight at birth - needed to calc milk production in birth period because milk prod is calculated before yatf weight is updated
@@ -7608,24 +7632,28 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     if stubble:
         return r_intake_f_tpdams, r_intake_f_tpoffs, o_ebg_tpdams, o_ebg_tpoffs
 
-    if model_inversion or calibration is not None:
-        ##store the calibration variables for each production trait (p)
-        ##Comment any traits that don't have target values
-        calibration_values_p = np.zeros_like(calibration_targets_p)
-        i = 0
-        calibration_values_p[i] = o_cfw_tpdams[0,210,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #ACFW of single ewes at 3.5yo
-        i += 1
-        calibration_values_p[i] = o_cfw_tpdams[0,106,0,0,0,0,0,0,0,0,0,0,0,0,0,0]   #YCFW of NM ewes at 1.5yo
-        i += 1
-        calibration_values_p[i] = o_fd_tpdams[0,210,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #AFD of single ewes at 3.5yo
-        i += 1
-        calibration_values_p[i] = o_fd_tpdams[0,106,0,0,0,0,0,0,0,0,0,0,0,0,0,0]    #YFD of NM ewes at 1.5yo
-        i += 1
-        # calibration_values_p[i] = o_ss_tpdams[0,210,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #ASS of single ewes at 3.5yo
-        # i += 1
-        calibration_values_p[i] = o_sl_tpdams[0,210,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #ASL of single ewes at 3.5yo
-        i += 1
+    #to report the calibration output for the standard genotype define calibration = {} in RunAfoRaw.py
+    if calibration is not None:
+        ##calculate the calibration variables for each production trait (p)
+        pcfw = o_cfw_tpdams[0,54,0,0,0,0,0,0,0,0,0,0,0,0,0,0]    #PCFW of NM ewes at 0.5yo
+        ycfw = o_cfw_tpdams[0,106,0,0,0,0,0,0,0,0,0,0,0,0,0,0]   #YCFW of NM ewes at 1.5yo
+        hcfw = o_cfw_tpdams[0,158,0,0,0,0,0,0,0,0,0,0,0,0,0,0]   #HCFW of NM ewes at 1.5yo
+        acfw = o_cfw_tpdams[0,210,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #ACFW of single ewes at 3.5yo
+        pfd = o_fd_tpdams[0,54,0,0,0,0,0,0,0,0,0,0,0,0,0,0]     #PFD of NM ewes at 0.5yo
+        yfd = o_fd_tpdams[0,106,0,0,0,0,0,0,0,0,0,0,0,0,0,0]    #YFD of NM ewes at 1.5yo
+        hfd = o_fd_tpdams[0,158,0,0,0,0,0,0,0,0,0,0,0,0,0,0]    #HFD of NM ewes at 0.5yo
+        afd = o_fd_tpdams[0,210,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #AFD of single ewes at 3.5yo
+        pss = o_ss_tpdams[0,54,0,0,0,0,0,0,0,0,0,0,0,0,0,0]    #PSS of NM ewes at 3.5yo
+        yss = o_ss_tpdams[0,106,0,0,0,0,0,0,0,0,0,0,0,0,0,0]   #YSS of NM ewes at 3.5yo
+        hss = o_ss_tpdams[0,158,0,0,0,0,0,0,0,0,0,0,0,0,0,0]   #HSS of NM ewes at 3.5yo
+        ass = o_ss_tpdams[0,210,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #ASS of single ewes at 3.5yo
+        psl = o_sl_tpdams[0,54,0,0,0,0,0,0,0,0,0,0,0,0,0,0]     #PSL of NM ewes at 3.5yo
+        ysl = o_sl_tpdams[0,106,0,0,0,0,0,0,0,0,0,0,0,0,0,0]    #YSL of NM ewes at 3.5yo
+        hsl = o_sl_tpdams[0,158,0,0,0,0,0,0,0,0,0,0,0,0,0,0]    #HSL of NM ewes at 3.5yo
+        asl = o_sl_tpdams[0,210,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #ASL of single ewes at 3.5yo
         ##proportion of preg is 1 - (number of dry (b[1]) divided by the number dry and pregnant (b[1:5]))
+        ycon = 1 - fun.f_divide(o_numbers_start_tpdams[0,59,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
+                             np.sum(o_numbers_start_tpdams[0,59,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0]))
         preg_2yo = 1 - fun.f_divide(o_numbers_start_tpdams[0,111,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
                              np.sum(o_numbers_start_tpdams[0,111,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0]))
         preg_3yo = 1 - fun.f_divide(o_numbers_start_tpdams[0,163,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
@@ -7634,10 +7662,10 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                              np.sum(o_numbers_start_tpdams[0,215,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0]))
         preg_5yo = 1 - fun.f_divide(o_numbers_start_tpdams[0,267,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
                              np.sum(o_numbers_start_tpdams[0,267,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0]))
-        propn_preg = (preg_2yo + preg_3yo + preg_4yo + preg_5yo) / 4
-        calibration_values_p[i] = propn_preg     #% preg of adult ewes average across 2, 3, 4 & 5yo at joining 1st cycle
-        i += 1
+        acon = (preg_2yo + preg_3yo + preg_4yo + preg_5yo) / 4
         ##Litter size is sum of the ewes weighted by # foetuses (np.dot with arange(4)) divided by pregnant ewes
+        yls = fun.f_divide(np.dot(o_numbers_start_tpdams[0,59,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0], np.arange(4))
+                            , np.sum(o_numbers_start_tpdams[0,59,0,0,2:5,0,0,0,0,0,0,0,0,0,0,0]))
         ls_2yo = fun.f_divide(np.dot(o_numbers_start_tpdams[0,111,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0], np.arange(4))
                             , np.sum(o_numbers_start_tpdams[0,111,0,0,2:5,0,0,0,0,0,0,0,0,0,0,0]))
         ls_3yo = fun.f_divide(np.dot(o_numbers_start_tpdams[0,163,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0], np.arange(4))
@@ -7646,11 +7674,11 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             , np.sum(o_numbers_start_tpdams[0,215,0,0,2:5,0,0,0,0,0,0,0,0,0,0,0]))
         ls_5yo = fun.f_divide(np.dot(o_numbers_start_tpdams[0,267,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0], np.arange(4))
                             , np.sum(o_numbers_start_tpdams[0,267,0,0,2:5,0,0,0,0,0,0,0,0,0,0,0]))
-        litter_size = (ls_2yo + ls_3yo + ls_4yo + ls_5yo) / 4
-        calibration_values_p[i] = litter_size     #% litter size of adult ewes average across 2, 3, 4 & 5yo at joining 1st cycle
-        i += 1
+        als = (ls_2yo + ls_3yo + ls_4yo + ls_5yo) / 4
         ##twin survival is square root of the number of ewe with twins (BT22) after lambing / number before lambing
         ##Square root is simpler to calculate than summing BTRT 22 * 2 & 21 * 1, but this will need to change if the assumption on survival of twins being independent is relaxed
+        yera = fun.f_divide(o_numbers_start_tpdams[0,84,0,0,3,0,0,0,0,0,0,0,0,0,0,0]
+                                   , o_numbers_start_tpdams[0,80,0,0,3,0,0,0,0,0,0,0,0,0,0,0])**0.5
         twin_surv_2yo = fun.f_divide(o_numbers_start_tpdams[0,136,0,0,3,0,0,0,0,0,0,0,0,0,0,0]
                                    , o_numbers_start_tpdams[0,132,0,0,3,0,0,0,0,0,0,0,0,0,0,0])**0.5
         twin_surv_3yo = fun.f_divide(o_numbers_start_tpdams[0,188,0,0,3,0,0,0,0,0,0,0,0,0,0,0]
@@ -7659,147 +7687,312 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                    , o_numbers_start_tpdams[0,236,0,0,3,0,0,0,0,0,0,0,0,0,0,0])**0.5
         twin_surv_5yo = fun.f_divide(o_numbers_start_tpdams[0,292,0,0,3,0,0,0,0,0,0,0,0,0,0,0]
                                    , o_numbers_start_tpdams[0,288,0,0,3,0,0,0,0,0,0,0,0,0,0,0])**0.5
-        twin_surv = (twin_surv_2yo + twin_surv_3yo + twin_surv_4yo + twin_surv_5yo) / 4
-        calibration_values_p[i] = twin_surv     #twin lamb survival of adult ewes average across 2, 3, 4 & 5yo 1st cycle
-        i += 1
-        calibration_values_p[i] = o_ffcfw_tpdams[0,215,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #Adult weight of ewes at 3.5yo prior to prejoining BTRT 11 in previous year
-        i += 1
-        # calibration_values_p[i] = fun.f_divide(r_fat_tpdams[0,215,0,0,2,0,0,0,0,0,0,0,0,0,0,0]
-        #                                      , r_ebw_tpdams[0,215,0,0,2,0,0,0,0,0,0,0,0,0,0,0])  #% of fat for the dams at 3yo joining
-        # i += 1
-        calibration_values_p[i] = fun.f_divide(np.sum(o_numbers_start_tpdams[0,312,0,:,:,0,0,0,0,0,0,0,0,0,0,0])           #Cumulative mortality of ewes from yearling shearing to 5.5yo BTRT 11
-                                             , np.sum(o_numbers_start_tpdams[0,104,0,:,:,0,0,0,0,0,0,0,0,0,0,0]))
-        i += 1
-        # calibration_values_p[i] = o_wean_w_tpyatf[0,199,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #Weaning weight of 1st cycle single born ewes
-        # i += 1
-        # calibration_values_p[i] = o_ffcfw_tpdams[0,85,0,0,0,0,0,0,0,0,0,0,0,0,0]    #Yearling weight of ewes at 1.5yo prior to prejoining, NM in previous year
-        # i += 1
-        # calibration_values_p[i] = o_ffcfw_tpdams[0, 57, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]  #Ewe LW targets
-        # i += 1
-        # calibration_values_p[i] = o_ffcfw_tpdams[0, 64, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        # i += 1
-        # calibration_values_p[i] = o_ffcfw_tpdams[0, 71, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        # i += 1
-        # calibration_values_p[i] = o_ffcfw_tpdams[0, 91, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        # i += 1
-        # calibration_values_p[i] = o_ffcfw_tpdams[0, 100, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        # i += 1
-        # calibration_values_p[i] = o_ffcfw_tpdams[0, 116, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        # i += 1
-        # calibration_values_p[i] = o_ffcfw_tpdams[0, 124, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        # i += 1
-        # calibration_values_p[i] = o_ffcfw_tpdams[0, 139, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        # i += 1
-        # calibration_values_p[i] = o_ffcfw_tpdams[0, 154, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        # i += 1
-        # calibration_values_p[i] = o_ffcfw_tpdams[0, 161, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        # i += 1
-        # calibration_values_p[i] = o_ffcfw_tpdams[0, 173, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        # i += 1
-        # calibration_values_p[i] = o_ffcfw_tpdams[0, 181, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        # i += 1
-        # calibration_values_p[i] = o_ffcfw_tpdams[0, 196, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        # i += 1
-        # calibration_values_p[i] = o_ffcfw_tpdams[0, 213, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        # i += 1
-        # calibration_values_p[i] = o_ffcfw_tpdams[0, 226, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        # i += 1
-        # calibration_values_p[i] = o_ffcfw_tpdams[0, 233, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        # i += 1
-        # calibration_values_p[i] = o_ffcfw_tpdams[0, 248, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        # i += 1
-        # calibration_values_p[i] = o_ffcfw_tpdams[0, 259, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        # i += 1
-        # calibration_values_p[i] = o_ffcfw_tpdams[0, 265, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        # i += 1
-        # calibration_values_p[i] = o_ffcfw_tpdams[0, 278, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        # i += 1
-        # calibration_values_p[i] = o_ffcfw_tpdams[0, 299, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        # i += 1
-        # calibration_values_p[i] = o_ffcfw_tpdams[0, 311, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        # i += 1
-        # calibration_values_p[i] = o_ffcfw_tpdams[0, 326, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        # i += 1
-        # calibration_values_p[i] = o_ffcfw_tpdams[0, 329, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        # i += 1
-        # calibration_values_p[i] = o_ffcfw_tpdams[0, 334, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        # i += 1
-        # calibration_values_p[i] = o_ffcfw_tpdams[0, 338, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        # i += 1
-        # calibration_values_p[i] = o_ffcfw_tpdams[0, 352, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        # i += 1
-        # calibration_values_p[i] = o_ffcfw_tpdams[0, 363, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        # i += 1
-        # calibration_values_p[i] = o_ffcfw_tpoffs[0, 56, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0]  #Wether LW targets
-        # i += 1
-        # calibration_values_p[i] = o_ffcfw_tpoffs[0, 60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0]
-        # i += 1
-        # calibration_values_p[i] = o_ffcfw_tpoffs[0, 64, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0]
-        # i += 1
-        # calibration_values_p[i] = o_ffcfw_tpoffs[0, 69, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0]
-        # i += 1
-        # calibration_values_p[i] = o_ffcfw_tpoffs[0, 77, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0]
-        # i += 1
-        # calibration_values_p[i] = o_ffcfw_tpoffs[0, 81, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0]
-        # i += 1
-        # calibration_values_p[i] = o_ffcfw_tpoffs[0, 85, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0]
-        # i += 1
-        # calibration_values_p[i] = o_ffcfw_tpoffs[0, 89, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0]
-        # i += 1
-        # calibration_values_p[i] = o_ffcfw_tpoffs[0, 94, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0]
-        # i += 1
-        # calibration_values_p[i] = o_ffcfw_tpoffs[0, 100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0]
-        # i += 1
-        # calibration_values_p[i] = o_ffcfw_tpoffs[0, 102, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0]
-        # i += 1
-        # calibration_values_p[i] = o_ffcfw_tpoffs[0, 115, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0]
-        # i += 1
-        # calibration_values_p[i] = o_ffcfw_tpoffs[0, 128, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0]
-        # i += 1
-        # calibration_values_p[i] = o_ffcfw_tpoffs[0, 159, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0]
+        aera = (twin_surv_2yo + twin_surv_3yo + twin_surv_4yo + twin_surv_5yo) / 4
+        ##birth weight - #todo connect up birth weight of 1st cycle single born female yatf of 2 tooth and adult ewes
+        bwt = 0     # bwt = ( + + + )/4
+        ##weaning weight of 1st cycle single born female yatf of 2 tooth and adult ewes
+        wwt = (o_wean_w_tpyatf[0,147,0,0,2,0,0,0,0,0,0,0,0,0,0,0]
+             + o_wean_w_tpyatf[0,199,0,0,2,0,0,0,0,0,0,0,0,0,0,0]
+             + o_wean_w_tpyatf[0,251,0,0,2,0,0,0,0,0,0,0,0,0,0,0]
+             + o_wean_w_tpyatf[0,303,0,0,2,0,0,0,0,0,0,0,0,0,0,0]) / 4
+        pwt = 0     # pwt = o_ffcfw_tpdams[]     #Post wean weight of non-mated females at ?? months old
+        ywt = o_ffcfw_tpdams[0,85,0,0,0,0,0,0,0,0,0,0,0,0,0,0]     #Yearling weight of non-mated females ewes at 1yo
+        hwt = o_ffcfw_tpdams[0,111,0,0,0,0,0,0,0,0,0,0,0,0,0,0]    #Hogget weight of ewes at 1.5yo prior to prejoining, NM in previous year
+        awt = o_ffcfw_tpdams[0,215,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #Adult weight of ewes at 3.5yo prior to prejoining, BTRT 11 in previous year
+        pfat = 0    # o_cfat_start_tpdams[]     #Post wean fat depth of non-mated females at ?? months old
+        yfat = o_cfat_start_tpdams[0,85,0,0,0,0,0,0,0,0,0,0,0,0,0,0]     #Yearling fat depth of non-mated females ewes at 1yo
+        hfat = o_cfat_start_tpdams[0,111,0,0,0,0,0,0,0,0,0,0,0,0,0,0]    #Hogget fat depth of ewes at 1.5yo prior to prejoining, NM in previous year
+        afat = o_cfat_start_tpdams[0,215,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #Adult fat depth of ewes at 3.5yo prior to prejoining, BTRT 11 in previous year
+        pwbe = 0    # fun.f_divide(r_fat_tpdams[]
+                    #       , r_ebw_tpdams[])  #% of fat for Post weaning females
+        ywbe = fun.f_divide(r_fat_tpdams[0,85,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+                          , r_ebw_tpdams[0,85,0,0,0,0,0,0,0,0,0,0,0,0,0,0])  #% of fat for Yearling non-mated females ewes at 1yo
+        hwbe = fun.f_divide(r_fat_tpdams[0,111,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+                          , r_ebw_tpdams[0,111,0,0,0,0,0,0,0,0,0,0,0,0,0,0])  #% of fat for Hogget ewes at 1.5yo prior to prejoining, NM in previous year
+        awbe = fun.f_divide(r_fat_tpdams[0,215,0,0,2,0,0,0,0,0,0,0,0,0,0,0]
+                          , r_ebw_tpdams[0,215,0,0,2,0,0,0,0,0,0,0,0,0,0,0])  #% of fat for the dams at 3.5yo prior to prejoining, BTRT 11 in previous year
+        ##SRW based on ALW and Fat% of 3.5yo ewes prior to prejoining
+        ###Estimating SRW as LW at 25% fat.
+        ###The calculation assumes that muscle mass is constant and only fat mass changes as per Hutton's model
+        srw = awt * (1 - awbe) / (1 - 0.25)   #todo add the std fat % for SRW as  parameters to uinp if the method works
+        # srw = awt / (1 + 1.54 * (awbe - 0.25))   # alternative formula that can be fitted to simulation data (see W18:p64)
+        ##weaning weight of 1st cycle single born female yatf of 2 tooth and adult ewes
+        wcs = (o_cs_start_tpyatf[0,147,0,0,2,0,0,0,0,0,0,0,0,0,0,0]
+             + o_cs_start_tpyatf[0,199,0,0,2,0,0,0,0,0,0,0,0,0,0,0]
+             + o_cs_start_tpyatf[0,251,0,0,2,0,0,0,0,0,0,0,0,0,0,0]
+             + o_cs_start_tpyatf[0,303,0,0,2,0,0,0,0,0,0,0,0,0,0,0]) / 4
+        pcs = 0    # o_cs_start_tpdams[0,85,0,0,0,0,0,0,0,0,0,0,0,0,0,0]     #Post weaning CS of not mated females at ?? months old
+        ycs = o_cs_start_tpdams[0,85,0,0,0,0,0,0,0,0,0,0,0,0,0,0]     #Yearling CS of ewes at 1yo, NM in previous year
+        hcs = o_cs_start_tpdams[0,111,0,0,0,0,0,0,0,0,0,0,0,0,0,0]    #Hogget CS of ewes at 1.5yo prior to prejoining, NM in previous year
+        acs = o_cs_start_tpdams[0,215,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #Adult CS of ewes at 3.5yo prior to prejoining, BTRT 11 in previous year
+        # connect up periods for mortality of younger animals.
 
-        ### Handle the multi-trait calibration using an a-priori method
-        ###Option 1 A linear scalarising method, based on a subjective weight divided by the SD of the target trait range (calibration weights)
-        ###Calculate the objective value based on sum of squares of the relative error (error as a proportion of the SD of the target trait)
-        calibration_objective = np.sum(((calibration_values_p - calibration_targets_p) * calibration_weights_p) ** 2)
+        psurv = 0    # fun.f_divide(np.sum(o_numbers_start_tpdams[0,312,0,:,:,0,0,0,0,0,0,0,0,0,0,0])           #Mortality of ewes from yearling shearing to 5.5yo BTRT 11
+                     #       , np.sum(o_numbers_start_tpdams[0,104,0,:,:,0,0,0,0,0,0,0,0,0,0,0]))
+        ysurv = 0    # fun.f_divide(np.sum(o_numbers_start_tpdams[0,312,0,:,:,0,0,0,0,0,0,0,0,0,0,0])           #Mortality of ewes from yearling shearing to 5.5yo BTRT 11
+                     #       , np.sum(o_numbers_start_tpdams[0,104,0,:,:,0,0,0,0,0,0,0,0,0,0,0]))
+        hsurv = 0    # fun.f_divide(np.sum(o_numbers_start_tpdams[0,312,0,:,:,0,0,0,0,0,0,0,0,0,0,0])           #Mortality of ewes from yearling shearing to 5.5yo BTRT 11
+                     #       , np.sum(o_numbers_start_tpdams[0,104,0,:,:,0,0,0,0,0,0,0,0,0,0,0]))
+        #todo  Maybe need a different definition of asurv for use with EV of breeding traits.
+        asurv = fun.f_divide(np.sum(o_numbers_start_tpdams[0,312,0,:,:,0,0,0,0,0,0,0,0,0,0,0])           #Cumulative mortality of ewes from yearling shearing to 5.5yo BTRT 11
+                           , np.sum(o_numbers_start_tpdams[0,104,0,:,:,0,0,0,0,0,0,0,0,0,0,0]))
+        # elw1 = o_ffcfw_tpdams[0, 57, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]  #Ewe LW targets
+        # elw2 = o_ffcfw_tpdams[0, 64, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        # elw3 = o_ffcfw_tpdams[0, 71, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        # elw4 = o_ffcfw_tpdams[0, 91, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        # elw5 = o_ffcfw_tpdams[0, 100, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        # elw6 = o_ffcfw_tpdams[0, 116, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        # elw7 = o_ffcfw_tpdams[0, 124, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        # elw8 = o_ffcfw_tpdams[0, 139, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        # elw9 = o_ffcfw_tpdams[0, 154, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        # elw10 = o_ffcfw_tpdams[0, 161, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        # elw11 = o_ffcfw_tpdams[0, 173, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        # elw12 = o_ffcfw_tpdams[0, 181, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        # elw13 = o_ffcfw_tpdams[0, 196, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        # elw14 = o_ffcfw_tpdams[0, 213, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        # elw15 = o_ffcfw_tpdams[0, 226, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        # elw16 = o_ffcfw_tpdams[0, 233, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        # elw17 = o_ffcfw_tpdams[0, 248, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        # elw18 = o_ffcfw_tpdams[0, 259, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        # elw19 = o_ffcfw_tpdams[0, 265, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        # elw20 = o_ffcfw_tpdams[0, 278, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        # elw21 = o_ffcfw_tpdams[0, 299, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        # elw22 = o_ffcfw_tpdams[0, 311, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        # elw23 = o_ffcfw_tpdams[0, 326, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        # elw24 = o_ffcfw_tpdams[0, 329, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        # elw25 = o_ffcfw_tpdams[0, 334, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        # elw26 = o_ffcfw_tpdams[0, 338, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        # elw27 = o_ffcfw_tpdams[0, 352, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        # elw28 = o_ffcfw_tpdams[0, 363, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        # wlw1 = o_ffcfw_tpoffs[0, 56, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0]  #Wether LW targets
+        # wlw2 = o_ffcfw_tpoffs[0, 60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0]
+        # wlw3 = o_ffcfw_tpoffs[0, 64, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0]
+        # wlw4 = o_ffcfw_tpoffs[0, 69, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0]
+        # wlw5 = o_ffcfw_tpoffs[0, 77, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0]
+        # wlw6 = o_ffcfw_tpoffs[0, 81, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0]
+        # wlw7 = o_ffcfw_tpoffs[0, 85, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0]
+        # wlw8 = o_ffcfw_tpoffs[0, 89, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0]
+        # wlw9 = o_ffcfw_tpoffs[0, 94, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0]
+        # wlw10 = o_ffcfw_tpoffs[0, 100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0]
+        # wlw11 = o_ffcfw_tpoffs[0, 115, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0]
+        # wlw12 = o_ffcfw_tpoffs[0, 128, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0]
+        # wlw13 = o_ffcfw_tpoffs[0, 159, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0]
+        # wlw14 = o_ffcfw_tpoffs[0, 159, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0]
 
-        # ###Option 2 A Chebyshev scalarisation. The weighting is the inverse of the coefficient increasing weight on small coefficients
-        # ###The objective is the deviation of the worst trait relative to the size of the coefficient
-        # ###Requires n_coef = n_production traits & coefficient to be > 0. Stopped using this because of these constraints and no apparent benefit.
-        # objective = np.max((fun.f_divide(calibration_values_p - calibration_targets_p, calibration_targets_p) ** 2)
-        #                     / np.maximum(0.0001, np.abs(coefficients_c)))
+        ##set all target variables to default of 0, so they can be reported even if not used.
+        pcfw_target = 0
+        ycfw_target = 0
+        hcfw_target = 0
+        acfw_target = 0
+        pfd_target = 0
+        yfd_target = 0
+        hfd_target = 0
+        afd_target = 0
+        pss_target = 0
+        yss_target = 0
+        hss_target = 0
+        ass_target = 0
+        psl_target = 0
+        ysl_target = 0
+        hsl_target = 0
+        asl_target = 0
+        ycon_target = 0
+        acon_target = 0
+        yls_target = 0
+        als_target = 0
+        yera_target = 0
+        aera_target = 0
+        bwt_target = 0
+        wwt_target = 0
+        pwt_target = 0
+        ywt_target = 0
+        hwt_target = 0
+        awt_target = 0
+        srw_target = 0
+        pfat_target = 0
+        yfat_target = 0
+        hfat_target = 0
+        afat_target = 0
+        wcs_target = 0
+        pcs_target = 0
+        ycs_target = 0
+        hcs_target = 0
+        acs_target = 0
+        pwbe_target = 0
+        ywbe_target = 0
+        hwbe_target = 0
+        awbe_target = 0
+        psurv_target = 0
+        ysurv_target = 0
+        hsurv_target = 0
+        asurv_target = 0
 
-        print(f"obj: {calibration_objective} trait & (coefficient) Team SRW:")  # {coefficients_c[SRW_coeff]}")
-        i = 0; j = 0
-        print(f"ACFW this {calibration_values_p[i]} with ({coefficients_c[j]}) target {calibration_targets_p[i]}")  #ACFW of single ewes at 3.5yo
-        i += 1; j += 1
-        print(f"YCFW this {calibration_values_p[i]} with ({coefficients_c[j]}) target {calibration_targets_p[i]}")  #YCFW of NM ewes at 1.5yo
-        i += 1; j += 1
-        print(f"AFD this {calibration_values_p[i]} with ({coefficients_c[j]}) target {calibration_targets_p[i]}")  #AFD of single ewes at 3.5yo
-        i += 1; j += 1
-        print(f"YFD this {calibration_values_p[i]} with ({coefficients_c[j]}) target {calibration_targets_p[i]}")  #YFD of NM ewes at 1.5yo
-        i += 1; j += 1
-        # print(f"SS this {calibration_values_p[i]} with ({coefficients_c[j]}) target {calibration_targets_p[i]}")  #SS of single ewes at 3.5yo
-        # i += 1; j += 1
-        print(f"SL this {calibration_values_p[i]} with ({coefficients_c[j]}) target {calibration_targets_p[i]}")  #SL of single ewes at 3.5yo
-        i += 1; j += 1
-        print(f"% preg this {calibration_values_p[i]} with ({coefficients_c[j]}) target {calibration_targets_p[i]}")  #% preg of adult ewes average across 2, 3, 4 & 5yo at joining 1st cycle
-        i += 1; j += 1
-        print(f"Litter Size this {calibration_values_p[i]} with ({coefficients_c[j]}) target {calibration_targets_p[i]}")  #% litter size of adult ewes average across 2, 3, 4 & 5yo at joining 1st cycle
-        i += 1; j += 1
-        print(f"Twin survival this {calibration_values_p[i]} with ({coefficients_c[j]}) target {calibration_targets_p[i]}")  #twin lamb survival of adult ewes average across 2, 3, 4 & 5yo 1st cycle
-        i += 1; j += 1
-        if n_coeff > n_traits: j += 1   # n_coeff > n_traits means that SRW was passed as a fixed trait so skip in the reporting
-        print(f"Dam weight 3yo joining this {calibration_values_p[i]} with ({coefficients_c[j]}) target {calibration_targets_p[i]}")  #Adult weight of ewes at 3.5yo prior to prejoining BTRT 11 in previous year
-        i += 1; j += 1
-        # print(f"Proportion fat this {calibration_values_p[i]} with ({coefficients_c[j]}) target {calibration_targets_p[i]}")
-        # i += 1; j += 1
-        print(f"Dam survival Y-A5 this {calibration_values_p[i]} with ({coefficients_c[j]}) target {calibration_targets_p[i]}")
-        i += 1; j += 1
-        # print(f"Wean weight this {calibration_values_p[i]} with ({coefficients_c[j]}) target {calibration_targets_p[i]}")  #Weaning weight of 1st cycle singles
-        # i += 1; j += 1
-        # print(f"Yearling weight this {calibration_values_p[i]} with ({coefficients_c[j]}) target {calibration_targets_p[i]}")  #Yearling weight of ewes at 1.5yo prior to prejoining, NM in previous year
-        # i += 1; j += 1
+        ##store the calibration variables for each production trait (p)
+        ##Comment any traits that don't have target values
+        calibration_values_p = np.zeros_like(calibration_targets_p)
+        i = 0
+        ##assign calibration values for each trait and set the target for printing
+        # calibration_values_p[i] = pcfw; pcfw_target = calibration_targets_p[i]; i += 1
+        calibration_values_p[i] = ycfw; ycfw_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = hcfw; hcfw_target = calibration_targets_p[i]; i += 1
+        calibration_values_p[i] = acfw; acfw_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = pfd; pfd_target = calibration_targets_p[i]; i += 1
+        calibration_values_p[i] = yfd; yfd_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = hfd; hfd_target = calibration_targets_p[i]; i += 1
+        calibration_values_p[i] = afd; afd_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = pss; pss_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = yss; yss_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = hss; hss_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = ass; ass_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = psl; psl_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = ysl; ysl_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = hsl;  hsl_target = calibration_targets_p[i]; i += 1
+        calibration_values_p[i] = asl; asl_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = ycon;  ycon_target = calibration_targets_p[i]; i += 1
+        calibration_values_p[i] = acon; acon_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = yls;  yls_target = calibration_targets_p[i]; i += 1
+        calibration_values_p[i] = als; als_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = yera; yera_target = calibration_targets_p[i]; i += 1
+        calibration_values_p[i] = aera; aera_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = bwt; bwt_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = wwt; wwt_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = pwt; pwt_target = calibration_targets_p[i]; i += 1
+        calibration_values_p[i] = ywt; ywt_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = hwt; hwt_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = awt; awt_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = srw; srw_target = calibration_targets_p[i]; i += 1         #used when SRW has a target (which is not common)
+
+        ##Different treatment for SRW if it is being endogenously estimated.
+        ###With SRW endogenous the target is the parameter and the calibration value is the estimate
+        # calibration_values_p[i] = srw; srw_target = uinp.parameters['i_srw_c2'][genotype]    #used when SRW is being endogenously calculated
+
+        # calibration_values_p[i] = pfat; pfat_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = yfat; yfat_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = hfat; hfat_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = afat; afat_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = wcs; wcs_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = pcs; pcs_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = ycs; ycs_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = hcs; hcs_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = acs; acs_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = pwbe; pwbe_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = ywbe; ywbe_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = hwbe; hwbe_target = calibration_targets_p[i]; i += 1
+        calibration_values_p[i] = awbe; awbe_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = psurv; psurv_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = ysurv; ysurv_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = hsurv; hsurv_target = calibration_targets_p[i]; i += 1
+        calibration_values_p[i] = asurv; asurv_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = elw0; elw0_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = elw1; elw1_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = elw2; elw2_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = elw3; elw3_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = elw4; elw4_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = elw5; elw5_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = elw6; elw6_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = elw7; elw7_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = elw8; elw8_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = elw9; elw9_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = elw10; elw10_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = elw11; elw11_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = elw12; elw12_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = elw13; elw13_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = elw14; elw14_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = elw15; elw15_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = elw16; elw16_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = elw17; elw17_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = elw18; elw18_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = elw19; elw19_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = elw20; elw20_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = elw21; elw21_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = elw22; elw22_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = elw23; elw23_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = elw24; elw24_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = elw25; elw25_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = elw26; elw26_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = elw27; elw27_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = wlw0; elw0_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = wlw1; wlw1_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = wlw2; wlw2_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = wlw3; wlw3_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = wlw4; wlw4_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = wlw5; wlw5_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = wlw6; wlw6_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = wlw7; wlw7_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = wlw8; wlw8_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = wlw9; wlw9_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = wlw10; wlw10_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = wlw11; wlw11_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = wlw12; wlw12_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = wlw13; wlw13_target = calibration_targets_p[i]; i += 1
+        # calibration_values_p[i] = wlw14; wlw14_target = calibration_targets_p[i]; i += 1
+
+        if model_inversion:
+            ### Handle the multi-trait calibration using an a-priori method
+            ###Option 1 A linear scalarising method using calibration_weights from [Calibration_control.xlsx]TargetWeightings!
+            ### The weighting is a subjective weight multiplied by the inverse of the target trait value.
+            ###Calculate the objective value based on sum of squares of the scaled error
+            calibration_objective = np.sum(((calibration_values_p - calibration_targets_p) * calibration_weights_p) ** 2)
+
+            # ###Option 2 A Chebyshev scalarisation. The weighting is the inverse of the coefficient increasing weight on small coefficients
+            # ###The objective is the deviation of the worst trait relative to the size of the coefficient
+            # ###Requires n_coef = n_production traits & coefficient to be > 0. Stopped using this because of these constraints and no apparent benefit.
+            # objective = np.max((fun.f_divide(calibration_values_p - calibration_targets_p, calibration_targets_p) ** 2)
+            #                     / np.maximum(0.0001, np.abs(coefficients_c)))
+
+            print(f"obj: {calibration_objective} trait  Team SRW: [{uinp.parameters['i_srw_c2'][a_c2_c0]} + {saa_srw}")
+
+        #Report the values, coefficients and target for the current attempt
+        b=1; w=2; p=3; y=4; h=5; a=6 # set the slice numbers in the saa_p11 arrays (a is using the a2 slice)
+
+        # print(f"PCFW target {pcfw_target} this {pcfw} with (sfw={sen.saa['sfw_p11'][p]})")
+        print(f"yCFW target {ycfw_target} this {ycfw} with (sfw={sen.saa['sfw_p11'][y]} & {sen.saa['ycfw_scalar']})")
+        # print(f"HCFW target {hcfw_target} this {hcfw} with (sfw={sen.saa['sfw_p11'][h]})")
+        print(f"ACFW target {acfw_target} this {acfw} with (sfw={sen.saa['sfw_p11'][a]})")
+        # print(f"PFD target {pfd_target} this {pfd} with (sfd={sen.saa['sfd_p11'][p]})")
+        print(f"YFD target {yfd_target} this {yfd} with (sfd={sen.saa['sfd_p11'][y]} & {sen.saa['yfd_scalar']})")
+        # print(f"HFD target {hfd_target} this {hfd} with (sfd={sen.saa['sfd_p11'][h]})")
+        print(f"AFD target {afd_target} this {afd} with (sfd={sen.saa['sfd_p11'][a]})")
+        # print(f"PSS target {pss_target} this {pss} with (iss={sen.saa['iss_p11'][p]})")
+        # print(f"YSS target {yss_target} this {yss} with (iss={sen.saa['iss_p11'][y]})")
+        # print(f"HSS target {hss_target} this {hss} with (iss={sen.saa['iss_p11'][h]})")
+        print(f"ASS target {ass_target} this {ass} with (iss={sen.saa['iss_p11'][a]})")
+        # print(f"PSL target {psl_target} this {psl} with (follicles={sen.saa['follicles_p11'][p]})")
+        # print(f"YSL target {ysl_target} this {ysl} with (follicles={sen.saa['follicles_p11'][y]})")
+        # print(f"HSL target {hsl_target} this {hsl} with (follicles={sen.saa['follicles_p11'][h]})")
+        print(f"ASL target {asl_target} this {asl} with (follicles={sen.saa['follicles_p11'][a]})")
+        # print(f"YCON target {ycon_target} this {ycon} with ({sen.saa['con_p11'][y]})")
+        print(f"ACON target {acon_target} this {acon} with ({sen.saa['con_p11'][a]})")
+        # print(f"YLS target {yls_target} this {yls} with ({sen.saa['ls_p11'][y]})")
+        print(f"ALS target {als_target} this {als} with ({sen.saa['ls_p11'][a]})")
+        # print(f"YERA target {yera_target} this {yera} with ({sen.saa['era_p11'][y]})")
+        print(f"AERA target {aera_target} this {aera} with ({sen.saa['era_p11'][a]})")
+        # print(f"BWT target {bwt_target} this {bwt} with (srw={sen.saa['srw_p11'][b]})")
+        print(f"WWT target {wwt_target} this {wwt} with (srw={sen.saa['srw_p11'][w]} & milk_scalar={sen.saa['milk_yield']})")
+        # print(f"PWT target {pwt_target} this {pwt} with (srw={sen.saa['srw_p11'][p]})")
+        print(f"YWT target {ywt_target} this {ywt} with (srw={sen.saa['srw_p11'][y]}, k={sen.saa['growth_constant']} & PI={sen.saa['pi_p11'][y]})")
+        # print(f"HWT target {hwt_target} this {hwt} with (srw={sen.saa['srw_p11'][h]})")
+        print(f"AWT target {awt_target} this {awt} with (srw={sen.saa['srw_p11'][a]}) & PI={sen.saa['pi_p11'][a]}")
+        # print(f"SRW target {srw_target} this {srw} with ({sen.saa['srw']})")
+        # print(f"PFAT target {pfat_target} this {pfat} with (PI={sen.saa['pi_p11'][p]})")
+        print(f"YFAT target {yfat_target} this {yfat} with (PI={sen.saa['pi_p11'][y]})")
+        # print(f"HFAT target {hfat_target} this {hfat} with (PI={sen.saa['pi_p11'][h]})")
+        # print(f"AFAT target {afat_target} this {afat} with (PI={sen.saa['pi_p11'][a]})")
+        # print(f"WCS target {wcs_target} this {wcs} with (PI={sen.saa['pi_p11'][w]})")
+        # print(f"PCS target {pcs_target} this {pcs} with (PI={sen.saa['pi_p11'][p]})")
+        # print(f"YCS target {ycs_target} this {ycs} with (PI={sen.saa['pi_p11'][y]})")
+        # print(f"HCS target {hcs_target} this {hcs} with (PI={sen.saa['pi_p11'][h]})")
+        # print(f"ACS target {acs_target} this {acs} with (PI={sen.saa['pi_p11'][a]})")
+        # print(f"PWBE target {pwbe_target} this {pwbe} with (EVG={sen.saa['evg_p11'][p]} & PI={sen.saa['pi_p11'][p]})")
+        # print(f"YWBE target {ywbe_target} this {ywbe} with (EVG={sen.saa['evg_p11'][y]} & PI={sen.saa['pi_p11'][y]})")
+        # print(f"HWBE target {hwbe_target} this {hwbe} with (EVG={sen.saa['evg_p11'][h]} & PI={sen.saa['pi_p11'][h]})")
+        print(f"AWBE target {awbe_target} this {awbe} with (EVG={sen.saa['evg_p11'][a]} & PI={sen.saa['pi_p11'][a]})")
+        # print(f"PSURV target {psurv_target} this {psurv} with ({sen.saa['bsurv_p11'][p]})")
+        # print(f"YSURV target {ysurv_target} this {ysurv} with ({sen.saa['bsurv_p11'][y]})")
+        # print(f"HSURV target {hsurv_target} this {hsurv} with ({sen.saa['bsurv_p11'][h]})")
+        print(f"ASURV target {asurv_target} this {asurv} with ({sen.saa['bsurv_p11'][a]})")
+        # print(f"ASURV target {asurv_target} this {asurv} with ({sen.saa['pnsurv_p11'][a]})")
+
         # print("LW targets Ewes (value, sar, target)")
         # for k in range(28):
         #     print(f"({calibration_values_p[i]}, {coefficients_c[j]}, {calibration_targets_p[i]})",end='')
@@ -7808,106 +8001,10 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         # for k in range(14):
         #     print(f"({calibration_values_p[i]}, {coefficients_c[j]}, {calibration_targets_p[i]})", end='')
         #     i += 1; j += 1
-        return calibration_objective
 
-    else:
-        if calibration is not None:   #to access this code define calibration = {} in RunAfoRaw.py
-            ##print & save the calibration variables when running AFO - used as a record of the calibration.
-            calibration_values_p = np.zeros(n_traits)
-            i = 0
-            calibration_values_p[i] = o_cfw_tpdams[0,210,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #ACFW of single ewes at 3.5yo
-            i += 1
-            calibration_values_p[i] = o_cfw_tpdams[0,106,0,0,0,0,0,0,0,0,0,0,0,0,0,0]   #YCFW of NM ewes at 1.5yo
-            i += 1
-            calibration_values_p[i] = o_fd_tpdams[0,210,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #AFD of single ewes at 3.5yo
-            i += 1
-            calibration_values_p[i] = o_fd_tpdams[0,106,0,0,0,0,0,0,0,0,0,0,0,0,0,0]    #YFD of NM ewes at 1.5yo
-            i += 1
-            calibration_values_p[i] = o_ss_tpdams[0,210,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #SS of single ewes at 3.5yo
-            i += 1
-            calibration_values_p[i] = o_sl_tpdams[0,210,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #SL of single ewes at 3.5yo
-            i += 1
-            ##proportion of preg is 1 - (number of dry (b[1]) divided by the number dry and pregnant (b[1:5]))
-            preg_2yo = 1 - fun.f_divide(o_numbers_start_tpdams[0,111,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
-                                 np.sum(o_numbers_start_tpdams[0,111,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0]))
-            preg_3yo = 1 - fun.f_divide(o_numbers_start_tpdams[0,163,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
-                                 np.sum(o_numbers_start_tpdams[0,163,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0]))
-            preg_4yo = 1 - fun.f_divide(o_numbers_start_tpdams[0,215,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
-                                 np.sum(o_numbers_start_tpdams[0,215,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0]))
-            preg_5yo = 1 - fun.f_divide(o_numbers_start_tpdams[0,267,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
-                                 np.sum(o_numbers_start_tpdams[0,267,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0]))
-            propn_preg = (preg_2yo + preg_3yo + preg_4yo + preg_5yo) / 4
-            calibration_values_p[i] = propn_preg     #% preg of adult ewes average across 2, 3, 4 & 5yo at joining 1st cycle
-            i += 1
-            ##Litter size is sum of the ewes weighted by # foetuses (np.dot with arange(4)) divided by pregnant ewes
-            ls_2yo = fun.f_divide(np.dot(o_numbers_start_tpdams[0,111,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0], np.arange(4))
-                                , np.sum(o_numbers_start_tpdams[0,111,0,0,2:5,0,0,0,0,0,0,0,0,0,0,0]))
-            ls_3yo = fun.f_divide(np.dot(o_numbers_start_tpdams[0,163,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0], np.arange(4))
-                                , np.sum(o_numbers_start_tpdams[0,163,0,0,2:5,0,0,0,0,0,0,0,0,0,0,0]))
-            ls_4yo = fun.f_divide(np.dot(o_numbers_start_tpdams[0,215,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0], np.arange(4))
-                                , np.sum(o_numbers_start_tpdams[0,215,0,0,2:5,0,0,0,0,0,0,0,0,0,0,0]))
-            ls_5yo = fun.f_divide(np.dot(o_numbers_start_tpdams[0,267,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0], np.arange(4))
-                                , np.sum(o_numbers_start_tpdams[0,267,0,0,2:5,0,0,0,0,0,0,0,0,0,0,0]))
-            litter_size = (ls_2yo + ls_3yo + ls_4yo + ls_5yo) / 4
-            calibration_values_p[i] = litter_size     #% litter size of adult ewes average across 2, 3, 4 & 5yo at joining 1st cycle
-            i += 1
-            ##twin survival is square root of the number of ewe with twins (BT22) after lambing / number before lambing
-            ##Square root is simpler to calculate than summing BTRT 22 * 2 & 21 * 1, but this will need to change if the assumption on survival of twins being independent is relaxed
-            twin_surv_2yo = fun.f_divide(o_numbers_start_tpdams[0,136,0,0,3,0,0,0,0,0,0,0,0,0,0,0]
-                                       , o_numbers_start_tpdams[0,132,0,0,3,0,0,0,0,0,0,0,0,0,0,0])**0.5
-            twin_surv_3yo = fun.f_divide(o_numbers_start_tpdams[0,188,0,0,3,0,0,0,0,0,0,0,0,0,0,0]
-                                       , o_numbers_start_tpdams[0,184,0,0,3,0,0,0,0,0,0,0,0,0,0,0])**0.5
-            twin_surv_4yo = fun.f_divide(o_numbers_start_tpdams[0,240,0,0,3,0,0,0,0,0,0,0,0,0,0,0]
-                                       , o_numbers_start_tpdams[0,236,0,0,3,0,0,0,0,0,0,0,0,0,0,0])**0.5
-            twin_surv_5yo = fun.f_divide(o_numbers_start_tpdams[0,292,0,0,3,0,0,0,0,0,0,0,0,0,0,0]
-                                       , o_numbers_start_tpdams[0,288,0,0,3,0,0,0,0,0,0,0,0,0,0,0])**0.5
-            twin_surv = (twin_surv_2yo + twin_surv_3yo + twin_surv_4yo + twin_surv_5yo) / 4
-            calibration_values_p[i] = twin_surv     #single lamb survival of adult ewes average across 2, 3, 4 & 5yo 1st cycle
-            i += 1
-            calibration_values_p[i] = o_ffcfw_tpdams[0,215,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #Adult weight of ewes at 3.5yo prior to prejoining BTRT 11 in previous year
-            i += 1
-            calibration_values_p[i] = fun.f_divide(r_fat_tpdams[0,215,0,0,2,0,0,0,0,0,0,0,0,0,0,0]
-                                                 , r_ebw_tpdams[0,215,0,0,2,0,0,0,0,0,0,0,0,0,0,0])  #% of fat for the dams at 3yo joining
-            i += 1
-            calibration_values_p[i] = fun.f_divide(np.sum(o_numbers_start_tpdams[0,312,0,:,:,0,0,0,0,0,0,0,0,0,0,0])           #Cumulative mortality of ewes from yearling shearing to 5.5yo BTRT 11
-                                                 , np.sum(o_numbers_start_tpdams[0,104,0,:,:,0,0,0,0,0,0,0,0,0,0,0]))
-            i += 1
-            calibration_values_p[i] = o_wean_w_tpyatf[0,199,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #Weaning weight of 1st cycle single born ewes
-            i += 1
-            calibration_values_p[i] = o_ffcfw_tpdams[0,85,0,0,0,0,0,0,0,0,0,0,0,0,0,0]    #Yearling weight of ewes at 1.5yo prior to prejoining, NM in previous year
-            i += 1
-
-            i=0; j=0
-            print(f"ACFW {calibration_values_p[i]} with ({coefficients_c[j]})")  #ACFW of single ewes at 3.5yo
-            i += 1; j += 1
-            print(f"YCFW {calibration_values_p[i]} with ({coefficients_c[j]})")  #YCFW of NM ewes at 1.5yo
-            i += 1; j += 1
-            print(f"AFD {calibration_values_p[i]} with ({coefficients_c[j]})")  #AFD of single ewes at 3.5yo
-            i += 1; j += 1
-            print(f"YFD {calibration_values_p[i]} with ({coefficients_c[j]})")  #YFD of NM ewes at 3.5yo
-            i += 1; j += 1
-            print(f"SS {calibration_values_p[i]} with ({coefficients_c[j]})")  #SS of single ewes at 3.5yo
-            i += 1; j += 1
-            print(f"SL {calibration_values_p[i]} with ({coefficients_c[j]})")  #SL of single ewes at 3.5yo
-            i += 1; j += 1
-            print(f"% Preg {calibration_values_p[i]} with ({coefficients_c[j]})")  #% preg of adult ewes average across 2, 3, 4 & 5yo at joining 1st cycle
-            i += 1; j += 1
-            print(f"Litter Size {calibration_values_p[i]} with ({coefficients_c[j]})")  #% litter size of adult ewes average across 2, 3, 4 & 5yo at joining 1st cycle
-            i += 1; j += 1
-            print(f"Twin survival {calibration_values_p[i]} with ({coefficients_c[j]})")  #twin lamb survival of adult ewes average across 2, 3, 4 & 5yo 1st cycle
-            i += 1; j += 1
-            j += 1  #comment out this increment if calibrating with SRW
-            print(f"Dam weight 3yo joining {calibration_values_p[i]} with ({coefficients_c[j]})")  #Adult weight of ewes at 3.5yo prior to prejoining BTRT 11 in previous year
-            # j += 1   #comment out this increment if calibrating with PI
-            i += 1; j += 1
-            print(f"Proportion fat {calibration_values_p[i]} with ({coefficients_c[j]})")
-            i += 1; j += 1
-            print(f"Dam survival Y-A5 {calibration_values_p[i]} with ({coefficients_c[j]})")
-            i += 1; j += 1
-            print(f"Wean weight {calibration_values_p[i]} with ({coefficients_c[j]})")  #Weaning weight of 1st cycle singles from 3yos
-            i += 1; j += 1
-            print(f"Yearling weight {calibration_values_p[i]} with ({coefficients_c[j]})")  #Yearling weight of ewes at 1.5yo prior to prejoining, NM in previous year
-
+        if model_inversion:
+            return calibration_objective
+        else:
             calibration["output"] = calibration_values_p
             return
 
