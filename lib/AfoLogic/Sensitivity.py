@@ -571,7 +571,6 @@ def create_sa():
     saa['iss_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')  #SA value with age stages for staple strength (cw[16])
     saa['follicles_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')  #SA value with age stages for staple length (cw[11])
     saa['srw_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')  #SA value with age stages for weight (srw)
-    saa['wwt_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')  #SA value with age stages for weaning weight (cl[0])
     saa['pi_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')  #SA value with age stages for potential intake (ci[1])
     saa['evg_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')  #SA value with age stages for fatness (cg[8] & cg[9])
     saa['bsurv_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')  #SA value with age stages for basal survival (cd[1])

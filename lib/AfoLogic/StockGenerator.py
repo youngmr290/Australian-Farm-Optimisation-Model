@@ -1910,7 +1910,6 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 + np.any(sen.saa['iss_p11'])
                 + np.any(sen.saa['follicles_p11'])
                 + np.any(sen.saa['srw_p11'])
-                + np.any(sen.saa['wwt_p11'])
                 + np.any(sen.saa['pi_p11'])
                 + np.any(sen.saa['evg_p11'])
                 + np.any(sen.saa['bsurv_p11'])
@@ -2007,18 +2006,18 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     saa = sfun.f1_saa_p11_to_p(sen.saa['follicles_p11'], scalar_poffsp11)
     cw_p_cpoffs[11] += saa
 
-    ##cl[0] - peak milk yield scalar
-    #todo some pre-loop calcs use cl_cp and only the essentials have been updated to cl_p_cp. See W18 p46 for other vars to update
-    ###dams
-    saa = sfun.f1_saa_p11_to_p(sen.saa['wwt_p11'], scalar_pdamsp11)
-    target_shape = np.broadcast_shapes(cl_cpdams.shape, saa.shape)
-    cl_p_cpdams = np.broadcast_to(cl_cpdams, target_shape).copy()
-    cl_p_cpdams[0] += saa
-    ###yatf
-    saa = sfun.f1_saa_p11_to_p(sen.saa['wwt_p11'], scalar_pyatfp11)
-    target_shape = np.broadcast_shapes(cl_cpyatf.shape, saa.shape)
-    cl_p_cpyatf = np.broadcast_to(cl_cpyatf, target_shape).copy()
-    cl_p_cpyatf[0] += saa
+    # ##cl[0] - peak milk yield scalar - now done in UniversalInputs.py
+    # #todo some pre-loop calcs use cl_cp and only the essentials have been updated to cl_p_cp. See W18 p46 for other vars to update
+    # ###dams
+    # saa = sfun.f1_saa_p11_to_p(sen.saa['wwt_p11'], scalar_pdamsp11)
+    # target_shape = np.broadcast_shapes(cl_cpdams.shape, saa.shape)
+    # cl_p_cpdams = np.broadcast_to(cl_cpdams, target_shape).copy()
+    # cl_p_cpdams[0] += saa
+    # ###yatf
+    # saa = sfun.f1_saa_p11_to_p(sen.saa['wwt_p11'], scalar_pyatfp11)
+    # target_shape = np.broadcast_shapes(cl_cpyatf.shape, saa.shape)
+    # cl_p_cpyatf = np.broadcast_to(cl_cpyatf, target_shape).copy()
+    # cl_p_cpyatf[0] += saa
 
     ##ci[1] - potential intake
     #todo some pre-loop calcs use ci_cp and haven't been updated to ci_p_cp (non-essential). See W18 p46 for vars to update
@@ -2725,13 +2724,13 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                         * np.exp(ci_cpdams[9, ..., na] * (1 - pimi_pa1e1b1nwzida0e0b0xyg1p0)), weights=age_y_adj_weights_pa1e1b1nwzida0e0b0xyg1p0, axis = -1) #maximum to stop error in power (not sure why the negatives were causing a problem)
     ##Peak milk production pattern (time from birth). Average for the days that the dam is lactating
     ## Includes genotype scalar for milk yield (cl_cpyatf[0]), using yatf so that saa_p11 is controlled by the age of yatf
-    mp_age_y_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(cl_p_cpyatf[0, ..., na] * cb1_cpdams[0, ..., na]
+    mp_age_y_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(cl_cpyatf[0, ..., na] * cb1_cpdams[0, ..., na]
                                         * lmm_pa1e1b1nwzida0e0b0xyg1p0 ** cl_cpdams[3, ..., na]
                                         * np.exp(cl_cpdams[3, ..., na] * (1 - lmm_pa1e1b1nwzida0e0b0xyg1p0))
                                                 , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg2p0, axis = -1)
     ##Suckling volume pattern. Includes genotype scalar for milk yield (cl[0]) and SA for potential intake of the young at foot.
     ## Average for the days that the dam is lactating
-    mp2_age_y_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(cl_p_cpyatf[0, ..., na] * nyatf_b1nwzida0e0b0xyg[...,na]
+    mp2_age_y_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(cl_cpyatf[0, ..., na] * nyatf_b1nwzida0e0b0xyg[...,na]
                                         * cl_cpdams[6, ..., na] * ( cl_cpdams[12, ..., na] + cl_cpdams[13, ..., na]
                                         * np.exp(-cl_cpdams[14, ..., na] * age_p0_pa1e1b1nwzida0e0b0xyg2p0))
                                                 , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg2p0, axis = -1) * sen.sam['pi_yatf']
@@ -3653,11 +3652,11 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             cw_cpdams = fun.f_slice(cw_p_cpdams, p_slice)
             cw_cpyatf = fun.f_slice(cw_p_cpyatf, p_slice)
             cw_cpoffs = fun.f_slice(cw_p_cpoffs, p_slice)
-            ###cl parameter
-            # cl_cpsire = fun.f_slice(cl_p_cpsire, p_slice)
-            cl_cpdams = fun.f_slice(cl_p_cpdams, p_slice)
-            cl_cpyatf = fun.f_slice(cl_p_cpyatf, p_slice)
-            # cl_cpoffs = fun.f_slice(cl_p_cpoffs, p_slice)
+            # ###cl parameter (saa now applied to the parameter in UniversalInputs.py)
+            # # cl_cpsire = fun.f_slice(cl_p_cpsire, p_slice)
+            # cl_cpdams = fun.f_slice(cl_p_cpdams, p_slice)
+            # cl_cpyatf = fun.f_slice(cl_p_cpyatf, p_slice)
+            # # cl_cpoffs = fun.f_slice(cl_p_cpoffs, p_slice)
             ###ci parameter
             ci_cpsire = fun.f_slice(ci_p_cpsire, p_slice)
             ci_cpdams = fun.f_slice(ci_p_cpdams, p_slice)
