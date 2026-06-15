@@ -122,7 +122,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         # y = coefficients_c[j]; j += 1
         # h = coefficients_c[j]; j += 1
         # a = coefficients_c[j]; j += 1
-        # sen.saa['iss_p11'] = sfun.f1_create_param_p11(w, p, y, h, a)
+        # sen.saa['iss_p11'] = sfun.f1_create_saa_param_p11(w, p, y, h, a)
 
         #Follicle number to calibrate staple length
         # , cw[11] parameter
@@ -133,7 +133,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         # y = coefficients_c[j]; j += 1
         # h = coefficients_c[j]; j += 1
         a = coefficients_c[j]; j += 1
-        sen.saa['follicles_p11'] = sfun.f1_create_param_p11(w, p, y, h, a)
+        sen.saa['follicles_p11'] = sfun.f1_create_saa_param_p11(w, p, y, h, a)
 
         #Conception, cb1[24,25&26, 1] parameter
         ##LiveEx: Conception only for adult stage
