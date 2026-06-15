@@ -3165,6 +3165,11 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     ##increment the number of loops. This may be specified in the SAV to finetune the LTW effect.
     loop_ltw_len = loop_ltw_len + fun.f_sa(0, sen.sav['LTW_loops_increment'], 5)
 
+    if model_inversion:   #set ltw_loops and remove sires and offs calculations in the loops
+        loop_ltw_len = 1
+        days_period_pa1e1b1nwzida0e0b0xyg0[...] = 0
+        days_period_pa1e1b1nwzida0e0b0xyg3[...] = 0
+
     for loop_ltw in range(loop_ltw_len):
         #todo The double loop could be replaced by separating the offspring into their own loop
         # it doesn't remove the requirement to loop for the dams because they need to have the first loop to generate the inputs for the second loop
