@@ -18,14 +18,15 @@ sys.argv: Experiment number (will use the first trial in the experiment). If bla
 """
 
 
-from timeit import default_timer as timer
-
 import numpy as np
+from timeit import default_timer as timer
+import sys
+import os
+
+##Calibration specific imports
 import pandas as pd
 from scipy import optimize as spo
 import multiprocessing as mp
-import os
-import sys
 import multiprocessing
 import time
 
@@ -35,6 +36,8 @@ print(f'Calibration commenced at: {time.ctime()}')
 time_list = [] ; time_was = []
 time_list.append(timer()) ; time_was.append("start")
 
+#sets the path to the root directory so the relative imports in the other files work
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
 from lib.RawVersion import LoadExcelInputs as dxl
 from lib.RawVersion import LoadExp as exp
@@ -46,10 +49,21 @@ from lib.AfoLogic import Periods as per
 from lib.AfoLogic import Functions as fun
 from lib.AfoLogic import SeasonalFunctions as zfun
 from lib.AfoLogic import Sensitivity as sen
-from lib.AfoLogic import StockGenerator as sgen
-from lib.AfoLogic import relativeFile
 
+from lib.AfoLogic import Pasture as pas
+from lib.AfoLogic import SupFeed as sup
+from lib.AfoLogic import Saltbush as slp
+from lib.AfoLogic import CropGrazing as cgz
+from lib.AfoLogic import CropResidue as stub
+from lib.AfoLogic import StockGenerator as stock
+from lib.AfoLogic import Trees as trees
 
+time_list.append(timer()) ; time_was.append("import Modules")
+
+params={}
+r_vals={}
+
+# from lib.AfoLogic import relativeFile
 
 ###############
 #User control #
@@ -97,8 +111,8 @@ pinp.f_property_inp_sa(pinp_defaults)
 ##mask lmu
 pinp.f1_mask_lmu()
 
-##expand p6 axis to include nodes
-sinp.f1_expand_p6()
+# ##expand p6 axis to include nodes
+# sinp.f1_expand_p6()
 pinp.f1_expand_p6()
 
 ##check the rotations and inputs align - this means rotation method can be controlled using a SA
@@ -239,8 +253,8 @@ if __name__ == '__main__':
             disp = True  #False     Display the result each iteration
             polish = False  #True      After the differential evolution carry out some further refining
             population = popsize * n_coef   #adjust popsize so that population fits in with the number of processors
-            # max_workers = 30  #1         The number of multi-processes, while calculating the population. Relate to size of population
-            workers = min(multiprocessing.cpu_count(), population)   #, max_workers)    removed max workers so there wasn't a limit when using google
+            max_workers = 1  #1         The number of multi-processes, while calculating the population. Relate to size of population
+            workers = min(multiprocessing.cpu_count(), population, max_workers)    # removed max workers so there wasn't a limit when using google
             if workers != 1:
                 updating = 'deferred'  #   Use deferred if workers > 1 to suppress warning
             else:
@@ -252,7 +266,7 @@ if __name__ == '__main__':
             ## call the optimise routine
             result = spo.differential_evolution(sgen.generator, bounds
                 , args = (params, r_vals, nv, pkl_fs_info, pkl_fs, stubble, calibration, calibration_weights, calibration_targets)
-                , maxiter=maxiter, popsize=popsize, tol=tol, disp=disp, polish=polish, updating=updating, workers=workers, x0=bestbet)
+                , maxiter=maxiter, popsize=popsize, tol=tol, disp=disp, polish=polish, updating=updating, x0=bestbet)
             #assign the team results to arrays
             coefficients_tc[t, :] = result.x
             success_t[t] = result.success
