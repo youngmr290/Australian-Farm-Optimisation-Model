@@ -67,7 +67,8 @@ from . import Trees as tre
 # from memory_profiler import profile
 # @profile
 def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pkl_fs={}, stubble=None
-        , model_inversion=None, calibration_weights_p=None, calibration_targets_p=None, calibration=None, plots=False):
+            , model_inversion=None, calibration_weights_p=None, calibration_targets_p=None, calibration=None
+            , plots=False):
     """
     A function to wrap the generator and post-processing that can be called by SheepPyomo.
 
@@ -87,8 +88,17 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     ##Model inversion coefficients #
     ################################
     if model_inversion:
+        # print(coefficients_c)   #only useful for debugging when not multiprocessing (workers=1, and not multiprocessing teams)
         n_coeff = coefficients_c.size
         n_traits = calibration_weights_p.size
+        saa_srw = 0  #set default value because used in the reporting later
+        ##set default values for variables that are used in the calibration
+        ### These can be saa passed from exp.xlsx. Reset to 0 here so not applied twice
+        sen.saa['ycfw_scalar'] = 0.0
+        sen.saa['yfd_scalar'] = 0.0
+        sen.saa['milk_yield'] = 0.0
+        sen.saa['growth_constant'] = 0.0
+        sen.saa['srw'] = 0.0
 
         ##Comment any coefficients that aren't being calibrated
         j = 0
@@ -270,6 +280,17 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         #     i += 1
         # pinp.feedsupply['i_feedsupply_options_r1j2p'] = fun.f_sa(pinp.feedsupply['i_feedsupply_options_r1j2p']
         #                                             , sen.sar['feedsupply_r1jp'], 4, value_min=0.0, target=13.0)
+
+        ###Apply the SAA for genotype calibration that exclude the p11 axis
+        uinp.parameters['i_srw_c2'] = fun.f_sa(uinp.parameters['i_srw_c2'].astype(float),sen.saa['srw'], 2)
+        idx = fun.f_slice_idx(uinp.parameters['i_cw_c2'], {0: [25]})
+        uinp.parameters['i_cw_c2'][idx] = fun.f_sa(uinp.parameters['i_cw_c2'][idx], sen.saa['ycfw_scalar'], 2)
+        idx = fun.f_slice_idx(uinp.parameters['i_cw_c2'], {0: [26]})
+        uinp.parameters['i_cw_c2'][idx] = fun.f_sa(uinp.parameters['i_cw_c2'][idx], sen.saa['yfd_scalar'], 2)
+        idx = fun.f_slice_idx(uinp.parameters['i_cl_c2'], {0: [0]})
+        uinp.parameters['i_cl_c2'][idx] = fun.f_sa(uinp.parameters['i_cl_c2'][idx], sen.saa['milk_yield'], 2)
+        idx = fun.f_slice_idx(uinp.parameters['i_cn_c2'], {0: [1]})
+        uinp.parameters['i_cn_c2'][idx] = fun.f_sa(uinp.parameters['i_cn_c2'][idx], sen.saa['growth_constant'], 2)
 
     else:   #not model_inversion
         ## assign the zero values to the saa coefficients (for printing later).
