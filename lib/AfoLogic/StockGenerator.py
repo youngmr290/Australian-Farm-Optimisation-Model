@@ -10762,7 +10762,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                          dvp_is_mating_or_weaning].reshape((-1,)+dvp_is_mating_or_weaning.shape[1:])[:,na,...])
     dvp_is_mating_or_weaning_yvg1 = idx_mating_or_weaning_yvg1 == index_va1e1b1nwzida0e0b0xyg1
     ###shearing or weaning offs - with a y (year axis)
-    t_period_is_mainshearing_pa1e1b1nwzida0e0b0xyg3 = np.roll(period_is_mainshearing_pa1e1b1nwzida0e0b0xyg3, axis=p_pos, shift=1) #we want the period following shearing when the new dvp has started (shearing is last period of dvp) therefore start of the year is the period after shearing.
+    t_period_is_mainshearing_pa1e1b1nwzida0e0b0xyg3 = np.roll(period_is_mainshearing_pa1e1b1nwzida0e0b0xyg3, axis=p_pos, shift=2) #we want the period following shearing when the new dvp has started (shearing is last or second last period of dvp) therefore start of the year is the period after shearing.
     dvp_is_aftershear = sfun.f1_p2v(t_period_is_mainshearing_pa1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3).astype(dtypeint)
     dvp_is_shear_or_weaning = fun.f_slice(dvp_is_aftershear, {d_pos: [0, 1]}).astype(bool) #slice d - assuming that shearing dvp will be the same across d. If this is ever a problem we could cluster d.
     dvp_is_shear_or_weaning[0,...] = True #dvp 0 is weaning so set it to true.
