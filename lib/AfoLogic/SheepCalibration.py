@@ -132,8 +132,9 @@ r_vals={}   #an empty dictionary used in sgen.generator to store the report valu
 nv={}
 pkl_fs_info={}
 pkl_fs={}
-calibration = True
+model_inversion = True
 stubble=False
+calibration = {}
 
 ## create empty arrays to accept the output
 coefficients_tc = np.zeros((n_teams,n_coef))
@@ -144,7 +145,11 @@ message_t = np.empty(n_teams, dtype = object)
 
 ##loop through teams and save output
 
-def f_run_calibration(t, coefficients_dict, success_dict, wsmse_dict, nit_dict, message_dict):
+def f_run_calibration(t, coefficients_dict, success_dict, wsmse_dict, nit_dict, message_dict, calibration):
+
+    '''Function that calls the Differential Evolution function if multiprocessing teams, rather than workers
+    Processing of teams individually using multiple workers is done in the main code.
+    '''
     ## weightings for the calibration objective function
     ### these are defined for all teams and don't vary
     calibration_weights = weights_p
@@ -167,7 +172,8 @@ def f_run_calibration(t, coefficients_dict, success_dict, wsmse_dict, nit_dict, 
 
     ## call the optimise routine
     result = spo.differential_evolution(sgen.generator, bounds
-        , args = (params, r_vals, nv, pkl_fs_info, pkl_fs, stubble, calibration, calibration_weights, calibration_targets)
+        , args = (params, r_vals, nv, pkl_fs_info, pkl_fs, stubble, model_inversion, calibration_weights
+                  , calibration_targets, calibration)
         , maxiter=maxiter, popsize=popsize, tol=tol, disp=disp, polish=polish, updating=updating, workers=workers, x0=bestbet)
     #assign the team results to dicts
     coefficients_dict[t] = result.x
@@ -223,13 +229,13 @@ if __name__ == '__main__':
 
             ##Set some of the control variables (that might want to be tweaked later)
             ###200 iterations will usually get a very good result 10E-10. 400 almost always exits optimally
-            maxiter = 200  #400      The maximum number of iterations. # calls = (maxiter + 1) * selection population
-            popsize = 5  #15        The selection population is (popsize * n coefficients)
+            maxiter = 400  #400      The maximum number of iterations. # calls = (maxiter + 1) * selection population
+            popsize = 6  #15        The selection population is (popsize * n coefficients)
             tol = 0.01  #0.01      The optimisation relative tolerance
             disp = True  #False     Display the result each iteration
             polish = False  #True      After the differential evolution carry out some further refining
             population = popsize * n_coef   #adjust popsize so that population fits in with the number of processors
-            max_workers = 1  #1         The number of multi-processes, while calculating the population. Relate to size of population
+            max_workers = 1  #28 for T7600 with 14 coefficients    The number of multi-processes, while calculating the population. Relate to size of population
             workers = min(multiprocessing.cpu_count(), population, max_workers)    # removed max workers so there wasn't a limit when using google
             if workers != 1:
                 updating = 'deferred'  #   Use deferred if workers > 1 to suppress warning
@@ -241,8 +247,10 @@ if __name__ == '__main__':
             mp.freeze_support()
             ## call the optimise routine
             result = spo.differential_evolution(sgen.generator, bounds
-                , args = (params, r_vals, nv, pkl_fs_info, pkl_fs, stubble, calibration, calibration_weights, calibration_targets)
-                , maxiter=maxiter, popsize=popsize, tol=tol, disp=disp, polish=polish, updating=updating, x0=bestbet)
+                , args = (params, r_vals, nv, pkl_fs_info, pkl_fs, stubble, model_inversion, calibration_weights
+                          , calibration_targets, calibration)
+                , maxiter=maxiter, popsize=popsize, tol=tol, disp=disp, polish=polish, updating=updating
+                , workers=workers, x0=bestbet)
             #assign the team results to arrays
             coefficients_tc[t, :] = result.x
             success_t[t] = result.success

@@ -101,7 +101,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         sen.saa['ycfw_scalar'] = coefficients_c[j]; j += 1    #YCFW scalar, cw_dams[25] parameter which scales SFW
         # h = coefficients_c[j]; j += 1
         a = coefficients_c[j]; j += 1
-        sen.saa['sfw_p11'] = sfun.f1_create_saa_param_p11(w, p, y, h, a)
+        sen.saa['sfw_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         #Standard fibre diameter, SFD parameter
         ##LiveEx: CFW is calibrated for A for whole of life. Y is by the scalar
@@ -112,7 +112,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         sen.saa['yfd_scalar'] = coefficients_c[j]; j += 1    #YFD scalar, cw_dams[26] parameter which scales SFD
         # h = coefficients_c[j]; j += 1
         a = coefficients_c[j]; j += 1
-        sen.saa['sfd_p11'] = sfun.f1_create_saa_param_p11(w, p, y, h, a)
+        sen.saa['sfd_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         # #Intrinsic staple strength, cw[16] parameter
         # ##SS is calibrated manually to reduce the number of coefficients in the DE. It does not interact with other traits.
@@ -122,7 +122,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         # y = coefficients_c[j]; j += 1
         # h = coefficients_c[j]; j += 1
         # a = coefficients_c[j]; j += 1
-        # sen.saa['iss_p11'] = sfun.f1_create_saa_param_p11(w, p, y, h, a)
+        # sen.saa['iss_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         #Follicle number to calibrate staple length
         # , cw[11] parameter
@@ -133,7 +133,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         # y = coefficients_c[j]; j += 1
         # h = coefficients_c[j]; j += 1
         a = coefficients_c[j]; j += 1
-        sen.saa['follicles_p11'] = sfun.f1_create_saa_param_p11(w, p, y, h, a)
+        sen.saa['follicles_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         #Conception, cb1[24,25&26, 1] parameter
         ##LiveEx: Conception only for adult stage
@@ -143,7 +143,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         # y = coefficients_c[j]; j += 1
         h = np.nan  #hogget is not a reproducing age group
         a = coefficients_c[j]; j += 1
-        sen.saa['con_p11'] = sfun.f1_create_saa_param_p11(w, p, y, h, a)
+        sen.saa['con_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         #Litter size, cb1[24,25&26, 2&3] parameter
         ##LiveEx: Litter size only for adult stage
@@ -153,7 +153,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         # y = coefficients_c[j]; j += 1
         h = np.nan  #hogget is not a reproducing age group
         a = coefficients_c[j]; j += 1
-        sen.saa['ls_p11'] = sfun.f1_create_saa_param_p11(w, p, y, h, a)
+        sen.saa['ls_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         #Ewe rearing ability/lamb survival, cu6[8, -1] & cu2[8, -1] parameters
         ##LiveEx: Ewe rearing ability only for adult stage
@@ -163,7 +163,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         # y = coefficients_c[j]; j += 1
         h = np.nan  #hogget is not a reproducing age group
         a = coefficients_c[j]; j += 1
-        sen.saa['era_p11'] = sfun.f1_create_saa_param_p11(w, p, y, h, a)
+        sen.saa['era_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         #Standard reference weight to calibrate LW. Can also be used to match SRW calculated from ALW & Fat %
         ##LiveEx: SRW being altered for all age groups with a fixed growth constant and YWT is being calibrated using PI
@@ -177,7 +177,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         sen.saa['growth_constant'] = coefficients_c[j]; j += 1    #Yearling weight, cn_dams[1] parameter which alters the growth path
         # h = np.nan
         # a = saa_srw = coefficients_c[j]; j += 1
-        sen.saa['srw_p11'] = sfun.f1_create_saa_param_p11(w, p, y, h, a)
+        sen.saa['srw_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
         sen.saa['srw'] = saa_srw = coefficients_c[j]; j += 1  #included when WBE is included
 
         #Potential intake to calibrate Carcase fatness & WBE, ci[1] parameter
@@ -188,7 +188,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         y = coefficients_c[j]; j += 1
         # h = np.nan  #no hfat
         a = coefficients_c[j]; j += 1  #np.nan when SRW is included
-        sen.saa['pi_p11'] = sfun.f1_create_saa_param_p11(w, p, y, h, a)
+        sen.saa['pi_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         #EVG to calibrate Whole body energy, cg[8&9] parameters
         ##LiveEx: Only using the calibrated coefficients for H & A because it is an adult trait.
@@ -198,7 +198,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         y = np.nan  #WBE is currently only an adult trait, but hogget is also changed.
         # h =
         a = coefficients_c[j]; j += 1
-        sen.saa['evg_p11'] = sfun.f1_create_saa_param_p11(w, p, y, h, a)
+        sen.saa['evg_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         #Basal survival, cd[1] parameter
         ##LiveEx: Not altering basal survival coefficient.
@@ -208,7 +208,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         # y = coefficients_c[j]; j += 1
         # h = coefficients_c[j]; j += 1
         a = coefficients_c[j]; j += 1  #adult survival can also be represented in peri-natal survival
-        sen.saa['bsurv_p11'] = sfun.f1_create_saa_param_p11(w, p, y, h, a)
+        sen.saa['bsurv_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         #Peri-natal survival, cu2[23, -1] parameter
         ##LiveEx: Only doing Adult age stage
@@ -218,7 +218,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         # y = coefficients_c[j]; j += 1
         # h = np.nan  #ERA is a Y & A trait
         # a = coefficients_c[j]; j += 1
-        # sen.saa['pnsurv_p11'] = sfun.f1_create_saa_param_p11(w, p, y, h, a)
+        # sen.saa['pnsurv_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         # ##Build and apply sar variable based on the next 44 coefficients
         # indicelist = [(slice(3, 4, None), slice(None, None, None), slice(40, 57, None))    #00   Ewes
@@ -7909,7 +7909,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             ###Option 1 A linear scalarising method using calibration_weights from [Calibration_control.xlsx]TargetWeightings!
             ### The weighting is a subjective weight multiplied by the inverse of the target trait value.
             ###Calculate the objective value based on sum of squares of the scaled error
-            calibration_objective = np.sum(((calibration_values_p - calibration_targets_p) * calibration_weights_p) ** 2)
+            t_objective = np.sum(((calibration_values_p - calibration_targets_p) * calibration_weights_p) ** 2)
+            calibration_objective = 1e8 if np.isnan(t_objective) else t_objective
 
             # ###Option 2 A Chebyshev scalarisation. The weighting is the inverse of the coefficient increasing weight on small coefficients
             # ###The objective is the deviation of the worst trait relative to the size of the coefficient
