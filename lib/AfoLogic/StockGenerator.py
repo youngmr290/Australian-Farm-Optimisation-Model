@@ -271,44 +271,16 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         # pinp.feedsupply['i_feedsupply_options_r1j2p'] = fun.f_sa(pinp.feedsupply['i_feedsupply_options_r1j2p']
         #                                             , sen.sar['feedsupply_r1jp'], 4, value_min=0.0, target=13.0)
 
-    else:   #not model_inversion, assign the zero values to the saa coefficients (for printing later).
-        # ##set the genotype to report. This is the genotype of the c2 axis in Universal.xlsx
-        # genotype = pinp.sheep['a_c2_c0'][0]    #2 is CFS for MLP & GEPEP traditional, 3 is GFS for GEPEP
-        n_coeff = 14
+    else:   #not model_inversion
+        ## assign the zero values to the saa coefficients (for printing later).
+        ### coefficients and traits need to align with the numbers in the inversion (code above and below)
+        ### A source of the values is the analysis definitions in [Calibration_controls.xlsx]
+        n_coeff = 15  #Values for reporting arrays when not doing inversion (align with the code below)
         n_traits = 11
         coefficients_c = np.zeros(n_coeff)
         calibration_targets_p = np.zeros (n_traits)
-    #     j = 0
-    #     coefficients_c[j] = uinp.parameters['i_sfw_c2'][genotype]           #cfw
-    #     j += 1
-    #     coefficients_c[j] = uinp.parameters['i_cw_c2'][25, genotype]        #ycfw scalar
-    #     j += 1
-    #     coefficients_c[j] = uinp.parameters['i_sfd_c2'][genotype]          #fd
-    #     j += 1
-    #     coefficients_c[j] = uinp.parameters['i_cw_c2'][26, genotype]        #yfd scalar
-    #     j += 1
-    #     coefficients_c[j] = uinp.parameters['i_cw_c2'][16, genotype]        #SS
-    #     j += 1
-    #     coefficients_c[j] = uinp.parameters['i_cw_c2'][11, genotype]        #SL
-    #     j += 1
-    #     coefficients_c[j] = uinp.parameters['i_cl0_c2'][25, 0, genotype]   #% preg (Con)
-    #     j += 1
-    #     coefficients_c[j] = uinp.parameters['i_cl0_c2'][25, 1, genotype]    #Litter size
-    #     j += 1
-    #     coefficients_c[j] = uinp.parameters['i_cu2_c2'][8, -1, genotype]    #Lamb survival (ERA)
-    #     j += 1
-    #     coefficients_c[j] = uinp.parameters['i_srw_c2'][genotype]           #Adult LW
-    #     j += 1
-    #     coefficients_c[j] = uinp.parameters['i_ci_c2'][1, genotype]         #Intake
-    #     j += 1
-    #     # cg[9] calculated from the deviation in cg[8]
-    #     coefficients_c[j] = uinp.parameters['i_cg_c2'][8, genotype]         #Fatness EVG
-    #     j += 1
-    #     coefficients_c[j] = uinp.parameters['i_cd_c2'][1, genotype]        #Basal mortality
-    #     j += 1
-    #     coefficients_c[j] = uinp.parameters['i_cl_c2'][0, genotype]        #Wwt, by milk production and intake scalar
-    #     j += 1
-    #     coefficients_c[j] = uinp.parameters['i_cn_c2'][1, genotype]        #YWT, normal growth curve coefficient
+        # ##set the genotype to report. This is the genotype of the c2 axis in Universal.xlsx
+        # genotype = pinp.sheep['a_c2_c0'][0]    #2 is CFS for MLP & GEPEP traditional, 3 is GFS for GEPEP
 
 
     ######################
