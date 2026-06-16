@@ -518,7 +518,7 @@ def create_sa():
     saa['feedsupply_adj_offs_p10'] = np.zeros((3), dtype='float64') #user offs fs adjuster - used in web app (simplified version of feedsupply_adj_r2p)
     saa['rr'] = 0.0                    #reproductive rate/scanning percentage (adjust the standard scanning % for f_conception_ltw and within function for f_conception_cs
     saa['ss'] = 0.0                    #staple strength (adjust SS in sgen end of period)
-    saa['fat_depth'] = 0.0         #Change in carcase fat_depth of all sale animals. Note: no energy cost linked to fat depth - relocate body fat to the carcase.
+    saa['gr_depth'] = 0.0         #Change in gr site fat_depth of all sale animals. Note: no energy cost linked to fat depth. Assumption is relocate body fat to the gr site to alter sale value.
     ##SAT
     ##SAR
     sar['feedsupply_r1jp'] = np.zeros(pinp.feedsupply['i_feedsupply_options_r1j2p'].shape, dtype='float64')  #SA value for feedsupply.
@@ -549,23 +549,28 @@ def create_sa():
     sam['muscle_target_c2'] = np.ones(uinp.parameters['i_muscle_target_c2'].shape, dtype='float64')   #std muscle mass target genotype params
     ##SAP
     ##SAA
-    saa['sfd_c2'] = 0.0                     #std fibre diameter genotype params
-    saa['srw_c2'] = 0.0                     #std reference weight genotype params
+    saa['sfd_c2'] = 0.0              #std fibre diameter genotype params
+    saa['srw_c2'] = 0.0              #std reference weight genotype params
     saa['cg_c1c2'] = np.zeros(uinp.parameters['i_cg_c2'].shape, dtype='float64')  #SA value for weight gain params.
     saa['ck_c1c2'] = np.zeros(uinp.parameters['i_ck_c2'].shape, dtype='float64')  #SA value for energy efficiency params.
     saa['cl0_c1c2'] = np.zeros(uinp.parameters['i_cl0_c2'].shape, dtype='float64')  #SA value for litter size genotype params.
-    saa['scan_std_c2'] = 0.0                #std scanning percentage of a genotype. Controls the MU repro, initial propn of sing/twin/trip prog required to replace the dams, the lifetime productivity of the dams as affected by their BTRT.
-    saa['nlb_c2'] = 0.0                #std scanning percentage of a genotype. Controls the MU repro, initial propn of sing/twin/trip prog required to replace the dams, the lifetime productivity of the dams as affected by their BTRT.
-    saa['lss'] = 0.0                    #lamb survival of singles. This SA alters the BTRT of the initial animals, it does not alter the calculation of lamb mortality. Therefore, both need to be used.
-    saa['lstw'] = 0.0                    #lamb survival of twins. This SA alters the BTRT of the initial animals, it does not alter the calculation of lamb mortality. Therefore, both need to be used.
-    saa['lstr'] = 0.0                    #lamb survival of triplets. This SA alters the BTRT of the initial animals, it does not alter the calculation of lamb mortality. Therefore, both need to be used.
+    saa['scan_std_c2'] = 0.0         #std scanning percentage of a genotype. Controls the MU repro, initial propn of sing/twin/trip prog required to replace the dams, the lifetime productivity of the dams as affected by their BTRT.
+    saa['nlb_c2'] = 0.0              #std scanning percentage of a genotype. Controls the MU repro, initial propn of sing/twin/trip prog required to replace the dams, the lifetime productivity of the dams as affected by their BTRT.
+    saa['lss'] = 0.0                 #lamb survival of singles. This SA alters the BTRT of the initial animals, it does not alter the calculation of lamb mortality. Therefore, both need to be used.
+    saa['lstw'] = 0.0                #lamb survival of twins. This SA alters the BTRT of the initial animals, it does not alter the calculation of lamb mortality. Therefore, both need to be used.
+    saa['lstr'] = 0.0                #lamb survival of triplets. This SA alters the BTRT of the initial animals, it does not alter the calculation of lamb mortality. Therefore, both need to be used.
+    saa['ycfw_scalar'] = 0.0         #Genotype calibration: Adjust scalar for ycfw genotype params
+    saa['yfd_scalar'] = 0.0          #Genotype calibration: Adjust scalar for yfd genotype params
+    saa['milk_yield'] = 0.0          #Genotype calibration: Adjust cl_yatf[0] parameter which alters milk production, lamb milk intake and ewe PI during lactation
+    saa['growth_constant'] = 0.0     #Genotype calibration: Adjust growth constant (k) param
+    saa['srw'] = 0.0                 #Genotype calibration: Adjust SRW
+
     ##SAA on slices of the livestock parameters using the age stage axis
     saa['sfw_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')  #SA value with age stages for clean fleece weight (sfw)
     saa['sfd_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')  #SA value with age stages for fibre diameter (sfd)
     saa['iss_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')  #SA value with age stages for staple strength (cw[16])
     saa['follicles_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')  #SA value with age stages for staple length (cw[11])
     saa['srw_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')  #SA value with age stages for weight (srw)
-    saa['wwt_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')  #SA value with age stages for weaning weight (cl[0])
     saa['pi_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')  #SA value with age stages for potential intake (ci[1])
     saa['evg_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')  #SA value with age stages for fatness (cg[8] & cg[9])
     saa['bsurv_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')  #SA value with age stages for basal survival (cd[1])

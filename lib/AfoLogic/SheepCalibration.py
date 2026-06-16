@@ -18,14 +18,15 @@ sys.argv: Experiment number (will use the first trial in the experiment). If bla
 """
 
 
-from timeit import default_timer as timer
-
 import numpy as np
+from timeit import default_timer as timer
+import sys
+import os
+
+##Calibration specific imports
 import pandas as pd
 from scipy import optimize as spo
 import multiprocessing as mp
-import os
-import sys
 import multiprocessing
 import time
 
@@ -35,6 +36,8 @@ print(f'Calibration commenced at: {time.ctime()}')
 time_list = [] ; time_was = []
 time_list.append(timer()) ; time_was.append("start")
 
+#sets the path to the root directory so the relative imports in the other files work
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
 from lib.RawVersion import LoadExcelInputs as dxl
 from lib.RawVersion import LoadExp as exp
@@ -42,36 +45,29 @@ from lib.RawVersion import RawVersionExtras as rve
 from lib.AfoLogic import StructuralInputs as sinp
 from lib.AfoLogic import PropertyInputs as pinp
 from lib.AfoLogic import UniversalInputs as uinp
-from lib.AfoLogic import Periods as per
 from lib.AfoLogic import Functions as fun
-from lib.AfoLogic import SeasonalFunctions as zfun
 from lib.AfoLogic import Sensitivity as sen
-from lib.AfoLogic import StockGenerator as sgen
 from lib.AfoLogic import relativeFile
 
+from lib.AfoLogic import StockGenerator as sgen
 
+time_list.append(timer()) ; time_was.append("import Modules")
+
+
+# from lib.AfoLogic import relativeFile
 
 ###############
 #User control #
 ###############
-try:
-    exp_number = int(sys.argv[1])  #reads in as string so need to convert to int, the script path is the first value hence take the second.
-    trial = 0    #If an experiment was passed as an argument then take the specified trial in the experiment
-except (IndexError, ValueError) as e:  #in case no arg passed to python specify a trial number
-    ## the trial number is value in Col A of target trial in exp.xls. Default is QT (trial 31) but can point to any trial
-    trial = 12   #12 is QT
+trial = 1   #this will run the first trial in the exp_group (so you need to set the exp group in the script params)
 
 ######
 #Run #
 ######
 ##load excel data and experiment data
 exp_data, exp_group_bool, trial_pinp = exp.f_read_exp()
-sinp_defaults, uinp_defaults, pinp_defaults = dxl.f_load_excel_default_inputs(trial_pinp=trial_pinp)
-d_rot_info = dxl.f_load_phases()
-cat_propn_s1_ks2 = dxl.f_load_stubble()
-
-##cut exp_data based on the experiment group
 exp_data = exp.f_group_exp(exp_data, exp_group_bool)
+sinp_defaults, uinp_defaults, pinp_defaults = dxl.f_load_excel_default_inputs(trial_pinp=trial_pinp.iloc[[trial]])
 
 ##select property for the current trial
 property = trial_pinp.iloc[trial]
@@ -94,19 +90,13 @@ sinp.f_structural_inp_sa(sinp_defaults)
 uinp.f_universal_inp_sa(uinp_defaults)
 pinp.f_property_inp_sa(pinp_defaults)
 
+##expand p6 axis to include nodes
+pinp.f1_expand_p6()
+
 ##mask lmu
 pinp.f1_mask_lmu()
 
-##expand p6 axis to include nodes
-sinp.f1_expand_p6()
-pinp.f1_expand_p6()
-
-##check the rotations and inputs align - this means rotation method can be controlled using a SA
-d_rot_info = pinp.f1_phases(d_rot_info)
-
-# time_list.append(timer()) ; time_was.append("import other modules")
-
-
+##read calibration info
 df_targets_tp = pd.read_excel(relativeFile.findExcel("Calibration_control.xlsx"), sheet_name="Targets",index_col=[0],header=[0], engine='openpyxl')
 df_weights_p = pd.read_excel(relativeFile.findExcel("Calibration_control.xlsx"), sheet_name="Weights",index_col=[0],header=[0], engine='openpyxl')
 df_bestbet_tc = pd.read_excel(relativeFile.findExcel("Calibration_control.xlsx"), sheet_name="BestBet",index_col=[0],header=[0], engine='openpyxl')
@@ -142,8 +132,9 @@ r_vals={}   #an empty dictionary used in sgen.generator to store the report valu
 nv={}
 pkl_fs_info={}
 pkl_fs={}
-calibration = True
+model_inversion = True
 stubble=False
+calibration = {}
 
 ## create empty arrays to accept the output
 coefficients_tc = np.zeros((n_teams,n_coef))
@@ -154,7 +145,11 @@ message_t = np.empty(n_teams, dtype = object)
 
 ##loop through teams and save output
 
-def f_run_calibration(t, coefficients_dict, success_dict, wsmse_dict, nit_dict, message_dict):
+def f_run_calibration(t, coefficients_dict, success_dict, wsmse_dict, nit_dict, message_dict, calibration):
+
+    '''Function that calls the Differential Evolution function if multiprocessing teams, rather than workers
+    Processing of teams individually using multiple workers is done in the main code.
+    '''
     ## weightings for the calibration objective function
     ### these are defined for all teams and don't vary
     calibration_weights = weights_p
@@ -177,7 +172,8 @@ def f_run_calibration(t, coefficients_dict, success_dict, wsmse_dict, nit_dict, 
 
     ## call the optimise routine
     result = spo.differential_evolution(sgen.generator, bounds
-        , args = (params, r_vals, nv, pkl_fs_info, pkl_fs, stubble, calibration, calibration_weights, calibration_targets)
+        , args = (params, r_vals, nv, pkl_fs_info, pkl_fs, stubble, model_inversion, calibration_weights
+                  , calibration_targets, calibration)
         , maxiter=maxiter, popsize=popsize, tol=tol, disp=disp, polish=polish, updating=updating, workers=workers, x0=bestbet)
     #assign the team results to dicts
     coefficients_dict[t] = result.x
@@ -233,14 +229,14 @@ if __name__ == '__main__':
 
             ##Set some of the control variables (that might want to be tweaked later)
             ###200 iterations will usually get a very good result 10E-10. 400 almost always exits optimally
-            maxiter = 200  #400      The maximum number of iterations. # calls = (maxiter + 1) * selection population
-            popsize = 5  #15        The selection population is (popsize * n coefficients)
+            maxiter = 400  #400      The maximum number of iterations. # calls = (maxiter + 1) * selection population
+            popsize = 6  #15        The selection population is (popsize * n coefficients)
             tol = 0.01  #0.01      The optimisation relative tolerance
             disp = True  #False     Display the result each iteration
             polish = False  #True      After the differential evolution carry out some further refining
             population = popsize * n_coef   #adjust popsize so that population fits in with the number of processors
-            # max_workers = 30  #1         The number of multi-processes, while calculating the population. Relate to size of population
-            workers = min(multiprocessing.cpu_count(), population)   #, max_workers)    removed max workers so there wasn't a limit when using google
+            max_workers = 1  #28 for T7600 with 14 coefficients    The number of multi-processes, while calculating the population. Relate to size of population
+            workers = min(multiprocessing.cpu_count(), population, max_workers)    # removed max workers so there wasn't a limit when using google
             if workers != 1:
                 updating = 'deferred'  #   Use deferred if workers > 1 to suppress warning
             else:
@@ -251,8 +247,10 @@ if __name__ == '__main__':
             mp.freeze_support()
             ## call the optimise routine
             result = spo.differential_evolution(sgen.generator, bounds
-                , args = (params, r_vals, nv, pkl_fs_info, pkl_fs, stubble, calibration, calibration_weights, calibration_targets)
-                , maxiter=maxiter, popsize=popsize, tol=tol, disp=disp, polish=polish, updating=updating, workers=workers, x0=bestbet)
+                , args = (params, r_vals, nv, pkl_fs_info, pkl_fs, stubble, model_inversion, calibration_weights
+                          , calibration_targets, calibration)
+                , maxiter=maxiter, popsize=popsize, tol=tol, disp=disp, polish=polish, updating=updating
+                , workers=workers, x0=bestbet)
             #assign the team results to arrays
             coefficients_tc[t, :] = result.x
             success_t[t] = result.success
