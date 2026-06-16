@@ -67,7 +67,7 @@ from . import Trees as tre
 # from memory_profiler import profile
 # @profile
 def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pkl_fs={}, stubble=None
-            , model_inversion=None, calibration_weights_p=None, calibration_targets_p=None, calibration=None
+            , calibrate_trait_values=None, calibration_weights_p=None, calibration_targets_p=None, o_trait_values=None
             , plots=False):
     """
     A function to wrap the generator and post-processing that can be called by SheepPyomo.
@@ -87,7 +87,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     ################################
     ##Model inversion coefficients #
     ################################
-    if model_inversion:
+    if calibrate_trait_values:
         # print(coefficients_c)   #only useful for debugging when not multiprocessing (workers=1, and not multiprocessing teams)
         n_coeff = coefficients_c.size
         n_traits = calibration_weights_p.size
@@ -292,7 +292,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         idx = fun.f_slice_idx(uinp.parameters['i_cn_c2'], {0: [1]})
         uinp.parameters['i_cn_c2'][idx] = fun.f_sa(uinp.parameters['i_cn_c2'][idx], sen.saa['growth_constant'], 2)
 
-    else:   #not model_inversion
+    else:   #not calibrate_trait_values
         ## assign the zero values to the saa coefficients (for printing later).
         ### coefficients and traits need to align with the numbers in the inversion (code above and below)
         ### A source of the values is the analysis definitions in [Calibration_controls.xlsx]
@@ -3186,7 +3186,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     ##increment the number of loops. This may be specified in the SAV to finetune the LTW effect.
     loop_ltw_len = loop_ltw_len + fun.f_sa(0, sen.sav['LTW_loops_increment'], 5)
 
-    if model_inversion:   #set ltw_loops and remove sires and offs calculations in the loops
+    if calibrate_trait_values or o_trait_values is not None:   #set ltw_loops and remove sires and offs calculations in the loops
         loop_ltw_len = 1
         days_period_pa1e1b1nwzida0e0b0xyg0[...] = 0
         days_period_pa1e1b1nwzida0e0b0xyg3[...] = 0
@@ -7631,9 +7631,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     if stubble:
         return r_intake_f_tpdams, r_intake_f_tpoffs, o_ebg_tpdams, o_ebg_tpoffs
 
-    #to report the calibration output for the standard genotype define calibration = {} in RunAfoRaw.py
-    if calibration is not None:
-        ##calculate the calibration variables for each production trait (p)
+    ##if calibrating or reporting trait values: calculate the calibration variables for each production trait (p)
+    if calibrate_trait_values or o_trait_values is not None:
         pcfw = o_cfw_tpdams[0,54,0,0,0,0,0,0,0,0,0,0,0,0,0,0]    #PCFW of NM ewes at 0.5yo
         ycfw = o_cfw_tpdams[0,106,0,0,0,0,0,0,0,0,0,0,0,0,0,0]   #YCFW of NM ewes at 1.5yo
         hcfw = o_cfw_tpdams[0,158,0,0,0,0,0,0,0,0,0,0,0,0,0,0]   #HCFW of NM ewes at 1.5yo
@@ -7828,116 +7827,116 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
         ##store the calibration variables for each production trait (p)
         ##Comment any traits that don't have target values
-        calibration_values_p = np.zeros_like(calibration_targets_p)
+        trait_values_p = np.zeros_like(calibration_targets_p)
         i = 0
         ##assign calibration values for each trait and set the target for printing
-        # calibration_values_p[i] = pcfw; pcfw_target = calibration_targets_p[i]; i += 1
-        calibration_values_p[i] = ycfw; ycfw_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = hcfw; hcfw_target = calibration_targets_p[i]; i += 1
-        calibration_values_p[i] = acfw; acfw_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = pfd; pfd_target = calibration_targets_p[i]; i += 1
-        calibration_values_p[i] = yfd; yfd_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = hfd; hfd_target = calibration_targets_p[i]; i += 1
-        calibration_values_p[i] = afd; afd_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = pss; pss_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = yss; yss_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = hss; hss_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = ass; ass_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = psl; psl_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = ysl; ysl_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = hsl;  hsl_target = calibration_targets_p[i]; i += 1
-        calibration_values_p[i] = asl; asl_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = ycon;  ycon_target = calibration_targets_p[i]; i += 1
-        calibration_values_p[i] = acon; acon_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = yls;  yls_target = calibration_targets_p[i]; i += 1
-        calibration_values_p[i] = als; als_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = yera; yera_target = calibration_targets_p[i]; i += 1
-        calibration_values_p[i] = aera; aera_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = bwt; bwt_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = wwt; wwt_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = pwt; pwt_target = calibration_targets_p[i]; i += 1
-        calibration_values_p[i] = ywt; ywt_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = hwt; hwt_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = awt; awt_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = srw; srw_target = calibration_targets_p[i]; i += 1         #used when SRW has a target (which is not common)
+        # trait_values_p[i] = pcfw; pcfw_target = calibration_targets_p[i]; i += 1
+        trait_values_p[i] = ycfw; ycfw_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = hcfw; hcfw_target = calibration_targets_p[i]; i += 1
+        trait_values_p[i] = acfw; acfw_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = pfd; pfd_target = calibration_targets_p[i]; i += 1
+        trait_values_p[i] = yfd; yfd_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = hfd; hfd_target = calibration_targets_p[i]; i += 1
+        trait_values_p[i] = afd; afd_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = pss; pss_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = yss; yss_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = hss; hss_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = ass; ass_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = psl; psl_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = ysl; ysl_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = hsl;  hsl_target = calibration_targets_p[i]; i += 1
+        trait_values_p[i] = asl; asl_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = ycon;  ycon_target = calibration_targets_p[i]; i += 1
+        trait_values_p[i] = acon; acon_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = yls;  yls_target = calibration_targets_p[i]; i += 1
+        trait_values_p[i] = als; als_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = yera; yera_target = calibration_targets_p[i]; i += 1
+        trait_values_p[i] = aera; aera_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = bwt; bwt_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = wwt; wwt_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = pwt; pwt_target = calibration_targets_p[i]; i += 1
+        trait_values_p[i] = ywt; ywt_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = hwt; hwt_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = awt; awt_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = srw; srw_target = calibration_targets_p[i]; i += 1         #used when SRW has a target (which is not common)
 
         ##Different treatment for SRW if it is being endogenously estimated.
         ###With SRW endogenous the target is the parameter and the calibration value is the estimate
-        # calibration_values_p[i] = srw; srw_target = uinp.parameters['i_srw_c2'][genotype]    #used when SRW is being endogenously calculated
+        # trait_values_p[i] = srw; srw_target = uinp.parameters['i_srw_c2'][genotype]    #used when SRW is being endogenously calculated
 
-        # calibration_values_p[i] = pfat; pfat_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = yfat; yfat_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = hfat; hfat_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = afat; afat_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = wcs; wcs_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = pcs; pcs_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = ycs; ycs_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = hcs; hcs_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = acs; acs_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = pwbe; pwbe_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = ywbe; ywbe_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = hwbe; hwbe_target = calibration_targets_p[i]; i += 1
-        calibration_values_p[i] = awbe; awbe_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = psurv; psurv_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = ysurv; ysurv_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = hsurv; hsurv_target = calibration_targets_p[i]; i += 1
-        calibration_values_p[i] = asurv; asurv_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = elw0; elw0_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = elw1; elw1_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = elw2; elw2_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = elw3; elw3_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = elw4; elw4_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = elw5; elw5_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = elw6; elw6_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = elw7; elw7_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = elw8; elw8_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = elw9; elw9_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = elw10; elw10_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = elw11; elw11_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = elw12; elw12_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = elw13; elw13_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = elw14; elw14_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = elw15; elw15_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = elw16; elw16_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = elw17; elw17_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = elw18; elw18_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = elw19; elw19_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = elw20; elw20_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = elw21; elw21_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = elw22; elw22_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = elw23; elw23_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = elw24; elw24_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = elw25; elw25_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = elw26; elw26_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = elw27; elw27_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = wlw0; elw0_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = wlw1; wlw1_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = wlw2; wlw2_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = wlw3; wlw3_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = wlw4; wlw4_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = wlw5; wlw5_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = wlw6; wlw6_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = wlw7; wlw7_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = wlw8; wlw8_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = wlw9; wlw9_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = wlw10; wlw10_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = wlw11; wlw11_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = wlw12; wlw12_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = wlw13; wlw13_target = calibration_targets_p[i]; i += 1
-        # calibration_values_p[i] = wlw14; wlw14_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = pfat; pfat_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = yfat; yfat_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = hfat; hfat_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = afat; afat_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = wcs; wcs_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = pcs; pcs_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = ycs; ycs_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = hcs; hcs_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = acs; acs_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = pwbe; pwbe_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = ywbe; ywbe_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = hwbe; hwbe_target = calibration_targets_p[i]; i += 1
+        trait_values_p[i] = awbe; awbe_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = psurv; psurv_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = ysurv; ysurv_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = hsurv; hsurv_target = calibration_targets_p[i]; i += 1
+        trait_values_p[i] = asurv; asurv_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = elw0; elw0_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = elw1; elw1_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = elw2; elw2_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = elw3; elw3_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = elw4; elw4_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = elw5; elw5_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = elw6; elw6_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = elw7; elw7_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = elw8; elw8_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = elw9; elw9_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = elw10; elw10_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = elw11; elw11_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = elw12; elw12_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = elw13; elw13_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = elw14; elw14_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = elw15; elw15_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = elw16; elw16_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = elw17; elw17_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = elw18; elw18_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = elw19; elw19_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = elw20; elw20_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = elw21; elw21_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = elw22; elw22_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = elw23; elw23_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = elw24; elw24_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = elw25; elw25_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = elw26; elw26_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = elw27; elw27_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = wlw0; elw0_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = wlw1; wlw1_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = wlw2; wlw2_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = wlw3; wlw3_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = wlw4; wlw4_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = wlw5; wlw5_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = wlw6; wlw6_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = wlw7; wlw7_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = wlw8; wlw8_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = wlw9; wlw9_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = wlw10; wlw10_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = wlw11; wlw11_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = wlw12; wlw12_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = wlw13; wlw13_target = calibration_targets_p[i]; i += 1
+        # trait_values_p[i] = wlw14; wlw14_target = calibration_targets_p[i]; i += 1
 
-        if model_inversion:
-            ### Handle the multi-trait calibration using an a-priori method
+        if calibrate_trait_values:
+            ### Handle the multi-trait calibration using an a-priority method
             ###Option 1 A linear scalarising method using calibration_weights from [Calibration_control.xlsx]TargetWeightings!
             ### The weighting is a subjective weight multiplied by the inverse of the target trait value.
             ###Calculate the objective value based on sum of squares of the scaled error
-            t_objective = np.sum(((calibration_values_p - calibration_targets_p) * calibration_weights_p) ** 2)
+            t_objective = np.sum(((trait_values_p - calibration_targets_p) * calibration_weights_p) ** 2)
             calibration_objective = 1e8 if np.isnan(t_objective) else t_objective
 
             # ###Option 2 A Chebyshev scalarisation. The weighting is the inverse of the coefficient increasing weight on small coefficients
             # ###The objective is the deviation of the worst trait relative to the size of the coefficient
             # ###Requires n_coef = n_production traits & coefficient to be > 0. Stopped using this because of these constraints and no apparent benefit.
-            # objective = np.max((fun.f_divide(calibration_values_p - calibration_targets_p, calibration_targets_p) ** 2)
+            # objective = np.max((fun.f_divide(trait_values_p - calibration_targets_p, calibration_targets_p) ** 2)
             #                     / np.maximum(0.0001, np.abs(coefficients_c)))
 
             print(f"obj: {calibration_objective} trait  Team SRW: [{uinp.parameters['i_srw_c2'][a_c2_c0]} + {saa_srw}")
@@ -7995,17 +7994,17 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
         # print("LW targets Ewes (value, sar, target)")
         # for k in range(28):
-        #     print(f"({calibration_values_p[i]}, {coefficients_c[j]}, {calibration_targets_p[i]})",end='')
+        #     print(f"({trait_values_p[i]}, {coefficients_c[j]}, {calibration_targets_p[i]})",end='')
         #     i += 1; j += 1
         # print("\n LW targets Wethers (value, sar, target)")
         # for k in range(14):
-        #     print(f"({calibration_values_p[i]}, {coefficients_c[j]}, {calibration_targets_p[i]})", end='')
+        #     print(f"({trait_values_p[i]}, {coefficients_c[j]}, {calibration_targets_p[i]})", end='')
         #     i += 1; j += 1
 
-        if model_inversion:
+        if calibrate_trait_values:
             return calibration_objective
         else:
-            calibration["output"] = calibration_values_p
+            o_trait_values["output"] = trait_values_p
             return
 
 
