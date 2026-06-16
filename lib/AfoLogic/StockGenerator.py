@@ -181,7 +181,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         saa_srw = 0   # stored for reporting of the genotype later.
         # sen.saa['birth_weight'] = coefficients_c[j]; j += 1    #Birth weight, #todo still to decide how to control BWT
         w = np.nan  #wwt is changed with a separate coefficient
-        # sen.saa['milk_yield'] = coefficients_c[j]; j += 1    #Weaning weight, cl_yatf[0] parameter which alters milk production, lamb milk intake and ewe PI during lactation
+        sen.saa['milk_yield'] = coefficients_c[j]; j += 1    #Weaning weight, cl_yatf[0] parameter which alters milk production, lamb milk intake and ewe PI during lactation
         # p = coefficients_c[j]; j += 1
         # y = coefficients_c[j]; j += 1   #ywt can be changed using the growth constant
         sen.saa['growth_constant'] = coefficients_c[j]; j += 1    #Yearling weight, cn_dams[1] parameter which alters the growth path
