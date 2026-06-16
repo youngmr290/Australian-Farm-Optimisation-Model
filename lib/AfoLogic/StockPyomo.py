@@ -16,8 +16,8 @@ from . import StructuralInputs as sinp
 from . import Sensitivity as sen
 
 
-def stock_precalcs(params, r_vals, nv, pkl_fs_info, pkl_fs, calibration=None):
-    sgen.generator(params=params, r_vals=r_vals, nv=nv, pkl_fs_info=pkl_fs_info, pkl_fs=pkl_fs, calibration=calibration)
+def stock_precalcs(params, r_vals, nv, pkl_fs_info, pkl_fs, o_trait_values=None):
+    sgen.generator(params=params, r_vals=r_vals, nv=nv, pkl_fs_info=pkl_fs_info, pkl_fs=pkl_fs, o_trait_values=o_trait_values)
 
 
 

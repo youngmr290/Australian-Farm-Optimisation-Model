@@ -30,17 +30,11 @@ cat_propn_s1_ks2 = dxl.f_load_stubble()
 ##run AFO #
 ###########
 start_loops_time = time.time()    #This excludes the time for reading the inputs and is used to calculate remaining time
-calibration = {}    # =None for AFO to run 'normally' ={} to generate the calibration TraitValues.xlsx outputs.
 
 run = 0  # counter to work out average time per loop
 for row in dataset:
     ##start timer for each loop
     start_trial_time = time.time()
-    if calibration is None:
-        calibration_row = None
-    else:
-        calibration[row]={}  #create row key inside calibration dictionary
-        calibration_row = calibration[row]
 
     ##get trial name - used for outputs
     trial_name = exp_data.index[row][3]
@@ -69,15 +63,14 @@ for row in dataset:
     ##run AFO
     model, profit, trial_infeasible, lp_vars, r_vals, pkl_fs_info, d_rot_info = (
         afo.exp(solver_method, user_sa, property, trial_name, trial_description, sinp_defaults, uinp_defaults,
-                pinp_defaults, d_rot_info, cat_propn_s1_ks2, pkl_fs, print_debug_output, calibration=calibration_row))
+                pinp_defaults, d_rot_info, cat_propn_s1_ks2, pkl_fs, print_debug_output))
 
     ##tally trials run for print statements
     run += 1
 
     ##save AFO outputs
-    if calibration is None:
-        out.f_save_trial_outputs(exp_data, row, trial_name, model, profit, trial_infeasible, lp_vars, r_vals
-                                 , pkl_fs_info, d_rot_info)
+    out.f_save_trial_outputs(exp_data, row, trial_name, model, profit, trial_infeasible, lp_vars, r_vals
+                             , pkl_fs_info, d_rot_info)
 
     ##determine expected time to completion - trials left multiplied by average time per trial &time for current loop
     trials_to_go = total_trials - run
@@ -88,14 +81,6 @@ for row in dataset:
         f'{trial_description}, time taken this trial: {time.time() - start_trial_time:.2f}')  # time since start of this trial
     print(
         f'{trial_description}, Expected finish time: \033[1m{time.ctime(finish_time_expected)}\033[0m (at {time.ctime()})')
-
-if calibration is not None:    #this is for saving the calibration trait values for each team. Done as a separate experiment
-    traits_to_save = pd.DataFrame({row: values["output"] for row, values in calibration.items()}).T
-    writer = pd.ExcelWriter("Output/TraitValues.xlsx", engine='xlsxwriter')
-    traits_to_save.to_excel(writer, sheet_name='Traits', index=True, header=False)
-    writer.close()
-    print(f'Trait values written to Excel. Note: Optimisation is not being carried out')
-
 
 
 end = time.time()
