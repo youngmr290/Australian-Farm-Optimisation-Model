@@ -2118,7 +2118,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     saa = sfun.f1_saa_p11_to_p(sen.saa['con_p11'], scalar_pdamsp11)
     target_shape = np.broadcast_shapes(cb1_cpdams.shape, saa.shape)
     cb1_p_cpdams = np.broadcast_to(cb1_cpdams, target_shape).copy()
-    slc_b1 = fun.f_slice_idx(cb1_p_cpdams, {b1_pos: [1]})
+    slc_b1 = fun.f_slice_idx(cb1_p_cpdams, {b1_pos: [0]})
     cb1_p_cpdams[24:27][slc_b1] += saa
 
     ##cb1[24, 25 & 26, 2 & 3] - litter size
@@ -2126,7 +2126,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     saa = sfun.f1_saa_p11_to_p(sen.saa['ls_p11'], scalar_pdamsp11)
     target_shape = np.broadcast_shapes(cb1_cpdams.shape, saa.shape)
     cb1_p_cpdams = np.broadcast_to(cb1_cpdams, target_shape).copy()
-    slc_b1 = fun.f_slice_idx(cb1_p_cpdams, {b1_pos: [2,4]})
+    slc_b1 = fun.f_slice_idx(cb1_p_cpdams, {b1_pos: [1]})
     cb1_p_cpdams[24:27][slc_b1] += saa
 
     ##cu6[8, -1] & cu2[8, -1] - ewe rearing ability / lamb survival
