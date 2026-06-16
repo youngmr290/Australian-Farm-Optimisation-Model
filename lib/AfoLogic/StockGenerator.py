@@ -5661,7 +5661,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p:p+1] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...] >0):
                     temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_lwc_cs(cg_cpyatf, rc_start_yatf, mei_yatf, mem_yatf
-                            , new_yatf, zf1_yatf, zf2_yatf, kg_yatf, kw_cs_pa1e1b1nwzida0e0b0xyg2, rev_trait_values['yatf'][p])
+                            , new_yatf, zf1_yatf, zf2_yatf, kg_yatf, kw_cs_pa1e1b1nwzida0e0b0xyg2, rev_trait_values['yatf'][p]
+                            , days_per_period=days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...])
                     if eqn_used:
                         ebg_yatf = temp0
                         evg_yatf = temp1
