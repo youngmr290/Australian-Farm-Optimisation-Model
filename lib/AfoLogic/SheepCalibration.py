@@ -8,10 +8,11 @@ SheepCalibration.py is run using python -u SheepCalibration.py {<exp no>} {<numb
 <exp no> is an optional argument, if it is excluded the default trial is QT
 <number of processes> is an optional argument. The default is 1 (don't multiprocess teams use workers on a single team)
 
-Multiprocessing the teams (with workers =1) will be quicker if the number of cpus is greater than population size.
-Population size is pop_size parameter (5) x if there are sufficient teams to occupy the computer resource
+Multiprocessing the teams (with workers =1) will be quicker if
+ (1) the number of cpus is greater than population size - Population size is pop_size parameter (5 to 15) x number of coefficients
+ (2) there are sufficient teams to occupy the computer resource
 If not, use multiple workers. The maximum useful number of workers is the size of the selection population
-Multiprocessing teams should be more efficient because it can use 'immediate' updating
+Multiprocessing teams can be more efficient because it can use 'immediate' updating
 
 sys.argv: Experiment number (will use the first trial in the experiment). If blank uses QT (trial 12)
           Number of multi processes. If blank will not multiprocess but will use workers
@@ -135,8 +136,9 @@ def run_calibration_for_team_worker(t):
 
 
 def build_context(targets_tp, weights_p, bestbet_tc, bnd_lo_tc, bnd_up_tc, pkl_fs, n_coef, *, team_processes):
-    maxiter = 200 if team_processes else 400
-    popsize = 5 if team_processes else 6
+    #team processes is multi processing teams, else is individual teams
+    maxiter = 400
+    popsize = 5 if team_processes else 5
     population = popsize * n_coef
     max_workers = 1
     workers = 1 if team_processes else min(multiprocessing.cpu_count(), population, max_workers)
