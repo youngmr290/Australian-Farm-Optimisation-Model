@@ -1708,7 +1708,7 @@ def f_heatloss_nfs(cc, ffcfw_start, rc_start, sl_start, temp_ave, temp_max, temp
 
 
 def f_lwc_cs(cg, rc_start, mei, mem, new, zf1, zf2, kg, kw, rev_trait_value, nec = 0, kc = 1, nel = 0, kl = 1
-             , gest_propn = 0, lact_propn = 0):
+             , gest_propn = 0, lact_propn = 0, days_per_period=7):
     ##Note: The energy components of rev_trait_value are not active in this function. Have to be using f_lwc_nfs
 
     ##Calculate me for conceptus growth, milk production & wool growth
@@ -1717,7 +1717,7 @@ def f_lwc_cs(cg, rc_start, mei, mem, new, zf1, zf2, kg, kw, rev_trait_value, nec
     mew = new / kw
     ## ME requirement to maintain maternal body energy (maintenance). Surplus is available for maternal body gain
     maintenance = mem + mec * gest_propn + mel * lact_propn + mew
-    if np.any(maintenance < 0):
+    if np.any((maintenance < 0) & (np.asarray(days_per_period) > 0)):
         warnings.warn(f"Negative maintenance detected: min={np.nanmin(maintenance):.6g}", RuntimeWarning)
     ##Level of feeding (maint = 0). Note: level is calculated elsewhere (differently) for use in Blaxter & Clapperton equations
     level = (mei / maintenance) - 1
@@ -1857,7 +1857,7 @@ def f_lwc_mu(cg, ck, rc_start, mei_initial, nem_ee, km, hp_mei, new, kw, zf1, zf
     mew = fun.f_divide(new, kw)
     ##Energy intake that is surplus to maintaining maternal body energy. Surplus is available for maternal body gain
     maintenance  = nem_ee + hp_mei + mec * gest_propn + mel * lact_propn + mew
-    if np.any(maintenance < 0):
+    if np.any((maintenance < 0) & (np.asarray(days_period) > 0)):
         warnings.warn(f"Negative maintenance detected: min={np.nanmin(maintenance):.6g}", RuntimeWarning)
     surplus_energy_ee = mei_initial - maintenance
     below_maintenance = surplus_energy_ee < 0
@@ -2111,7 +2111,7 @@ def f_lwc_nfs(cg, ck, muscle, viscera, muscle_target, mei_initial, km, md, hp_ma
                                 , retained_energy[..., na, na] + heat_loss_m0p1), axis = (-1,-2))
     ###mem: maintenance energy requirement including heat associated with feeding (will be greater than CSIRO equiv mem)
     mem = mei - (retained_energy + hp_re)
-    if np.any( mem < 0):
+    if np.any((mem < 0) & (np.asarray(step) > 0)):
         warnings.warn(f"Negative maintenance detected: min={np.nanmin(mem):.6g}", RuntimeWarning)
     ### Calculate adjustment to mei to reflect the changes made by the REV or post calc SA
     mei_adjustment = mei - mei_initial
