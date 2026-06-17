@@ -1719,6 +1719,7 @@ def f_lwc_cs(cg, rc_start, mei, mem, new, zf1, zf2, kg, kw, rev_trait_value, nec
     maintenance = mem + mec * gest_propn + mel * lact_propn + mew
     if np.any((maintenance < 0) & (np.asarray(days_per_period) > 0)):
         warnings.warn(f"Negative maintenance detected: min={np.nanmin(maintenance):.6g}", RuntimeWarning)
+        maintenance = np.maximum(0, maintenance)
     ##Level of feeding (maint = 0). Note: level is calculated elsewhere (differently) for use in Blaxter & Clapperton equations
     level = (mei / maintenance) - 1
     ##Energy intake that is surplus to maintenance
@@ -1859,6 +1860,7 @@ def f_lwc_mu(cg, ck, rc_start, mei_initial, nem_ee, km, hp_mei, new, kw, zf1, zf
     maintenance  = nem_ee + hp_mei + mec * gest_propn + mel * lact_propn + mew
     if np.any((maintenance < 0) & (np.asarray(days_period) > 0)):
         warnings.warn(f"Negative maintenance detected: min={np.nanmin(maintenance):.6g}", RuntimeWarning)
+        maintenance = np.maximum(0, maintenance)
     surplus_energy_ee = mei_initial - maintenance
     below_maintenance = surplus_energy_ee < 0
     ##Level of feeding relative to level that would maintain maternal body tissue (maint = 0)
@@ -2113,6 +2115,7 @@ def f_lwc_nfs(cg, ck, muscle, viscera, muscle_target, mei_initial, km, md, hp_ma
     mem = mei - (retained_energy + hp_re)
     if np.any((mem < 0) & (np.asarray(step) > 0)):
         warnings.warn(f"Negative maintenance detected: min={np.nanmin(mem):.6g}", RuntimeWarning)
+        mem = np.maximum(0, mem)
     ### Calculate adjustment to mei to reflect the changes made by the REV or post calc SA
     mei_adjustment = mei - mei_initial
 
