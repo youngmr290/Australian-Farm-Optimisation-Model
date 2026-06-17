@@ -51,7 +51,16 @@ from lib.AfoLogic import StockGenerator as sgen
 ###############
 #User control #
 ###############
-calibrate_trait_values = True #set to False if you want to report the trait values for a given trial.
+RUN_CALIBRATION = True #set to False if you want to report the trait values for a given trial.
+
+# Optimisation controls. Team multiprocessing always uses one worker per team;
+# single-team mode can use workers within scipy's differential_evolution.
+MAXITER = 400
+POPSIZE = 5
+MAX_WORKERS_WITHIN_TEAM = 1
+TOL = 0.01
+DISP = True
+POLISH = False
 
 worker_context = {}
 
@@ -64,17 +73,25 @@ def get_sa_value(user_sa, key, default=False):
     return result
 
 
-def setup_trial(trial, exp_data, trial_pinp, sinp_defaults, uinp_defaults, pinp_defaults):
+def get_trial_sa(exp_data, trial):
+    return rve.f_process_user_sa(exp_data, trial)
+
+
+def load_trial_fs(user_sa):
+    """Load the feed-supply pickle requested by the trial sensitivity settings."""
+    fs_use_pkl = get_sa_value(user_sa, "fs_use_pkl", False)
+    fs_use_number = get_sa_value(user_sa, "fs_use_number", None)
+    return dxl.f_load_fs(fs_use_pkl, fs_use_number)
+
+
+def reset_trial_inputs(trial, exp_data, trial_pinp, sinp_defaults, uinp_defaults, pinp_defaults, user_sa=None):
+    """Reset all mutable AFO input modules back to the selected trial state."""
     ##select property for the current trial
     property = trial_pinp.iloc[trial]
 
     ##process user SA
-    user_sa = rve.f_process_user_sa(exp_data, trial)
-
-    ##load pkl_fs based in SA values
-    fs_use_pkl = get_sa_value(user_sa, "fs_use_pkl", False)
-    fs_use_number = get_sa_value(user_sa, "fs_use_number", None)
-    pkl_fs = dxl.f_load_fs(fs_use_pkl, fs_use_number)
+    if user_sa is None:
+        user_sa = get_trial_sa(exp_data, trial)
 
     ##select property and reset default inputs for the current trial. Must occur first.
     sinp.f_select_n_reset_sinp(sinp_defaults)
@@ -96,6 +113,13 @@ def setup_trial(trial, exp_data, trial_pinp, sinp_defaults, uinp_defaults, pinp_
 
     ##mask lmu
     pinp.f1_mask_lmu()
+    return user_sa
+
+
+def setup_trial(trial, exp_data, trial_pinp, sinp_defaults, uinp_defaults, pinp_defaults):
+    """Reset trial inputs and load the feed-supply data for one generator run."""
+    user_sa = reset_trial_inputs(trial, exp_data, trial_pinp, sinp_defaults, uinp_defaults, pinp_defaults)
+    pkl_fs = load_trial_fs(user_sa)
     return pkl_fs
 
 
@@ -108,40 +132,85 @@ def read_calibration_control():
     return df_targets_tp, df_weights_p, df_bestbet_tc, df_bnd_lo_tc, df_bnd_up_tc
 
 
-def init_worker(trial, exp_data, trial_pinp, sinp_defaults, uinp_defaults, pinp_defaults, context):
+def init_worker(context):
+    """Store per-trial data in each team worker.
+
+    The actual trial reset happens inside calibration_objective() before every
+    sgen.generator call. This initializer only gives the worker enough context
+    to run multiple teams without re-pickling that context for every task.
+    """
     context = context.copy()
-    context["pkl_fs"] = setup_trial(trial, exp_data, trial_pinp, sinp_defaults, uinp_defaults, pinp_defaults)
     worker_context.clear()
     worker_context.update(context)
 
 
 def run_calibration_for_team(t, context):
-    '''Call Differential Evolution for one team.'''
-    calibration_weights = context["weights_p"]
-    calibration_targets = context["targets_tp"][t]
+    """Call Differential Evolution for one team.
+
+    This is used by both run modes:
+    - sequential loop over teams
+    - multiprocessing loop where each process handles a team
+    """
     bounds = list(zip(context["bnd_lo_tc"][t], context["bnd_up_tc"][t]))
     bestbet = context["bestbet_tc"][t]
+    team_context = context.copy()
+    team_context["team"] = t
+    team_context["calibration_weights"] = context["weights_p"]
+    team_context["calibration_targets"] = context["targets_tp"][t]
 
-    result = spo.differential_evolution(sgen.generator, bounds
-        , args = (context["params"], context["r_vals"], context["nv"], context["pkl_fs_info"], context["pkl_fs"]
-                  , context["stubble"], calibrate_trait_values, calibration_weights, calibration_targets)
+    result = spo.differential_evolution(calibration_objective, bounds
+        , args = (team_context,)
         , maxiter=context["maxiter"], popsize=context["popsize"], tol=context["tol"], disp=context["disp"]
         , polish=context["polish"], updating=context["updating"], workers=context["workers"], x0=bestbet)
     print(f"Team {t} coefficients are {result.x} obj: {result.fun} evaluations {result.nfev}")
     return t, result.x, result.success, result.fun, result.nit, result.message
 
 
+def calibration_objective(coefficients_c, context):
+    """Reset the selected trial before every objective evaluation.
+
+    Differential Evolution calls this function many times for each team. The
+    stock generator mutates shared module state while evaluating a coefficient
+    set, so the trial inputs must be rebuilt before every call.
+    """
+    pkl_fs = setup_trial(
+        context["trial"],
+        context["exp_data"],
+        context["trial_pinp"],
+        context["sinp_defaults"],
+        context["uinp_defaults"],
+        context["pinp_defaults"],
+    )
+
+    return sgen.generator(
+        coefficients_c=coefficients_c,
+        params={},
+        r_vals={},
+        nv={},
+        pkl_fs_info={},
+        pkl_fs=pkl_fs,
+        stubble=context["stubble"],
+        calibrate_trait_values=RUN_CALIBRATION,
+        calibration_weights_p=context["calibration_weights"],
+        calibration_targets_p=context["calibration_targets"],
+    )
+
+
 def run_calibration_for_team_worker(t):
+    """Pool.map wrapper.
+
+    multiprocessing.Pool.map can only pass the team number here. The larger
+    context is stored once per worker by init_worker().
+    """
     return run_calibration_for_team(t, worker_context)
 
 
-def build_context(targets_tp, weights_p, bestbet_tc, bnd_lo_tc, bnd_up_tc, pkl_fs, n_coef, *, team_processes):
-    #team processes is multi processing teams, else is individual teams
-    maxiter = 400
-    popsize = 5 if team_processes else 5
+def build_context(targets_tp, weights_p, bestbet_tc, bnd_lo_tc, bnd_up_tc, n_coef, *, team_processes
+                  , trial, exp_data, trial_pinp, sinp_defaults, uinp_defaults, pinp_defaults):
+    """Collect the values needed by team calibration and objective evaluation."""
+    popsize = POPSIZE
     population = popsize * n_coef
-    max_workers = 1
-    workers = 1 if team_processes else min(multiprocessing.cpu_count(), population, max_workers)
+    workers = 1 if team_processes else min(multiprocessing.cpu_count(), population, MAX_WORKERS_WITHIN_TEAM)
     updating = 'deferred' if workers != 1 else 'immediate'
     return {
         "targets_tp": targets_tp,
@@ -149,17 +218,18 @@ def build_context(targets_tp, weights_p, bestbet_tc, bnd_lo_tc, bnd_up_tc, pkl_f
         "bestbet_tc": bestbet_tc,
         "bnd_lo_tc": bnd_lo_tc,
         "bnd_up_tc": bnd_up_tc,
-        "params": {},
-        "r_vals": {},
-        "nv": {},
-        "pkl_fs_info": {},
-        "pkl_fs": pkl_fs,
+        "trial": trial,
+        "exp_data": exp_data,
+        "trial_pinp": trial_pinp,
+        "sinp_defaults": sinp_defaults,
+        "uinp_defaults": uinp_defaults,
+        "pinp_defaults": pinp_defaults,
         "stubble": False,
-        "maxiter": maxiter,
+        "maxiter": MAXITER,
         "popsize": popsize,
-        "tol": 0.01,
-        "disp": True,
-        "polish": False,
+        "tol": TOL,
+        "disp": DISP,
+        "polish": POLISH,
         "workers": workers,
         "updating": updating,
     }
@@ -212,14 +282,13 @@ def main():
     dataset = list(np.flatnonzero(np.nan_to_num(np.array(exp_data.index.get_level_values(0))))) # Define the dataset - trials that require running
     sinp_defaults, uinp_defaults, pinp_defaults = dxl.f_load_excel_default_inputs(trial_pinp=trial_pinp)
 
-    if len(dataset) > 1 and calibrate_trait_values:
+    if len(dataset) > 1 and RUN_CALIBRATION:
         raise ValueError("Can't run calibration with multiple trials. Select an experiment with one active trial.")
 
     o_trait_values = {}
 
     ##loop through trials. there can only be one active trial if running the calibration (can be multiple if reporting)
     for trial in dataset:
-        pkl_fs = setup_trial(trial, exp_data, trial_pinp, sinp_defaults, uinp_defaults, pinp_defaults)
         o_trait_values[trial] = {}  # create row key inside calibration dictionary
 
         df_targets_tp, df_weights_p, df_bestbet_tc, df_bnd_lo_tc, df_bnd_up_tc = read_calibration_control()
@@ -246,15 +315,18 @@ def main():
         bnd_up_tc = df_bnd_up_tc.values
 
         teams = list(range(n_teams))
-        if calibrate_trait_values:
+        if RUN_CALIBRATION:
             team_processes = n_processes != 1
-            context = build_context(targets_tp, weights_p, bestbet_tc, bnd_lo_tc, bnd_up_tc, pkl_fs, n_coef, team_processes=team_processes)
+            context = build_context(
+                targets_tp, weights_p, bestbet_tc, bnd_lo_tc, bnd_up_tc, n_coef,
+                team_processes=team_processes, trial=trial, exp_data=exp_data, trial_pinp=trial_pinp,
+                sinp_defaults=sinp_defaults, uinp_defaults=uinp_defaults, pinp_defaults=pinp_defaults
+            )
             if team_processes:
                 print(f"multiprocess across {n_processes} teams")
                 worker_init_context = context.copy()
-                worker_init_context["pkl_fs"] = None
-                initializer_args = (trial, exp_data, trial_pinp, sinp_defaults, uinp_defaults, pinp_defaults, worker_init_context)
-                with multiprocessing.Pool(processes=n_processes, initializer=init_worker, initargs=initializer_args) as pool:
+                # The worker context contains the trial reset inputs used by calibration_objective().
+                with multiprocessing.Pool(processes=n_processes, initializer=init_worker, initargs=(worker_init_context,)) as pool:
                     results = pool.map(run_calibration_for_team_worker, teams, chunksize=1)
             else:
                 print(f"multiprocess the population of {context['popsize'] * n_coef} with {context['workers']} workers")
@@ -273,15 +345,17 @@ def main():
             print(f"elapsed total time for calibration {time_elapsed//3600:>02.0f}:{time_elapsed%3600//60:02.0f}:{time_elapsed%60:07.4f} ") # Time in seconds
 
         else: #if just reporting trait values
+            pkl_fs = setup_trial(trial, exp_data, trial_pinp, sinp_defaults, uinp_defaults, pinp_defaults)
             sgen.generator(params={}, r_vals={}, nv={}, pkl_fs_info={}, pkl_fs=pkl_fs,
                            o_trait_values=o_trait_values[trial])
 
     ## this is for saving the calibration trait values for each team.
-    traits_to_save = pd.DataFrame({trial: values["output"] for trial, values in o_trait_values.items()}).T
-    writer = pd.ExcelWriter("Output/TraitValues.xlsx", engine='xlsxwriter')
-    traits_to_save.to_excel(writer, sheet_name='Traits', index=True, header=False)
-    writer.close()
-    print(f'Trait values written to Excel. Note: Optimisation is not being carried out')
+    if not RUN_CALIBRATION:
+        traits_to_save = pd.DataFrame({trial: values["output"] for trial, values in o_trait_values.items()}).T
+        writer = pd.ExcelWriter("Output/TraitValues.xlsx", engine='xlsxwriter')
+        traits_to_save.to_excel(writer, sheet_name='Traits', index=True, header=False)
+        writer.close()
+        print(f'Trait values written to Excel. Note: Optimisation is not being carried out')
 
 
 if __name__ == '__main__':
