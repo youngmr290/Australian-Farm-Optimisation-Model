@@ -36,8 +36,8 @@ r_vals={}
 ###############
 #User control #
 ###############
-trial = 1   #this will run the first trial in the exp_group (so you need to set the exp group in the script params)
-test_pas = False
+trial_no = 1   #active trial number - 1 will run the first active trial in the exp_group (so you need to set the exp group in the script params)
+test_pas = True
 test_sup = False
 test_slp = False
 test_cropgraze = False
@@ -51,6 +51,8 @@ test_trees = False
 ##load excel data and experiment data
 exp_data, exp_group_bool, trial_pinp = exp.f_read_exp()
 exp_data = exp.f_group_exp(exp_data, exp_group_bool)
+dataset = list(np.flatnonzero(np.nan_to_num(np.array(exp_data.index.get_level_values(0))))) # Define the dataset - trials that require running
+trial = dataset[trial_no-1]
 sinp_defaults, uinp_defaults, pinp_defaults = dxl.f_load_excel_default_inputs(trial_pinp=trial_pinp.iloc[[trial]])
 d_rot_info = dxl.f_load_phases()
 cat_propn_s1_ks2 = dxl.f_load_stubble()
