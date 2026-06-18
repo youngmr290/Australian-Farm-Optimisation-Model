@@ -7939,7 +7939,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             # objective = np.max((fun.f_divide(trait_values_p - calibration_targets_p, calibration_targets_p) ** 2)
             #                     / np.maximum(0.0001, np.abs(coefficients_c)))
 
-            print(f"obj: {calibration_objective} trait  Team SRW: [{uinp.parameters['i_srw_c2'][a_c2_c0]} + {saa_srw}")
+            print(f"obj: {calibration_objective} trait  Team SRW: {uinp.parameters['i_srw_c2'][a_c2_c0][0]} + {saa_srw}")
 
         #Report the values, coefficients and target for the current attempt
         b=1; w=2; p=3; y=4; h=5; a=6 # set the slice numbers in the saa_p11 arrays (a is using the a2 slice)

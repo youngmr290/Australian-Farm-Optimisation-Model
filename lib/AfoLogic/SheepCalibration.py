@@ -56,8 +56,8 @@ RUN_CALIBRATION = True #set to False if you want to report the trait values for 
 # Optimisation controls. Team multiprocessing always uses one worker per team;
 # single-team mode can use workers within scipy's differential_evolution.
 MAXITER = 400
-POPSIZE = 5
-MAX_WORKERS_WITHIN_TEAM = 1
+POPSIZE = 5   # between 5 and 15. population = popsize * n_coeff
+MAX_WORKERS_WITHIN_TEAM = 25   #setting workers to a factor of 'population' ensures even utilisation of CPUs
 TOL = 0.01
 DISP = True
 POLISH = False
