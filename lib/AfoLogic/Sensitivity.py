@@ -384,6 +384,14 @@ def create_sa():
         saa['pgr',pasture]                     = 0.0                                                          # SA addition for growth on all lmus in all periods
         saa['pgr_zp6',pasture]                   = np.zeros((len_z, len_p6),  dtype='float64')  # SA addition for growth in each feed period
         saa['pgr_l',pasture]                   = np.zeros((len(pinp.general['i_lmu_area'])),  dtype='float64')  # SA addition for growth on each lmus in all periods
+        saa['grn_dmd',pasture]                    = 0.0                                                          # SA addition for green dmd
+        saa['dry_dmd_eogs',pasture]                    = 0.0                                                        # SA addition for dry dmd
+        saa['dry_dmd_brk',pasture]                    = 0.0                                                          # SA addition for dry dmd
+        saa['DigRednSenesce',pasture]                    = 0.0                                                          # SA addition for digestibility of senescing feed relative to green diet digestibility
+
+
+
+
         ##SAT
         ##SAR
 

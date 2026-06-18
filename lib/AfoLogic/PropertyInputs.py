@@ -461,6 +461,11 @@ def f_property_inp_sa(pinp_defaults):
         pasture_inputs[pasture]['MedPGR'] = fun.f_sa(pasture_inputs[pasture]['MedPGR'], sen.saa[('pgr',pasture)], 2)
         pasture_inputs[pasture]['MedPGR'] = fun.f_sa(pasture_inputs[pasture]['MedPGR'], sen.saa[('pgr_zp6',pasture)][...,na], 2)
         pasture_inputs[pasture]['MedPGR'] = fun.f_sa(pasture_inputs[pasture]['MedPGR'], sen.saa[('pgr_l',pasture)], 2)
+
+        pasture_inputs[pasture]['DigGrn'] = fun.f_sa(pasture_inputs[pasture]['DigGrn'], sen.saa[('grn_dmd',pasture)], 2)
+        pasture_inputs[pasture]['i_dry_dmd_eogs_z'] = fun.f_sa(pasture_inputs[pasture]['i_dry_dmd_eogs_z'], sen.saa[('dry_dmd_eogs',pasture)], 2)
+        pasture_inputs[pasture]['i_dry_dmd_brk_z'] = fun.f_sa(pasture_inputs[pasture]['i_dry_dmd_brk_z'], sen.saa[('dry_dmd_brk',pasture)], 2)
+        pasture_inputs[pasture]['DigRednSenesce'] = fun.f_sa(pasture_inputs[pasture]['DigRednSenesce'], sen.saa[('DigRednSenesce',pasture)], 2)
         ###sat
         ###sar
 
