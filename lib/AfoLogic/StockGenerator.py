@@ -5662,7 +5662,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...] >0):
                     temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_lwc_cs(cg_cpyatf, rc_start_yatf, mei_yatf, mem_yatf
                             , new_yatf, zf1_yatf, zf2_yatf, kg_yatf, kw_cs_pa1e1b1nwzida0e0b0xyg2, rev_trait_values['yatf'][p]
-                            , days_per_period=days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...])
+                            , days_per_period=days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...], b_mask=(nyatf_b1nwzida0e0b0xyg>0))
                     if eqn_used:
                         ebg_yatf = temp0
                         evg_yatf = temp1
@@ -5728,7 +5728,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9 = sfun.f_lwc_nfs(cg_cpyatf
                             , ck_cpyatf, muscle_start_yatf, viscera_start_yatf, muscle_target_pa1e1b1nwzida0e0b0xyg2, mei_yatf
                             , km_yatf, md_solid_yatf, hp_maint_nfs_yatf, hp_mei_nfs_yatf, dw_yatf, heat_loss_yatfm0p1
-                            , days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1], rev_trait_values['yatf'][p])
+                            , days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1], rev_trait_values['yatf'][p], b_mask=(nyatf_b1nwzida0e0b0xyg>0))
                     #use this version of hp_total in f_templc_nfs() in next function call
                     hp_total_nfs_yatf = temp6
                     if eqn_used:
