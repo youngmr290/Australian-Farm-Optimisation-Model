@@ -2029,7 +2029,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     saa = sfun.f1_saa_p11_to_p(sen.saa['follicles_p11'], scalar_poffsp11)
     cw_p_cpoffs[11] += saa
 
-    # ##cl[0] - peak milk yield scalar - now done in UniversalInputs.py
+    # ##cl[0] - peak milk yield scalar - now done using saa['milk_yield'] which is applied when the coefficients are assigned
     # #todo some pre-loop calcs use cl_cp and only the essentials have been updated to cl_p_cp. See W18 p46 for other vars to update
     # ###dams
     # saa = sfun.f1_saa_p11_to_p(sen.saa['wwt_p11'], scalar_pdamsp11)
@@ -2114,13 +2114,13 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     cd_p_cpoffs = np.broadcast_to(cd_cpoffs, target_shape).copy()
     cd_p_cpoffs[1] += saa
 
-    ##cb1[24, 25 & 26, 1] - conception   Note: cb1 slices are different to cl0 slices.
+    ##cb1[24, 25 & 26, 1] - conception   Note: cb1 slices (11 slice axis) are different to cl0 slices (4 slice axis).
     #todo some pre-loop calcs use cb1_cpdams and haven't been updated to cb1_p_cpdams (non-essential). See W18 p46 for vars to update
     ###dams
     saa = sfun.f1_saa_p11_to_p(sen.saa['con_p11'], scalar_pdamsp11)
     target_shape = np.broadcast_shapes(cb1_cpdams.shape, saa.shape)
     cb1_p_cpdams = np.broadcast_to(cb1_cpdams, target_shape).copy()
-    slc_b1 = fun.f_slice_idx(cb1_p_cpdams, {b1_pos: [0]})
+    slc_b1 = fun.f_slice_idx(cb1_p_cpdams, {b1_pos: [0, 2]})  #slice 0:1 = NM & Dry
     cb1_p_cpdams[24:27][slc_b1] += saa
 
     ##cb1[24, 25 & 26, 2 & 3] - litter size
@@ -2128,7 +2128,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     saa = sfun.f1_saa_p11_to_p(sen.saa['ls_p11'], scalar_pdamsp11)
     target_shape = np.broadcast_shapes(cb1_cpdams.shape, saa.shape)
     cb1_p_cpdams = np.broadcast_to(cb1_cpdams, target_shape).copy()
-    slc_b1 = fun.f_slice_idx(cb1_p_cpdams, {b1_pos: [1]})
+    slc_b1 = fun.f_slice_idx(cb1_p_cpdams, {b1_pos: [2]})   # = LSLN 11
+    cb1_p_cpdams[24:27][slc_b1] += saa
+    slc_b1 = fun.f_slice_idx(cb1_p_cpdams, {b1_pos: [8]})   # = LSLN 10
     cb1_p_cpdams[24:27][slc_b1] += saa
 
     ##cu6[8, -1] & cu2[8, -1] - ewe rearing ability / lamb survival
@@ -7965,10 +7967,13 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         print(f"ASL target {asl_target} this {asl} with (follicles={sen.saa['follicles_p11'][a]})")
         # print(f"YCON target {ycon_target} this {ycon} with ({sen.saa['con_p11'][y]})")
         print(f"ACON target {acon_target} this {acon} with ({sen.saa['con_p11'][a]})")
+        print(f"2yo={preg_2yo} 3yo={preg_3yo} 4yo={preg_5yo} 5yo={preg_5yo}")
         # print(f"YLS target {yls_target} this {yls} with ({sen.saa['ls_p11'][y]})")
         print(f"ALS target {als_target} this {als} with ({sen.saa['ls_p11'][a]})")
+        print(f"2yo={ls_2yo} 3yo={ls_3yo} 4yo={ls_5yo} 5yo={ls_5yo}")
         # print(f"YERA target {yera_target} this {yera} with ({sen.saa['era_p11'][y]})")
         print(f"AERA target {aera_target} this {aera} with ({sen.saa['era_p11'][a]})")
+        print(f"2yo={twin_surv_2yo} 3yo={twin_surv_3yo} 4yo={twin_surv_4yo} 5yo={twin_surv_5yo}")
         # print(f"BWT target {bwt_target} this {bwt} with (srw_p11={sen.saa['srw_p11'][b]})")
         print(f"WWT target {wwt_target} this {wwt} with (srw_p11={sen.saa['srw_p11'][w]} & milk_scalar={sen.saa['milk_yield']})")
         # print(f"PWT target {pwt_target} this {pwt} with (srw_p11={sen.saa['srw_p11'][p]})")
