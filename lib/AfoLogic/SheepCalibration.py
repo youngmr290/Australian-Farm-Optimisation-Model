@@ -352,7 +352,8 @@ def main():
     ## this is for saving the calibration trait values for each team.
     if not RUN_CALIBRATION:
         traits_to_save = pd.DataFrame({trial: values["output"] for trial, values in o_trait_values.items()}).T
-        writer = pd.ExcelWriter("Output/TraitValues.xlsx", engine='xlsxwriter')
+        trait_file_path = relativeFile.find(__file__, "../../Output", "TraitValues.xlsx")
+        writer = pd.ExcelWriter(trait_file_path, engine='xlsxwriter')
         traits_to_save.to_excel(writer, sheet_name='Traits', index=True, header=False)
         writer.close()
         print(f'Trait values written to Excel. Note: Optimisation is not being carried out')
