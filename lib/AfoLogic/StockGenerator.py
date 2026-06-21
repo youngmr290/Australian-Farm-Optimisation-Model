@@ -2123,31 +2123,36 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     slc_b1 = fun.f_slice_idx(cb1_p_cpdams, {b1_pos: [0, 2]})  #slice 0:1 = NM & Dry
     cb1_p_cpdams[24:27][slc_b1] += saa
 
-    ##cb1[24, 25 & 26, 2 & 3] - litter size
+    ##cb1[24, 25 & 26, 2 & 3] - litter size (Note: parameter is already broadcast)
     ###dams
     saa = sfun.f1_saa_p11_to_p(sen.saa['ls_p11'], scalar_pdamsp11)
-    target_shape = np.broadcast_shapes(cb1_cpdams.shape, saa.shape)
-    cb1_p_cpdams = np.broadcast_to(cb1_cpdams, target_shape).copy()
-    slc_b1 = fun.f_slice_idx(cb1_p_cpdams, {b1_pos: [2]})   # = LSLN 11
+    slc_b1 = fun.f_slice_idx(cb1_p_cpdams, {b1_pos: [2,4]})   # = LSLN 11 & 22
     cb1_p_cpdams[24:27][slc_b1] += saa
-    slc_b1 = fun.f_slice_idx(cb1_p_cpdams, {b1_pos: [8]})   # = LSLN 10
+    slc_b1 = fun.f_slice_idx(cb1_p_cpdams, {b1_pos: [5]})   # = LSLN 21
+    cb1_p_cpdams[24:27][slc_b1] += saa
+    slc_b1 = fun.f_slice_idx(cb1_p_cpdams, {b1_pos: [8,10]})   # = LSLN 10 & 20
     cb1_p_cpdams[24:27][slc_b1] += saa
 
     ##cu6[8, -1] & cu2[8, -1] - ewe rearing ability / lamb survival
     ###dams
     saa = sfun.f1_saa_p11_to_p(sen.saa['era_p11'], scalar_pdamsp11)
-    target_shape = np.broadcast_shapes(cu2_cc1pdams.shape, saa.shape)
-    cu2_p_cc1pdams = np.broadcast_to(cu2_cc1pdams, target_shape).copy()
-    cu2_p_cc1pdams[8, -1] += saa
     target_shape = np.broadcast_shapes(cu6_cc1pdams.shape, saa.shape)
     cu6_p_cc1pdams = np.broadcast_to(cu6_cc1pdams, target_shape).copy()
     cu6_p_cc1pdams[8, -1] += saa
+    ###yatf
+    saa = sfun.f1_saa_p11_to_p(sen.saa['era_p11'], scalar_pdamsp11)  #although lamb survival is a yatf parameter the age stage is based on dams
+    target_shape = np.broadcast_shapes(cu2_cc1pyatf.shape, saa.shape)
+    cu2_p_cc1pyatf = np.broadcast_to(cu2_cc1pyatf, target_shape).copy()
+    cu2_p_cc1pyatf[8, -1] += saa
+    target_shape = np.broadcast_shapes(cu6_cc1pyatf.shape, saa.shape)
+    cu6_p_cc1pyatf = np.broadcast_to(cu6_cc1pyatf, target_shape).copy()
+    cu6_p_cc1pyatf[8, -1] += saa
 
     ##cu2[23, -1] - peri-natal survival
     ###dams
     saa = sfun.f1_saa_p11_to_p(sen.saa['pnsurv_p11'], scalar_pdamsp11)
-    # target_shape = np.broadcast_shapes(cu2_cc1pdams.shape, saa.shape)  #cu2 already reshaped for cu2[8]
-    # cu2_p_cc1pdams = np.broadcast_to(cu2_cc1pdams, target_shape).copy()
+    target_shape = np.broadcast_shapes(cu2_cc1pdams.shape, saa.shape)
+    cu2_p_cc1pdams = np.broadcast_to(cu2_cc1pdams, target_shape).copy()
     cu2_p_cc1pdams[23, -1] += saa
 
 
@@ -3710,7 +3715,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             ###cu2 parameter
             # cu2_cc1psire = fun.f_slice(cu2_p_cc1psire, p_slice)
             cu2_cc1pdams = fun.f_slice(cu2_p_cc1pdams, p_slice)
-            # cu2_cc1pyatf = fun.f_slice(cu2_p_cc1pyatf, p_slice)
+            cu2_cc1pyatf = fun.f_slice(cu2_p_cc1pyatf, p_slice)
             # cu2_cc1poffs = fun.f_slice(cu2_p_cc1poffs, p_slice)
             ###cu6 parameter
             # cu6_cc1psire = fun.f_slice(cu6_p_cc1psire, p_slice)
