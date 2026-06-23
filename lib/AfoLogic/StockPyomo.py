@@ -135,14 +135,25 @@ def f1_stockpyomo_local(params, model, MP_lp_vars):
     model.p_mei_sire = pe.Param(model.s_feed_periods, model.s_feed_pools, model.s_season_types, model.s_groups_sire,
                                 initialize=params['p_mei_sire'],
                                   default=0.0, mutable=False, doc='energy requirement sire')
+    model.p_methane_me_saved_sire = pe.Param(model.s_feed_periods, model.s_feed_pools, model.s_season_types, model.s_groups_sire,
+                                initialize=params['p_methane_me_saved_sire'],
+                                  default=0.0, mutable=False, doc='ME saved from methane reduction sire')
     model.p_mei_dams = pe.Param(model.s_k2_birth_dams, model.s_feed_periods, model.s_feed_pools, model.s_sale_dams,
                                model.s_dvp_dams, model.s_wean_times, model.s_nut_dams, model.s_lw_dams, model.s_season_types, 
                                model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, initialize=params['p_mei_dams'],
                                 default=0.0, mutable=False, doc='energy requirement dams')
+    model.p_methane_me_saved_dams = pe.Param(model.s_k2_birth_dams, model.s_feed_periods, model.s_feed_pools, model.s_sale_dams,
+                               model.s_dvp_dams, model.s_wean_times, model.s_nut_dams, model.s_lw_dams, model.s_season_types,
+                               model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, initialize=params['p_methane_me_saved_dams'],
+                                default=0.0, mutable=False, doc='ME saved from methane reduction dams')
     model.p_mei_offs = pe.Param(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_feed_periods, model.s_feed_pools, model.s_sale_offs,
                                model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs, model.s_season_types, model.s_tol, model.s_wean_times,
                                model.s_gender, model.s_gen_merit_offs, model.s_groups_offs, initialize=params['p_mei_offs'],
                                 default=0.0, mutable=False, doc='energy requirement offs')
+    model.p_methane_me_saved_offs = pe.Param(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_feed_periods, model.s_feed_pools, model.s_sale_offs,
+                               model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs, model.s_season_types, model.s_tol, model.s_wean_times,
+                               model.s_gender, model.s_gen_merit_offs, model.s_groups_offs, initialize=params['p_methane_me_saved_offs'],
+                                default=0.0, mutable=False, doc='ME saved from methane reduction offs')
 
     ##potential intake
     model.p_pi_sire = pe.Param(model.s_feed_periods, model.s_feed_pools, model.s_season_types, model.s_groups_sire,
@@ -831,6 +842,25 @@ def f_stock_me(model,q,s,p6,f,z):
                       for k3 in model.s_k3_damage_offs for k5 in model.s_k5_birth_offs for t3 in model.s_sale_offs for v3 in model.s_dvp_offs
                       for n3 in model.s_nut_offs for w3 in model.s_lw_offs for x in model.s_gender for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs
                       if pe.value(model.p_mei_offs[k3,k5,p6,f,t3,v3,n3,w3,z,i,a,x,y3,g3]) != 0)
+               for a in model.s_wean_times for i in model.s_tol)
+
+
+def f_stock_methane_me_saved(model,q,s,p6,f,z):
+    '''
+    Calculate methane-reduction energy captured from livestock activities.
+
+    Used in global constraint (con_me). See CorePyomo
+    '''
+
+    return sum(model.v_sire[q,s,g0] * model.p_methane_me_saved_sire[p6,f,z,g0] for g0 in model.s_groups_sire)\
+           + sum(sum(model.v_dams[q,s,k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_methane_me_saved_dams[k2,p6,f,t1,v1,a,n1,w1,z,i,y1,g1]
+                     for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
+                     for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams
+                     if pe.value(model.p_methane_me_saved_dams[k2,p6,f,t1,v1,a,n1,w1,z,i,y1,g1]) != 0)
+                + sum(model.v_offs[q,s,k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3]  * model.p_methane_me_saved_offs[k3,k5,p6,f,t3,v3,n3,w3,z,i,a,x,y3,g3]
+                      for k3 in model.s_k3_damage_offs for k5 in model.s_k5_birth_offs for t3 in model.s_sale_offs for v3 in model.s_dvp_offs
+                      for n3 in model.s_nut_offs for w3 in model.s_lw_offs for x in model.s_gender for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs
+                      if pe.value(model.p_methane_me_saved_offs[k3,k5,p6,f,t3,v3,n3,w3,z,i,a,x,y3,g3]) != 0)
                for a in model.s_wean_times for i in model.s_tol)
 
 

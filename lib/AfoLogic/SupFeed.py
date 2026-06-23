@@ -357,6 +357,8 @@ def f_sup_emissions(r_vals, nv):
         stock_ch4_sup_fk3 = efun.f_stock_ch4_feed_nir(1000 * dry_matter_content_k3 * prop_consumed_fk3, dmd_k3)
     elif uinp.sheep['i_eqn_used_g1_q1p7'][12, 0] == 1:  #Baxter and Claperton
         stock_ch4_sup_fk3 = efun.f_stock_ch4_feed_bc(1000 * dry_matter_content_k3 * prop_consumed_fk3, md_k3 / 1000) #div 1000 to convert to kg
+    stock_ch4_sup_fk3, methane_me_saved_sup_fk3 = efun.f_methane_reduction(
+        stock_ch4_sup_fk3, sen.sam['methane_yield'], sen.sav['methane_capture'])
 
     ##livestock nitrous oxide emissions linked to the consumption of 1t of saltbush - note that the equation system used is the one selected for dams in p1
     if uinp.sheep['i_eqn_used_g1_q1p7'][13, 0] == 0:  # National Greenhouse Gas Inventory Report
@@ -368,14 +370,16 @@ def f_sup_emissions(r_vals, nv):
     keys_f = np.array(['nv{0}'.format(i) for i in range(nv['len_nv'])])
     index_fk3 = pd.MultiIndex.from_product([keys_f, sup_md_vol.columns])
     co2e_sup_fk3 = pd.Series(co2e_sup_fk3.ravel(), index=index_fk3)
+    methane_me_saved_sup_fk3 = pd.Series(methane_me_saved_sup_fk3.ravel(), index=index_fk3)
     stock_n2o_sup_fk3 = pd.Series(stock_n2o_sup_fk3.ravel(), index=index_fk3)
     stock_ch4_sup_fk3 = pd.Series(stock_ch4_sup_fk3.ravel(), index=index_fk3)
 
     ##store report vals
     fun.f1_make_r_val(r_vals,stock_n2o_sup_fk3,'stock_n2o_sup_fk3')
     fun.f1_make_r_val(r_vals,stock_ch4_sup_fk3,'stock_ch4_sup_fk3')
+    fun.f1_make_r_val(r_vals,methane_me_saved_sup_fk3,'methane_me_saved_sup_fk3')
 
-    return co2e_sup_fk3
+    return co2e_sup_fk3, methane_me_saved_sup_fk3
 
 def f_sup_labour(nv):
     '''
@@ -564,7 +568,7 @@ def f1_sup_selectivity():
 def f_sup_params(params,r_vals, nv):
     total_sup_cost, total_sup_wc, storage_dep, storage_asset, confinement_dep, co2e_fuel_fk = f_sup_feeding_cost(r_vals, nv)
     vol_tonne, md_tonne = f_sup_md_vol(r_vals, nv)
-    co2e_sup_consumption_fk = f_sup_emissions(r_vals, nv)
+    co2e_sup_consumption_fk, methane_me_saved_sup_fk = f_sup_emissions(r_vals, nv)
     sup_labour = f_sup_labour(nv)
     buy_grain_price, buy_grain_wc, buy_grain_prov_p7z = f_buy_grain_price(r_vals)
     a_p6_p7 = f1_a_p6_p7()
@@ -584,6 +588,7 @@ def f_sup_params(params,r_vals, nv):
 
     ##create season params
     params['co2e_sup_fk'] = co2e_sup_consumption_fk.add(co2e_fuel_fk).to_dict()
+    params['methane_me_saved_sup_fk'] = methane_me_saved_sup_fk.to_dict()
     params['total_sup_cost'] = total_sup_cost.to_dict()
     params['total_sup_wc'] = total_sup_wc.to_dict()
     params['sup_labour'] = sup_labour.to_dict()

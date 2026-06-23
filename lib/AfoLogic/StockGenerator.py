@@ -592,6 +592,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     o_pi_tpsire = np.zeros(tpg0, dtype =dtype)
     o_mei_solid_tpsire = np.zeros(tpg0, dtype =dtype)
     o_ch4_animal_tpsire = np.zeros(tpg0, dtype =dtype)
+    o_methane_me_saved_tpsire = np.zeros(tpg0, dtype =dtype)
     o_n2o_animal_tpsire = np.zeros(tpg0, dtype =dtype)
     o_cfw_tpsire = np.zeros(tpg0, dtype =dtype)
     o_sl_tpsire = np.zeros(tpg0, dtype =dtype)
@@ -629,6 +630,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     o_pi_tpdams = np.zeros(tpg1, dtype =dtype)
     o_mei_solid_tpdams = np.zeros(tpg1, dtype =dtype)
     o_ch4_animal_tpdams = np.zeros(tpg1, dtype =dtype)
+    o_methane_me_saved_tpdams = np.zeros(tpg1, dtype =dtype)
     o_n2o_animal_tpdams = np.zeros(tpg1, dtype =dtype)
     o_cfw_tpdams = np.zeros(tpg1, dtype =dtype)
     o_d_cfw_tpdams = np.zeros(tpg1, dtype =dtype)
@@ -679,6 +681,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     o_pi_tpyatf = np.zeros(tpg2, dtype =dtype)
     o_mei_solid_tpyatf = np.zeros(tpg2, dtype =dtype)
     o_ch4_animal_tpyatf = np.zeros(tpg2, dtype =dtype)
+    o_methane_me_saved_tpyatf = np.zeros(tpg2, dtype =dtype)
     o_n2o_animal_tpyatf = np.zeros(tpg2, dtype =dtype)
     # o_cfw_tpyatf = np.zeros(tpg2, dtype =dtype)
     # o_gfw_tpyatf = np.zeros(tpg2, dtype =dtype)
@@ -729,6 +732,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     o_pi_tpoffs = np.zeros(tpg3, dtype =dtype)
     o_mei_solid_tpoffs = np.zeros(tpg3, dtype =dtype)
     o_ch4_animal_tpoffs = np.zeros(tpg3, dtype =dtype)
+    o_methane_me_saved_tpoffs = np.zeros(tpg3, dtype =dtype)
     o_n2o_animal_tpoffs = np.zeros(tpg3, dtype =dtype)
     o_cfw_tpoffs = np.zeros(tpg3, dtype =dtype)
     # o_gfw_tpoffs = np.zeros(tpg3, dtype =dtype)
@@ -5831,32 +5835,40 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 eqn_used = (eqn_used_g0_q1p[eqn_group, p:p+1] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1,...] >0):
                     temp0 = efun.f_stock_ch4_animal_nir()
+                    temp0, temp1 = efun.f_methane_reduction(temp0, sen.sam['methane_yield'], sen.sav['methane_capture'])
                     if eqn_used:
                         ch4_animal_sire = temp0
+                        methane_me_saved_sire = temp1
                     if eqn_compare:
                         r_compare12_q0q2tpsire[eqn_system, 0, :, p:p+1, ...] = temp0
                 ###dams
                 eqn_used = (eqn_used_g1_q1p[eqn_group, p:p+1] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
                     temp0 = efun.f_stock_ch4_animal_nir()
+                    temp0, temp1 = efun.f_methane_reduction(temp0, sen.sam['methane_yield'], sen.sav['methane_capture'])
                     if eqn_used:
                         ch4_animal_dams = temp0
+                        methane_me_saved_dams = temp1
                     if eqn_compare:
                         r_compare12_q0q2tpdams[eqn_system, 0, :, p:p+1, ...] = temp0
                 ###yatf
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p:p+1] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...] >0):
                     temp0 = efun.f_stock_ch4_animal_nir()
+                    temp0, temp1 = efun.f_methane_reduction(temp0, sen.sam['methane_yield'], sen.sav['methane_capture'])
                     if eqn_used:
                         ch4_animal_yatf = temp0
+                        methane_me_saved_yatf = temp1
                     if eqn_compare:
                         r_compare12_q0q2tpyatf[eqn_system, 0, :, p:p+1, ...] = temp0
                 ###offs
                 eqn_used = (eqn_used_g3_q1p[eqn_group, p:p+1] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1,...] >0):
                     temp0 = efun.f_stock_ch4_animal_nir()
+                    temp0, temp1 = efun.f_methane_reduction(temp0, sen.sam['methane_yield'], sen.sav['methane_capture'])
                     if eqn_used:
                         ch4_animal_offs = temp0
+                        methane_me_saved_offs = temp1
                     if eqn_compare:
                         r_compare12_q0q2tpoffs[eqn_system, 0, :, p:p+1, ...] = temp0
 
@@ -5866,32 +5878,40 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 eqn_used = (eqn_used_g0_q1p[eqn_group, p:p+1] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1,...] >0):
                     temp0 = efun.f_stock_ch4_animal_bc(ch_cpsire, intake_f_sire, intake_s_sire, md_solid_sire, level_sire)
+                    temp0, temp1 = efun.f_methane_reduction(temp0, sen.sam['methane_yield'], sen.sav['methane_capture'])
                     if eqn_used:
                         ch4_animal_sire = temp0
+                        methane_me_saved_sire = temp1
                     if eqn_compare:
                         r_compare12_q0q2tpsire[eqn_system, 0, :, p:p+1, ...] = temp0
                 ###dams
                 eqn_used = (eqn_used_g1_q1p[eqn_group, p:p+1] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
                     temp0 = efun.f_stock_ch4_animal_bc(ch_cpdams, intake_f_dams, intake_s_dams, md_solid_dams, level_dams)
+                    temp0, temp1 = efun.f_methane_reduction(temp0, sen.sam['methane_yield'], sen.sav['methane_capture'])
                     if eqn_used:
                         ch4_animal_dams = temp0
+                        methane_me_saved_dams = temp1
                     if eqn_compare:
                         r_compare12_q0q2tpdams[eqn_system, 0, :, p:p+1, ...] = temp0
                 ###yatf
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p:p+1] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...] >0):
                     temp0 = efun.f_stock_ch4_animal_bc(ch_cpyatf, intake_f_yatf, intake_s_yatf, md_solid_yatf, level_yatf)
+                    temp0, temp1 = efun.f_methane_reduction(temp0, sen.sam['methane_yield'], sen.sav['methane_capture'])
                     if eqn_used:
                         ch4_animal_yatf = temp0
+                        methane_me_saved_yatf = temp1
                     if eqn_compare:
                         r_compare12_q0q2tpyatf[eqn_system, 0, :, p:p+1, ...] = temp0
                 ###offs
                 eqn_used = (eqn_used_g3_q1p[eqn_group, p:p+1] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1,...] >0):
                     temp0 = efun.f_stock_ch4_animal_bc(ch_cpoffs, intake_f_offs, intake_s_offs, md_solid_offs, level_offs)
+                    temp0, temp1 = efun.f_methane_reduction(temp0, sen.sam['methane_yield'], sen.sav['methane_capture'])
                     if eqn_used:
                         ch4_animal_offs = temp0
+                        methane_me_saved_offs = temp1
                     if eqn_compare:
                         r_compare12_q0q2tpoffs[eqn_system, 0, :, p:p+1, ...] = temp0
 
@@ -6669,6 +6689,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 o_pi_tpsire[:, p:p+1] = pi_sire
                 o_mei_solid_tpsire[:, p:p+1] = mei_solid_sire
                 o_ch4_animal_tpsire[:, p:p+1] = ch4_animal_sire
+                o_methane_me_saved_tpsire[:, p:p+1] = methane_me_saved_sire
                 o_n2o_animal_tpsire[:, p:p+1] = n2o_animal_sire
                 o_cfw_tpsire[:, p:p+1] = cfw_sire
                 o_sl_tpsire[:, p:p+1] = sl_sire
@@ -6741,6 +6762,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 o_pi_tpdams[:, p:p+1] = pi_dams
                 o_mei_solid_tpdams[:, p:p+1] = mei_solid_dams
                 o_ch4_animal_tpdams[:, p:p+1] = ch4_animal_dams
+                o_methane_me_saved_tpdams[:, p:p+1] = methane_me_saved_dams
                 o_n2o_animal_tpdams[:, p:p+1] = n2o_animal_dams
                 o_cfw_tpdams[:, p:p+1] = cfw_dams
                 o_d_cfw_tpdams[:, p:p+1] = d_cfw_dams * days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1]
@@ -6820,6 +6842,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 o_pi_tpyatf[:, p:p+1] = pi_yatf
                 o_mei_solid_tpyatf[:, p:p+1] = mei_solid_yatf
                 o_ch4_animal_tpyatf[:, p:p+1] = ch4_animal_yatf
+                o_methane_me_saved_tpyatf[:, p:p+1] = methane_me_saved_yatf
                 o_n2o_animal_tpyatf[:, p:p+1] = n2o_animal_yatf
                 # o_cfw_tpyatf[:, p:p+1] = cfw_yatf
                 # o_gfw_tpyatf[:, p:p+1] = gfw_yatf
@@ -6895,6 +6918,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 o_pi_tpoffs[:, p:p+1] = pi_offs
                 o_mei_solid_tpoffs[:, p:p+1] = mei_solid_offs
                 o_ch4_animal_tpoffs[:, p:p+1] = ch4_animal_offs
+                o_methane_me_saved_tpoffs[:, p:p+1] = methane_me_saved_offs
                 o_n2o_animal_tpoffs[:, p:p+1] = n2o_animal_offs
                 o_cfw_tpoffs[:, p:p+1] = cfw_offs
                 # o_gfw_tpoffs[:, p:p+1] = gfw_offs
@@ -8998,6 +9022,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     o_mei_solid_tpdams = o_mei_solid_tpdams + np.sum(o_mei_solid_tpyatf * gender_propn_xyg, axis=x_pos, keepdims=True)
     ##emissions
     o_ch4_animal_tpdams = o_ch4_animal_tpdams + np.sum(o_ch4_animal_tpyatf * gender_propn_xyg, axis=x_pos, keepdims=True)
+    o_methane_me_saved_tpdams = o_methane_me_saved_tpdams + np.sum(o_methane_me_saved_tpyatf * gender_propn_xyg, axis=x_pos, keepdims=True)
     o_n2o_animal_tpdams = o_n2o_animal_tpdams + np.sum(o_n2o_animal_tpyatf * gender_propn_xyg, axis=x_pos, keepdims=True)
 
 
@@ -9143,11 +9168,17 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     mei_p6ftva1e1b1nwzida0e0b0xyg0 = sfun.f1_p2v_std(o_mei_solid_tpsire * nv_propn_ftpsire, numbers_p=o_numbers_end_tpsire
                                         , on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0, days_period_p=days_period_pa1e1b1nwzida0e0b0xyg0
                                         , a_any1_p=a_p6_pa1e1b1nwzida0e0b0xyg, index_any1tvp=index_p6tpa1e1b1nwzida0e0b0xyg[:,na,...])[:,:,:,na,...]#add singleton v
+    methane_me_saved_p6ftva1e1b1nwzida0e0b0xyg0 = sfun.f1_p2v_std(o_methane_me_saved_tpsire * nv_propn_ftpsire, numbers_p=o_numbers_end_tpsire
+                                        , on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0, days_period_p=days_period_pa1e1b1nwzida0e0b0xyg0
+                                        , a_any1_p=a_p6_pa1e1b1nwzida0e0b0xyg, index_any1tvp=index_p6tpa1e1b1nwzida0e0b0xyg[:,na,...])[:,:,:,na,...]#add singleton v
     pi_p6ftva1e1b1nwzida0e0b0xyg0 = sfun.f1_p2v_std(o_pi_tpsire * nv_propn_ftpsire, numbers_p=o_numbers_end_tpsire
                                         , on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0, days_period_p=days_period_pa1e1b1nwzida0e0b0xyg0
                                         , a_any1_p=a_p6_pa1e1b1nwzida0e0b0xyg, index_any1tvp=index_p6tpa1e1b1nwzida0e0b0xyg[:,na,...])[:,:,:,na,...]#add singleton v
     ###dams
     mei_p6ftva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(o_mei_solid_tpdams * nv_propn_ftpdams, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_tpdams
+                                       , on_hand_tpa1e1b1nwzida0e0b0xyg1, days_period_pa1e1b1nwzida0e0b0xyg1
+                                       , a_any1_p=a_p6_pa1e1b1nwzida0e0b0xyg, index_any1tp=index_p6tpa1e1b1nwzida0e0b0xyg[:,na,...])
+    methane_me_saved_p6ftva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(o_methane_me_saved_tpdams * nv_propn_ftpdams, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_tpdams
                                        , on_hand_tpa1e1b1nwzida0e0b0xyg1, days_period_pa1e1b1nwzida0e0b0xyg1
                                        , a_any1_p=a_p6_pa1e1b1nwzida0e0b0xyg, index_any1tp=index_p6tpa1e1b1nwzida0e0b0xyg[:,na,...])
 
@@ -9157,6 +9188,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
     ###offs
     mei_p6ftva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(o_mei_solid_tpoffs * nv_propn_ftpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_tpoffs
+                                       , on_hand_tpa1e1b1nwzida0e0b0xyg3, days_period_cut_pa1e1b1nwzida0e0b0xyg3
+                                       , a_any1_p=a_p6_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p], index_any1tp=index_p6tpa1e1b1nwzida0e0b0xyg[:,na,...])
+    methane_me_saved_p6ftva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(o_methane_me_saved_tpoffs * nv_propn_ftpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_tpoffs
                                        , on_hand_tpa1e1b1nwzida0e0b0xyg3, days_period_cut_pa1e1b1nwzida0e0b0xyg3
                                        , a_any1_p=a_p6_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p], index_any1tp=index_p6tpa1e1b1nwzida0e0b0xyg[:,na,...])
     pi_p6ftva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(o_pi_tpoffs * nv_propn_ftpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_tpoffs
@@ -9924,6 +9958,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     mei_p6ftva1e1b1nwzida0e0b0xyg0 = sfun.f1_create_production_param('sire', mei_p6ftva1e1b1nwzida0e0b0xyg0,
                                                                    numbers_start_vg=numbers_start_tva1e1b1nwzida0e0b0xyg0,
                                                                    mask_vg=mask_fp_z8var_p6tva1e1b1nwzida0e0b0xyg[:,na,...])
+    methane_me_saved_p6ftva1e1b1nwzida0e0b0xyg0 = sfun.f1_create_production_param('sire', methane_me_saved_p6ftva1e1b1nwzida0e0b0xyg0,
+                                                                   numbers_start_vg=numbers_start_tva1e1b1nwzida0e0b0xyg0,
+                                                                   mask_vg=mask_fp_z8var_p6tva1e1b1nwzida0e0b0xyg[:,na,...])
     mei_k2p6ftva1e1b1nwzida0e0b0xyg1 = sfun.f1_create_production_param('dams', mei_p6ftva1e1b1nwzida0e0b0xyg1
                                                                       , a_k2cluster_va1e1b1nwzida0e0b0xyg1
                                                                       , index_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,...]
@@ -9931,7 +9968,21 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                                                       , mask_vg=(mask_w8vars_va1e1b1nw8zida0e0b0xyg1
                                                                                  *mask_z8var_va1e1b1nwzida0e0b0xyg1
                                                                                  *mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1[:,na,na,...]))
+    methane_me_saved_k2p6ftva1e1b1nwzida0e0b0xyg1 = sfun.f1_create_production_param('dams', methane_me_saved_p6ftva1e1b1nwzida0e0b0xyg1
+                                                                      , a_k2cluster_va1e1b1nwzida0e0b0xyg1
+                                                                      , index_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,...]
+                                                                      , numbers_start_vg=numbers_start_tva1e1b1nwzida0e0b0xyg1
+                                                                      , mask_vg=(mask_w8vars_va1e1b1nw8zida0e0b0xyg1
+                                                                                 *mask_z8var_va1e1b1nwzida0e0b0xyg1
+                                                                                 *mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1[:,na,na,...]))
     mei_k3k5p6ftva1e1b1nwzida0e0b0xyg3 = sfun.f1_create_production_param('offs', mei_p6ftva1e1b1nwzida0e0b0xyg3
+                                                                        , a_k3cluster_da0e0b0xyg3
+                                                                        , index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,na,...]
+                                                                        , a_k5cluster_da0e0b0xyg3
+                                                                        , index_k5tva1e1b1nwzida0e0b0xyg3[:,na,na,...]
+                                                                        , numbers_start_tva1e1b1nwzida0e0b0xyg3
+                                                                        , mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3 * mask_z8var_va1e1b1nwzida0e0b0xyg3)
+    methane_me_saved_k3k5p6ftva1e1b1nwzida0e0b0xyg3 = sfun.f1_create_production_param('offs', methane_me_saved_p6ftva1e1b1nwzida0e0b0xyg3
                                                                         , a_k3cluster_da0e0b0xyg3
                                                                         , index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,na,...]
                                                                         , a_k5cluster_da0e0b0xyg3
@@ -11303,10 +11354,13 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     ##mei
     ###mei - sire
     params['p_mei_sire'] = fun.f1_make_pyomo_dict(mei_p6ftva1e1b1nwzida0e0b0xyg0, arrays_p6fzg0)
+    params['p_methane_me_saved_sire'] = fun.f1_make_pyomo_dict(methane_me_saved_p6ftva1e1b1nwzida0e0b0xyg0, arrays_p6fzg0)
     ###mei - dams
     params['p_mei_dams'] = fun.f1_make_pyomo_dict(mei_k2p6ftva1e1b1nwzida0e0b0xyg1, arrays_k2p6ftva1nwziyg1)
+    params['p_methane_me_saved_dams'] = fun.f1_make_pyomo_dict(methane_me_saved_k2p6ftva1e1b1nwzida0e0b0xyg1, arrays_k2p6ftva1nwziyg1)
     ###mei - offs
     params['p_mei_offs'] = fun.f1_make_pyomo_dict(mei_k3k5p6ftva1e1b1nwzida0e0b0xyg3, arrays_k3k5p6ftvnwziaxyg3, loop_axis_pos=p_pos, index_loop_axis_pos=-9)
+    params['p_methane_me_saved_offs'] = fun.f1_make_pyomo_dict(methane_me_saved_k3k5p6ftva1e1b1nwzida0e0b0xyg3, arrays_k3k5p6ftvnwziaxyg3, loop_axis_pos=p_pos, index_loop_axis_pos=-9)
 
     ##pi
     ###pi - sire
@@ -12081,10 +12135,13 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     fun.f1_make_r_val(r_vals, uinp.emissions['i_ch4_gwp_factor'], 'ch4_gwp_factor')
     fun.f1_make_r_val(r_vals, uinp.emissions['i_n2o_gwp_factor'], 'n2o_gwp_factor')
     fun.f1_make_r_val(r_vals, ch4_animal_tva1e1b1nwzida0e0b0xyg0, 'ch4_animal_zg0', shape=zg0_shape) #no mask needed since no active period axis
+    fun.f1_make_r_val(r_vals, methane_me_saved_p6ftva1e1b1nwzida0e0b0xyg0, 'methane_me_saved_sire_p6fzg0', mask_fp_z8var_p6tva1e1b1nwzida0e0b0xyg[:,na,...], z_pos, p6fzg0_shape)
     fun.f1_make_r_val(r_vals, n2o_animal_tva1e1b1nwzida0e0b0xyg0, 'n2o_animal_zg0', shape=zg0_shape) #no mask needed since no active period axis
     fun.f1_make_r_val(r_vals, ch4_animal_k2tva1e1b1nwzida0e0b0xyg1, 'ch4_animal_k2tva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1,z_pos, k2tva1nwziyg1_shape)
+    fun.f1_make_r_val(r_vals, methane_me_saved_k2p6ftva1e1b1nwzida0e0b0xyg1, 'methane_me_saved_dams_k2p6ftva1nw8ziyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,...], z_pos, k2p6ftva1nwziyg1_shape)
     fun.f1_make_r_val(r_vals, n2o_animal_k2tva1e1b1nwzida0e0b0xyg1, 'n2o_animal_k2tva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1,z_pos, k2tva1nwziyg1_shape)
     fun.f1_make_r_val(r_vals, ch4_animal_k3k5tva1e1b1nwzida0e0b0xyg3, 'ch4_animal_k3k5tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3,z_pos, k3k5tvnwziaxyg3_shape)
+    fun.f1_make_r_val(r_vals, methane_me_saved_k3k5p6ftva1e1b1nwzida0e0b0xyg3, 'methane_me_saved_offs_k3k5p6ftvnw8ziaxyg3', mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,na,...], z_pos, k3k5p6ftvnwziaxyg3_shape)
     fun.f1_make_r_val(r_vals, n2o_animal_k3k5tva1e1b1nwzida0e0b0xyg3, 'n2o_animal_k3k5tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3,z_pos, k3k5tvnwziaxyg3_shape)
     fun.f1_make_r_val(r_vals, co2e_fuel_tva1e1b1nwzida0e0b0xyg0, 'co2e_fuel_zg0', shape=zg0_shape) #no mask needed since no active period axis
     fun.f1_make_r_val(r_vals, co2e_fuel_k2tva1e1b1nwzida0e0b0xyg1, 'co2e_fuel_k2tva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1,z_pos, k2tva1nwziyg1_shape)

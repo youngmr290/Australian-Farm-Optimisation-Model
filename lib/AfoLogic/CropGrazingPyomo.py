@@ -102,6 +102,10 @@ def f1_cropgrazepyomo_local(params,model):
                                      initialize=params['co2e_cropgraze_kp6z'], default=0, mutable=False,
                                      doc='kgs of co2e produced per tonne of crop grazing')
 
+    model.methane_me_saved_cropgraze_kp6z = pe.Param(model.s_cropgraze_base_kp6z,
+                                     initialize=params['methane_me_saved_cropgraze_kp6z'], default=0, mutable=False,
+                                     doc='ME saved from methane reduction per tonne of crop grazing')
+
     ###################################
     #call local constraints           #
     ###################################
@@ -185,6 +189,17 @@ def f_grazecrop_me(model,q,s,p6,f,z):
     Used in global constraint (con_me). See CorePyomo
     '''
     return sum(model.v_tonnes_crop_consumed[q,s,f,k,p6,p5,z,l] * model.p_crop_md[f,k,p6,p5,z,l]
+               for (k, p6_, p5, z_, l) in model.s_cropgraze_base_kp6p5zl
+               if p6_ == p6 and z_ == z)
+
+
+def f_grazecrop_methane_me_saved(model,q,s,p6,f,z):
+    '''
+    Calculate methane-reduction energy captured from green crop consumption.
+
+    Used in global constraint (con_me). See CorePyomo
+    '''
+    return sum(model.v_tonnes_crop_consumed[q,s,f,k,p6,p5,z,l] * model.methane_me_saved_cropgraze_kp6z[k,p6,z]
                for (k, p6_, p5, z_, l) in model.s_cropgraze_base_kp6p5zl
                if p6_ == p6 and z_ == z)
 

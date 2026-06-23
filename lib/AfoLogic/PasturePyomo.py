@@ -89,6 +89,11 @@ def f1_paspyomo_local(params, model, MP_lp_vars):
     model.p_me_cons_grnha = pe.Param(model.s_sequence_year, model.s_feed_pools, model.s_grazing_int, model.s_foo_levels, model.s_feed_periods,
                                      model.s_lmus, model.s_season_types, model.s_pastures, initialize=params['p_me_cons_grnha_qfgop6lzt'],
                                      default=0, mutable=False, doc='Total ME from grazing a hectare')
+
+    model.p_methane_me_saved_grnpas = pe.Param(model.s_sequence_year, model.s_grazing_int, model.s_foo_levels,
+                                    model.s_feed_periods, model.s_lmus, model.s_season_types, model.s_pastures,
+                                    initialize=params['p_methane_me_saved_grnpas_qgop6lzt'], default=0,
+                                    mutable=False, doc='ME saved from methane reduction when grazing a hectare')
     
     model.p_volume_grnha = pe.Param(model.s_sequence_year, model.s_feed_pools, model.s_grazing_int, model.s_foo_levels, model.s_feed_periods,
                                     model.s_lmus, model.s_season_types, model.s_pastures, initialize=params['p_volume_grnha_qfgop6lzt'],
@@ -101,6 +106,10 @@ def f1_paspyomo_local(params, model, MP_lp_vars):
     model.p_dry_mecons_t = pe.Param(model.s_feed_pools, model.s_dry_groups, model.s_feed_periods, model.s_season_types,
                                     model.s_pastures, initialize=params['p_dry_mecons_t_fdp6zt'], default=0,
                                     mutable=False, doc='Total ME from grazing a tonne of dry feed')
+
+    model.p_methane_me_saved_drypas = pe.Param(model.s_dry_groups, model.s_feed_periods, model.s_season_types,
+                                    model.s_pastures, initialize=params['p_methane_me_saved_drypas_dp6zt'], default=0,
+                                    mutable=False, doc='ME saved from methane reduction when grazing a tonne of dry feed')
     
     model.p_dry_volume_t = pe.Param(model.s_feed_pools, model.s_dry_groups, model.s_feed_periods, model.s_season_types,
                                     model.s_pastures, initialize=params['p_dry_volume_t_fdp6zt'], default=0,
@@ -139,6 +148,10 @@ def f1_paspyomo_local(params, model, MP_lp_vars):
 
     model.p_poc_md = pe.Param(model.s_feed_pools, model.s_feed_periods, model.s_season_types, initialize=params['p_poc_md_fp6z'],
                               default=0, doc='md of pasture on crop paddocks for each feed period')
+
+    model.p_methane_me_saved_poc = pe.Param(model.s_feed_periods, model.s_season_types,
+                              initialize=params['p_methane_me_saved_poc_p6z'], default=0,
+                              mutable=False, doc='ME saved from methane reduction when grazing pasture on crop paddocks')
     
     model.p_poc_vol = pe.Param(model.s_feed_pools, model.s_feed_periods, model.s_season_types, initialize=params['p_poc_vol_fp6z'],
                                default=0, mutable=False, doc='vol (ri intake) of pasture on crop paddocks for each feed period')
@@ -428,6 +441,26 @@ def f_nappas_me(model,q,s,p6,f,z):
     Used in global constraint (con_me). See CorePyomo
     '''
     return sum(model.v_nap_consumed[q,s,f,d,p6,z,t] * model.p_dry_mecons_t[f,d,p6,z,t] for d in model.s_dry_groups for t in model.s_pastures)
+
+
+def f_pas_methane_me_saved(model,q,s,p6,f,z):
+    '''
+    Calculate the methane-reduction energy captured from selected pasture consumption.
+
+    Used in global constraint (con_me). See CorePyomo
+    '''
+    return sum(sum(sum(model.v_greenpas_ha[q,s,f,g,o,p6,l,z,t] * model.p_methane_me_saved_grnpas[q,g,o,p6,l,z,t] for g in model.s_grazing_int for o in model.s_foo_levels) \
+               + sum(model.v_drypas_consumed[q,s,f,d,p6,z,l,t] * model.p_methane_me_saved_drypas[d,p6,z,t] for d in model.s_dry_groups) for t in model.s_pastures) \
+               + model.v_poc[q,s,f,p6,l,z] * model.p_methane_me_saved_poc[p6,z] for l in model.s_lmus)
+
+
+def f_nappas_methane_me_saved(model,q,s,p6,f,z):
+    '''
+    Calculate the methane-reduction energy captured from selected non-arable pasture consumption.
+
+    Used in global constraint (con_me). See CorePyomo
+    '''
+    return sum(model.v_nap_consumed[q,s,f,d,p6,z,t] * model.p_methane_me_saved_drypas[d,p6,z,t] for d in model.s_dry_groups for t in model.s_pastures)
 
 ##Vol
 def f_pas_vol(model,q,s,p6,f,z):
