@@ -82,6 +82,10 @@ def f1_suppyomo_local(params, model):
     ##sup emissions
     model.co2e_sup_fk = pe.Param(model.s_feed_pools, model.s_supp_feeds, initialize=params['co2e_sup_fk'] , default = 0.0, doc='emissions per tonne of grain consumed/fed')
 
+    model.methane_me_saved_sup_fk = pe.Param(model.s_feed_pools, model.s_supp_feeds,
+                                             initialize=params['methane_me_saved_sup_fk'], default = 0.0,
+                                             doc='ME saved from methane reduction per tonne of supplement consumed/fed')
+
     ##a_p6_p7
     model.p_a_p6_p7 = pe.Param(model.s_season_periods, model.s_feed_periods, model.s_season_types, initialize=params['a_p6_p7'], default = 0.0, doc='link between p6 and m')
 
@@ -122,6 +126,17 @@ def f_sup_me(model,q,s,p6,f,z):
 
     return sum(model.v_sup_con[q,s,z,k3,f,p6] * model.p_sup_md[f,k3,p6,z] for k3 in model.s_supp_feeds
                if pe.value(model.p_sup_md[f,k3,p6,z])!=0)
+
+
+def f_sup_methane_me_saved(model,q,s,p6,f,z):
+    '''
+    Calculate methane-reduction energy captured from consuming supplement.
+
+    Used in global constraint (con_me). See CorePyomo
+    '''
+
+    return sum(model.v_sup_con[q,s,z,k3,f,p6] * model.methane_me_saved_sup_fk[f,k3] for k3 in model.s_supp_feeds
+               if pe.value(model.methane_me_saved_sup_fk[f,k3])!=0)
 
 def f_sup_vol(model,q,s,p6,f,z):
     '''

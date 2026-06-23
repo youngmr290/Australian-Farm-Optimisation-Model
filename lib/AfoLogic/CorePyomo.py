@@ -628,6 +628,10 @@ def f_con_me(model):
         if pe.value(model.p_wyear_inc_qs[q, s]) and pe.value(model.p_mask_season_p6z[p6,z]):
             return -paspy.f_pas_me(model,q,s,p6,f,z) - paspy.f_nappas_me(model,q,s,p6,f,z) - suppy.f_sup_me(model,q,s,p6,f,z) \
                    - stubpy.f_cropresidue_me(model,q,s,p6,f,z) - cgzpy.f_grazecrop_me(model,q,s,p6,f,z) - slppy.f_saltbush_me(model,q,s,z,p6,f) \
+                   - paspy.f_pas_methane_me_saved(model,q,s,p6,f,z) - paspy.f_nappas_methane_me_saved(model,q,s,p6,f,z) \
+                   - suppy.f_sup_methane_me_saved(model,q,s,p6,f,z) - stubpy.f_cropresidue_methane_me_saved(model,q,s,p6,f,z) \
+                   - cgzpy.f_grazecrop_methane_me_saved(model,q,s,p6,f,z) - slppy.f_saltbush_methane_me_saved(model,q,s,z,p6,f) \
+                   - stkpy.f_stock_methane_me_saved(model,q,s,p6,f,z) \
                    + stkpy.f_stock_me(model,q,s,p6,f,z) - mvf.f_mvf_me(model,q,s,p6,f) <= 0
         else:
             return pe.Constraint.Skip

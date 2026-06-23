@@ -331,6 +331,8 @@ def crop_residue_all(params, r_vals, nv, cat_propn_s1_ks2):
         stock_ch4_stub_p6zks1 = efun.f_stock_ch4_feed_nir(1000, dmd_cat_p6zks1)
     elif uinp.sheep['i_eqn_used_g1_q1p7'][12, 0] == 1:  #Baxter and Claperton
         stock_ch4_stub_p6zks1 = efun.f_stock_ch4_feed_bc(1000, md_p6zks1)
+    stock_ch4_stub_p6zks1, methane_me_saved_stub_p6zks1 = efun.f_methane_reduction(
+        stock_ch4_stub_p6zks1, SA.sam['methane_yield'], SA.sav['methane_capture'])
 
     ##livestock nitrous oxide emissions linked to the consumption of 1t of saltbush - note that the equation system used is the one selected for dams in p1
     if uinp.sheep['i_eqn_used_g1_q1p7'][13, 0] == 0:  # National Greenhouse Gas Inventory Report
@@ -363,6 +365,7 @@ def crop_residue_all(params, r_vals, nv, cat_propn_s1_ks2):
 
     ## Apply existence mask for interpretability
     stock_ch4_stub_p6zks1 *= mask_stubble_exists_p6zk[..., na]
+    methane_me_saved_stub_p6zks1 *= mask_stubble_exists_p6zk[..., na]
     stock_n2o_stub_p6zks1 *= mask_stubble_exists_p6zk[..., na]
     co2e_stub_cons_p6zks1  *= mask_stubble_exists_p6zk[..., na]
     residue_cons_n2o_p6zk  *= mask_stubble_exists_p6zk
@@ -379,6 +382,7 @@ def crop_residue_all(params, r_vals, nv, cat_propn_s1_ks2):
     md_fp6zks1 = md_fp6zks1 * mask_fp_z8var_p6z[...,na,na]
     vol_fp6zks1 = vol_fp6zks1 * mask_fp_z8var_p6z[...,na,na]
     stock_ch4_stub_p6zks1 = stock_ch4_stub_p6zks1 * mask_fp_z8var_p6z[...,na,na]
+    methane_me_saved_stub_p6zks1 = methane_me_saved_stub_p6zks1 * mask_fp_z8var_p6z[...,na,na]
     stock_n2o_stub_p6zks1 = stock_n2o_stub_p6zks1 * mask_fp_z8var_p6z[...,na,na]
     residue_cons_n2o_p6zk = residue_cons_n2o_p6zk * mask_fp_z8var_p6z[...,na]
     residue_cons_ch4_p6zk = residue_cons_ch4_p6zk * mask_fp_z8var_p6z[...,na]
@@ -446,6 +450,7 @@ def crop_residue_all(params, r_vals, nv, cat_propn_s1_ks2):
 
     ##emissions
     params['co2e_stub_cons_p6zks1'] = fun.f1_make_pyomo_dict(co2e_stub_cons_p6zks1, arrays_p6zks1)
+    params['methane_me_saved_stub_p6zks1'] = fun.f1_make_pyomo_dict(methane_me_saved_stub_p6zks1, arrays_p6zks1)
     params['co2e_stub_production_zk'] = fun.f1_make_pyomo_dict(co2e_stub_production_zk, arrays_zk)
 
     ##--- build active index masks for sparse Pyomo sets - more notes in corresponding pyomo module ---
@@ -484,6 +489,7 @@ def crop_residue_all(params, r_vals, nv, cat_propn_s1_ks2):
     ##store report vals
     fun.f1_make_r_val(r_vals,np.moveaxis(np.moveaxis(md_fp6zks1, 0, 2), 0, 1),'md_zp6fks1',mask_fp_z8var_zp6[:,:,na,na,na],z_pos=-5)
     fun.f1_make_r_val(r_vals,np.moveaxis(stock_ch4_stub_p6zks1, 0, 1),'stock_ch4_stub_zp6ks1',mask_fp_z8var_zp6[:,:,na,na],z_pos=-4)
+    fun.f1_make_r_val(r_vals,np.moveaxis(methane_me_saved_stub_p6zks1, 0, 1),'methane_me_saved_stub_zp6ks1',mask_fp_z8var_zp6[:,:,na,na],z_pos=-4)
     fun.f1_make_r_val(r_vals,np.moveaxis(stock_n2o_stub_p6zks1, 0, 1),'stock_n2o_stub_zp6ks1',mask_fp_z8var_zp6[:,:,na,na],z_pos=-4)
     fun.f1_make_r_val(r_vals,biomass2residue_ks2,'biomass2residue_ks2')
     fun.f1_make_r_val(r_vals,residue_harv_n2o_zk,'residue_harv_n2o_zk')

@@ -193,6 +193,8 @@ def f_saltbush_precalcs(params, r_vals, nv):
         stock_ch4_sb_zp6 = efun.f_stock_ch4_feed_nir(1000, sb_dmd_zp6)
     elif uinp.sheep['i_eqn_used_g1_q1p7'][12, 0] == 1:  #Baxter and Claperton
         stock_ch4_sb_zp6 = efun.f_stock_ch4_feed_bc(1000, sb_me_zp6/1000) #have to divide by 1000 because it was ME/t
+    stock_ch4_sb_zp6, methane_me_saved_sb_zp6 = efun.f_methane_reduction(
+        stock_ch4_sb_zp6, sen.sam['methane_yield'], sen.sav['methane_capture'])
 
     ##livestock nitrous oxide emissions linked to the consumption of 1t of saltbush - note that the equation system used is the one selected for dams in p1
     if uinp.sheep['i_eqn_used_g1_q1p7'][13, 0] == 0:  # National Greenhouse Gas Inventory Report
@@ -219,6 +221,7 @@ def f_saltbush_precalcs(params, r_vals, nv):
     sb_me_zp6f = sb_me_zp6f * mask_fp_z8var_zp6[:,:,na]
     sb_vol_zp6f = sb_vol_zp6f * mask_fp_z8var_zp6[:,:,na]
     co2e_sb_zp6 = co2e_sb_zp6 * mask_fp_z8var_zp6
+    methane_me_saved_sb_zp6 = methane_me_saved_sb_zp6 * mask_fp_z8var_zp6
 
     ##make key arrays
     ###keys
@@ -247,12 +250,14 @@ def f_saltbush_precalcs(params, r_vals, nv):
     params['sb_vol_zp6f'] = fun.f1_make_pyomo_dict(sb_vol_zp6f, arrays_zp6f)
     params['sb_selectivity_zp6'] = fun.f1_make_pyomo_dict(sb_selectivity_zp6, arrays_zp6)
     params['co2e_sb_zp6'] = fun.f1_make_pyomo_dict(co2e_sb_zp6, arrays_zp6)
+    params['methane_me_saved_sb_zp6'] = fun.f1_make_pyomo_dict(methane_me_saved_sb_zp6, arrays_zp6)
 
     ##make r_vals
     fun.f1_make_r_val(r_vals,sb_me_zp6f,'sb_me_zp6f',mask_fp_z8var_zp6[...,na],z_pos=-2)
     fun.f1_make_r_val(r_vals,slp_estab_cost_p7z,'slp_estab_cost_p7z',mask_season_p7z,z_pos=-1)
     ###emissions
     fun.f1_make_r_val(r_vals,stock_ch4_sb_zp6,'stock_ch4_sb_zp6',mask_fp_z8var_zp6,z_pos=-2)
+    fun.f1_make_r_val(r_vals,methane_me_saved_sb_zp6,'methane_me_saved_sb_zp6',mask_fp_z8var_zp6,z_pos=-2)
     fun.f1_make_r_val(r_vals,stock_n2o_sb_zp6,'stock_n2o_sb_zp6',mask_fp_z8var_zp6,z_pos=-2)
 
 

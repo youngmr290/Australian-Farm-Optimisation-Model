@@ -144,6 +144,23 @@ def f_stock_ch4_animal_nir():
     return ch4_fixed
 
 
+def f_methane_reduction(ch4, methane_yield, methane_capture):
+    '''
+    Apply a methane-yield scalar and calculate the metabolisable energy captured
+    from avoided methane losses.
+
+    :param ch4: base methane production in kg.
+    :param methane_yield: scalar on methane production. 0.8 means 20% less methane.
+    :param methane_capture: proportion of avoided methane energy captured by the animal.
+    :return: adjusted methane kg, captured energy MJ.
+    '''
+    ch4_adjusted = ch4 * methane_yield
+    ch4_saved = ch4 - ch4_adjusted
+    ch4_energy_density = 52.5
+    me_saved = ch4_saved * ch4_energy_density * methane_capture
+    return ch4_adjusted, me_saved
+
+
 def f_stock_n2o_feed_nir(intake, dmd, cp):
     '''
     Calculates the component of livestock nitrous oxide emissions linked to feed activities, using the methods documented
