@@ -43,6 +43,8 @@ def coremodel_all(trial_name, model, method, nv, print_debug_output, MP_lp_vars)
     ##################
     #call constraints#
     ##################
+    model.p_methane_additive_cost = pe.Param(initialize=sen.sav['methane_additive_cost'], default=0.0,
+                                             doc='Cost of methane reducing feed additive ($/kg DMI)')
     # Labour fixed
     f_con_labour_fixed_anyone(model)
     f_con_labour_fixed_manager(model)
@@ -662,6 +664,20 @@ def f_con_vol(model):
                                   doc='constraint between me available and consumed')
 
 
+def f_methane_additive_cost(model,q,s,p7,z):
+    '''
+    Tallies the methane reducing feed additive cost attached to feed consumption DVs.
+    '''
+    if pe.value(model.p_methane_additive_cost) != 0:
+        return paspy.f_pas_methane_additive_cost(model,q,s,p7,z) \
+               + suppy.f_sup_methane_additive_cost(model,q,s,p7,z) \
+               + stubpy.f_cropresidue_methane_additive_cost(model,q,s,p7,z) \
+               + cgzpy.f_grazecrop_methane_additive_cost(model,q,s,p7,z) \
+               + slppy.f_saltbush_methane_additive_cost(model,q,s,z,p7)
+    else:
+        return 0
+
+
 def f_con_cashflow(model):
     '''
     Tallies all cashflow in each period and transfers to the next period. Season periods exist so that a transfer can
@@ -673,6 +689,7 @@ def f_con_cashflow(model):
         if pe.value(model.p_wyear_inc_qs[q, s]) and pe.value(model.p_mask_season_p7z[p7,z9]):
             return ((-f1_grain_income(model,q,s,p7,z9,c1) + phspy.f_rotation_cost(model,q,s,p7,z9) + labpy.f_labour_cost(model,q,s,p7,z9)
                     + macpy.f_mach_cost(model,q,s,p7,z9) + suppy.f_sup_feeding_cost(model,q,s,p7,z9) + model.p_overhead_cost[p7,z9] + slppy.f_saltbush_cost(model,q,s,z9,p7)
+                    + f_methane_additive_cost(model,q,s,p7,z9)
                     - stkpy.f_stock_cashflow(model,q,s,p7,z9,c1) - treepy.f_tree_cashflow(model,p7,z9)
                     - model.v_debit[q,s,c1,p7,z9] + model.v_credit[q,s,c1,p7,z9])
                     + sum((model.v_debit[q,s,c1,p7_prev,z8] - model.v_credit[q,s,c1,p7_prev,z8]) * model.p_parentz_provwithin_season[p7_prev,z8,z9] * ((p7!=p7_start)*1)  #end cashflow doesnot provide start cashflow else unbounded.
@@ -821,6 +838,7 @@ def f_con_minroe(model):
         if pe.value(model.p_wyear_inc_qs[q, s]) and pe.value(model.p_mask_season_p7z[p7,z9]):
             return ((phspy.f_rotation_cost(model,q,s,p7,z9) + labpy.f_labour_cost(model,q,s,p7,z9) + macpy.f_mach_cost(model,q,s,p7,z9)
                      + suppy.f_sup_feeding_cost(model,q,s,p7,z9) + stkpy.f_stock_cost(model,q,s,p7,z9) + slppy.f_saltbush_cost(model,q,s,z9,p7)
+                     + f_methane_additive_cost(model,q,s,p7,z9)
                      + f1_sup_minroe(model,q,s,p7,z9))
                     * fin.f1_min_roe()
                     - model.v_minroe[q,s,p7,z9]

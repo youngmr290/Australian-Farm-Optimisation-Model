@@ -543,6 +543,7 @@ def create_sa():
     sav['cu2_c1c2'] = np.full(uinp.parameters['i_cu2_c2'].shape, '-', dtype=object)  #lamb survival params for genotypes.
     sav['cu6_c1c2'] = np.full(uinp.parameters['i_cu6_c2'].shape, '-', dtype=object)  #ewe lamb params for genotypes.
     sav['methane_capture'] = 0.0       #proportion of avoided methane energy captured by the animal
+    sav['methane_additive_cost'] = 0.0 #cost of methane reducing feed additive ($/kg DMI)
     ##SAM
     sam['ci_c1c2'] = np.ones(uinp.parameters['i_ci_c2'].shape, dtype='float64')  #intake params for genotypes
     sam['cl_c1c2'] = np.ones(uinp.parameters['i_cl_c2'].shape, dtype='float64')  # lactation params for genotypes

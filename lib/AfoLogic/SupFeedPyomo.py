@@ -106,6 +106,16 @@ def f_sup_feeding_cost(model,q,s,p7,z):
                for f in model.s_feed_pools for k3 in model.s_supp_feeds for p6 in model.s_feed_periods
                if pe.value(model.p_sup_cost[p7,z,p6,k3,f])!=0)
 
+
+def f_sup_methane_additive_cost(model,q,s,p7,z):
+    '''
+    Calculate the feed additive cost for selected supplement consumption.
+
+    Used in global constraint (con_profit). See CorePyomo
+    '''
+    return sum(model.v_sup_con[q,s,z,k3,f,p6] * 1000 * model.p_methane_additive_cost * model.p_a_p6_p7[p7,p6,z]
+               for f in model.s_feed_pools for k3 in model.s_supp_feeds for p6 in model.s_feed_periods)
+
 def f_sup_wc(model,q,s,c0,p7,z):
     '''
     Calculate the total wc of feeding the selected level of supplement.

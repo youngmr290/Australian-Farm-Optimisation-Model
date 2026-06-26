@@ -738,6 +738,7 @@ def f_pasture(params, r_vals, nv):
 
     params['p_me_cons_grnha_qfgop6lzt'] = fun.f1_make_pyomo_dict(me_cons_grnha_qfgop6lzt, arrays_qfgop6lzt)
     params['p_methane_me_saved_grnpas_qgop6lzt'] = fun.f1_make_pyomo_dict(methane_me_saved_grnpas_qgop6lzt, arrays_qgop6lzt)
+    params['p_cons_grnha_t_qgop6lzt'] = fun.f1_make_pyomo_dict(cons_grnha_t_qgop6lzt, arrays_qgop6lzt)
 
     params['p_dry_mecons_t_fdp6zt'] = fun.f1_make_pyomo_dict(dry_mecons_t_fdp6zt, arrays_fdp6zt)
     params['p_methane_me_saved_drypas_dp6zt'] = fun.f1_make_pyomo_dict(methane_me_saved_drypas_dp6zt, arrays_dp6zt)
