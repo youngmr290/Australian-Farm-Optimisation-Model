@@ -2646,6 +2646,61 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
     return feed_budget.astype(float).round(2)
 
 
+def f_dmi_summary(lp_vars, r_vals, option=0):
+    '''
+    Summary of dry matter intake from feed decision variables.
+
+    :param option: int:
+            0. season probability weighted total DMI by feed source.
+            1. DMI by q, s, z, p6 and feed source.
+            2. season probability weighted DMI by p6 and feed source.
+    '''
+    keys_q = r_vals['zgen']['keys_q']
+    keys_s = r_vals['zgen']['keys_s']
+    keys_z = r_vals['zgen']['keys_z']
+    keys_p6 = r_vals['pas']['keys_p6']
+    index_qszp6 = pd.MultiIndex.from_product([keys_q, keys_s, keys_z, keys_p6], names=['q', 's', 'z', 'p6'])
+
+    def f_qsp6z_to_series(array_qsp6z, name):
+        array_qszp6 = np.moveaxis(array_qsp6z, [0, 1, 2, 3], [0, 1, 3, 2])
+        return pd.Series(array_qszp6.ravel(), index=index_qszp6, name=name)
+
+    def f_qszp6_to_series(array_qszp6, name):
+        return pd.Series(array_qszp6.ravel(), index=index_qszp6, name=name)
+
+    grn_consumed_qgop6lzt = r_vals['pas']['cons_grnha_t_qgop6lzt']
+    grn_dmi_qsfgop6lzt = d_vars['base']['greenpas_ha_qsfgop6lzt'] * grn_consumed_qgop6lzt[:, na, na, ...]
+    green = f_qsp6z_to_series(np.sum(grn_dmi_qsfgop6lzt, axis=(2, 3, 4, 6, 8)), 'Green Pas')
+
+    dry = f_qsp6z_to_series(np.sum(d_vars['base']['drypas_consumed_qsfdp6zlt'], axis=(2, 3, 6, 7)), 'Dry Pas')
+    nap = f_qsp6z_to_series(np.sum(d_vars['base']['nap_consumed_qsfdp6zt'], axis=(2, 3, 6)), 'Dry Crop Paddock Pas')
+    poc = f_qsp6z_to_series(np.sum(d_vars['base']['poc_consumed_qsfp6lz'], axis=(2, 4)), 'Green Crop Paddock Pas')
+    stub = f_qszp6_to_series(np.sum(d_vars['base']['stub_qszp6fks1s2'], axis=(4, 5, 6, 7)), 'Crop Residue')
+    crop = f_qsp6z_to_series(np.sum(d_vars['base']['crop_consumed_qsfkp6p5zl'], axis=(2, 3, 5, 7)), 'Crop Graze')
+    saltbush = f_qszp6_to_series(np.sum(d_vars['base']['v_tonnes_sb_consumed_qszp6fl'], axis=(4, 5)), 'Saltbush')
+
+    sup = f_grain_sup_summary(lp_vars, r_vals, option=3)
+    sup = sup.groupby(level=(0, 1, 2, 5)).sum()
+    sup.index = sup.index.set_names(['q', 's', 'z', 'p6'])
+    sup.name = 'Supplement'
+
+    dmi_qszp6_source = pd.concat([green, dry, nap, poc, stub, crop, saltbush, sup], axis=1).fillna(0)
+
+    if option == 1:
+        return dmi_qszp6_source
+
+    z_prob_qsz = pd.Series(r_vals['zgen']['z_prob_qsz'].ravel(),
+                           index=pd.MultiIndex.from_product([keys_q, keys_s, keys_z], names=['q', 's', 'z']))
+    weighted = dmi_qszp6_source.mul(z_prob_qsz, axis=0)
+
+    if option == 2:
+        return weighted.groupby(level='p6').sum()
+
+    summary = weighted.sum(axis=0).to_frame('DMI (t)')
+    summary.loc['Total', 'DMI (t)'] = summary['DMI (t)'].sum()
+    return summary
+
+
 def f_sup_per_dse(lp_vars, r_vals):
     '''
     Total supplement fed per dse per day.

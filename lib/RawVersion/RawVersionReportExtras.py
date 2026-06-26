@@ -28,6 +28,7 @@ def f_create_report_dfs(non_exist_trials):
     reports["stacked_profitarea"] = pd.DataFrame()  # profit by land area
     reports["stacked_feed"] = pd.DataFrame()  # feed budget
     reports["stacked_feed2"] = pd.DataFrame()  # feed budget
+    reports["stacked_dmi"] = pd.DataFrame()  # dry matter intake summary
     reports["stacked_grazing"] = pd.DataFrame()  # grazing summary
     reports["stacked_ewe_numbers_summary"] = pd.DataFrame()  # grazing summary
     reports["stacked_wethers_n_crossys_numbers_summary"] = pd.DataFrame()  # grazing summary
@@ -205,6 +206,10 @@ def f_concat_reports(stacked_reports, reports, report_run, trial_name):
     if report_run.loc['run_feedbudget', 'Run']:
         feed = pd.concat([reports["feed_total"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
         stacked_reports["stacked_feed2"] = rfun.f_append_dfs(stacked_reports["stacked_feed2"], feed)
+
+    if report_run.loc['run_dmi', 'Run']:
+        dmi = pd.concat([reports["dmi"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
+        stacked_reports["stacked_dmi"] = rfun.f_append_dfs(stacked_reports["stacked_dmi"], dmi)
 
     if report_run.loc['run_feedbudget', 'Run']:
         grazing = pd.concat([reports["grazing"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
@@ -763,6 +768,8 @@ def f_save_reports(report_run, reports, processor):
     if report_run.loc['run_feedbudget', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_feed"], 'feed_budget', df_settings, option=xl_display_mode)
         df_settings = rfun.f_df2xl(writer, reports["stacked_feed2"], 'feed_budget_total', df_settings, option=xl_display_mode)
+    if report_run.loc['run_dmi', 'Run']:
+        df_settings = rfun.f_df2xl(writer, reports["stacked_dmi"], 'dmi', df_settings, option=xl_display_mode)
         df_settings = rfun.f_df2xl(writer, reports["stacked_grazing"], 'grazing_summary', df_settings, option=xl_display_mode)
     if report_run.loc['run_numbers_summary', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_ewe_numbers_summary"], 'ewe_numbers_summary', df_settings, option=xl_display_mode)
