@@ -1708,7 +1708,7 @@ def f_heatloss_nfs(cc, ffcfw_start, rc_start, sl_start, temp_ave, temp_max, temp
 
 
 def f_lwc_cs(cg, rc_start, mei, mem, new, zf1, zf2, kg, kw, rev_trait_value, nec = 0, kc = 1, nel = 0, kl = 1
-             , gest_propn = 0, lact_propn = 0, days_per_period=7):
+             , gest_propn = 0, lact_propn = 0, days_per_period=7, b_mask = 1):
     ##Note: The energy components of rev_trait_value are not active in this function. Have to be using f_lwc_nfs
 
     ##Calculate me for conceptus growth, milk production & wool growth
@@ -1717,7 +1717,7 @@ def f_lwc_cs(cg, rc_start, mei, mem, new, zf1, zf2, kg, kw, rev_trait_value, nec
     mew = new / kw
     ## ME requirement to maintain maternal body energy (maintenance). Surplus is available for maternal body gain
     maintenance = mem + mec * gest_propn + mel * lact_propn + mew
-    if np.any((maintenance < 0) & (np.asarray(days_per_period) > 0)):
+    if np.any((maintenance < 0) & (np.asarray(days_per_period) > 0) & b_mask):
         warnings.warn(f"Negative maintenance detected: min={np.nanmin(maintenance):.6g}", RuntimeWarning)
         maintenance = np.maximum(0, maintenance)
     ##Level of feeding (maint = 0). Note: level is calculated elsewhere (differently) for use in Blaxter & Clapperton equations
@@ -1858,7 +1858,7 @@ def f_lwc_mu(cg, ck, rc_start, mei_initial, nem_ee, km, hp_mei, new, kw, zf1, zf
     mew = fun.f_divide(new, kw)
     ##Energy intake that is surplus to maintaining maternal body energy. Surplus is available for maternal body gain
     maintenance  = nem_ee + hp_mei + mec * gest_propn + mel * lact_propn + mew
-    if np.any((maintenance < 0) & (np.asarray(days_period) > 0)):
+    if np.any((maintenance < 0) & (np.asarray(days_period) > 0) & b_mask):
         warnings.warn(f"Negative maintenance detected: min={np.nanmin(maintenance):.6g}", RuntimeWarning)
         maintenance = np.maximum(0, maintenance)
     surplus_energy_ee = mei_initial - maintenance
@@ -1953,7 +1953,7 @@ def f_lwc_mu(cg, ck, rc_start, mei_initial, nem_ee, km, hp_mei, new, kw, zf1, zf
 
 
 def f_lwc_nfs(cg, ck, muscle, viscera, muscle_target, mei_initial, km, md, hp_maint, hp_mei, dw, heat_loss_m0p1, step
-              , rev_trait_value, dc = 0, bc = 0, dl = 0, gest_propn = 0, lact_propn = 0):
+              , rev_trait_value, dc = 0, bc = 0, dl = 0, gest_propn = 0, lact_propn = 0, b_mask=1):
     #todo Connect a back calculation function for nfs (or perhaps change the existing function to work for both mu & nfs)
     ##fat gain (MJ/d) is calculated using a formula derived from the Oddy etal 2023 paper (see Generator9:p16-17)
     ###The calculation is multistep because parameter values (bcm & bcf) depend on the sign of dm and df
@@ -2113,7 +2113,7 @@ def f_lwc_nfs(cg, ck, muscle, viscera, muscle_target, mei_initial, km, md, hp_ma
                                 , retained_energy[..., na, na] + heat_loss_m0p1), axis = (-1,-2))
     ###mem: maintenance energy requirement including heat associated with feeding (will be greater than CSIRO equiv mem)
     mem = mei - (retained_energy + hp_re)
-    if np.any((mem < 0) & (np.asarray(step) > 0)):
+    if np.any((mem < 0) & (np.asarray(step) > 0) & b_mask):
         warnings.warn(f"Negative maintenance detected: min={np.nanmin(mem):.6g}", RuntimeWarning)
         mem = np.maximum(0, mem)
     ### Calculate adjustment to mei to reflect the changes made by the REV or post calc SA
