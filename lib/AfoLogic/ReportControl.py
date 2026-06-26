@@ -138,6 +138,9 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         dams_cols = f_update_default_controls(user_controls, 'feed_total', 'dams_cols', []) #birth opp
         offs_cols = f_update_default_controls(user_controls, 'feed_total', 'offs_cols', []) #shear opp
         reports["feed_total"] = rfun.f_feed_budget(lp_vars, r_vals, option=option, nv_option=nv_option, dams_cols=dams_cols, offs_cols=offs_cols, residue_cols=residue_cols)
+    if report_run.loc['run_dmi', 'Run']:
+        option = f_update_default_controls(user_controls, 'dmi', 'option', 0)  #0 total by source, 1 q/s/z/p6 by source, 2 p6 by source
+        reports["dmi"] = rfun.f_dmi_summary(lp_vars, r_vals, option=option)
     if report_run.loc['run_feedbudget', 'Run']:
         reports["grazing"] = rfun.f_grazing_summary(lp_vars, r_vals)
     if report_run.loc['run_numbers_summary', 'Run']:
