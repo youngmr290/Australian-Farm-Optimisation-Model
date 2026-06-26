@@ -7645,19 +7645,35 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         pcfw = o_cfw_tpdams[0,54,0,0,0,0,0,0,0,0,0,0,0,0,0,0]    #PCFW of NM ewes at 0.5yo
         ycfw = o_cfw_tpdams[0,106,0,0,0,0,0,0,0,0,0,0,0,0,0,0]   #YCFW of NM ewes at 1.5yo
         hcfw = o_cfw_tpdams[0,158,0,0,0,0,0,0,0,0,0,0,0,0,0,0]   #HCFW of NM ewes at 1.5yo
-        acfw = o_cfw_tpdams[0,210,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #ACFW of single ewes at 3.5yo
+        a2cfw = o_cfw_tpdams[0,158,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #A2CFW of single ewes at 2.5yo
+        a3cfw = o_cfw_tpdams[0,210,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #A3CFW of single ewes at 3.5yo
+        a4cfw = o_cfw_tpdams[0,262,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #A4CFW of single ewes at 4.5yo
+        a5cfw = o_cfw_tpdams[0,314,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #A5CFW of single ewes at 5.5yo
+        acfw = (a2cfw + a3cfw + a4cfw + a5cfw) / 4
         pfd = o_fd_tpdams[0,54,0,0,0,0,0,0,0,0,0,0,0,0,0,0]     #PFD of NM ewes at 0.5yo
         yfd = o_fd_tpdams[0,106,0,0,0,0,0,0,0,0,0,0,0,0,0,0]    #YFD of NM ewes at 1.5yo
         hfd = o_fd_tpdams[0,158,0,0,0,0,0,0,0,0,0,0,0,0,0,0]    #HFD of NM ewes at 0.5yo
-        afd = o_fd_tpdams[0,210,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #AFD of single ewes at 3.5yo
+        a2fd = o_fd_tpdams[0,158,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #A2FD of single ewes at 2.5yo
+        a3fd = o_fd_tpdams[0,210,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #A3FD of single ewes at 3.5yo
+        a4fd = o_fd_tpdams[0,262,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #A4FD of single ewes at 4.5yo
+        a5fd = o_fd_tpdams[0,314,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #A5FD of single ewes at 5.5yo
+        afd = (a2fd + a3fd + a4fd + a5fd) / 4
         pss = o_ss_tpdams[0,54,0,0,0,0,0,0,0,0,0,0,0,0,0,0]    #PSS of NM ewes at 3.5yo
         yss = o_ss_tpdams[0,106,0,0,0,0,0,0,0,0,0,0,0,0,0,0]   #YSS of NM ewes at 3.5yo
         hss = o_ss_tpdams[0,158,0,0,0,0,0,0,0,0,0,0,0,0,0,0]   #HSS of NM ewes at 3.5yo
-        ass = o_ss_tpdams[0,210,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #ASS of single ewes at 3.5yo
+        a2ss = o_ss_tpdams[0,158,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #A2SS of single ewes at 2.5yo
+        a3ss = o_ss_tpdams[0,210,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #A3SS of single ewes at 3.5yo
+        a4ss = o_ss_tpdams[0,262,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #A4SS of single ewes at 4.5yo
+        a5ss = o_ss_tpdams[0,314,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #A5SS of single ewes at 5.5yo
+        ass = (a2ss + a3ss + a4ss + a5ss) / 4
         psl = o_sl_tpdams[0,54,0,0,0,0,0,0,0,0,0,0,0,0,0,0]     #PSL of NM ewes at 3.5yo
         ysl = o_sl_tpdams[0,106,0,0,0,0,0,0,0,0,0,0,0,0,0,0]    #YSL of NM ewes at 3.5yo
         hsl = o_sl_tpdams[0,158,0,0,0,0,0,0,0,0,0,0,0,0,0,0]    #HSL of NM ewes at 3.5yo
-        asl = o_sl_tpdams[0,210,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #ASL of single ewes at 3.5yo
+        a2sl = o_sl_tpdams[0,158,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #A2SL of single ewes at 2.5yo
+        a3sl = o_sl_tpdams[0,210,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #A3SL of single ewes at 3.5yo
+        a4sl = o_sl_tpdams[0,262,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #A4SL of single ewes at 4.5yo
+        a5sl = o_sl_tpdams[0,314,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #A5SL of single ewes at 5.5yo
+        asl = (a2sl + a3sl + a4sl + a5sl) / 4
         ##proportion of preg is 1 - (number of dry (b[1]) divided by the number dry and pregnant (b[1:5]))
         ycon = 1 - fun.f_divide(o_numbers_start_tpdams[0,59,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
                              np.sum(o_numbers_start_tpdams[0,59,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0]))
@@ -7958,18 +7974,22 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         print(f"yCFW target {ycfw_target} this {ycfw} with (sfw={sen.saa['sfw_p11'][y]} & {sen.saa['ycfw_scalar']})")
         # print(f"HCFW target {hcfw_target} this {hcfw} with (sfw={sen.saa['sfw_p11'][h]})")
         print(f"ACFW target {acfw_target} this {acfw} with (sfw={sen.saa['sfw_p11'][a]})")
+        print(f"2yo={a2cfw} 3yo={a3cfw} 4yo={a4cfw} 5yo={a5cfw}")
         # print(f"PFD target {pfd_target} this {pfd} with (sfd={sen.saa['sfd_p11'][p]})")
         print(f"YFD target {yfd_target} this {yfd} with (sfd={sen.saa['sfd_p11'][y]} & {sen.saa['yfd_scalar']})")
         # print(f"HFD target {hfd_target} this {hfd} with (sfd={sen.saa['sfd_p11'][h]})")
         print(f"AFD target {afd_target} this {afd} with (sfd={sen.saa['sfd_p11'][a]})")
+        print(f"2yo={a2fd} 3yo={a3fd} 4yo={a4fd} 5yo={a5fd}")
         # print(f"PSS target {pss_target} this {pss} with (iss={sen.saa['iss_p11'][p]})")
         # print(f"YSS target {yss_target} this {yss} with (iss={sen.saa['iss_p11'][y]})")
         # print(f"HSS target {hss_target} this {hss} with (iss={sen.saa['iss_p11'][h]})")
         print(f"ASS target {ass_target} this {ass} with (iss={sen.saa['iss_p11'][a]})")
+        print(f"2yo={a2ss} 3yo={a3ss} 4yo={a4ss} 5yo={a5ss}")
         # print(f"PSL target {psl_target} this {psl} with (follicles={sen.saa['follicles_p11'][p]})")
         # print(f"YSL target {ysl_target} this {ysl} with (follicles={sen.saa['follicles_p11'][y]})")
         # print(f"HSL target {hsl_target} this {hsl} with (follicles={sen.saa['follicles_p11'][h]})")
         print(f"ASL target {asl_target} this {asl} with (follicles={sen.saa['follicles_p11'][a]})")
+        print(f"2yo={a2sl} 3yo={a3sl} 4yo={a4sl} 5yo={a5sl}")
         # print(f"YCON target {ycon_target} this {ycon} with ({sen.saa['con_p11'][y]})")
         print(f"ACON target {acon_target} this {acon} with ({sen.saa['con_p11'][a]})")
         print(f"2yo={preg_2yo} 3yo={preg_3yo} 4yo={preg_5yo} 5yo={preg_5yo}")
