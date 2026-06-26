@@ -341,6 +341,20 @@ def f_cropresidue_methane_me_saved(model,q,s,p6,f,z):
                for k in model.s_stub_k_by_p6z[p6, z]
                for sc in model.s_stub_cat
                for s2 in model.s_biomass_uses)
+
+
+def f_cropresidue_methane_additive_cost(model,q,s,p7,z):
+    '''
+    Calculate the feed additive cost for selected stubble consumption.
+
+    Used in global constraint (con_profit). See CorePyomo
+    '''
+    return sum(model.v_stub_con[q,s,z,p6,f,k,sc,s2] * 1000 * model.p_methane_additive_cost * model.p_a_p6_p7[p7,p6,z]
+               for p6 in model.s_feed_periods
+               for f in model.s_feed_pools
+               for k in model.s_stub_k_by_p6z[p6, z]
+               for sc in model.s_stub_cat
+               for s2 in model.s_biomass_uses)
     
 ##stubble vol
 def f_cropresidue_vol(model,q,s,p6,f,z):

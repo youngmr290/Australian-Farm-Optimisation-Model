@@ -221,6 +221,20 @@ def f_saltbush_methane_me_saved(model,q,s,z,p6,f):
     else:
         return 0
 
+
+def f_saltbush_methane_additive_cost(model,q,s,z,p7):
+    '''
+    Calculate the feed additive cost for selected saltbush consumption.
+
+    Used in global constraint (con_profit). See CorePyomo
+    '''
+    if pinp.general['pas_inc_t'][3]:
+        return sum(model.v_tonnes_sb_consumed[q,s,z,p6,f,l] * 1000 * model.p_methane_additive_cost * model.p_a_p6_p7[p7,p6,z]
+                   for p6 in model.s_feed_periods for f in model.s_feed_pools for l in model.s_lmus)
+    else:
+        return 0
+
+
 def f_saltbush_vol(model,q,s,z,p6,f):
     '''
     Calculate the total volume required by each nv pool to consume the selected level of saltbush.

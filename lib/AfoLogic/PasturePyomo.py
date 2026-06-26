@@ -94,6 +94,11 @@ def f1_paspyomo_local(params, model, MP_lp_vars):
                                     model.s_feed_periods, model.s_lmus, model.s_season_types, model.s_pastures,
                                     initialize=params['p_methane_me_saved_grnpas_qgop6lzt'], default=0,
                                     mutable=False, doc='ME saved from methane reduction when grazing a hectare')
+
+    model.p_cons_grnha_t = pe.Param(model.s_sequence_year, model.s_grazing_int, model.s_foo_levels,
+                                    model.s_feed_periods, model.s_lmus, model.s_season_types, model.s_pastures,
+                                    initialize=params['p_cons_grnha_t_qgop6lzt'], default=0,
+                                    mutable=False, doc='Tonnes of DMI consumed from grazing a hectare')
     
     model.p_volume_grnha = pe.Param(model.s_sequence_year, model.s_feed_pools, model.s_grazing_int, model.s_foo_levels, model.s_feed_periods,
                                     model.s_lmus, model.s_season_types, model.s_pastures, initialize=params['p_volume_grnha_qfgop6lzt'],
@@ -461,6 +466,24 @@ def f_nappas_methane_me_saved(model,q,s,p6,f,z):
     Used in global constraint (con_me). See CorePyomo
     '''
     return sum(model.v_nap_consumed[q,s,f,d,p6,z,t] * model.p_methane_me_saved_drypas[d,p6,z,t] for d in model.s_dry_groups for t in model.s_pastures)
+
+
+def f_pas_methane_additive_cost(model,q,s,p7,z):
+    '''
+    Calculate the feed additive cost for selected pasture consumption.
+
+    Used in global constraint (con_profit). See CorePyomo
+    '''
+    additive_cost_per_kg = model.p_methane_additive_cost
+    return sum((sum(sum(model.v_greenpas_ha[q,s,f,g,o,p6,l,z,t] * model.p_cons_grnha_t[q,g,o,p6,l,z,t]
+                        for g in model.s_grazing_int for o in model.s_foo_levels)
+                    + sum(model.v_drypas_consumed[q,s,f,d,p6,z,l,t] for d in model.s_dry_groups)
+                    for t in model.s_pastures)
+                + model.v_poc[q,s,f,p6,l,z])
+               * 1000 * additive_cost_per_kg * model.p_a_p6_p7[p7,p6,z]
+               for f in model.s_feed_pools for p6 in model.s_feed_periods for l in model.s_lmus) \
+           + sum(model.v_nap_consumed[q,s,f,d,p6,z,t] * 1000 * additive_cost_per_kg * model.p_a_p6_p7[p7,p6,z]
+                 for f in model.s_feed_pools for d in model.s_dry_groups for p6 in model.s_feed_periods for t in model.s_pastures)
 
 ##Vol
 def f_pas_vol(model,q,s,p6,f,z):
