@@ -89,10 +89,13 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     ################################
     saa_srw = 0  #set default value for reporting later. Requires a separate variable because has 2 source coefficients
     srw_parameter = 0  #set a value in case whole section is commented out
-    if calibrate_trait_values:
+    if calibrate_trait_values or o_trait_values is not None:
         # print(coefficients_c)   #only useful for debugging when not multiprocessing (workers=1, and not multiprocessing teams)
         n_coeff = coefficients_c.size
         n_traits = calibration_weights_p.size
+        ##set the genotype to report. This is the genotype of the c2 axis in Universal.xlsx
+        genotype = pinp.sheep['a_c2_c0'][0]    #2 is CFS for MLP & GEPEP traditional, 3 is GFS for GEPEP
+
         ##set default values for variables that are used in the calibration
         ### These can be saa passed from exp.xlsx. Reset to 0 here so not applied twice
         sen.saa['ycfw_scalar'] = 0.0
@@ -190,17 +193,18 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         sen.saa['growth_constant'] = coefficients_c[j]; j += 1    #Yearling weight, cn_dams[1] parameter which alters the growth path
         # h = np.nan
         # a = saa_srw = coefficients_c[j]; j += 1               #only this line or next line not both
-        sen.saa['srw'] = saa_srw = coefficients_c[j]; j += 1  #included when WBE is included
+        sen.saa['srw'] = saa_srw = coefficients_c[j]; j += 1  #included when WBE is included or the value is being set
         sen.saa['srw_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
+        srw_parameter = uinp.parameters['i_srw_c2'][genotype] + saa_srw  #parameter value for srw
 
         #Potential intake to calibrate Carcase fatness & WBE, ci[1] parameter
         ##LiveEx: Fit YWT and YFAT volunteers
         w = p = y = h = a = None
         w = np.nan  #intake pre-weaning is handled with the cl[0] parameter, which is intake of milk
         # p = coefficients_c[j]; j += 1
-        y = coefficients_c[j]; j += 1
+        # y = coefficients_c[j]; j += 1
         # h = np.nan  #no hfat
-        a = coefficients_c[j]; j += 1  #np.nan when SRW is included
+        a = coefficients_c[j]; j += 1  #np.nan when SRW is an active calibration coefficient
         sen.saa['pi_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         #EVG to calibrate Whole body energy, cg[8&9] parameters
@@ -295,19 +299,15 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         idx = fun.f_slice_idx(uinp.parameters['i_cn_c2'], {0: [1]})
         uinp.parameters['i_cn_c2'][idx] = fun.f_sa(uinp.parameters['i_cn_c2'][idx], sen.saa['growth_constant'], 2)
 
-    else:   #not calibrate_trait_values
-        ## assign the zero values to the saa coefficients (for printing later).
-        ### coefficients and traits need to align with the numbers in the inversion (code above and below)
-        ### A source of the values is the analysis definitions in [Calibration_controls.xlsx]
-        n_coeff = 15  #Values for reporting arrays when not doing inversion (align with the code below)
-        n_traits = 11
-        coefficients_c = np.zeros(n_coeff)
-        calibration_targets_p = np.zeros (n_traits)
+    # else:   #not calibrate_trait_values
+    #     ## assign the zero values to the saa coefficients (for printing later).
+    #     ### coefficients and traits need to align with the numbers in the inversion (code above and below)
+    #     ### A source of the values is the analysis definitions in [Calibration_controls.xlsx]
+    #     n_coeff = 15  #Values for reporting arrays when not doing inversion (align with the code below)
+    #     n_traits = 11
+    #     coefficients_c = np.zeros(n_coeff)
+    #     calibration_targets_p = np.zeros (n_traits)
 
-    if calibrate_trait_values or o_trait_values is not None:
-        ##set the genotype to report. This is the genotype of the c2 axis in Universal.xlsx
-        genotype = pinp.sheep['a_c2_c0'][0]    #2 is CFS for MLP & GEPEP traditional, 3 is GFS for GEPEP
-        srw_parameter = uinp.parameters['i_srw_c2'][genotype] + saa_srw  #parameter value for srw
 
     ######################
     ##background vars    #
@@ -7958,21 +7958,21 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         # trait_values_p[i] = wlw13; wlw13_target = calibration_targets_p[i]; i += 1
         # trait_values_p[i] = wlw14; wlw14_target = calibration_targets_p[i]; i += 1
 
-        if calibrate_trait_values:
-            ### Handle the multi-trait calibration using an a-priority method
-            ###Option 1 A linear scalarising method using calibration_weights from [Calibration_control.xlsx]TargetWeightings!
-            ### The weighting is a subjective weight multiplied by the inverse of the target trait value.
-            ###Calculate the objective value based on sum of squares of the scaled error
-            t_objective = np.sum(((trait_values_p - calibration_targets_p) * calibration_weights_p) ** 2)
-            calibration_objective = 1e8 if np.isnan(t_objective) else t_objective
+        #if calibrate_trait_values:
+        ### Handle the multi-trait calibration using an a-priority method
+        ###Option 1 A linear scalarising method using calibration_weights from [Calibration_control.xlsx]TargetWeightings!
+        ### The weighting is a subjective weight multiplied by the inverse of the target trait value.
+        ###Calculate the objective value based on sum of squares of the scaled error
+        t_objective = np.sum(((trait_values_p - calibration_targets_p) * calibration_weights_p) ** 2)
 
-            # ###Option 2 A Chebyshev scalarisation. The weighting is the inverse of the coefficient increasing weight on small coefficients
-            # ###The objective is the deviation of the worst trait relative to the size of the coefficient
-            # ###Requires n_coef = n_production traits & coefficient to be > 0. Stopped using this because of these constraints and no apparent benefit.
-            # objective = np.max((fun.f_divide(trait_values_p - calibration_targets_p, calibration_targets_p) ** 2)
-            #                     / np.maximum(0.0001, np.abs(coefficients_c)))
+        # ###Option 2 A Chebyshev scalarisation. The weighting is the inverse of the coefficient increasing weight on small coefficients
+        # ###The objective is the deviation of the worst trait relative to the size of the coefficient
+        # ###Requires n_coef = n_production traits & coefficient to be > 0. Stopped using this because of these constraints and no apparent benefit.
+        # t_objective = np.max((fun.f_divide(trait_values_p - calibration_targets_p, calibration_targets_p) ** 2)
+        #                     / np.maximum(0.0001, np.abs(coefficients_c)))
 
-            print(f"obj: {calibration_objective} trait  Team SRW: {uinp.parameters['i_srw_c2'][a_c2_c0][0]} + {saa_srw}")
+        calibration_objective = 1e8 if np.isnan(t_objective) else t_objective
+        print(f"obj: {calibration_objective} trait  Team SRW: {uinp.parameters['i_srw_c2'][genotype]} + {saa_srw}")
 
         #Report the values, coefficients and target for the current attempt
         b=1; w=2; p=3; y=4; h=5; a2=6; a=7 # set the slice numbers in the saa_p11 arrays (a is using the a3 slice)
