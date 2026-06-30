@@ -15,6 +15,7 @@ from contextlib import contextmanager
 from typing import Any, Dict
 import inspect as ins
 import os
+from scipy.special import expit
 
 #this module shouldn't import other AFO modules
 from . import Exceptions as exc #can import exceptions because exceptions imports no modules
@@ -770,7 +771,7 @@ def f1_get_value(series, key):
 
 def f_back_transform(x):
     ''' Back transform a value using a derivation of exp(x) / (1 + exp(x))'''
-    return 1 / (1 + np.exp(-x))
+    return expit(x) #more stable than np.exp(x) / (1 + np.exp(x))
 
 def f_sig(x,a,b):
     ''' Sig function CSIRO equation 124 ^the equation below is the sig function from SheepExplorer'''

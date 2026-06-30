@@ -28,7 +28,6 @@ import os
 import pandas as pd
 from scipy import optimize as spo
 import multiprocessing as mp
-import multiprocessing
 import time
 
 #sets the path to the root directory so the relative imports in the other files work
@@ -43,21 +42,23 @@ from lib.AfoLogic import UniversalInputs as uinp
 from lib.AfoLogic import Functions as fun
 from lib.AfoLogic import Sensitivity as sen
 from lib.AfoLogic import relativeFile
-
 from lib.AfoLogic import StockGenerator as sgen
-
-# from lib.AfoLogic import relativeFile
 
 ###############
 #User control #
 ###############
-RUN_CALIBRATION = True #set to False if you want to report the trait values for a given trial.
+# Command line: python SheepCalibration.py <exp_no> <n_processes> <RUN_CALIBRATION>
+# RUN_CALIBRATION: True is to run the calibration, False is report the trait values
+try:
+    RUN_CALIBRATION = sys.argv[3].lower() in ['true', '1', 'yes']
+except (IndexError, AttributeError):
+    RUN_CALIBRATION = True  # default
 
 # Optimisation controls. Team multiprocessing always uses one worker per team;
 # single-team mode can use workers within scipy's differential_evolution.
-MAXITER = 400
-POPSIZE = 5   # between 5 and 15. population = popsize * n_coeff
-MAX_WORKERS_WITHIN_TEAM = 25   #setting workers to a factor of 'population' ensures even utilisation of CPUs
+MAXITER = 200
+POPSIZE = 6   # between 5 and 15. population = popsize * n_coeff
+MAX_WORKERS_WITHIN_TEAM = 1   #48  #setting workers to a factor of 'population' ensures even utilisation of CPUs
 TOL = 0.01
 DISP = True
 POLISH = False
@@ -148,21 +149,37 @@ def run_calibration_for_team(t, context):
     """Call Differential Evolution for one team.
 
     This is used by both run modes:
-    - sequential loop over teams
-    - multiprocessing loop where each process handles a team
+    - sequential loop over teams and workers >= 1
+    - multiprocessing loop where each process handles a team and workers = 1
     """
     bounds = list(zip(context["bnd_lo_tc"][t], context["bnd_up_tc"][t]))
     bestbet = context["bestbet_tc"][t]
+
     team_context = context.copy()
     team_context["team"] = t
     team_context["calibration_weights"] = context["weights_p"]
     team_context["calibration_targets"] = context["targets_tp"][t]
 
-    result = spo.differential_evolution(calibration_objective, bounds
-        , args = (team_context,)
-        , maxiter=context["maxiter"], popsize=context["popsize"], tol=context["tol"], disp=context["disp"]
-        , polish=context["polish"], updating=context["updating"], workers=context["workers"], x0=bestbet)
-    print(f"Team {t} coefficients are {result.x} obj: {result.fun} evaluations {result.nfev}")
+    print(f"Starting calibration for Team {t}...")
+
+    result = spo.differential_evolution(
+        calibration_objective,
+        bounds,
+        args = (team_context,),
+        maxiter=context["maxiter"],
+        popsize=context["popsize"],
+        tol=context["tol"],
+        disp=context["disp"],
+        polish=context["polish"],
+        updating=context["updating"],
+        workers=context["workers"],
+        x0=bestbet,
+        #Extra stability options (from Grok)
+        recombination=0.7,
+        mutation=(0.5, 1.0)
+    )
+
+    print(f"Team {t} coefficients are {result.x} obj: {result.fun} evaluations {result.nfev} - {result.success}")
     return t, result.x, result.success, result.fun, result.nit, result.message
 
 
@@ -210,7 +227,7 @@ def build_context(targets_tp, weights_p, bestbet_tc, bnd_lo_tc, bnd_up_tc, n_coe
     """Collect the values needed by team calibration and objective evaluation."""
     popsize = POPSIZE
     population = popsize * n_coef
-    workers = 1 if team_processes else min(multiprocessing.cpu_count(), population, MAX_WORKERS_WITHIN_TEAM)
+    workers = 1 if team_processes else min(mp.cpu_count(), population, MAX_WORKERS_WITHIN_TEAM)
     updating = 'deferred' if workers != 1 else 'immediate'
     return {
         "targets_tp": targets_tp,
@@ -259,22 +276,29 @@ def write_calibration_results(df_targets_tp, df_bnd_lo_tc, df_bnd_up_tc, keys_t,
 
     ### Write to Excel
     calibration_path = relativeFile.findExcel('CalibrationResults.xlsx')
-    writer = pd.ExcelWriter(calibration_path, engine='xlsxwriter')
-    df_targets_tp.to_excel(writer, "Targets", index=True, header=True, startrow=0, startcol=1)
-    coefficients.to_excel(writer, "Coefficients", index=True, header=True, startrow=0, startcol=1)
-    success.to_excel(writer, "Coefficients", index=False, header=True, startrow=0, startcol=n_coef+2)
-    wsmse.to_excel(writer, "Coefficients", index=False, header=True, startrow=0, startcol=n_coef+3)
-    nit.to_excel(writer, "Coefficients", index=False, header=True, startrow=0, startcol=n_coef+4)
-    message.to_excel(writer, "Coefficients", index=False, header=True, startrow=0, startcol=n_coef+5)
-    df_bnd_lo_tc.to_excel(writer, "Low", index=True, header=True, startrow=0, startcol=1)
-    df_bnd_up_tc.to_excel(writer, "High", index=True, header=True, startrow=0, startcol=1)
-    writer.close()
+    with pd.ExcelWriter(calibration_path, engine='xlsxwriter') as writer:
+        df_targets_tp.to_excel(writer, "Targets", index=True, header=True, startrow=0, startcol=1)
+        coefficients.to_excel(writer, "Coefficients", index=True, header=True, startrow=0, startcol=1)
+        success.to_excel(writer, "Coefficients", index=False, header=True, startrow=0, startcol=n_coef+2)
+        wsmse.to_excel(writer, "Coefficients", index=False, header=True, startrow=0, startcol=n_coef+3)
+        nit.to_excel(writer, "Coefficients", index=False, header=True, startrow=0, startcol=n_coef+4)
+        message.to_excel(writer, "Coefficients", index=False, header=True, startrow=0, startcol=n_coef+5)
+        df_bnd_lo_tc.to_excel(writer, "Low", index=True, header=True, startrow=0, startcol=1)
+        df_bnd_up_tc.to_excel(writer, "High", index=True, header=True, startrow=0, startcol=1)
 
 
 def main():
     #report the clock time that the experiment was started
     print(f'Calibration commenced at: {time.ctime()}')
     time_list = [timer()]
+
+    # Handle command line arguments
+    global RUN_CALIBRATION
+    try:
+        if len(sys.argv) > 3:
+            RUN_CALIBRATION = (sys.argv[3].lower() in ['true', '1', 'yes'])
+    except:
+        pass
 
     ##load excel data and experiment data
     exp_data, exp_group_bool, trial_pinp = exp.f_read_exp()
@@ -305,7 +329,7 @@ def main():
         except IndexError:  # in case no arg passed to python
             maximum_processes = 1  # available memory / value determined by size of the model being run (~5GB for the small model)
         ## number of agents (processes) should be min of the num of cpus, number of teams or the user specified limit due to memory capacity
-        n_processes = min(multiprocessing.cpu_count(), n_teams, maximum_processes)
+        n_processes = min(mp.cpu_count(), n_teams, maximum_processes)
 
         ###convert to np
         targets_tp = df_targets_tp.values
@@ -314,19 +338,32 @@ def main():
         bnd_lo_tc = df_bnd_lo_tc.values
         bnd_up_tc = df_bnd_up_tc.values
 
+        team_processes = n_processes != 1
+        context = build_context(
+            targets_tp,
+            weights_p,
+            bestbet_tc,
+            bnd_lo_tc,
+            bnd_up_tc,
+            n_coef,
+            team_processes=team_processes,
+            trial=trial,
+            exp_data=exp_data,
+            trial_pinp=trial_pinp,
+            sinp_defaults=sinp_defaults,
+            uinp_defaults=uinp_defaults,
+            pinp_defaults=pinp_defaults
+        )
+
         teams = list(range(n_teams))
         if RUN_CALIBRATION:
-            team_processes = n_processes != 1
-            context = build_context(
-                targets_tp, weights_p, bestbet_tc, bnd_lo_tc, bnd_up_tc, n_coef,
-                team_processes=team_processes, trial=trial, exp_data=exp_data, trial_pinp=trial_pinp,
-                sinp_defaults=sinp_defaults, uinp_defaults=uinp_defaults, pinp_defaults=pinp_defaults
-            )
             if team_processes:
                 print(f"multiprocess across {n_processes} teams")
                 worker_init_context = context.copy()
                 # The worker context contains the trial reset inputs used by calibration_objective().
-                with multiprocessing.Pool(processes=n_processes, initializer=init_worker, initargs=(worker_init_context,)) as pool:
+                with mp.Pool(processes=n_processes,
+                             initializer=init_worker,
+                             initargs=(worker_init_context,)) as pool:
                     results = pool.map(run_calibration_for_team_worker, teams, chunksize=1)
             else:
                 print(f"multiprocess the population of {context['popsize'] * n_coef} with {context['workers']} workers")
@@ -345,18 +382,50 @@ def main():
             print(f"elapsed total time for calibration {time_elapsed//3600:>02.0f}:{time_elapsed%3600//60:02.0f}:{time_elapsed%60:07.4f} ") # Time in seconds
 
         else: #if just reporting trait values
-            pkl_fs = setup_trial(trial, exp_data, trial_pinp, sinp_defaults, uinp_defaults, pinp_defaults)
-            sgen.generator(params={}, r_vals={}, nv={}, pkl_fs_info={}, pkl_fs=pkl_fs,
-                           o_trait_values=o_trait_values[trial])
+            for t in teams:
+                o_trait_values[trial][t] = {}  # create team key inside calibration traits dictionary
+                pkl_fs = setup_trial(
+                    context["trial"],
+                    context["exp_data"],
+                    context["trial_pinp"],
+                    context["sinp_defaults"],
+                    context["uinp_defaults"],
+                    context["pinp_defaults"],
+                )
+
+                sgen.generator(
+                    coefficients_c=context["bestbet_tc"][t],
+                    params={},
+                    r_vals={},
+                    nv={},
+                    pkl_fs_info={},
+                    pkl_fs=pkl_fs,
+                    o_trait_values=o_trait_values[trial][t],
+                    stubble = context["stubble"],
+                    calibration_weights_p = context["weights_p"],
+                    calibration_targets_p = context["targets_tp"][t],
+                )
 
     ## this is for saving the calibration trait values for each team.
     if not RUN_CALIBRATION:
-        traits_to_save = pd.DataFrame({trial: values["output"] for trial, values in o_trait_values.items()}).T
-        writer = pd.ExcelWriter("Output/TraitValues.xlsx", engine='xlsxwriter')
-        traits_to_save.to_excel(writer, sheet_name='Traits', index=True, header=False)
-        writer.close()
-        print(f'Trait values written to Excel. Note: Optimisation is not being carried out')
+        print("Saving trait values...")
+        data = {}
+        for trial, team_dict in o_trait_values.items():
+            for t, team_data in team_dict.items():
+                key = f"Trial_{trial}_Team_{t}"
+                if isinstance(team_data, dict) and "output" in team_data:
+                    data[key] = team_data["output"]
+                else:
+                    print(f"Warning: No output for Trial {trial} Team {t}")
 
+        if data:
+            traits_to_save = pd.DataFrame(data).T
+            trait_file_path = relativeFile.find(__file__, "../../Output", "TraitValues.xlsx")
+            with pd.ExcelWriter(trait_file_path, engine='xlsxwriter') as writer:
+                traits_to_save.to_excel(writer, sheet_name='Traits', index=True, header=True)
+            print(f'Trait values written to {trait_file_path}. Note: Optimisation is not being carried out')
+        else:
+            print("No trait data was collected to save.")
 
 if __name__ == '__main__':
     main()
