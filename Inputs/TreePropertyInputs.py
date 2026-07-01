@@ -37,6 +37,18 @@ region_tree_inputs = {
         #deepflow/recharge
         "recharge_l": np.array([1.1, 0.8, 1.4, 1.1, 1.1, 0.0, 0.0, 0.0, 0.0]),
     },
+    #todo temp
+    "GSW1": {
+        "estimated_area_trees_l": np.array([0, 0, 0, 0, 0, 0, 0, 0, 0]),
+        "tree_fert_soil_scalar": np.array([0.62, 0.62, 0.77, 1, 1, np.nan, np.nan, np.nan, np.nan]),
+        #growth scalar for region
+        "regional_growth_scalar": 1.64,
+        # tree growth scalar for LMU0 to LMU8
+        "lmu_growth_scalar_l": np.array([0.62, 0.62, 0.77, 1, 1, np.nan, np.nan, np.nan, np.nan]),
+        "lmu_carbon_scalar_l": np.array([0.81, 0.81, 0.885, 1.0, 1.0, np.nan, np.nan, np.nan, np.nan]), #this is less because as the trees on the good soils reach mature size the gap will cloase between soil types.
+        #deepflow/recharge
+        "recharge_l": np.array([1.1, 0.8, 1.4, 1.1, 1.1, 0.0, 0.0, 0.0, 0.0]),
+    },
     "SWV": {
         "estimated_area_trees_l": np.array([0, 0, 0, 0, 0, 0, 0, 0, 0]),
         "tree_fert_soil_scalar": np.array([1, 1, 1, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan]),
