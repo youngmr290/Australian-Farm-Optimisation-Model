@@ -387,7 +387,7 @@ def f_con_erosion(model):
             #senescence is included here because it is passed into the dry feed pool in the following fp. Thus senesced feed is not included in green or dry pasture in the period it senesced.
             return sum(sum(model.v_greenpas_ha[q,s,f,g,o,p6,l,z,t] for f in model.s_feed_pools) * -(model.p_foo_end_grnha[q,g,o,p6,l,z,t] +
                        sum(model.p_senesce_grnha[q,d,g,o,p6,l,z,t] for d in model.s_dry_groups)) for g in model.s_grazing_int for o in model.s_foo_levels) \
-                    -  sum(model.v_drypas_transfer[q,s,d,p6,z,l,t] * 1000 for d in model.s_dry_groups) \
+                    -  sum(model.v_drypas_transfer[q,s,d,p6,z,l,t] * model.p_dry_transfer_req_t[p6,z,t] for d in model.s_dry_groups) \
                     + sum(model.v_phase_area[q,s,p7,z,r,l]  * model.p_erosion[p7,p6,l,r,z,t]
                           for r in model.s_phases for p7 in model.s_season_periods if pe.value(model.p_erosion[p7,p6,l,r,z,t]) != 0) <=0
         else:
