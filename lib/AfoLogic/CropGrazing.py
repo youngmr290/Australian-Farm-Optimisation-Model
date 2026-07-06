@@ -57,9 +57,6 @@ def f1_cropgraze_common_dates_and_masks():
     grazing_exists_p6p5z = np.maximum(date_start_p5z, date_break_z)  + cropgraze_defer_days <= date_end_p6z[:, na, :]
     grazing_exists_p6p5z = np.logical_and(grazing_exists_p6z[:, na, :], grazing_exists_p6p5z)
 
-    ### recalc grazing_exists_p6z: a grazing period p6 can only be grazed if there exists at least
-    ### one sowing period p5 in that zone that satisfies the defer-days timing condition
-    grazing_exists_p6z = np.any(grazing_exists_p6p5z, axis=1)
 
     ###propn of each crop on each lmu that is grazed
     propn_area_grazed_kl = pinp.cropgraze['i_cropgraze_propn_area_grazed_kl'] * np.any(grazing_exists_p6p5z)
@@ -72,6 +69,11 @@ def f1_cropgraze_common_dates_and_masks():
         * (propn_area_grazed_kl[:, na, na, na, :] > 0)
     )
 
+    ### recalc grazing_exists masks: a grazing period p6 can only be grazed if there exists at least
+    ### one sowing period p5 in that zone that satisfies the defer-days timing condition
+    cropgrazing_exists_kp6p5z_mask = np.any(cropgrazing_exists_kp6p5zl_mask, axis=-1)
+    cropgrazing_exists_kp6z_mask = np.any(cropgrazing_exists_kp6p5z_mask, axis=-2)
+
     ### season mask
     mask_fp_z8var_p6z = zfun.f_season_transfer_mask(date_start_p6z, z_pos=-1, mask=True)
 
@@ -82,11 +84,12 @@ def f1_cropgraze_common_dates_and_masks():
         date_end_p5z=date_end_p5z,
         consumption_factor_p6z=consumption_factor_p6z,
         cropgraze_defer_days=cropgraze_defer_days,
-        grazing_exists_p6z=grazing_exists_p6z,
         grazing_exists_p6p5z=grazing_exists_p6p5z,
         mask_fp_z8var_p6z=mask_fp_z8var_p6z,
         propn_area_grazed_kl=propn_area_grazed_kl,
         cropgrazing_exists_kp6p5zl_mask=cropgrazing_exists_kp6p5zl_mask,
+        cropgrazing_exists_kp6p5z_mask=cropgrazing_exists_kp6p5z_mask,
+        grazing_exists_kp6z=cropgrazing_exists_kp6z_mask,
     )
 
 
@@ -133,6 +136,7 @@ def f_cropgraze_DM(r_vals=None, total_DM=False):
     consumption_factor_p6z = common['consumption_factor_p6z']
     cropgraze_defer_days   = common['cropgraze_defer_days']
     grazing_exists_p6p5z   = common['grazing_exists_p6p5z']
+    grazing_exists_kp6p5z   = common['cropgrazing_exists_kp6p5z_mask']
     mask_fp_z8var_p6z    = common['mask_fp_z8var_p6z']
     propn_area_grazed_kl = common['propn_area_grazed_kl']
 
@@ -199,7 +203,7 @@ def f_cropgraze_DM(r_vals=None, total_DM=False):
         transfer_exists_p6p5z = grazing_exists_p6p5z * np.roll(grazing_exists_p6p5z, shift=-1, axis=0) #doesn't transfer into the first period or out of the last hence need to add the roll
 
         ##calc DM removal when animals consume 1t - accounts for wastage and trampling
-        crop_DM_required_kp6p5z = 1000 / (1 - wastage_k[:,na,na,na]) * grazing_exists_p6p5z
+        crop_DM_required_kp6p5z = 1000 / (1 - wastage_k[:,na,na,na]) * grazing_exists_kp6p5z
 
         ##apply season mask (only apply here because these become params. The other part of the 'if' statement goes to another function)
         crop_DM_provided_kp6p5z8lz9 = crop_DM_provided_kp6p5z8lz9 * mask_fp_z8var_p6z[:,na,:,na,na] * mask_fp_z8var_p6z[:,na,na,na,:] #mask both the z axes with the same mask
@@ -345,7 +349,7 @@ def f_cropgraze_emissions(r_vals):
 
     ##shared
     common = f1_cropgraze_common_dates_and_masks()
-    grazing_exists_p6z = common['grazing_exists_p6z']
+    grazing_exists_kp6z = common['grazing_exists_kp6z']
     mask_fp_z8var_p6z = common['mask_fp_z8var_p6z']
 
     ##inputs
@@ -368,10 +372,10 @@ def f_cropgraze_emissions(r_vals):
     co2e_cropgraze_kp6z = stock_ch4_cropgraze_kp6z * uinp.emissions['i_ch4_gwp_factor'] + stock_n2o_cropgraze_kp6z * uinp.emissions['i_n2o_gwp_factor']
 
     ##apply season mask and grazing exists mask
-    stock_n2o_cropgraze_kp6z = stock_n2o_cropgraze_kp6z * mask_fp_z8var_p6z * grazing_exists_p6z
-    stock_ch4_cropgraze_kp6z = stock_ch4_cropgraze_kp6z * mask_fp_z8var_p6z * grazing_exists_p6z
-    methane_me_saved_cropgraze_kp6z = methane_me_saved_cropgraze_kp6z * mask_fp_z8var_p6z * grazing_exists_p6z
-    co2e_cropgraze_kp6z = co2e_cropgraze_kp6z * mask_fp_z8var_p6z * grazing_exists_p6z
+    stock_n2o_cropgraze_kp6z = stock_n2o_cropgraze_kp6z * mask_fp_z8var_p6z * grazing_exists_kp6z
+    stock_ch4_cropgraze_kp6z = stock_ch4_cropgraze_kp6z * mask_fp_z8var_p6z * grazing_exists_kp6z
+    methane_me_saved_cropgraze_kp6z = methane_me_saved_cropgraze_kp6z * mask_fp_z8var_p6z * grazing_exists_kp6z
+    co2e_cropgraze_kp6z = co2e_cropgraze_kp6z * mask_fp_z8var_p6z * grazing_exists_kp6z
 
     ##store report vals
     fun.f1_make_r_val(r_vals,stock_n2o_cropgraze_kp6z,'stock_n2o_cropgraze_kp6z',mask_fp_z8var_p6z,z_pos=-1)
@@ -390,7 +394,7 @@ def f_cropgraze_biomass_penalty(r_vals):
     '''
     ##shared
     common = f1_cropgraze_common_dates_and_masks()
-    grazing_exists_p6z = common['grazing_exists_p6z']
+    grazing_exists_kp6z = common['grazing_exists_kp6z']
     mask_fp_z8var_p6z = common['mask_fp_z8var_p6z']
 
     ##inputs
@@ -403,7 +407,7 @@ def f_cropgraze_biomass_penalty(r_vals):
     biomass_reduction_propn_kp6z = biomass_reduction_propn_kp6z / harvest_index_k[:,na,na]
 
     ##apply season mask and grazing exists mask
-    biomass_reduction_propn_kp6z = biomass_reduction_propn_kp6z * mask_fp_z8var_p6z * grazing_exists_p6z
+    biomass_reduction_propn_kp6z = biomass_reduction_propn_kp6z * mask_fp_z8var_p6z * grazing_exists_kp6z
 
     ##store report vals
     fun.f1_make_r_val(r_vals,biomass_reduction_propn_kp6z,'crop_grazing_biomass_penalty_kp6z',mask_fp_z8var_p6z,z_pos=-1)
