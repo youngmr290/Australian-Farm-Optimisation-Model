@@ -2753,7 +2753,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     rain_intake_pa1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(np.maximum(0, 1 - rain_pa1e1b1nwzida0e0b0xygp0[mask_p_offs_p] / ci_cpoffs[18, ..., na])
                                                         ,  weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg3p0, axis = -1)
     ##Proportion of peak intake due to time from birth
-    pi_age_y_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(cb1_cpdams[19, ..., na] * np.maximum(0,pimi_pa1e1b1nwzida0e0b0xyg1p0) ** ci_cpdams[9, ..., na]
+    pi_age_y_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(cl_cpdams[0, ..., na] * cb1_cpdams[19, ..., na] * np.maximum(0,pimi_pa1e1b1nwzida0e0b0xyg1p0) ** ci_cpdams[9, ..., na]
                         * np.exp(ci_cpdams[9, ..., na] * (1 - pimi_pa1e1b1nwzida0e0b0xyg1p0)), weights=age_y_adj_weights_pa1e1b1nwzida0e0b0xyg1p0, axis = -1) #maximum to stop error in power (not sure why the negatives were causing a problem)
     ##Peak milk production pattern (time from birth). Average for the days that the dam is lactating
     ## Includes genotype scalar for milk yield (cl_cpyatf[0]), using yatf so that saa_p11 is controlled by the age of yatf
@@ -2764,7 +2764,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     ##Suckling volume pattern. Includes genotype scalar for milk yield (cl[0]) and SA for potential intake of the young at foot.
     ## Average for the days that the dam is lactating
     mp2_age_y_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(cl_cpyatf[0, ..., na] * nyatf_b1nwzida0e0b0xyg[...,na]
-                                        * cl_cpdams[6, ..., na] * ( cl_cpdams[12, ..., na] + cl_cpdams[13, ..., na]
+                                        * cl_cpdams[6, ..., na] * (cl_cpdams[12, ..., na] + cl_cpdams[13, ..., na]
                                         * np.exp(-cl_cpdams[14, ..., na] * age_p0_pa1e1b1nwzida0e0b0xyg2p0))
                                                 , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg2p0, axis = -1) * sen.sam['pi_yatf']
     ##Pattern of conception efficiency (doy). Different methods are used to represent seasonality in the 3 conception functions
