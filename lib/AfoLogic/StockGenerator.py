@@ -182,8 +182,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         a = coefficients_c[j]; j += 1
         sen.saa['era_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
-        #Standard reference weight to calibrate LW. Can also be used to match SRW calculated from ALW & Fat %
-        ##LiveEx: SRW being altered for all age groups with a fixed growth constant and YWT is being calibrated using PI
+        #Standard reference weight coefficient adjustments can be linked to target LW or to an estimate of SRW from ALW & Fat %
+        ##WT at younger ages can be calibrated by SRW age stage coefficients or by adjusting milk yield and the growth constant
         w = p = y = h = a = None
         # sen.saa['birth_weight'] = coefficients_c[j]; j += 1    #Birth weight, #todo still to decide how to control BWT
         w = np.nan  #wwt is changed with a separate coefficient
@@ -195,7 +195,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         # a = saa_srw = coefficients_c[j]; j += 1               #only this line or next line not both
         sen.saa['srw'] = saa_srw = coefficients_c[j]; j += 1  #included when WBE is included or the value is being set
         sen.saa['srw_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
-        srw_parameter = uinp.parameters['i_srw_c2'][genotype] + saa_srw  #parameter value for srw
+        srw_parameter = uinp.parameters['i_srw_c2'][genotype] + saa_srw  #actual parameter value for srw (for reporting)
 
         #Potential intake to calibrate Carcase fatness & WBE, ci[1] parameter
         ##LiveEx: Fit YWT and YFAT volunteers
