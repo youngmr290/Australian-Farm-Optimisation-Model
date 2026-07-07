@@ -7241,13 +7241,13 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                         , numbers_end_dams[...,na,na], p_pos-2, w_pos-2, z_pos-2, tuple(x-2 for x in prejoin_tup)
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2,...,na,na], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2,...,na,na]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1:p+2,...,na,na] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1:p+2,...,na,na]
-                                        , stub_lw_idx=stub_lw_idx_dams[...,na,na], len_gen_t=len_gen_t1, a_t_g=a_t_g1
+                                        , stub_lw_idx=stub_lw_idx_dams[...,na,na], len_gen_t=len_gen_t1, a_t_g=a_t_g1[...,na,na]
                                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2,...,na,na])
                 cf_lact_start_damsp1p2 = sfun.f1_period_start_prod2(pointers_dams[...,na,na], index_unique_w_dams[...,na,na], cf_lact_damsp1p2
                                         , numbers_end_dams[...,na,na], p_pos-2, w_pos-2, z_pos-2, tuple(x-2 for x in prejoin_tup)
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2,...,na,na], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2,...,na,na]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1:p+2,...,na,na] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1:p+2,...,na,na]
-                                        , stub_lw_idx=stub_lw_idx_dams[...,na,na], len_gen_t=len_gen_t1, a_t_g=a_t_g1
+                                        , stub_lw_idx=stub_lw_idx_dams[...,na,na], len_gen_t=len_gen_t1, a_t_g=a_t_g1[...,na,na]
                                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2,...,na,na])
                 ###CS change carryover (running tally of dam CS change in late pregnancy)
                 cf_csc_start_dams = sfun.f1_period_start_prod2(pointers_dams, index_unique_w_dams, cf_csc_dams, numbers_end_dams, p_pos, w_pos, z_pos, prejoin_tup
