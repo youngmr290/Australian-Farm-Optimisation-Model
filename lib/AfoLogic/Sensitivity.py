@@ -449,7 +449,7 @@ def create_sa():
     sav['adjp_cfw_initial_w3'] = np.full(sinp.structuralsa['i_adjp_cfw_initial_w3'].shape, '-', dtype=object)    #initial cfw adjustment offs
     sav['adjp_fd_initial_w3'] = np.full(sinp.structuralsa['i_adjp_fd_initial_w3'].shape, '-', dtype=object)      #initial fd adjustment offs
     sav['adjp_fl_initial_w3'] = np.full(sinp.structuralsa['i_adjp_fl_initial_w3'].shape, '-', dtype=object)      #initial fl adjustment offs
-    sav['firstprejoin_averaged'] = True #do the a, e & b axes get averaged at the first prejoining (ewe lambs). If the value is changed to false the mate/not mate decision is made at the previous weaning (then at prejoining nm passes to nm and mated passes to mated).
+    sav['firstprejoin_averaged'] = False #do the a, e & b axes get averaged at the first prejoining (ewe lambs). If the value is False the mate/not mate decision is made at the previous weaning (then at prejoining nm passes to nm and mated passes to mated). This means DSP loses some flexibility (cant feed up animal then not mate). But this is not a huge limitation because mating decision is made over summer when little info about upcoming season is known.
     sav['condense_at_seasonstart'] = '-'  # SA to alter if condensing occurs at season start. Default is False except in the MP model when this can be set to True so that core fvps can be masked out and just the season nodes for fvps.
     sav['user_fvp_date_dams_iu'] = np.full(sinp.structuralsa['i_dams_user_fvp_date_iu'].shape, '-', dtype=object)      #SA to control user fvp dates.
     sav['user_fvp_date_dams_yiu'] = np.full((len_y,)+sinp.structuralsa['i_dams_user_fvp_date_iu'].shape, '-', dtype=object)      #SA to control user fvp dates.
