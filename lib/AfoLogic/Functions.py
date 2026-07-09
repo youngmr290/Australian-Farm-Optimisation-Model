@@ -1018,8 +1018,10 @@ def f_slice_idx(arr, slice_specs, default=slice(None)):
     for axis, args in slice_specs.items():
         # Single value → interpret as start, with stop = start + 1 (preserves dimension)
         # Multi value  → unpack directly into slice(start, stop) or slice(start, stop, step)
-        if arr.shape[axis] == 1:  #don't slice if singleton axis
-            if args[0] != 0 or args[0] != -1:  #don't display warning if taking slice 0 or -1
+        if arr.shape[axis] == 1:  #don't slice if singleton axis. Warning if slice isn't 0 or 1
+            if isinstance(args, int) and (args == 0 or args == -1):  #don't display warning if taking slice 0 or -1 of the singleton
+                pass
+            elif args[0] == 0 or args[0] == -1:  #don't display warning if taking slice 0 or -1 of the singleton
                 pass
             else:
                 callers = f1_get_caller_info(skip=1, levels=3)

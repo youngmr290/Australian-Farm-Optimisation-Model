@@ -3489,6 +3489,11 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         c_start_dams = np.array([0.0]) #passed as an argument to f_foetus_nfs() so needs to be defined prior to first assignment
         fs_w_reallocation_tpa1e1b1nw8zida0e0b0xyg1s9 = fun.f_expand(a_wstart_w1[:, na] == np.arange(w_start_len1),
                                                                    w_pos - 1, right_pos=-1, left_pos2=p_pos-3,right_pos2=w_pos - 1) #create default fs allocation - default means 1:1. This gets updated at period_is_condense.
+        ###Reshape ebw_start_dams to include e1 & b1 axis to remove e1b1 slicing errors in the first loop
+        target_shape = list(ebw_start_dams.shape)
+        target_shape[e1_pos] = len_e1
+        target_shape[b1_pos] = len_b1
+        ebw_start_dams = np.broadcast_to(ebw_start_dams, target_shape).copy()
 
         ##yatf
         d_cfw_history_start_p2g2[...] = np.nan
@@ -4388,6 +4393,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                 index_p0 < days_period_pa1e1b1nwzida0e0b0xyg2[...,na][p:p+1])
                         ###Expected average metabolic LW of yatf during period
                         ffcfw75_exp_yatf = np.sum(ffcfw_exp_a1e1b1nwzida0e0b0xyg2p0 ** 0.75, axis=-1) / np.maximum(1, days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1, ...])
+                        ###Weighted average across the x-axis
+                        ffcfw75_exp_yatf = np.sum(ffcfw75_exp_yatf * gender_propn_xyg, axis=x_pos, keepdims=True)
 
                         temp0, temp1, temp2, temp3 = sfun.f_milk_cs(cl_cpdams, srw_pa1e1b1nwzida0e0b0xyg1
                                 , relsize_start_dams, rc_birth_dams, mei_dams, meme_cs_dams, rc_start_dams
@@ -4416,6 +4423,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                 index_p0 < days_period_pa1e1b1nwzida0e0b0xyg2[...,na][p:p+1])
                         ###Expected average metabolic LW of yatf during period
                         ffcfw75_exp_yatf = np.sum(ffcfw_exp_a1e1b1nwzida0e0b0xyg2p0 ** 0.75, axis=-1) / np.maximum(1, days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1, ...])
+                        ###Weighted average across the x-axis
+                        ffcfw75_exp_yatf = np.sum(ffcfw75_exp_yatf * gender_propn_xyg, axis=x_pos, keepdims=True)
 
                         temp0, temp1, temp2, temp3 = sfun.f_milk_cs(cl_cpdams, srw_pa1e1b1nwzida0e0b0xyg1
                                 , relsize_start_dams, rc_birth_dams, mei_dams, neme_mu_dams / km_dams, rc_start_dams
@@ -5215,7 +5224,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 ebg_e1b1sliced = fun.f_slice(ebg_dams, {e1_pos: [-1, None], b1_pos: [2, 3]}) #slice e1 & b1 axis
                 nw_start_dams_e1b1sliced = fun.f_slice(nw_start_dams, {e1_pos: [-1, None], b1_pos: [2, 3]}) #slice e1 & b1 axis
                 gest_propn_b1sliced = gest_propn_pa1e1b1nwzida0e0b0xyg1[p:p+1]     # gest_propn_pa1e1b1nwzida0e0b0xyg1 does not have an active b1 axis
-                days_period_b1sliced = fun.f_slice(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1], {b1_pos: [2, 3]}) #slice b1 axis
+                days_period_b1sliced = days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1]   # days_period_pa1e1b1nwzida0e0b0xyg1 does not have an active b1 axis
 
                 t_w_mating = np.sum((ffcfw_e1b1sliced + ebg_e1b1sliced * cg_cpdams[18, ...]
                                      * (days_period_b1sliced * (1 - gest_propn_b1sliced) + cf_cpdams[4, ...] / 2))

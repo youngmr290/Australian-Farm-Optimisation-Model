@@ -1356,7 +1356,7 @@ def f_milk_cs(cl, srw, relsize_start, rc_birth_start, mei, meme, rc_start, ffcfw
                                                         - cl[23, ...] * rc_start * (milk_ratio - cl[24, ...] * rc_start))
         ##Milk production (per animal) based on suckling volume	(milk production per day of lactation)
         ### Based on the standard parameter values 'Suckling volume of young' is very rarely limiting milk production.
-        mp2 = np.minimum(mp1, np.mean(fun.f_slice(ffcfw75_exp_yatf, {i_x_pos: [1, None]}), axis=i_x_pos, keepdims=True) * mp2_age_y)   # averages female and castrates weight, ffcfw75 is metabolic weight
+        mp2 = np.minimum(mp1, ffcfw75_exp_yatf * mp2_age_y)
         ##Process the milk production REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
         mp2 = f1_rev_update('milk', mp2, rev_trait_value)
     else:
