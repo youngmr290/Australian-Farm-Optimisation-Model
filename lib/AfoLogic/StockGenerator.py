@@ -635,11 +635,14 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     o_ch4_animal_tpdams = np.zeros(tpg1, dtype =dtype)
     o_n2o_animal_tpdams = np.zeros(tpg1, dtype =dtype)
     o_cfw_tpdams = np.zeros(tpg1, dtype =dtype)
+    o_d_cfw_tpdams = np.zeros(tpg1, dtype =dtype)
     # o_gfw_tpdams = np.zeros(tpg1, dtype =dtype)
     o_sl_tpdams = np.zeros(tpg1, dtype =dtype)
     o_ss_tpdams = np.zeros(tpg1, dtype =dtype)
     o_fd_tpdams = np.zeros(tpg1, dtype =dtype)
     o_fd_min_tpdams = np.zeros(tpg1, dtype =dtype)
+    o_d_fd_tpdams = np.zeros(tpg1, dtype =dtype)
+    o_d_fl_tpdams = np.zeros(tpg1, dtype =dtype)
     o_rc_start_tpdams = np.ones(tpg1, dtype =dtype)
     o_relsize_start_tpdams = np.ones(tpg1, dtype =dtype)
     o_cs_start_tpdams = np.ones(tpg1, dtype =dtype) * 3
@@ -6454,7 +6457,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 gw_sire = ffcfw_sire - ebw_sire
                 ##Whole body energy (calculated from fat, muscle and viscera weight, not including conceptus and wool)
                 wbe_sire = sfun.f_wbe_mu(cg_cpsire, fat_sire, muscle_sire, viscera_sire)
-                ##Clean fleece weight (end)
+                ##Clean fleece weight (end). Incorporates the proportion of the wool harvested (cfw_propn_yg)
                 cfw_sire = cfw_start_sire + d_cfw_sire * days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1] * cfw_propn_yg0
                 ##Greasy fleece weight (end)
                 gfw_sire = cfw_sire / cw_cpsire[3, ...]
@@ -6501,7 +6504,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 gw_dams = ffcfw_dams - ebw_dams
                 ##Whole body energy (calculated from fat, muscle and viscera weight, not including conceptus and wool)
                 wbe_dams = sfun.f_wbe_mu(cg_cpdams, fat_dams, muscle_dams, viscera_dams)
-                ##Clean fleece weight (end)
+                ##Clean fleece weight (end). Incorporates the proportion of the wool harvested (cfw_propn_yg)
                 cfw_dams = cfw_start_dams + d_cfw_dams * days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1] * cfw_propn_yg1
                 ##Greasy fleece weight (end)
                 gfw_dams = cfw_dams / cw_cpdams[3, ...]
@@ -6552,7 +6555,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 gw_yatf = ffcfw_yatf - ebw_yatf
                 ##Whole body energy (calculated from fat, muscle and viscera weight, not including conceptus and wool)
                 wbe_yatf = sfun.f_wbe_mu(cg_cpyatf, fat_yatf, muscle_yatf, viscera_yatf)
-                ##Clean fleece weight (end)
+                ##Clean fleece weight (end). Incorporates the proportion of the wool harvested (cfw_propn_yg)
                 cfw_yatf = cfw_start_yatf + d_cfw_yatf * days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1] * cfw_propn_yg2
                 ##Greasy fleece weight (end)
                 gfw_yatf = cfw_yatf / cw_cpyatf[3, ...]
@@ -6600,7 +6603,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 gw_offs = ffcfw_offs - ebw_offs
                 ##Whole body energy (end - calculated from fat, muscle and viscera weight, not including  wool)
                 wbe_offs = sfun.f_wbe_mu(cg_cpoffs, fat_offs, muscle_offs, viscera_offs)
-                ##Clean fleece weight (end)
+                ##Clean fleece weight (end). Incorporates the proportion of the wool harvested (cfw_propn_yg)
                 cfw_offs = cfw_start_offs + d_cfw_offs * days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1] * cfw_propn_yg3
                 ##Greasy fleece weight (end)
                 gfw_offs = cfw_offs / cw_cpoffs[3, ...]
@@ -6735,10 +6738,13 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 o_ch4_animal_tpdams[:, p:p+1] = ch4_animal_dams
                 o_n2o_animal_tpdams[:, p:p+1] = n2o_animal_dams
                 o_cfw_tpdams[:, p:p+1] = cfw_dams
+                o_d_cfw_tpdams[:, p:p+1] = d_cfw_dams * days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1]
                 # o_gfw_tpdams[:, p:p+1] = gfw_dams
                 o_sl_tpdams[:, p:p+1] = sl_dams
                 o_fd_tpdams[:, p:p+1] = fd_dams
                 o_fd_min_tpdams[:, p:p+1] = fd_min_dams
+                o_d_fd_tpdams[:, p:p + 1] = d_fd_dams
+                o_d_fl_tpdams[:, p:p + 1] = d_fl_dams * days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1]
                 o_ss_tpdams[:, p:p+1] = ss_dams
                 o_n_sire_tpa1e1b1nwzida0e0b0xyg1g0p8[:, p:p+1] = n_sire_a1e1b1nwzida0e0b0xyg1g0p8
                 o_rc_start_tpdams[:, p:p+1] = rc_start_dams
