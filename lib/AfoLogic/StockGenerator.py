@@ -1779,6 +1779,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     ####Weight
     srw_female_yg0, srw_female_yg1, srw_female_yg2, srw_female_yg3 = sfun.f1_c2g(uinp.parameters['i_srw_c2']
                                 , uinp.parameters['i_srw_y'], a_c2_c0, i_g3_inc) #srw of a female of the given genotype (this is the definition of the inputs)
+    srwfat_yg0, srwfat_yg1, srwfat_yg2, srwfat_yg3 = sfun.f1_c2g(uinp.parameters['i_srwfat_c2']
+                                , uinp.parameters['i_srw_y'], a_c2_c0, i_g3_inc) #fat content of an adult at the SRW
     muscle_target_female_yg0, muscle_target_female_yg1, muscle_target_female_yg2, muscle_target_female_yg3 = sfun.f1_c2g(uinp.parameters['i_muscle_target_c2']
                                 , uinp.parameters['i_muscle_target_y'], a_c2_c0, i_g3_inc)
     lw_initial_yg0, lw_initial_yg1, lw_initial_yatf, lw_initial_yg3 = sfun.f1_c2g(uinp.parameters['i_lw_initial_c2']
@@ -7740,8 +7742,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         ##SRW based on ALW and Fat% of 3.5yo ewes prior to prejoining
         ###Estimating SRW as LW at 25% fat.
         ###The calculation assumes that muscle mass is constant and only fat mass changes as per Hutton's model
-        srw_from_fat = awt * (1 - awbe) / (1 - 0.25)   #todo add the std fat % for SRW as  parameters to uinp if the method works
-        # srw = awt / (1 + 1.54 * (awbe - 0.25))   # alternative formula that can be fitted to simulation data (see W18:p64)
+        srw_from_fat = awt * (1 - awbe) / (1 - srwfat_yg1)
+        # srw = awt / (1 + 1.54 * (awbe - srwfat_yg1))   # alternative formula that can be fitted to simulation data (see W18:p64)
         fat_at_srw = 1 - (awt / srw_parameter * (1 - awbe))     #estimated proportion of fat in the body at the srw
         ##weaning weight of 1st cycle single born female yatf of 2 tooth and adult ewes
         wcs = (o_cs_start_tpyatf[0,147,0,0,2,0,0,0,0,0,0,0,0,0,0,0]
