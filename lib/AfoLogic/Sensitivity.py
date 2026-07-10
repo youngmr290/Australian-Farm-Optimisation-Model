@@ -132,12 +132,13 @@ def create_sa():
     ##########
     ##SAV
     sav['working_cap_constraint_included'] = '-' #SA to control inclusion of work cap constraint in corepyomo
-    sav['minroe']      = '-'                  #SA to alter the minroe (applied to both steady-state and dsp minroe inputs)
-    sav['capital_limit']      = '-'          #SA to alter the capital limit (amount of money that can be loaned from bank)
-    sav['interest_rate']      = '-'           #SA to alter the credit and debit interest from bank
-    sav['opp_cost_capital']      = '-'        #SA to alter the opportunity cost of capital
-    sav['fixed_dep_rate'] = '-'               #SA to alter the fixed rate of machinery depreciation per year
-    sav['equip_insurance_rate'] = '-'         #SA to alter the insurance cost (% of machine value)
+    sav['minroe']      = '-'                     #SA to alter the minroe (applied to both steady-state and dsp minroe inputs)
+    sav['capital_limit']      = '-'              #SA to alter the capital limit (amount of money that can be loaned from bank)
+    sav['land_asset_value']      = '-'           #SA to alter the value of the land asset when calculating EV of traits.
+    sav['interest_rate']      = '-'              #SA to alter the credit and debit interest from bank
+    sav['opp_cost_capital']      = '-'           #SA to alter the opportunity cost of capital
+    sav['fixed_dep_rate'] = '-'                  #SA to alter the fixed rate of machinery depreciation per year
+    sav['equip_insurance_rate'] = '-'            #SA to alter the insurance cost (% of machine value)
     sav['overheads'] = np.full(len(pinp.general['i_overheads']), '-', dtype=object)  #SA to alter the overhead costs
     ##SAM
     ##SAP
@@ -483,6 +484,8 @@ def create_sa():
     sam['rr'] = 1.0                        #scanning percentage (adjust the standard scanning % for f_conception_ltw and within function for f_conception_cs
     sam['rr_og1'] = np.ones(pinp.sheep['i_scan_og1'].shape, dtype='float64')    # reproductive rate by age. Use shape that has og1
     sam['wean_redn_ol0g2'] = np.ones((len_o, len_l0, len_g2), dtype='float64')  #Adjust the number of yatf transferred at weaning - this is a high level sa, it impacts within a calculation not on an input
+    sam['stocki_fixed_h1'] = np.ones(uinp.sheep['i_infrastructure_costfixed_h1'].shape, dtype='float64')  #SA value for fixed costs of stock infrastructure.
+    sam['stocki_variable_h1'] = np.ones(uinp.sheep['i_infrastructure_costvariable_h1'].shape, dtype='float64')  #SA value for variable costs of stock infrastructure.
     sam['husb_cost_h2'] = np.ones(uinp.sheep['i_husb_operations_contract_cost_h2'].shape, dtype='float64')  #SA value for contract cost of husbandry operations.
     sam['husb_mustering_h2'] = np.ones(uinp.sheep['i_husb_operations_muster_propn_h2'].shape, dtype='float64')  #SA value for mustering required for husbandry operations.
     sam['husb_labour_l2h2'] = np.ones(uinp.sheep['i_husb_operations_labourreq_l2h2'].shape, dtype='float64')  #units of the job carried out per husbandry labour hour
