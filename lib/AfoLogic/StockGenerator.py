@@ -1716,6 +1716,23 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                                                 , p_index_pa1e1b1nwzida0e0b0xyg3==0), axis=0))
     a_n_pa1e1b1nwzida0e0b0xyg3 = (np.trunc(index_wzida0e0b0xyg3 / (n_fs_offs ** ((n_fvps_percondense_offs-1) - n_prior_fvps_pa1e1b1nwzida0e0b0xyg3))) % n_fs_offs).astype(int) #needs to be int so it can be an indice
 
+    ## Code to convert N33 to N11 for specified classes of animals in specified periods.
+    ### Useful to remove animals from the fs_opt, but can be used for any N33 trial.
+    ### Set the association a_n_p to 0 for animal classes and period so the feedsupply is effectively N11 for these classes and periods.
+    if sen.sav['partial_n11']:   #Control to include this code.
+        ### Create arrays that mask the periods to be excluded (True are excluded from fs_opt)
+        ###Current masks are set for the ewe lamb feed supply optimisation
+        ###Dam mask
+        ###Exclude NM dams (index_b1==0) in all p and all dams in periods after 2 tooth prejoining
+        period_pj_2tooth = prejoining_oa1e1b1nwzida0e0b0xyg1[1]/7    # the period of prejoining for 2-tooth ewes
+        dams_mask = np.logical_or(index_b1nwzida0e0b0xyg == 0, p_index_pa1e1b1nwzida0e0b0xyg >= period_pj_2tooth)
+        ###Offs mask
+        ###Exclude offspring of 2tooths and adults (index_d > 0)
+        offs_mask = index_da0e0b0xyg > 0
+        ###Set associations
+        a_n_pa1e1b1nwzida0e0b0xyg1 = fun.f_update(a_n_pa1e1b1nwzida0e0b0xyg1, 0, dams_mask)
+        a_n_pa1e1b1nwzida0e0b0xyg3 = fun.f_update(a_n_pa1e1b1nwzida0e0b0xyg3, 0, offs_mask)
+
 
     #######################
     ##Age, date, timing 1 #
