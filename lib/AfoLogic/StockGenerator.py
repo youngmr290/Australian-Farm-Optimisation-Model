@@ -86,14 +86,14 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     ################################
     ##Model inversion coefficients #
     ################################
+    ##set the genotype to report. This is the genotype of the c2 axis in Universal.xlsx
+    genotype = pinp.sheep['a_c2_c0'][0]  #2 is CFS for MLP & GEPEP traditional, 3 is GFS for GEPEP
     saa_srw = 0  #set default value for reporting later. Requires a separate variable because has 2 source coefficients
-    srw_parameter = 0  #set a value in case whole section is commented out
+    srw_parameter = uinp.parameters['i_srw_c2'][genotype]  #set a value in case whole section is commented out
     if calibrate_trait_values or o_trait_values is not None:
         # print(coefficients_c)   #only useful for debugging when not multiprocessing (workers=1, and not multiprocessing teams)
         n_coeff = coefficients_c.size
         n_traits = calibration_weights_p.size
-        ##set the genotype to report. This is the genotype of the c2 axis in Universal.xlsx
-        genotype = pinp.sheep['a_c2_c0'][0]    #2 is CFS for MLP & GEPEP traditional, 3 is GFS for GEPEP
 
         ##set default values for variables that are used in the calibration
         ### These can be saa passed from exp.xlsx. Reset to 0 here so not applied twice
@@ -106,7 +106,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         ##Comment any coefficients that aren't being calibrated
         j = 0
         #Standard fleece weight, SFW parameter
-        ##LiveEx: CFW is calibrated for A for whole of life. Y is by the scalar
+        ##CFW is calibrated for A for whole of life. Y is by the scalar
         w = p = y = h = a = None
         w = np.nan  #fleece growth prior to weaning is not carried forward to shearing
         # p = coefficients_c[j]; j += 1
@@ -117,7 +117,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         sen.saa['sfw_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         #Standard fibre diameter, SFD parameter
-        ##LiveEx: CFW is calibrated for A for whole of life. Y is by the scalar
+        ##FD is calibrated for A for whole of life. Y is by the scalar
         w = p = y = h = a = None
         w = np.nan  #fleece growth prior to weaning is not carried forward to shearing
         # p = coefficients_c[j]; j += 1
@@ -137,9 +137,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         # a = coefficients_c[j]; j += 1
         # sen.saa['iss_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
-        #Follicle number to calibrate staple length
-        # , cw[11] parameter
-        ##LiveEx: SL is calibrated for A and carried back.
+        #Follicle number to calibrate staple length, cw[11] parameter
+        ##SL is calibrated for A and carried back.
         w = p = y = h = a = None
         w = np.nan  #fleece growth prior to weaning is not carried forward to shearing
         # p = coefficients_c[j]; j += 1
@@ -149,29 +148,27 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         sen.saa['follicles_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         #Conception, cb1[24,25&26, 1] parameter
-        ##LiveEx: Conception only for adult stage
+        ##Conception only for adult stage
         w = p = y = h = a = None
         # w =
-        # p = np.nan  #post-wean is not a reproducing age group
-        # y = coefficients_c[j]; j += 1
+        # p = coefficients_c[j]; j += 1   #the Y joining is occurring during the post-wean age stage
         y = np.nan
         h = coefficients_c[j]; j += 1   #the A2 joining is occurring during the hogget age stage
         a = coefficients_c[j]; j += 1
         sen.saa['con_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         #Litter size, cb1[24,25&26, 2&3] parameter
-        ##LiveEx: Litter size only for adult stage
+        ##Litter size only for adult stage
         w = p = y = h = a = None
         # w =
-        # p = np.nan  #post-wean is not a reproducing age group
-        # y = coefficients_c[j]; j += 1
+        # p = coefficients_c[j]; j += 1   #the Y joining is occurring during the post-wean age stage
         y = np.nan
         h = coefficients_c[j]; j += 1   #the A2 joining is occurring during the hogget age stage
         a = coefficients_c[j]; j += 1
         sen.saa['ls_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         #Ewe rearing ability/lamb survival, cu6[8, -1] & cu2[8, -1] parameters
-        ##LiveEx: Ewe rearing ability only for adult stage
+        ##Ewe rearing ability only for adult stage
         w = p = y = h = a = None
         # w =
         # p = np.nan  #post-wean is not a reproducing age group
@@ -7660,116 +7657,208 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         return r_intake_f_tpdams, r_intake_f_tpoffs, o_ebg_tpdams, o_ebg_tpoffs
 
     ##if calibrating or reporting trait values: calculate the calibration variables for each production trait (p)
+    ###See DropBox [Calibration periods.xlsx] for slice numbers
     if calibrate_trait_values or o_trait_values is not None:
-        pcfw = o_cfw_tpdams[0,54,0,0,0,0,0,0,0,0,0,0,0,0,0,0]    #PCFW of NM ewes at 0.5yo
-        ycfw = o_cfw_tpdams[0,106,0,0,0,0,0,0,0,0,0,0,0,0,0,0]   #YCFW of NM ewes at 1.5yo
-        hcfw = o_cfw_tpdams[0,158,0,0,0,0,0,0,0,0,0,0,0,0,0,0]   #HCFW of NM ewes at 1.5yo
-        a2cfw = o_cfw_tpdams[0,158,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #A2CFW of single ewes at 2.5yo
-        a3cfw = o_cfw_tpdams[0,210,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #A3CFW of single ewes at 3.5yo
-        a4cfw = o_cfw_tpdams[0,262,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #A4CFW of single ewes at 4.5yo
-        a5cfw = o_cfw_tpdams[0,314,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #A5CFW of single ewes at 5.5yo
+        ##assign values to the p slices and ranges for the age stages. See
+        ###WT slices
+        b_wt_slc = {p_pos: [135,292,52], b1_pos: 2, x_pos: [0,2]}     #1st cycle single born female & castrate yatf of 2 tooth and adult ewes at birth, annually
+        w_wt_slc = {p_pos: [147,304,52], b1_pos: 2, x_pos: [0,2]}     #1st cycle single born female & castrate yatf of 2 tooth and adult ewes at weaning, annually
+        p_wt_slc = {p_pos: 63, b1_pos: 0}     #NM ewes mid point of p age stage
+        y_wt_slc = {p_pos: 84, b1_pos: 0}     #NM ewes mid point of y age stage
+        h_wt_slc = {p_pos: 110, b1_pos: 0}    #NM ewes prior to prejoining for 2yo lambing
+        a2_wt_slc = {p_pos: 162, b1_pos: 2}    #single bearing ewes prior to prejoining after 2yo lambing
+        a3_wt_slc = {p_pos: 214, b1_pos: 2}    #single bearing ewes prior to prejoining after 3yo lambing
+        a4_wt_slc = {p_pos: 266, b1_pos: 2}    #single bearing ewes prior to prejoining after 4yo lambing
+        a5_wt_slc = {p_pos: 318, b1_pos: 2}    #single bearing ewes prior to prejoining after 5yo lambing
+        ###Fleece slices
+        p_flc_slc = {p_pos: [52,73], b1_pos: 0}      #NM ewes duration of the p age stage
+        y_flc_slc = {p_pos: [73,95], b1_pos: 0}      #NM ewes duration of the y age stage
+        h_flc_slc = {p_pos: [95,125], b1_pos: 0}     #NM ewes duration of the h age stage
+        a2_flc_slc = {p_pos: [125,177], b1_pos: 2}    #single bearing ewes (11) duration of the a2 age stage
+        a3_flc_slc = {p_pos: [177,229], b1_pos: 2}    #single bearing ewes (11) duration of the a3 age stage
+        a4_flc_slc = {p_pos: [229,281], b1_pos: 2}    #single bearing ewes (11) duration of the a4 age stage
+        a5_flc_slc = {p_pos: [281,333], b1_pos: 2}    #single bearing ewes (11) duration of the a5 age stage
+        ###CON & LS slices
+        y_empty_slc = {p_pos: 67, b1_pos: 1}     #empty ewes after joining for 1yo lambing
+        y_mated_slc = {p_pos: 67, b1_pos: [1,5]}    #mated ewes after joining for 1yo lambing
+        y_preg_slc = {p_pos: 67, b1_pos: [2,5]}     #pregnant ewes after joining for 1yo lambing
+        a2_empty_slc = {p_pos: 112, b1_pos: 1}     #empty ewes after joining for 2yo lambing
+        a2_mated_slc = {p_pos: 112, b1_pos: [1,5]}    #mated ewes after joining for 2yo lambing
+        a2_preg_slc = {p_pos: 112, b1_pos: [2,5]}     #pregnant ewes after joining for 2yo lambing
+        a3_empty_slc = {p_pos: 164, b1_pos: 1}     #empty ewes after joining for 3yo lambing
+        a3_mated_slc = {p_pos: 164, b1_pos: [1,5]}    #mated ewes after joining for 3yo lambing
+        a3_preg_slc = {p_pos: 164, b1_pos: [2,5]}     #pregnant ewes after joining for 3yo lambing
+        a4_empty_slc = {p_pos: 216, b1_pos: 1}     #empty ewes after joining for 4yo lambing
+        a4_mated_slc = {p_pos: 216, b1_pos: [1,5]}    #mated ewes after joining for 4yo lambing
+        a4_preg_slc = {p_pos: 216, b1_pos: [2,5]}     #pregnant ewes after joining for 4yo lambing
+        a5_empty_slc = {p_pos: 268, b1_pos: 1}     #empty ewes after joining for 5yo lambing
+        a5_mated_slc = {p_pos: 268, b1_pos: [1,5]}    #mated ewes after joining for 5yo lambing
+        a5_preg_slc = {p_pos: 268, b1_pos: [2,5]}     #pregnant ewes after joining for 5yo lambing
+        ###ERA slices. Note b1 slice is handled in formula
+        y_lact_slc = {p_pos: 91}  #ewes after lambing for 1yo lambing
+        a2_lact_slc = {p_pos: 136}  #ewes after lambing for 2yo lambing
+        a3_lact_slc = {p_pos: 188}  #ewes after lambing for 3yo lambing
+        a4_lact_slc = {p_pos: 240}  #ewes after lambing for 4yo lambing
+        a5_lact_slc = {p_pos: 292}  #ewes after lambing for 5yo lambing
+
+        ##CFW values. Note: sum the p slices
+        pcfw = np.sum(fun.f_slice(o_d_cfw_tpdams, p_flc_slc, default=0))
+        ycfw = np.sum(fun.f_slice(o_d_cfw_tpdams, y_flc_slc, default=0))
+        hcfw = np.sum(fun.f_slice(o_d_cfw_tpdams, h_flc_slc, default=0))
+        a2cfw = np.sum(fun.f_slice(o_d_cfw_tpdams, a2_flc_slc, default=0))
+        a3cfw = np.sum(fun.f_slice(o_d_cfw_tpdams, a3_flc_slc, default=0))
+        a4cfw = np.sum(fun.f_slice(o_d_cfw_tpdams, a4_flc_slc, default=0))
+        a5cfw = np.sum(fun.f_slice(o_d_cfw_tpdams, a5_flc_slc, default=0))
         acfw = (a2cfw + a3cfw + a4cfw + a5cfw) / 4
-        pfd = o_fd_tpdams[0,54,0,0,0,0,0,0,0,0,0,0,0,0,0,0]     #PFD of NM ewes at 0.5yo
-        yfd = o_fd_tpdams[0,106,0,0,0,0,0,0,0,0,0,0,0,0,0,0]    #YFD of NM ewes at 1.5yo
-        hfd = o_fd_tpdams[0,158,0,0,0,0,0,0,0,0,0,0,0,0,0,0]    #HFD of NM ewes at 0.5yo
-        a2fd = o_fd_tpdams[0,158,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #A2FD of single ewes at 2.5yo
-        a3fd = o_fd_tpdams[0,210,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #A3FD of single ewes at 3.5yo
-        a4fd = o_fd_tpdams[0,262,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #A4FD of single ewes at 4.5yo
-        a5fd = o_fd_tpdams[0,314,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #A5FD of single ewes at 5.5yo
+
+        ##FD values. Note: FD weighted average on fibre length
+        fd_by_fl = o_d_fd_tpdams * o_d_fl_tpdams
+        pfd = fun.f_divide_float(np.sum(fun.f_slice(fd_by_fl, p_flc_slc, default=0))
+                          , np.sum(fun.f_slice(o_d_fl_tpdams, p_flc_slc, default=0)))
+        yfd = fun.f_divide_float(np.sum(fun.f_slice(fd_by_fl, y_flc_slc, default=0))
+                          , np.sum(fun.f_slice(o_d_fl_tpdams, y_flc_slc, default=0)))
+        hfd = fun.f_divide_float(np.sum(fun.f_slice(fd_by_fl, h_flc_slc, default=0))
+                          , np.sum(fun.f_slice(o_d_fl_tpdams, h_flc_slc, default=0)))
+        a2fd = fun.f_divide_float(np.sum(fun.f_slice(fd_by_fl, a2_flc_slc, default=0))
+                          , np.sum(fun.f_slice(o_d_fl_tpdams, a2_flc_slc, default=0)))
+        a3fd = fun.f_divide_float(np.sum(fun.f_slice(fd_by_fl, a3_flc_slc, default=0))
+                          , np.sum(fun.f_slice(o_d_fl_tpdams, a3_flc_slc, default=0)))
+        a4fd = fun.f_divide_float(np.sum(fun.f_slice(fd_by_fl, a4_flc_slc, default=0))
+                          , np.sum(fun.f_slice(o_d_fl_tpdams, a4_flc_slc, default=0)))
+        a5fd = fun.f_divide_float(np.sum(fun.f_slice(fd_by_fl, a5_flc_slc, default=0))
+                          , np.sum(fun.f_slice(o_d_fl_tpdams, a5_flc_slc, default=0)))
         afd = (a2fd + a3fd + a4fd + a5fd) / 4
-        pss = o_ss_tpdams[0,54,0,0,0,0,0,0,0,0,0,0,0,0,0,0]    #PSS of NM ewes at 3.5yo
-        yss = o_ss_tpdams[0,106,0,0,0,0,0,0,0,0,0,0,0,0,0,0]   #YSS of NM ewes at 3.5yo
-        hss = o_ss_tpdams[0,158,0,0,0,0,0,0,0,0,0,0,0,0,0,0]   #HSS of NM ewes at 3.5yo
-        a2ss = o_ss_tpdams[0,158,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #A2SS of single ewes at 2.5yo
-        a3ss = o_ss_tpdams[0,210,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #A3SS of single ewes at 3.5yo
-        a4ss = o_ss_tpdams[0,262,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #A4SS of single ewes at 4.5yo
-        a5ss = o_ss_tpdams[0,314,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #A5SS of single ewes at 5.5yo
+
+        ##SS values. Note: minimum cross-sectional area / average cross-sectional area
+        pfd_min = np.min(fun.f_slice(o_d_fd_tpdams, p_flc_slc, default=0))
+        cw16_sliced = fun.f_slice(cw_cpdams[16, ...], {}, default=0)
+        pss = pfd_min ** 2 / pfd ** 2 * cw16_sliced
+        yfd_min = np.min(fun.f_slice(o_d_fd_tpdams, y_flc_slc, default=0))
+        yss = yfd_min ** 2 / yfd ** 2 * cw16_sliced
+        hfd_min = np.min(fun.f_slice(o_d_fd_tpdams, h_flc_slc, default=0))
+        hss = hfd_min ** 2 / hfd ** 2 * cw16_sliced
+        a2fd_min = np.min(fun.f_slice(o_d_fd_tpdams, a2_flc_slc, default=0))
+        a2ss = a2fd_min ** 2 / a2fd ** 2 * cw16_sliced
+        a3fd_min = np.min(fun.f_slice(o_d_fd_tpdams, a3_flc_slc, default=0))
+        a3ss = a3fd_min ** 2 / a3fd ** 2 * cw16_sliced
+        a4fd_min = np.min(fun.f_slice(o_d_fd_tpdams, a4_flc_slc, default=0))
+        a4ss = a4fd_min ** 2 / a4fd ** 2 * cw16_sliced
+        a5fd_min = np.min(fun.f_slice(o_d_fd_tpdams, a5_flc_slc, default=0))
+        a5ss = a5fd_min ** 2 / a5fd ** 2 * cw16_sliced
         ass = (a2ss + a3ss + a4ss + a5ss) / 4
-        psl = o_sl_tpdams[0,54,0,0,0,0,0,0,0,0,0,0,0,0,0,0]     #PSL of NM ewes at 3.5yo
-        ysl = o_sl_tpdams[0,106,0,0,0,0,0,0,0,0,0,0,0,0,0,0]    #YSL of NM ewes at 3.5yo
-        hsl = o_sl_tpdams[0,158,0,0,0,0,0,0,0,0,0,0,0,0,0,0]    #HSL of NM ewes at 3.5yo
-        a2sl = o_sl_tpdams[0,158,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #A2SL of single ewes at 2.5yo
-        a3sl = o_sl_tpdams[0,210,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #A3SL of single ewes at 3.5yo
-        a4sl = o_sl_tpdams[0,262,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #A4SL of single ewes at 4.5yo
-        a5sl = o_sl_tpdams[0,314,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #A5SL of single ewes at 5.5yo
+
+        ##SL values. Note: sum of fibre length * staple length factor
+        d_sl = o_d_fl_tpdams * cw_cpdams[15, ...]
+        psl = np.sum(fun.f_slice(d_sl, p_flc_slc, default=0))
+        ysl = np.sum(fun.f_slice(d_sl, y_flc_slc, default=0))
+        hsl = np.sum(fun.f_slice(d_sl, h_flc_slc, default=0))
+        a2sl = np.sum(fun.f_slice(d_sl, a2_flc_slc, default=0))
+        a3sl = np.sum(fun.f_slice(d_sl, a3_flc_slc, default=0))
+        a4sl = np.sum(fun.f_slice(d_sl, a4_flc_slc, default=0))
+        a5sl = np.sum(fun.f_slice(d_sl, a5_flc_slc, default=0))
         asl = (a2sl + a3sl + a4sl + a5sl) / 4
-        ##proportion of preg is 1 - (number of dry (b[1]) divided by the number dry and pregnant (b[1:5]))
-        ycon = 1 - fun.f_divide(o_numbers_start_tpdams[0,59,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
-                         np.sum(o_numbers_start_tpdams[0,59,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0]))
-        a2con = 1 - fun.f_divide(o_numbers_start_tpdams[0,111,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
-                          np.sum(o_numbers_start_tpdams[0,111,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0]))
-        a3con = 1 - fun.f_divide(o_numbers_start_tpdams[0,163,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
-                          np.sum(o_numbers_start_tpdams[0,163,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0]))
-        a4con = 1 - fun.f_divide(o_numbers_start_tpdams[0,215,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
-                          np.sum(o_numbers_start_tpdams[0,215,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0]))
-        a5con = 1 - fun.f_divide(o_numbers_start_tpdams[0,267,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
-                          np.sum(o_numbers_start_tpdams[0,267,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0]))
-        acon = (a3con + a4con + a5con) / 3  #a2con is calibrated separately because separate 2 tooth coefficients
+
+        ##Proportion of preg = 1 - (number of empty divided by the number mated (empty + pregnant))
+        ycon = 1 - fun.f_divide_float(fun.f_slice(o_numbers_start_tpdams, y_empty_slc, default=0)
+                             , np.sum(fun.f_slice(o_numbers_start_tpdams, y_mated_slc, default=0)))
+        a2con = 1 - fun.f_divide_float(fun.f_slice(o_numbers_start_tpdams, a2_empty_slc, default=0)
+                              , np.sum(fun.f_slice(o_numbers_start_tpdams, a2_mated_slc, default=0)))
+        a3con = 1 - fun.f_divide_float(fun.f_slice(o_numbers_start_tpdams, a3_empty_slc, default=0)
+                              , np.sum(fun.f_slice(o_numbers_start_tpdams, a3_mated_slc, default=0)))
+        a4con = 1 - fun.f_divide_float(fun.f_slice(o_numbers_start_tpdams, a4_empty_slc, default=0)
+                              , np.sum(fun.f_slice(o_numbers_start_tpdams, a4_mated_slc, default=0)))
+        a5con = 1 - fun.f_divide_float(fun.f_slice(o_numbers_start_tpdams, a5_empty_slc, default=0)
+                              , np.sum(fun.f_slice(o_numbers_start_tpdams, a5_mated_slc, default=0)))
+        acon = (a3con + a4con + a5con) / 3
+
         ##Litter size is sum of the ewes weighted by # foetuses (np.dot with arange(4)) divided by pregnant ewes
-        yls = fun.f_divide(np.dot(o_numbers_start_tpdams[0,59,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0], np.arange(4))
-                         , np.sum(o_numbers_start_tpdams[0,59,0,0,2:5,0,0,0,0,0,0,0,0,0,0,0]))
-        a2ls = fun.f_divide(np.dot(o_numbers_start_tpdams[0,111,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0], np.arange(4))
-                          , np.sum(o_numbers_start_tpdams[0,111,0,0,2:5,0,0,0,0,0,0,0,0,0,0,0]))
-        a3ls = fun.f_divide(np.dot(o_numbers_start_tpdams[0,163,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0], np.arange(4))
-                          , np.sum(o_numbers_start_tpdams[0,163,0,0,2:5,0,0,0,0,0,0,0,0,0,0,0]))
-        a4ls = fun.f_divide(np.dot(o_numbers_start_tpdams[0, 215, 0, 0, 1:5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], np.arange(4))
-                          , np.sum(o_numbers_start_tpdams[0,215,0,0,2:5,0,0,0,0,0,0,0,0,0,0,0]))
-        a5ls = fun.f_divide(np.dot(o_numbers_start_tpdams[0,267,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0], np.arange(4))
-                          , np.sum(o_numbers_start_tpdams[0,267,0,0,2:5,0,0,0,0,0,0,0,0,0,0,0]))
+        ###np.dot only functions if the numbers array is indexed (not sliced)
+        yls = fun.f_divide_float(np.dot(fun.f_slice(o_numbers_start_tpdams, y_mated_slc, default=0), np.arange(4))
+                               , np.sum(fun.f_slice(o_numbers_start_tpdams, y_preg_slc, default=0)))
+        a2ls = fun.f_divide_float(np.dot(fun.f_slice(o_numbers_start_tpdams, a2_mated_slc, default=0), np.arange(4))
+                                , np.sum(fun.f_slice(o_numbers_start_tpdams, a2_preg_slc, default=0)))
+        a3ls = fun.f_divide_float(np.dot(fun.f_slice(o_numbers_start_tpdams, a3_mated_slc, default=0), np.arange(4))
+                                , np.sum(fun.f_slice(o_numbers_start_tpdams, a3_preg_slc, default=0)))
+        a4ls = fun.f_divide_float(np.dot(fun.f_slice(o_numbers_start_tpdams, a4_mated_slc, default=0), np.arange(4))
+                                , np.sum(fun.f_slice(o_numbers_start_tpdams, a4_preg_slc, default=0)))
+        a5ls = fun.f_divide_float(np.dot(fun.f_slice(o_numbers_start_tpdams, a5_mated_slc, default=0), np.arange(4))
+                                , np.sum(fun.f_slice(o_numbers_start_tpdams, a5_preg_slc, default=0)))
         als = (a3ls + a4ls + a5ls) / 3  #a2ls is calibrated separately because separate 2 tooth coefficients
-        ##twin survival is square root of the number of ewe with twins (BT22) after lambing / number before lambing
-        ##Square root is simpler to calculate than summing BTRT 22 * 2 & 21 * 1, but this will need to change if the assumption on survival of twins being independent is relaxed
-        yera = fun.f_divide(o_numbers_start_tpdams[0,84,0,0,3,0,0,0,0,0,0,0,0,0,0,0]
-                          , o_numbers_start_tpdams[0,80,0,0,3,0,0,0,0,0,0,0,0,0,0,0])**0.5
-        a2era = fun.f_divide(o_numbers_start_tpdams[0,136,0,0,3,0,0,0,0,0,0,0,0,0,0,0]
-                           , o_numbers_start_tpdams[0,132,0,0,3,0,0,0,0,0,0,0,0,0,0,0])**0.5
-        a3era = fun.f_divide(o_numbers_start_tpdams[0,188,0,0,3,0,0,0,0,0,0,0,0,0,0,0]
-                           , o_numbers_start_tpdams[0,184,0,0,3,0,0,0,0,0,0,0,0,0,0,0]) ** 0.5
-        a4era = fun.f_divide(o_numbers_start_tpdams[0,240,0,0,3,0,0,0,0,0,0,0,0,0,0,0]
-                           , o_numbers_start_tpdams[0,236,0,0,3,0,0,0,0,0,0,0,0,0,0,0]) ** 0.5
-        a5era = fun.f_divide(o_numbers_start_tpdams[0,292,0,0,3,0,0,0,0,0,0,0,0,0,0,0]
-                           , o_numbers_start_tpdams[0,288,0,0,3,0,0,0,0,0,0,0,0,0,0,0]) ** 0.5
+
+        ##ERA = twin survival is defined as survival of twin lambs from the ewes that survive
+        ### number of twin lambs at foot during lactation / 2 * number of twin bearing ewes
+        n_twin_lact = np.sum(o_numbers_start_tpdams * (nfoet_b1nwzida0e0b0xyg == 2) * nyatf_b1nwzida0e0b0xyg
+                             , axis=b1_pos, keepdims=True)
+        n_twin_preg = np.sum(o_numbers_start_tpdams * (nfoet_b1nwzida0e0b0xyg == 2) * 2
+                             , axis=b1_pos, keepdims=True)
+        yera = fun.f_divide_float(np.sum(fun.f_slice(n_twin_lact, y_lact_slc, default=0))
+                                , np.sum(fun.f_slice(n_twin_preg, y_lact_slc, default=0)))
+        a2era = fun.f_divide_float(np.sum(fun.f_slice(n_twin_lact, a2_lact_slc, default=0))
+                                 , np.sum(fun.f_slice(n_twin_preg, a2_lact_slc, default=0)))
+        a3era = fun.f_divide_float(np.sum(fun.f_slice(n_twin_lact, a3_lact_slc, default=0))
+                                 , np.sum(fun.f_slice(n_twin_preg, a3_lact_slc, default=0)))
+        a4era = fun.f_divide_float(np.sum(fun.f_slice(n_twin_lact, a4_lact_slc, default=0))
+                                 , np.sum(fun.f_slice(n_twin_preg, a4_lact_slc, default=0)))
+        a5era = fun.f_divide_float(np.sum(fun.f_slice(n_twin_lact, a5_lact_slc, default=0))
+                                 , np.sum(fun.f_slice(n_twin_preg, a5_lact_slc, default=0)))
         aera = (a2era + a3era + a4era + a5era) / 4  #a2era is included with the older adults because there aren't separate 2 tooth lamb survival coefficients
-        ##birth weight - #todo connect up birth weight of 1st cycle single born female yatf of 2 tooth and adult ewes
-        bwt = 0     # bwt = ( + + + )/4
-        ##weaning weight of 1st cycle single born female yatf of 2 tooth and adult ewes
-        wwt = (o_wean_w_tpyatf[0,147,0,0,2,0,0,0,0,0,0,0,0,0,0,0]
-             + o_wean_w_tpyatf[0,199,0,0,2,0,0,0,0,0,0,0,0,0,0,0]
-             + o_wean_w_tpyatf[0,251,0,0,2,0,0,0,0,0,0,0,0,0,0,0]
-             + o_wean_w_tpyatf[0,303,0,0,2,0,0,0,0,0,0,0,0,0,0,0]) / 4
-        pwt = 0     # pwt = o_ffcfw_tpdams[]     #Post wean weight of non-mated females at ?? months old
-        ywt = o_ffcfw_tpdams[0,85,0,0,0,0,0,0,0,0,0,0,0,0,0,0]     #Yearling weight of non-mated females ewes at 1yo
-        hwt = o_ffcfw_tpdams[0,111,0,0,0,0,0,0,0,0,0,0,0,0,0,0]    #Hogget weight of ewes at 1.5yo prior to prejoining, NM in previous year
-        awt = o_ffcfw_tpdams[0,215,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #Adult weight of ewes at 3.5yo prior to prejoining, BTRT 11 in previous year
-        pfat = 0    # o_cfat_start_tpdams[]     #Post wean fat depth of non-mated females at ?? months old
-        yfat = o_cfat_start_tpdams[0,85,0,0,0,0,0,0,0,0,0,0,0,0,0,0]     #Yearling fat depth of non-mated females ewes at 1yo
-        hfat = o_cfat_start_tpdams[0,111,0,0,0,0,0,0,0,0,0,0,0,0,0,0]    #Hogget fat depth of ewes at 1.5yo prior to prejoining, NM in previous year
-        afat = o_cfat_start_tpdams[0,215,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #Adult fat depth of ewes at 3.5yo prior to prejoining, BTRT 11 in previous year
-        pwbe = 0    # fun.f_divide(r_fat_tpdams[]
-                    #       , r_ebw_tpdams[])  #% of fat for Post weaning females
-        ywbe = fun.f_divide(r_fat_tpdams[0,85,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-                          , r_ebw_tpdams[0,85,0,0,0,0,0,0,0,0,0,0,0,0,0,0])  #% of fat for Yearling non-mated females ewes at 1yo
-        hwbe = fun.f_divide(r_fat_tpdams[0,111,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-                          , r_ebw_tpdams[0,111,0,0,0,0,0,0,0,0,0,0,0,0,0,0])  #% of fat for Hogget ewes at 1.5yo prior to prejoining, NM in previous year
-        awbe = fun.f_divide(r_fat_tpdams[0,215,0,0,2,0,0,0,0,0,0,0,0,0,0,0]
-                          , r_ebw_tpdams[0,215,0,0,2,0,0,0,0,0,0,0,0,0,0,0])  #% of fat for the dams at 3.5yo prior to prejoining, BTRT 11 in previous year
-        ##SRW based on ALW and Fat% of 3.5yo ewes prior to prejoining
+
+        ##WT Fleece free conceptus free weight
+        bwt = np.average(fun.f_slice(o_ffcfw_start_tpyatf, b_wt_slc, default=0))
+        wwt = np.average(fun.f_slice(o_wean_w_tpyatf, w_wt_slc, default=0))
+        pwt = fun.f_slice(o_ffcfw_tpdams, p_wt_slc, default=0)
+        ywt = fun.f_slice(o_ffcfw_tpdams, y_wt_slc, default=0)
+        hwt = fun.f_slice(o_ffcfw_tpdams, h_wt_slc, default=0)
+        a2wt = fun.f_slice(o_ffcfw_tpdams, a2_wt_slc, default=0)
+        a3wt = fun.f_slice(o_ffcfw_tpdams, a3_wt_slc, default=0)
+        a4wt = fun.f_slice(o_ffcfw_tpdams, a4_wt_slc, default=0)
+        a5wt = fun.f_slice(o_ffcfw_tpdams, a5_wt_slc, default=0)
+        awt = (a2wt + a3wt + a4wt + a5wt) / 4
+        ##C-site fat depth
+        pfat = fun.f_slice(o_cfat_start_tpdams, p_wt_slc, default=0)
+        yfat = fun.f_slice(o_cfat_start_tpdams, y_wt_slc, default=0)
+        hfat = fun.f_slice(o_cfat_start_tpdams, h_wt_slc, default=0)
+        a2fat = fun.f_slice(o_cfat_start_tpdams, a2_wt_slc, default=0)
+        a3fat = fun.f_slice(o_cfat_start_tpdams, a3_wt_slc, default=0)
+        a4fat = fun.f_slice(o_cfat_start_tpdams, a4_wt_slc, default=0)
+        a5fat = fun.f_slice(o_cfat_start_tpdams, a5_wt_slc, default=0)
+        afat = (a2fat + a3fat + a4fat + a5fat) / 4
+        ##WBE is Fat% (weight of fat divided by empty body weight)
+        pwbe = fun.f_divide_float(fun.f_slice(r_fat_tpdams, p_wt_slc, default=0)
+                                , fun.f_slice(r_ebw_tpdams, p_wt_slc, default=0))
+        ywbe = fun.f_divide_float(fun.f_slice(r_fat_tpdams, y_wt_slc, default=0)
+                                , fun.f_slice(r_ebw_tpdams, y_wt_slc, default=0))
+        hwbe = fun.f_divide_float(fun.f_slice(r_fat_tpdams, h_wt_slc, default=0)
+                                , fun.f_slice(r_ebw_tpdams, h_wt_slc, default=0))
+        a2wbe = fun.f_divide_float(fun.f_slice(r_fat_tpdams, a2_wt_slc, default=0)
+                                 , fun.f_slice(r_ebw_tpdams, a2_wt_slc, default=0))
+        a3wbe = fun.f_divide_float(fun.f_slice(r_fat_tpdams, a3_wt_slc, default=0)
+                                 , fun.f_slice(r_ebw_tpdams, a3_wt_slc, default=0))
+        a4wbe = fun.f_divide_float(fun.f_slice(r_fat_tpdams, a4_wt_slc, default=0)
+                                 , fun.f_slice(r_ebw_tpdams, a4_wt_slc, default=0))
+        a5wbe = fun.f_divide_float(fun.f_slice(r_fat_tpdams, a5_wt_slc, default=0)
+                                 , fun.f_slice(r_ebw_tpdams, a5_wt_slc, default=0))
+        awbe = (a2wbe + a3wbe + a4wbe + a5wbe) / 4
+
+        ##SRW based on ALW and Fat% of adult ewes prior to prejoining
         ###Estimating SRW as LW at 25% fat.
         ###The calculation assumes that muscle mass is constant and only fat mass changes as per Hutton's model
         srw_from_fat = awt * (1 - awbe) / (1 - srwfat_yg1)
         # srw = awt / (1 + 1.54 * (awbe - srwfat_yg1))   # alternative formula that can be fitted to simulation data (see W18:p64)
         fat_at_srw = 1 - (awt / srw_parameter * (1 - awbe))     #estimated proportion of fat in the body at the srw
-        ##weaning weight of 1st cycle single born female yatf of 2 tooth and adult ewes
-        wcs = (o_cs_start_tpyatf[0,147,0,0,2,0,0,0,0,0,0,0,0,0,0,0]
-             + o_cs_start_tpyatf[0,199,0,0,2,0,0,0,0,0,0,0,0,0,0,0]
-             + o_cs_start_tpyatf[0,251,0,0,2,0,0,0,0,0,0,0,0,0,0,0]
-             + o_cs_start_tpyatf[0,303,0,0,2,0,0,0,0,0,0,0,0,0,0,0]) / 4
-        pcs = 0    # o_cs_start_tpdams[0,85,0,0,0,0,0,0,0,0,0,0,0,0,0,0]     #Post weaning CS of not mated females at ?? months old
-        ycs = o_cs_start_tpdams[0,85,0,0,0,0,0,0,0,0,0,0,0,0,0,0]     #Yearling CS of ewes at 1yo, NM in previous year
-        hcs = o_cs_start_tpdams[0,111,0,0,0,0,0,0,0,0,0,0,0,0,0,0]    #Hogget CS of ewes at 1.5yo prior to prejoining, NM in previous year
-        acs = o_cs_start_tpdams[0,215,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #Adult CS of ewes at 3.5yo prior to prejoining, BTRT 11 in previous year
-        # connect up periods for mortality of younger animals.
 
+        ##Condition score
+        wcs = np.average(fun.f_slice(o_cs_start_tpyatf, w_wt_slc))
+        pcs = fun.f_slice(o_cs_start_tpdams, p_wt_slc)
+        ycs = fun.f_slice(o_cs_start_tpdams, y_wt_slc)
+        hcs = fun.f_slice(o_cs_start_tpdams, h_wt_slc)
+        a2cs = fun.f_slice(o_cs_start_tpdams, a2_wt_slc)
+        a3cs = fun.f_slice(o_cs_start_tpdams, a3_wt_slc)
+        a4cs = fun.f_slice(o_cs_start_tpdams, a4_wt_slc)
+        a5cs = fun.f_slice(o_cs_start_tpdams, a5_wt_slc)
+        acs = (a2cs + a3cs + a4cs + a5cs) / 4
+
+        #todo connect up periods for mortality of younger animals.
         psurv = 0    # fun.f_divide(np.sum(o_numbers_start_tpdams[0,312,0,:,:,0,0,0,0,0,0,0,0,0,0,0])           #Mortality of ewes from yearling shearing to 5.5yo BTRT 11
                      #       , np.sum(o_numbers_start_tpdams[0,104,0,:,:,0,0,0,0,0,0,0,0,0,0,0]))
         ysurv = 0    # fun.f_divide(np.sum(o_numbers_start_tpdams[0,312,0,:,:,0,0,0,0,0,0,0,0,0,0,0])           #Mortality of ewes from yearling shearing to 5.5yo BTRT 11
@@ -7779,6 +7868,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         #todo  Maybe need a different definition of asurv for use with EV of breeding traits.
         asurv = fun.f_divide(np.sum(o_numbers_start_tpdams[0,312,0,:,:,0,0,0,0,0,0,0,0,0,0,0])           #Cumulative mortality of ewes from yearling shearing to 5.5yo BTRT 11
                            , np.sum(o_numbers_start_tpdams[0,104,0,:,:,0,0,0,0,0,0,0,0,0,0,0]))
+
+        ##LW profile to calibrate feed supply
         # elw1 = o_ffcfw_tpdams[0, 57, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]  #Ewe LW targets
         # elw2 = o_ffcfw_tpdams[0, 64, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         # elw3 = o_ffcfw_tpdams[0, 71, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
