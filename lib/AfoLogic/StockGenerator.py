@@ -27,7 +27,6 @@ import functions from other modules
 # import datetime as dt
 # import pandas as pd
 import numpy as np
-# np.seterr(all='raise')   #uncomment this line to be able to debug any numpy floating point warnings
 import pickle as pkl
 #import matplotlib.pyplot as plt
 import time
@@ -5218,8 +5217,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 ##relative size and relative condition of the dams at mating are the determinants of conception
                 ## use the condition of dams in the 11 slice because mated animals can have a different feed supply
                 ## use dams in e[-1] because want the condition of the animal before it conceives. Note all e slices will have the same condition until conceived because they have the same feedsupply until scanning.
-                #todo Change the calculation of maternalLW to be based on ebw with the CSIRO gut fill so that changing diet quality doesn't affect repro.
-                ffcfw_e1b1sliced = fun.f_slice(ffcfw_start_dams, {e1_pos: [-1, None], b1_pos: [2, 3]}) #slice e1 & b1 axis
+                ##ffcfw based on empty body weight and CSIRO gut fill parameter so that gut fill/NV doesn't affect RR
+                ffcfw_e1b1sliced = fun.f_slice(ebw_start_dams, {e1_pos: [-1, None], b1_pos: [2, 3]}) * cg_cpdams[18, ...] #slice e1 & b1 axis
                 relsize_start_dams_e1b1sliced = fun.f_slice(relsize_start_dams, {e1_pos: [-1, None], b1_pos: [2, 3]}) #slice e1 & b1 axis
                 ebg_e1b1sliced = fun.f_slice(ebg_dams, {e1_pos: [-1, None], b1_pos: [2, 3]}) #slice e1 & b1 axis
                 nw_start_dams_e1b1sliced = fun.f_slice(nw_start_dams, {e1_pos: [-1, None], b1_pos: [2, 3]}) #slice e1 & b1 axis
