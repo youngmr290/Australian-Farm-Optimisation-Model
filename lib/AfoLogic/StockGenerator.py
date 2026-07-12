@@ -324,6 +324,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     k5_pos = sinp.stock['i_k5_pos']
     n_pos = sinp.stock['i_n_pos']
     p_pos = sinp.stock['i_p_pos']
+    t_pos = p_pos - 1
     w_pos = sinp.stock['i_w_pos']
     x_pos = sinp.stock['i_x_pos']
     y_pos = sinp.stock['i_y_pos']
@@ -12504,137 +12505,140 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         ##Slice the r_compare array and return the equation systems and p axes.
         try:  #Catch error when the variable doesn't exist, which for r_compare occurs if eqn_compare is false for a trial
             ##comment out either dams or offs because only one can be saved to Excel unless array names and df names are expanded.
-            array7_0a = r_compare7_q0q2tpdams[:, 0, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_0b = r_compare7_q0q2tpdams[:, 0, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_0c = r_compare7_q0q2tpdams[:, 0, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_1a = r_compare7_q0q2tpdams[:, 1, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_1b = r_compare7_q0q2tpdams[:, 1, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_1c = r_compare7_q0q2tpdams[:, 1, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_2a = r_compare7_q0q2tpdams[:, 2, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_2b = r_compare7_q0q2tpdams[:, 2, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_2c = r_compare7_q0q2tpdams[:, 2, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_3a = r_compare7_q0q2tpdams[:, 3, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_3b = r_compare7_q0q2tpdams[:, 3, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_3c = r_compare7_q0q2tpdams[:, 3, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_4a = r_compare7_q0q2tpdams[:, 4, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_4b = r_compare7_q0q2tpdams[:, 4, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_4c = r_compare7_q0q2tpdams[:, 4, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_5a = r_compare7_q0q2tpdams[:, 5, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_5b = r_compare7_q0q2tpdams[:, 5, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_5c = r_compare7_q0q2tpdams[:, 5, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_6a = r_compare7_q0q2tpdams[:, 6, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_6b = r_compare7_q0q2tpdams[:, 6, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_6c = r_compare7_q0q2tpdams[:, 6, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_7a = r_compare7_q0q2tpdams[:, 7, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_7b = r_compare7_q0q2tpdams[:, 7, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_7c = r_compare7_q0q2tpdams[:, 7, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_8a = r_compare7_q0q2tpdams[:, 8, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_8b = r_compare7_q0q2tpdams[:, 8, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_8c = r_compare7_q0q2tpdams[:, 8, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_9a = r_compare7_q0q2tpdams[:, 9, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_9b = r_compare7_q0q2tpdams[:, 9, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_9c = r_compare7_q0q2tpdams[:, 9, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_10a = r_compare7_q0q2tpdams[:, 10, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_10b = r_compare7_q0q2tpdams[:, 10, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_10c = r_compare7_q0q2tpdams[:, 10, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_13a = r_compare7_q0q2tpdams[:, 13, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_13b = r_compare7_q0q2tpdams[:, 13, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_13c = r_compare7_q0q2tpdams[:, 13, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            arrayA = o_mei_solid_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # b1 axis (dry, single & twin) used in place of q0
-            arrayB = r_md_solid_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # b1 axis (dry, single & twin) used in place of q0
-            arrayC = nv_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # b1 axis (dry, single & twin) used in place of q0
-            arrayD = r_ebw_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # have used (dry, single & twin) in place of q0
-            arrayE = r_wbe_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # have used (dry, single & twin) in place of q0
-            arrayF = r_fat_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # have used (dry, single & twin) in place of q0
-            arrayG = r_muscle_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # have used (dry, single & twin) in place of q0
-            arrayH = r_viscera_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # have used (dry, single & twin) in place of q0
-            arrayI = r_w_f_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # have used (dry, single & twin) in place of q0
-            arrayJ = o_cfw_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # have used (dry, single & twin) in place of q0
+            t_slc = min(2, len_gen_t1 - 1)   #Set value for the t slice to 2 if generating with a t axis
+            array7_0a = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 0, t_pos: t_slc, p_pos: [0,None], b1_pos: 1}, default=0)
+            array7_0b = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 0, t_pos: t_slc, p_pos: [0,None], b1_pos: 2}, default=0)
+            array7_0c = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 0, t_pos: t_slc, p_pos: [0,None], b1_pos: 3}, default=0)
+            array7_1a = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 1, t_pos: t_slc, p_pos: [0,None], b1_pos: 1}, default=0)
+            array7_1b = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 1, t_pos: t_slc, p_pos: [0,None], b1_pos: 2}, default=0)
+            array7_1c = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 1, t_pos: t_slc, p_pos: [0,None], b1_pos: 3}, default=0)
+            array7_2a = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 2, t_pos: t_slc, p_pos: [0,None], b1_pos: 1}, default=0)
+            array7_2b = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 2, t_pos: t_slc, p_pos: [0,None], b1_pos: 2}, default=0)
+            array7_2c = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 2, t_pos: t_slc, p_pos: [0,None], b1_pos: 3}, default=0)
+            array7_3a = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 3, t_pos: t_slc, p_pos: [0,None], b1_pos: 1}, default=0)
+            array7_3b = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 3, t_pos: t_slc, p_pos: [0,None], b1_pos: 2}, default=0)
+            array7_3c = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 3, t_pos: t_slc, p_pos: [0,None], b1_pos: 3}, default=0)
+            array7_4a = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 4, t_pos: t_slc, p_pos: [0,None], b1_pos: 1}, default=0)
+            array7_4b = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 4, t_pos: t_slc, p_pos: [0,None], b1_pos: 2}, default=0)
+            array7_4c = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 4, t_pos: t_slc, p_pos: [0,None], b1_pos: 3}, default=0)
+            array7_5a = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 5, t_pos: t_slc, p_pos: [0,None], b1_pos: 1}, default=0)
+            array7_5b = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 5, t_pos: t_slc, p_pos: [0,None], b1_pos: 2}, default=0)
+            array7_5c = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 5, t_pos: t_slc, p_pos: [0,None], b1_pos: 3}, default=0)
+            array7_6a = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 6, t_pos: t_slc, p_pos: [0,None], b1_pos: 1}, default=0)
+            array7_6b = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 6, t_pos: t_slc, p_pos: [0,None], b1_pos: 2}, default=0)
+            array7_6c = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 6, t_pos: t_slc, p_pos: [0,None], b1_pos: 3}, default=0)
+            array7_7a = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 7, t_pos: t_slc, p_pos: [0,None], b1_pos: 1}, default=0)
+            array7_7b = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 7, t_pos: t_slc, p_pos: [0,None], b1_pos: 2}, default=0)
+            array7_7c = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 7, t_pos: t_slc, p_pos: [0,None], b1_pos: 3}, default=0)
+            array7_8a = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 8, t_pos: t_slc, p_pos: [0,None], b1_pos: 1}, default=0)
+            array7_8b = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 8, t_pos: t_slc, p_pos: [0,None], b1_pos: 2}, default=0)
+            array7_8c = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 8, t_pos: t_slc, p_pos: [0,None], b1_pos: 3}, default=0)
+            array7_9a = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 9, t_pos: t_slc, p_pos: [0,None], b1_pos: 1}, default=0)
+            array7_9b = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 9, t_pos: t_slc, p_pos: [0,None], b1_pos: 2}, default=0)
+            array7_9c = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 9, t_pos: t_slc, p_pos: [0,None], b1_pos: 3}, default=0)
+            array7_10a = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 10, t_pos: t_slc, p_pos: [0,None], b1_pos: 1}, default=0)
+            array7_10b = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 10, t_pos: t_slc, p_pos: [0,None], b1_pos: 2}, default=0)
+            array7_10c = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 10, t_pos: t_slc, p_pos: [0,None], b1_pos: 3}, default=0)
+            array7_13a = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 13, t_pos: t_slc, p_pos: [0,None], b1_pos: 1}, default=0)
+            array7_13b = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 13, t_pos: t_slc, p_pos: [0,None], b1_pos: 2}, default=0)
+            array7_13c = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 13, t_pos: t_slc, p_pos: [0,None], b1_pos: 3}, default=0)
+            arrayA = fun.f_slice(o_mei_solid_tpdams, {t_pos: t_slc, p_pos: [0,None], b1_pos: [1,4]}, default=0).T   # b1 axis (dry, single & twin) used in place of q0
+            arrayB = fun.f_slice(r_md_solid_tpdams, {t_pos: t_slc, p_pos: [0,None], b1_pos: [1,4]}, default=0).T   # b1 axis (dry, single & twin) used in place of q0
+            arrayC = fun.f_slice(nv_tpdams, {t_pos: t_slc, p_pos: [0,None], b1_pos: [1,4]}, default=0).T   # b1 axis (dry, single & twin) used in place of q0
+            arrayD = fun.f_slice(r_ebw_tpdams, {t_pos: t_slc, p_pos: [0,None], b1_pos: [1,4]}, default=0).T   # have used (dry, single & twin) in place of q0
+            arrayE = fun.f_slice(r_wbe_tpdams, {t_pos: t_slc, p_pos: [0,None], b1_pos: [1,4]}, default=0).T   # have used (dry, single & twin) in place of q0
+            arrayF = fun.f_slice(r_fat_tpdams, {t_pos: t_slc, p_pos: [0,None], b1_pos: [1,4]}, default=0).T   # have used (dry, single & twin) in place of q0
+            arrayG = fun.f_slice(r_muscle_tpdams, {t_pos: t_slc, p_pos: [0,None], b1_pos: [1,4]}, default=0).T   # have used (dry, single & twin) in place of q0
+            arrayH = fun.f_slice(r_viscera_tpdams, {t_pos: t_slc, p_pos: [0,None], b1_pos: [1,4]}, default=0).T   # have used (dry, single & twin) in place of q0
+            arrayI = fun.f_slice(r_w_f_tpdams, {t_pos: t_slc, p_pos: [0,None], b1_pos: [1,4]}, default=0).T   # have used (dry, single & twin) in place of q0
+            arrayJ = fun.f_slice(o_cfw_tpdams, {t_pos: t_slc, p_pos: [0,None], b1_pos: [1,4]}, default=0).T   # have used (dry, single & twin) in place of q0
 
             ##calculations for the extra sheets
-            p_slc0 = {p_pos: [0]}
-            array_calc7_3a = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpdams, p_slc0), 0, weight=array7_3a)   #have to slice in case saa_p11 has been implemented
-            array_calc7_3b = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpdams, p_slc0), 0, weight=array7_3b)
-            array_calc7_3c = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpdams, p_slc0), 0, weight=array7_3c)
-            array_calc7_4a = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpdams, p_slc0), 1, weight=array7_4a)
-            array_calc7_4b = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpdams, p_slc0), 1, weight=array7_4b)
-            array_calc7_4c = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpdams, p_slc0), 1, weight=array7_4c)
-            array_calc7_5a = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpdams, p_slc0), 2, weight=array7_5a)
-            array_calc7_5b = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpdams, p_slc0), 2, weight=array7_5b)
-            array_calc7_5c = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpdams, p_slc0), 2, weight=array7_5c)
+            p_slc0 = {0: [0,None], p_pos: 0}    #all of the c axis and p[0]
+            array_calc7_3a = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpdams, p_slc0, default=0), 0, weight=array7_3a)   #have to slice in case saa_p11 has been implemented
+            array_calc7_3b = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpdams, p_slc0, default=0), 0, weight=array7_3b)
+            array_calc7_3c = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpdams, p_slc0, default=0), 0, weight=array7_3c)
+            array_calc7_4a = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpdams, p_slc0, default=0), 1, weight=array7_4a)
+            array_calc7_4b = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpdams, p_slc0, default=0), 1, weight=array7_4b)
+            array_calc7_4c = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpdams, p_slc0, default=0), 1, weight=array7_4c)
+            array_calc7_5a = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpdams, p_slc0, default=0), 2, weight=array7_5a)
+            array_calc7_5b = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpdams, p_slc0, default=0), 2, weight=array7_5b)
+            array_calc7_5c = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpdams, p_slc0, default=0), 2, weight=array7_5c)
             ###retained energy = df + dm + dv + dc + dw + dl
             array_calc7_6a = array_calc7_3a + array_calc7_4a + array_calc7_5a + array7_8a + array7_10a + array7_13a
             array_calc7_6b = array_calc7_3b + array_calc7_4b + array_calc7_5b + array7_8b + array7_10b + array7_13b
             array_calc7_6c = array_calc7_3c + array_calc7_4c + array_calc7_5c + array7_8c + array7_10c + array7_13c
-            array_calcF = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpdams, p_slc0), 0, weight=arrayF)
-            array_calcG = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpdams, p_slc0), 1, weight=arrayG)
-            array_calcH = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpdams, p_slc0), 2, weight=arrayH)
+            array_calcF = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpdams, p_slc0, default=0), 0, weight=arrayF)
+            array_calcG = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpdams, p_slc0, default=0), 1, weight=arrayG)
+            array_calcH = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpdams, p_slc0, default=0), 2, weight=arrayH)
 
-            ## Assign Offspring values to the array variables
-            # array7_0a = r_compare7_q0q2tpoffs[:, 0, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
-            # array7_0b = r_compare7_q0q2tpoffs[:, 0, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
-            # array7_0c = r_compare7_q0q2tpoffs[:, 0, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
-            # array7_1a = r_compare7_q0q2tpoffs[:, 1, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
-            # array7_1b = r_compare7_q0q2tpoffs[:, 1, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
-            # array7_1c = r_compare7_q0q2tpoffs[:, 1, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
-            # array7_2a = r_compare7_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
-            # array7_2b = r_compare7_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
-            # array7_2c = r_compare7_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
-            # array7_3a = r_compare7_q0q2tpoffs[:, 3, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
-            # array7_3b = r_compare7_q0q2tpoffs[:, 3, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
-            # array7_3c = r_compare7_q0q2tpoffs[:, 3, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
-            # array7_4a = r_compare7_q0q2tpoffs[:, 4, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
-            # array7_4b = r_compare7_q0q2tpoffs[:, 4, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
-            # array7_4c = r_compare7_q0q2tpoffs[:, 4, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
-            # array7_5a = r_compare7_q0q2tpoffs[:, 5, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
-            # array7_5b = r_compare7_q0q2tpoffs[:, 5, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
-            # array7_5c = r_compare7_q0q2tpoffs[:, 5, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
-            # array7_6a = r_compare7_q0q2tpoffs[:, 6, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
-            # array7_6b = r_compare7_q0q2tpoffs[:, 6, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
-            # array7_6c = r_compare7_q0q2tpoffs[:, 6, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
-            # array7_7a = r_compare9_q0q2tpoffs[:, 7, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
-            # array7_7b = r_compare9_q0q2tpoffs[:, 7, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
-            # array7_7c = r_compare9_q0q2tpoffs[:, 7, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
-            # array7_8a = r_compare9_q0q2tpoffs[:, 8, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
-            # array7_8b = r_compare9_q0q2tpoffs[:, 8, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
-            # array7_8c = r_compare9_q0q2tpoffs[:, 8, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
-            # array7_9a = r_compare17_q0q2tpoffs[:, 9, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
-            # array7_9b = r_compare17_q0q2tpoffs[:, 9, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
-            # array7_9c = r_compare17_q0q2tpoffs[:, 9, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
-            # array7_10a = r_compare18_q0q2tpoffs[:, 10, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
-            # array7_10b = r_compare18_q0q2tpoffs[:, 10, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
-            # array7_10c = r_compare18_q0q2tpoffs[:, 10, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
-            # array7_13a = r_compare18_q0q2tpoffs[:, 13, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
-            # array7_13b = r_compare18_q0q2tpoffs[:, 13, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
-            # array7_13c = r_compare18_q0q2tpoffs[:, 13, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
-            # arrayA = o_mei_solid_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # b1 axis (single, twin & triplet) used in place of q0
-            # arrayB = r_md_solid_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # b1 axis (single, twin & triplet) used in place of q0
-            # arrayC = nv_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # b1 axis (single, twin & triplet) used in place of q0
-            # arrayD = r_ebw_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # have used (single, twin & triplet) in place of q0
-            # arrayE = r_wbe_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # have used (single, twin & triplet) in place of q0
-            # arrayF = r_fat_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # have used (single, twin & triplet) in place of q0
-            # arrayG = r_muscle_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # have used (single, twin & triplet) in place of q0
-            # arrayH = r_viscera_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # have used (single, twin & triplet) in place of q0
-            # arrayI = r_w_f_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # have used (single, twin & triplet) in place of q0
-            # arrayJ = o_cfw_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # have used (single, twin & triplet) in place of q0
+            # ## Assign Offspring values to the array variables
+            # t_slc = 0   #Set value for the t slice to 2 if generating with a t axis
+            # array7_0a = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 0, t_pos: t_slc, p_pos: [0,None], b0_pos: 0, x_pos: 1}, default=0)
+            # array7_0b = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 0, t_pos: t_slc, p_pos: [0,None], b0_pos: 1, x_pos: 1}, default=0)
+            # array7_0c = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 0, t_pos: t_slc, p_pos: [0,None], b0_pos: 2, x_pos: 1}, default=0)
+            # array7_1a = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 1, t_pos: t_slc, p_pos: [0,None], b0_pos: 0, x_pos: 1}, default=0)
+            # array7_1b = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 1, t_pos: t_slc, p_pos: [0,None], b0_pos: 1, x_pos: 1}, default=0)
+            # array7_1c = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 1, t_pos: t_slc, p_pos: [0,None], b0_pos: 2, x_pos: 1}, default=0)
+            # array7_2a = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 2, t_pos: t_slc, p_pos: [0,None], b0_pos: 0, x_pos: 1}, default=0)
+            # array7_2b = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 2, t_pos: t_slc, p_pos: [0,None], b0_pos: 1, x_pos: 1}, default=0)
+            # array7_2c = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 2, t_pos: t_slc, p_pos: [0,None], b0_pos: 2, x_pos: 1}, default=0)
+            # array7_3a = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 3, t_pos: t_slc, p_pos: [0,None], b0_pos: 0, x_pos: 1}, default=0)
+            # array7_3b = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 3, t_pos: t_slc, p_pos: [0,None], b0_pos: 1, x_pos: 1}, default=0)
+            # array7_3c = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 3, t_pos: t_slc, p_pos: [0,None], b0_pos: 2, x_pos: 1}, default=0)
+            # array7_4a = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 4, t_pos: t_slc, p_pos: [0,None], b0_pos: 0, x_pos: 1}, default=0)
+            # array7_4b = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 4, t_pos: t_slc, p_pos: [0,None], b0_pos: 1, x_pos: 1}, default=0)
+            # array7_4c = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 4, t_pos: t_slc, p_pos: [0,None], b0_pos: 2, x_pos: 1}, default=0)
+            # array7_5a = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 5, t_pos: t_slc, p_pos: [0,None], b0_pos: 0, x_pos: 1}, default=0)
+            # array7_5b = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 5, t_pos: t_slc, p_pos: [0,None], b0_pos: 1, x_pos: 1}, default=0)
+            # array7_5c = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 5, t_pos: t_slc, p_pos: [0,None], b0_pos: 2, x_pos: 1}, default=0)
+            # array7_6a = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 6, t_pos: t_slc, p_pos: [0,None], b0_pos: 0, x_pos: 1}, default=0)
+            # array7_6b = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 6, t_pos: t_slc, p_pos: [0,None], b0_pos: 1, x_pos: 1}, default=0)
+            # array7_6c = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 6, t_pos: t_slc, p_pos: [0,None], b0_pos: 2, x_pos: 1}, default=0)
+            # array7_7a = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 7, t_pos: t_slc, p_pos: [0,None], b0_pos: 0, x_pos: 1}, default=0)
+            # array7_7b = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 7, t_pos: t_slc, p_pos: [0,None], b0_pos: 1, x_pos: 1}, default=0)
+            # array7_7c = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 7, t_pos: t_slc, p_pos: [0,None], b0_pos: 2, x_pos: 1}, default=0)
+            # array7_8a = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 8, t_pos: t_slc, p_pos: [0,None], b0_pos: 0, x_pos: 1}, default=0)
+            # array7_8b = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 8, t_pos: t_slc, p_pos: [0,None], b0_pos: 1, x_pos: 1}, default=0)
+            # array7_8c = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 8, t_pos: t_slc, p_pos: [0,None], b0_pos: 2, x_pos: 1}, default=0)
+            # array7_9a = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 9, t_pos: t_slc, p_pos: [0,None], b0_pos: 0, x_pos: 1}, default=0)
+            # array7_9b = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 9, t_pos: t_slc, p_pos: [0,None], b0_pos: 1, x_pos: 1}, default=0)
+            # array7_9c = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 9, t_pos: t_slc, p_pos: [0,None], b0_pos: 2, x_pos: 1}, default=0)
+            # array7_10a = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 10, t_pos: t_slc, p_pos: [0,None], b0_pos: 0, x_pos: 1}, default=0)
+            # array7_10b = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 10, t_pos: t_slc, p_pos: [0,None], b0_pos: 1, x_pos: 1}, default=0)
+            # array7_10c = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 10, t_pos: t_slc, p_pos: [0,None], b0_pos: 2, x_pos: 1}, default=0)
+            # array7_13a = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 13, t_pos: t_slc, p_pos: [0,None], b0_pos: 0, x_pos: 1}, default=0)
+            # array7_13b = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 13, t_pos: t_slc, p_pos: [0,None], b0_pos: 1, x_pos: 1}, default=0)
+            # array7_13c = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 13, t_pos: t_slc, p_pos: [0,None], b0_pos: 2, x_pos: 1}, default=0)
+            # arrayA = fun.f_slice(o_mei_solid_tpoffs, {t_pos: t_slc, p_pos: [0,None], b0_pos: [0,3], x_pos: 1}, default=0).T   # b0 axis (single, twin & triplet) used in place of q0
+            # arrayB = fun.f_slice(r_md_solid_tpoffs, {t_pos: t_slc, p_pos: [0,None], b0_pos: [0,3], x_pos: 1}, default=0).T   # b0 axis (single, twin & triplet) used in place of q0
+            # arrayC = fun.f_slice(nv_tpoffs, {t_pos: t_slc, p_pos: [0,None], b0_pos: [0,3], x_pos: 1}, default=0).T   # b0 axis (single, twin & triplet) used in place of q0
+            # arrayD = fun.f_slice(r_ebw_tpoffs, {t_pos: t_slc, p_pos: [0,None], b0_pos: [0,3], x_pos: 1}, default=0).T   # b0 axis (single, twin & triplet) used in place of q0
+            # arrayE = fun.f_slice(r_wbe_tpoffs, {t_pos: t_slc, p_pos: [0,None], b0_pos: [0,3], x_pos: 1}, default=0).T   # b0 axis (single, twin & triplet) used in place of q0
+            # arrayF = fun.f_slice(r_fat_tpoffs, {t_pos: t_slc, p_pos: [0,None], b0_pos: [0,3], x_pos: 1}, default=0).T   # b0 axis (single, twin & triplet) used in place of q0
+            # arrayG = fun.f_slice(r_muscle_tpoffs, {t_pos: t_slc, p_pos: [0,None], b0_pos: [0,3], x_pos: 1}, default=0).T   # b0 axis (single, twin & triplet) used in place of q0
+            # arrayH = fun.f_slice(r_viscera_tpoffs, {t_pos: t_slc, p_pos: [0,None], b0_pos: [0,3], x_pos: 1}, default=0).T   # b0 axis (single, twin & triplet) used in place of q0
+            # arrayI = fun.f_slice(r_w_f_tpoffs, {t_pos: t_slc, p_pos: [0,None], b0_pos: [0,3], x_pos: 1}, default=0).T   # b0 axis (single, twin & triplet) used in place of q0
+            # arrayJ = fun.f_slice(o_cfw_tpoffs, {t_pos: t_slc, p_pos: [0,None], b0_pos: [0,3], x_pos: 1}, default=0).T   # b0 axis (single, twin & triplet) used in place of q0
             #
             # ##calculations for the extra sheets
-            # array_calc7_3a = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpoffs, p_slc0), 0, weight=array7_3a)   #have to slice in case saa_p11 has been implemented
-            # array_calc7_3b = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpoffs, p_slc0), 0, weight=array7_3b)
-            # array_calc7_3c = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpoffs, p_slc0), 0, weight=array7_3c)
-            # array_calc7_4a = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpoffs, p_slc0), 1, weight=array7_4a)
-            # array_calc7_4b = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpoffs, p_slc0), 1, weight=array7_4b)
-            # array_calc7_4c = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpoffs, p_slc0), 1, weight=array7_4c)
-            # array_calc7_5a = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpoffs, p_slc0), 2, weight=array7_5a)
-            # array_calc7_5b = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpoffs, p_slc0), 2, weight=array7_5b)
-            # array_calc7_5c = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpoffs, p_slc0), 2, weight=array7_5c)
+            # p_slc0 = {0: [0, None], p_pos: 0}    #all of the c axis and p[0]
+            # array_calc7_3a = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpoffs, p_slc0, default=0), 0, weight=array7_3a)   #have to slice in case saa_p11 has been implemented
+            # array_calc7_3b = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpoffs, p_slc0, default=0), 0, weight=array7_3b)
+            # array_calc7_3c = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpoffs, p_slc0, default=0), 0, weight=array7_3c)
+            # array_calc7_4a = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpoffs, p_slc0, default=0), 1, weight=array7_4a)
+            # array_calc7_4b = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpoffs, p_slc0, default=0), 1, weight=array7_4b)
+            # array_calc7_4c = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpoffs, p_slc0, default=0), 1, weight=array7_4c)
+            # array_calc7_5a = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpoffs, p_slc0, default=0), 2, weight=array7_5a)
+            # array_calc7_5b = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpoffs, p_slc0, default=0), 2, weight=array7_5b)
+            # array_calc7_5c = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpoffs, p_slc0, default=0), 2, weight=array7_5c)
             # ###retained energy = df + dm + dv + dc + dw + dl
             # array_calc7_6a = array_calc7_3a + array_calc7_4a + array_calc7_5a + array7_8a + array7_10a + array7_13a
             # array_calc7_6b = array_calc7_3b + array_calc7_4b + array_calc7_5b + array7_8b + array7_10b + array7_13b
             # array_calc7_6c = array_calc7_3c + array_calc7_4c + array_calc7_5c + array7_8c + array7_10c + array7_13c
-            # array_calcF = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpoffs, p_slc0), 0, weight=arrayF)
-            # array_calcG = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpoffs, p_slc0), 1, weight=arrayG)
-            # array_calcH = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpoffs, p_slc0), 2, weight=arrayH)
+            # array_calcF = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpoffs, p_slc0, default=0), 0, weight=arrayF)
+            # array_calcG = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpoffs, p_slc0, default=0), 1, weight=arrayG)
+            # array_calcH = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpoffs, p_slc0, default=0), 2, weight=arrayH)
 
 
         except: #do not write the trial if any of the variables don't exist
@@ -12705,6 +12709,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             df_calcG = rfun.f_numpy2df(array_calcG, keys_bp, [1], [0])
             df_calcH = rfun.f_numpy2df(array_calcH, keys_bp, [1], [0])
 
+            ##Offspring arrays
             # df7_0a = rfun.f_numpy2df(array7_0a, keys_q0p3, [1], [0])
             # df7_0b = rfun.f_numpy2df(array7_0b, keys_q0p3, [1], [0])
             # df7_0c = rfun.f_numpy2df(array7_0c, keys_q0p3, [1], [0])
