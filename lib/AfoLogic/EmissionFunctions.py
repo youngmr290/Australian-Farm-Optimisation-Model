@@ -290,6 +290,7 @@ def f_stock_n2o_animal_nir(cl, d_cfw, relsize, srw, ebg, mp=0, mc=0):
     ###milk component - solids component is accounted for in the animal emission function because milk consumed is calculated in sgen.
     NF = (0.3 * (cpi_milk * (1 - ((milk_dmd + 10) / 100))) + 0.08 * cpi_milk) / 6.25
     ###Nitrogen retained in the body(NR): NR = {(0.045 x MP) + (WP x 0.84) + {[(212 - 4 x {[(EBG x 1000) / (4 x SRW ^ 0.75)] - 1}) - (140 - 4 x {[(EBG x 1000) / (4 x SRW ^ 0.75)] - 1}) / {1 + exp(-6 x(Z - 0.4))}] x EBG} / 1000 / 6.25
+    #todo this could be improved by passing the change in protein in the body rather than estimating it using the CSIRO protein gain equation - then changes in genetic partitioning will be reflected in the emissions
     NR = ((0.045 * MP) + (WP * 0.84) + (((212 - 4 * (((EBG * 1000) / (4 * SRW ** 0.75)) - 1)) - (140 - 4 * (((EBG * 1000) / (4 * SRW ** 0.75)) - 1)) / (1 + np.exp(-6 * (Z - 0.4)))) * EBG) / 1000) / 6.25
     ###N excreted in urine (U): U = (CPI / 6.25) - NR - F
     NU = (cpi_milk / 6.25) - NR - NF #animal component
