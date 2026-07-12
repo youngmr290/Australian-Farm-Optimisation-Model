@@ -292,6 +292,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         uinp.parameters['i_cw_c2'][idx] = fun.f_sa(uinp.parameters['i_cw_c2'][idx], sen.saa['yfd_scalar'], 2)
         idx = fun.f_slice_idx(uinp.parameters['i_cl_c2'], {0: [0]})
         uinp.parameters['i_cl_c2'][idx] = fun.f_sa(uinp.parameters['i_cl_c2'][idx], sen.saa['milk_yield'], 2)
+        sen.sam['pi_yatf'] = fun.f_sa(sen.sam['pi_yatf'], sen.saa['milk_yield'], 2)  #increase yatf PI of pasture as well as milk intake
         idx = fun.f_slice_idx(uinp.parameters['i_cn_c2'], {0: [1]})
         uinp.parameters['i_cn_c2'][idx] = fun.f_sa(uinp.parameters['i_cn_c2'][idx], sen.saa['growth_constant'], 2)
 
@@ -2783,12 +2784,13 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                         * lmm_pa1e1b1nwzida0e0b0xyg1p0 ** cl_cpdams[3, ..., na]
                                         * np.exp(cl_cpdams[3, ..., na] * (1 - lmm_pa1e1b1nwzida0e0b0xyg1p0))
                                                 , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg2p0, axis = -1)
-    ##Suckling volume pattern. Includes genotype scalar for milk yield (cl[0]) and SA for potential intake of the young at foot.
+    ##Suckling volume pattern. Includes genotype scalar for milk yield (cl[0]) but excludes SA for potential intake of the young at foot
+    ### Separating gives flexibility for inclusion of PI of pasture in the Wwt calibration by adjusting sam['pi_yatf'].
     ## Average for the days that the dam is lactating
     mp2_age_y_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(cl_cpyatf[0, ..., na] * nyatf_b1nwzida0e0b0xyg[...,na]
                                         * cl_cpdams[6, ..., na] * (cl_cpdams[12, ..., na] + cl_cpdams[13, ..., na]
                                         * np.exp(-cl_cpdams[14, ..., na] * age_p0_pa1e1b1nwzida0e0b0xyg2p0))
-                                                , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg2p0, axis = -1) * sen.sam['pi_yatf']
+                                                , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg2p0, axis = -1)   # * sen.sam['pi_yatf']
     ##Pattern of conception efficiency (doy). Different methods are used to represent seasonality in the 3 conception functions
     ### cpg_doy_cs is for the GrazPlan equations to predict the seasonal effect on proportion greater than conception rate - active b1 axis
     cpg_doy_cs_pa1e1b1nwzida0e0b0xyg1 = np.nanmean(np.maximum(0,1 - cb1_cpdams[1, ..., na]
