@@ -895,12 +895,12 @@ def f1_efficiency_mu(ck, md_solid, km):
 
 def f1_weight_energy_conversion(cg, option, weight=None, energy=None):
     '''
-
+    Convert between weight and energy content of a energy component
     :param cg: Numpy array, sim parameters - weight change.
     :param option: 0 = fat, 1 = muscle, 2 = viscera, 3 = wool, 4 = conceptus, 5 = milk.
     :param weight: Numpy array of float, weight of component (fresh weight).
-    :param energy:
-    :return: Energy content of the component.
+    :param energy: Numpy array of float, energy content of component (MJ).
+    :return: Energy content of the component if passed weight or weight if passed energy.
     '''
     ## select the relevant coefficients for the component
     if option == 0:  #Fat
