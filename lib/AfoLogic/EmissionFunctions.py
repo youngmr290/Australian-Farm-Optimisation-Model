@@ -228,7 +228,7 @@ def f_stock_n2o_feed_nir(intake, dmd, cp):
     return n2o_manure + n2o_atmospheric_deposition + n2o_leach
 
 
-def f_stock_n2o_animal_nir(cl, d_cfw, relsize, srw, ebg, mp=0, mc=0):
+def f_stock_n2o_animal_nir(cl, cg, d_cfw, d_muscle, d_viscera, mp=0, mc=0):
     '''
     Calculates the component of livestock nitrous oxide emissions linked to animal activities, using the methods documented
     in the National Greenhouse Gas Inventory Report.
@@ -241,13 +241,13 @@ def f_stock_n2o_animal_nir(cl, d_cfw, relsize, srw, ebg, mp=0, mc=0):
            nitrogen in the nitrogen cycle and therefore increase nitrogen deposition which produces some n2o when interacts with the earth.
         3. runoff and leaching of nitrogen in dung and urine.
 
-    The amount of emissions are effected by both livestock factors (e.g. age, relative size, EBG) and
+    The amount of emissions are affected by both livestock factors (e.g. body protein gain) and
     feed factors (e.g. quality, protein content, intake). Thus, in AFO the NIR equations are split
     between livestock and feed activities for improve accuracy.
 
     The NIR equations for livestock nitrous oxide emissions are as follows:
 
-    - Nitrogen retained in the body(NR): NR = {(0.045 x MP) + (WP x 0.84) + {[(212 - 4 x {[(EBG x 1000) / (4 x SRW ^ 0.75)] - 1}) - (140 - 4 x {[(EBG x 1000) / (4 x SRW ^ 0.75)] - 1}) / {1 + exp(-6 x(Z - 0.4))}] x EBG} / 1000 / 6.25
+    - Nitrogen retained in the body(NR): NR = (milk protein + wool protein + muscle protein change + viscera protein change) / 6.25
     - Nitrogen excreted in faeces (F): F = {0.3 x (CPI x (1 - [(DMD + 10) / 100])) + 0.105 x (ME x I x 0.008) + 0.08 x (0.045 x MC) + 0.0152 x I} / 6.25
     - Nitrogen excreted in urine (U): U = (CPI / 6.25) - NR - F
     - Nitrous oxide production from animal waste (N): N = ((F x EFf x Cg) + (U x EFu x Cg))
@@ -256,12 +256,12 @@ def f_stock_n2o_animal_nir(cl, d_cfw, relsize, srw, ebg, mp=0, mc=0):
 
     Note: Freer 2007: Crude protein, being total N × 6.25
 
+    :param cg: growth parameters, including the dry-matter fractions of muscle and viscera
     :param d_cfw: daily growth of clean fleece
+    :param d_muscle: daily change in fresh muscle weight
+    :param d_viscera: daily change in fresh viscera weight
     :param mp: milk production i.e mp2_dams
     :param mc: milk consumption i.e mp2_yatf
-    :param relsize: relative size of animal
-    :param srw: standard reference weight of animal
-    :param ebg: daily empty body gain
     :return: kilograms of n2o emissions per day linked to the animal activity
     '''
     ##inputs
@@ -279,9 +279,7 @@ def f_stock_n2o_animal_nir(cl, d_cfw, relsize, srw, ebg, mp=0, mc=0):
     MP = mp/me_milk #milk production kg/d - need to convert mp2 from Mj/d to kg by dividing by ME
     MC = mc/me_milk#milk intake - not the same as MP because of multiples - need to convert mp2 from Mj/d to kg by dividing by ME
     WP = d_cfw #clean wool production per day
-    Z = relsize
-    SRW = srw
-    EBG = ebg
+    body_protein_gain = d_muscle * cg[27, ...] + d_viscera * cg[28, ...]
 
     ##nitrogen from animal waste
     ###crude protein of milk intake
@@ -289,9 +287,8 @@ def f_stock_n2o_animal_nir(cl, d_cfw, relsize, srw, ebg, mp=0, mc=0):
     ###Nitrogen excreted in faeces (F): F = {0.3 x (CPI x (1 - [(DMD + 10) / 100])) + 0.105 x (ME x I x 0.008) + 0.08 x (0.045 x MC) + 0.0152 x I} / 6.25
     ###milk component - solids component is accounted for in the animal emission function because milk consumed is calculated in sgen.
     NF = (0.3 * (cpi_milk * (1 - ((milk_dmd + 10) / 100))) + 0.08 * cpi_milk) / 6.25
-    ###Nitrogen retained in the body(NR): NR = {(0.045 x MP) + (WP x 0.84) + {[(212 - 4 x {[(EBG x 1000) / (4 x SRW ^ 0.75)] - 1}) - (140 - 4 x {[(EBG x 1000) / (4 x SRW ^ 0.75)] - 1}) / {1 + exp(-6 x(Z - 0.4))}] x EBG} / 1000 / 6.25
-    #todo this could be improved by passing the change in protein in the body rather than estimating it using the CSIRO protein gain equation - then changes in genetic partitioning will be reflected in the emissions
-    NR = ((0.045 * MP) + (WP * 0.84) + (((212 - 4 * (((EBG * 1000) / (4 * SRW ** 0.75)) - 1)) - (140 - 4 * (((EBG * 1000) / (4 * SRW ** 0.75)) - 1)) / (1 + np.exp(-6 * (Z - 0.4)))) * EBG) / 1000) / 6.25
+    ###Nitrogen retained in milk, wool and the dry matter of muscle and viscera
+    NR = ((0.045 * MP) + (WP * 0.84) + body_protein_gain) / 6.25
     ###N excreted in urine (U): U = (CPI / 6.25) - NR - F
     NU = (cpi_milk / 6.25) - NR - NF #animal component
 

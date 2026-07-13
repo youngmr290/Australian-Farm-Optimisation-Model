@@ -5943,7 +5943,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 ###sire
                 eqn_used = (eqn_used_g0_q1p[eqn_group, p:p+1] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1,...] >0):
-                    temp0 = efun.f_stock_n2o_animal_nir(cl_cpsire, d_cfw_sire, relsize_start_sire, srw_pa1e1b1nwzida0e0b0xyg0, ebg_sire, mp=0, mc=0)
+                    temp0 = efun.f_stock_n2o_animal_nir(cl_cpsire, cg_cpsire, d_cfw_sire, d_muscle_sire, d_viscera_sire, mp=0, mc=0)
                     if eqn_used:
                         n2o_animal_sire = temp0
                     if eqn_compare:
@@ -5951,7 +5951,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 ###dams
                 eqn_used = (eqn_used_g1_q1p[eqn_group, p:p+1] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
-                    temp0 = efun.f_stock_n2o_animal_nir(cl_cpdams, d_cfw_dams, relsize_start_dams, srw_pa1e1b1nwzida0e0b0xyg1, ebg_dams, mp=mp2_dams)
+                    temp0 = efun.f_stock_n2o_animal_nir(cl_cpdams, cg_cpdams, d_cfw_dams, d_muscle_dams, d_viscera_dams, mp=mp2_dams)
                     if eqn_used:
                         n2o_animal_dams = temp0
                     if eqn_compare:
@@ -5959,7 +5959,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 ###yatf
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p:p+1] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...] >0):
-                    temp0 = efun.f_stock_n2o_animal_nir(cl_cpyatf, d_cfw_yatf, relsize_start_yatf, srw_pa1e1b1nwzida0e0b0xyg2, ebg_yatf, mc=mp2_yatf)
+                    temp0 = efun.f_stock_n2o_animal_nir(cl_cpyatf, cg_cpyatf, d_cfw_yatf, d_muscle_yatf, d_viscera_yatf, mc=mp2_yatf)
                     if eqn_used:
                         n2o_animal_yatf = temp0
                     if eqn_compare:
@@ -5967,7 +5967,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 ###offs
                 eqn_used = (eqn_used_g3_q1p[eqn_group, p:p+1] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1,...] >0):
-                    temp0 = efun.f_stock_n2o_animal_nir(cl_cpoffs, d_cfw_offs, relsize_start_offs, srw_pa1e1b1nwzida0e0b0xyg3, ebg_offs)
+                    temp0 = efun.f_stock_n2o_animal_nir(cl_cpoffs, cg_cpoffs, d_cfw_offs, d_muscle_offs, d_viscera_offs)
                     if eqn_used:
                         n2o_animal_offs = temp0
                     if eqn_compare:
