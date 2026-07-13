@@ -15,7 +15,7 @@ Variable v_phase_area
    ('q0', 's0', 'zm0', 'typ', 'YYBNWb', 'lmu3') 300.0000
    ('q0', 's0', 'zm0', 'typ', 'YYBNWb', 'lmu4') 232.9596
    ('q0', 's0', 'zm0', 'typ', 'YYNWBl', 'lmu4') 0.3737
-   ('q0', 's0', 'zm0', 'typ', 'YYWBLw', 'lmu4') 0.3737
+   ('q0', 's0', 'zm0', 'typ', 'YYWBL1w', 'lmu4') 0.3737
    ('q0', 's0', 'zm0', 'typ', 'YYBLWb', 'lmu4') 0.3737
    ('q0', 's0', 'zm0', 'typ', 'YYLWBrd', 'lmu4') 0.3737
    ('q0', 's0', 'zm0', 'typ', 'UUUNWb', 'lmu1') 12.5000
@@ -48,7 +48,7 @@ Variable v_phase_change_increase
    ('q0', 's0', 'zm0', 'typ', 'YYBNWb', 'lmu3') 300.0000
    ('q0', 's0', 'zm0', 'typ', 'YYBNWb', 'lmu4') 232.9596
    ('q0', 's0', 'zm0', 'typ', 'YYNWBl', 'lmu4') 0.3737
-   ('q0', 's0', 'zm0', 'typ', 'YYWBLw', 'lmu4') 0.3737
+   ('q0', 's0', 'zm0', 'typ', 'YYWBL1w', 'lmu4') 0.3737
    ('q0', 's0', 'zm0', 'typ', 'YYBLWb', 'lmu4') 0.3737
    ('q0', 's0', 'zm0', 'typ', 'YYLWBrd', 'lmu4') 0.3737
    ('q0', 's0', 'zm0', 'typ', 'UUUNWb', 'lmu1') 12.5000
