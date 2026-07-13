@@ -2340,10 +2340,10 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     ##wool growth efficiency
     ###wge is sfw divided by srw of a ewe of the given genotype. Scales the growth per unit intake to allow for the expected change in intake due to SRW
     ###Use SRW of the ewe so that males have same efficiency as females and hence grow more wool due to higher intake.
-    wge_p_pa1e1b1nwzida0e0b0xyg0 = sfw_p_pa1e1b1nwzida0e0b0xyg0 / srw_female_p_pa1e1b1nwzida0e0b0xyg0
-    wge_p_pa1e1b1nwzida0e0b0xyg1 = sfw_p_pa1e1b1nwzida0e0b0xyg1 / srw_female_p_pa1e1b1nwzida0e0b0xyg1
-    wge_p_pa1e1b1nwzida0e0b0xyg2 = sfw_p_pa1e1b1nwzida0e0b0xyg2 / srw_female_p_pa1e1b1nwzida0e0b0xyg2
-    wge_p_pa1e1b1nwzida0e0b0xyg3 = sfw_p_pa1e1b1nwzida0e0b0xyg3 / srw_female_p_pa1e1b1nwzida0e0b0xyg3
+    wge_p_pa1e1b1nwzida0e0b0xyg0 = sfw_p_pa1e1b1nwzida0e0b0xyg0 / (srw_female_p_pa1e1b1nwzida0e0b0xyg0 * sen.sam['random'])
+    wge_p_pa1e1b1nwzida0e0b0xyg1 = sfw_p_pa1e1b1nwzida0e0b0xyg1 / (srw_female_p_pa1e1b1nwzida0e0b0xyg1 * sen.sam['random'])
+    wge_p_pa1e1b1nwzida0e0b0xyg2 = sfw_p_pa1e1b1nwzida0e0b0xyg2 / (srw_female_p_pa1e1b1nwzida0e0b0xyg2 * sen.sam['random'])
+    wge_p_pa1e1b1nwzida0e0b0xyg3 = sfw_p_pa1e1b1nwzida0e0b0xyg3 / (srw_female_p_pa1e1b1nwzida0e0b0xyg3 * sen.sam['random'])
 
     ##Legume impact on efficiency
     lgf_eff_pa1e1b1nwzida0e0b0xyg0 = 1 + ck_cpsire[14,...] * legume_pa1e1b1nwzida0e0b0xyg
