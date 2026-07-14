@@ -1067,7 +1067,7 @@ def f_energy_mu(cx, cm, lw, lean, mr_age, mei, km, i_steepness, density, foo, co
     bmei = 1 - km
     hp_mei = bmei * mei
     ##Equivalent of meme from CSIRO feeding standards. Estimate of MEI for a non-reproducing animals when RE==0
-    meme_cs = (emetab + egraze) / km + omer
+    meme_cs = (emetab + egraze + omer) / km
     ##Calculate hp_maint for comparison with the new feeding standards which include HP for MEI above maintenance
     return neme, hp_mei, meme_cs
 
@@ -1707,7 +1707,7 @@ def f_heatloss_nfs(cc, ffcfw_start, rc_start, sl_start, temp_ave, temp_max, temp
     return total_heat_loss_m0p1
 
 
-def f_lwc_cs(cg, rc_start, mei, mem, new, zf1, zf2, kg, kw, rev_trait_value, nec = 0, kc = 1, nel = 0, kl = 1
+def f_lwc_cs(cg, rc_start, mei, mem, new, zf1, zf2, kg, kw, age, rev_trait_value, nec = 0, kc = 1, nel = 0, kl = 1
              , gest_propn = 0, lact_propn = 0, days_per_period=7, b_mask = 1):
     ##Note: The energy components of rev_trait_value are not active in this function. Have to be using f_lwc_nfs
 
@@ -1721,13 +1721,15 @@ def f_lwc_cs(cg, rc_start, mei, mem, new, zf1, zf2, kg, kw, rev_trait_value, nec
         warnings.warn(f"Negative maintenance detected: min={np.nanmin(maintenance):.6g}", RuntimeWarning)
         maintenance = np.maximum(0, maintenance)
     ##Level of feeding (maint = 0). Note: level is calculated elsewhere (differently) for use in Blaxter & Clapperton equations
-    level = (mei / maintenance) - 1
+    level = fun.f_divide(mei, maintenance) - 1
     ##Energy intake that is surplus to maintenance
     surplus_energy = mei - maintenance
     ##Net energy gain (based on ME) Note: will be negative if losing weight
     neg = kg * surplus_energy
     ##Energy Value of gain (MJ/kg EBW)
-    evg = cg[8, ...] - zf1 * (cg[9, ...] - cg[10, ...] * (level - 1)) + zf2 * cg[11, ...] * (rc_start - 1)
+    cg8 = f1_rev_sa(cg[8, ...], sen.saa['rev_evg'], age, sa_type=2)
+    cg9 = f1_rev_sa(cg[9, ...], sen.saa['rev_evg'], age, sa_type=2)
+    evg = cg8 - zf1 * (cg9 - cg[10, ...] * (level - 1)) + zf2 * cg[11, ...] * (rc_start - 1)
     ## Scale based on zf2. zf2 increases from 0 to 1 as z increases from 0.9 to 0.97
     evg = fun.f_sa(evg, sen.sap['evg'], 1)   # * zf2, 1)
     # ##Process the EVG REV: if EVG is not the target trait overwrite trait value with value from the dictionary or update the REV dictionary

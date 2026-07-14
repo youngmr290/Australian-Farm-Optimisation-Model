@@ -4881,7 +4881,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     eqn_used = (eqn_used_g0_q1p[eqn_group, p:p+1] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1,...] >0):
                         temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_lwc_cs(cg_cpsire, rc_start_sire, mei_sire
-                                , mem_sire, new_sire, zf1_sire, zf2_sire, kg_sire, kw_cs_pa1e1b1nwzida0e0b0xyg0, rev_trait_values['sire'][p])
+                                , mem_sire, new_sire, zf1_sire, zf2_sire, kg_sire, kw_cs_pa1e1b1nwzida0e0b0xyg0
+                                , age_pa1e1b1nwzida0e0b0xyg0[p:p+1], rev_trait_values['sire'][p])
                         if eqn_used:
                             ebg_sire = temp0
                             evg_sire = temp1
@@ -4899,7 +4900,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     eqn_used = (eqn_used_g1_q1p[eqn_group, p:p+1] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
                         temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_lwc_cs(cg_cpdams, rc_start_dams, mei_dams
-                                , mem_dams, new_dams, zf1_dams, zf2_dams, kg_dams, kw_cs_pa1e1b1nwzida0e0b0xyg1, rev_trait_values['dams'][p]
+                                , mem_dams, new_dams, zf1_dams, zf2_dams, kg_dams, kw_cs_pa1e1b1nwzida0e0b0xyg1
+                                , age_pa1e1b1nwzida0e0b0xyg1[p:p+1], rev_trait_values['dams'][p]
                                 , nec_dams, kc_cs_pa1e1b1nwzida0e0b0xyg1, nel_dams, kl_cs_dams
                                 , gest_propn_pa1e1b1nwzida0e0b0xyg1[p:p+1], lact_propn_pa1e1b1nwzida0e0b0xyg1[p:p+1])
                         if eqn_used:
@@ -4919,7 +4921,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     eqn_used = (eqn_used_g3_q1p[eqn_group, p:p+1] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1,...] >0):
                         temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_lwc_cs(cg_cpoffs, rc_start_offs, mei_offs
-                                , mem_offs, new_offs, zf1_offs, zf2_offs, kg_offs, kw_cs_pa1e1b1nwzida0e0b0xyg3, rev_trait_values['offs'][p])
+                                , mem_offs, new_offs, zf1_offs, zf2_offs, kg_offs, kw_cs_pa1e1b1nwzida0e0b0xyg3
+                                , age_cut_pa1e1b1nwzida0e0b0xyg3[p:p+1], rev_trait_values['offs'][p])
                         if eqn_used:
                             ebg_offs = temp0
                             evg_offs = temp1
@@ -5708,7 +5711,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p:p+1] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...] >0):
                     temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_lwc_cs(cg_cpyatf, rc_start_yatf, mei_yatf, mem_yatf
-                            , new_yatf, zf1_yatf, zf2_yatf, kg_yatf, kw_cs_pa1e1b1nwzida0e0b0xyg2, rev_trait_values['yatf'][p]
+                            , new_yatf, zf1_yatf, zf2_yatf, kg_yatf, kw_cs_pa1e1b1nwzida0e0b0xyg2
+                            , age_pa1e1b1nwzida0e0b0xyg2[p:p+1], rev_trait_values['yatf'][p]
                             , days_per_period=days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...], b_mask=(nyatf_b1nwzida0e0b0xyg>0))
                     if eqn_used:
                         ebg_yatf = temp0
@@ -5944,7 +5948,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 ###sire
                 eqn_used = (eqn_used_g0_q1p[eqn_group, p:p+1] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1,...] >0):
-                    temp0 = efun.f_stock_n2o_animal_nir(cl_cpsire, cg_cpsire, d_cfw_sire, d_muscle_sire, d_viscera_sire, mp=0, mc=0)
+                    temp0 = efun.f_stock_n2o_animal_nir(cl_cpsire, cg_cpsire, d_cfw_sire, d_muscle_sire, d_viscera_sire)
                     if eqn_used:
                         n2o_animal_sire = temp0
                     if eqn_compare:
