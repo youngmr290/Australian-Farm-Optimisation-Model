@@ -106,11 +106,11 @@ def f_stock_ch4_feed_nir(intake, dmd):
     ##methan production
     ###Enteric methane production per kg of feed eaten (M): M = I x 0.0188 + 0.00158
     ### note the fixed (0.00158) component is accounted for in the stock part of the equation.
-    ch4_entric = intake * 0.0188
+    ch4_enteric = intake * 0.0188
     ###Methane production from manure per kg of feed eaten (M): M = I x (1 - DMD) x EFT
     ch4_manure = intake * (1 - dmd) * temperate_emission_factor
     ###total methane
-    ch4 = ch4_manure + ch4_entric
+    ch4 = ch4_manure + ch4_enteric
 
    ##return methane emissions. These are converted to co2 equivalents at a later stage.
     return ch4
@@ -295,10 +295,10 @@ def f_stock_n2o_animal_nir(cl, cg, d_cfw, d_muscle, d_viscera, mp=0, mc=0):
     ##Nitrous oxide production from nitrification-denitrification of N in dung and urine - animal component of equation based on milk consumed and nitrogen retained in the body
     n2o_manure = (NF * EFf * Cg) + (NU * EFu * Cg)
 
-    ##Nitrous oxide production from atmospheric deposition due to dung and urine - feed component of equation
+    ##Nitrous oxide production from atmospheric deposition due to dung and urine - animal component of equation
     n2o_atmospheric_deposition = f_n2o_atmospheric_deposition(NF + NU, EF_atmos_deposition, FracGASM)
 
-    ##Nitrous oxide production from atmospheric deposition due to dung and urine - feed component of equation
+    ##Nitrous oxide production from atmospheric deposition due to dung and urine - animal component of equation
     n2o_leach = f_n2o_leach_runoff(NF + NU, FracWET, FracLEACH)
 
     ##return nitrous oxide emissions per day. These are converted to co2 equivalents at a later stage.
