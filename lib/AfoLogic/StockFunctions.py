@@ -936,12 +936,12 @@ def f1_adipose_propn(cg, evg):
     :param cg: Numpy array, sim parameters - weight change.
     :param evg: Numpy array, energy value of the gain (MJ/kg empty body weight - wet weight).
     '''
-    adipose_energy = cg[20, ...] * cg[26, ...]   #MJ per kg of adipose tissue
-    # prot_energy = cg[21, ...] * cg[27, ...]   # calculation only allowing for muscle and excluding the viscera component
-    ##energy content of the protein averaged across muscle & viscera (See Working13 pg32 for derivation)
-    prot_energy = (cg[21, ...] * cg[27, ...] * (1 + cg[38, ...] / (1 - cg[38, ...]))
+    adipose_energy = cg[20, ...] * cg[26, ...]   #MJ per kg of adipose tissue (wet)
+    # muscle_energy = cg[21, ...] * cg[27, ...]   # calculation only allowing for muscle and excluding the viscera component
+    ##energy content averaged across muscle & viscera (wet) (See Working13 pg32 for derivation)
+    mv_energy = (cg[21, ...] * cg[27, ...] * (1 + cg[38, ...] / (1 - cg[38, ...]))
                    / (1 + (cg[38, ...] * cg[21, ...] * cg[27, ...]) / ((1 - cg[38, ...]) * cg[22, ...] * cg[28, ...])))
-    adipose_propn = (evg - prot_energy) / (adipose_energy - prot_energy)
+    adipose_propn = (evg - mv_energy) / (adipose_energy - mv_energy)
     return adipose_propn
 
 def f1_kg_cs(ck, belowmaint, km, kg_supp, mei_propn_supp, kg_fodd, mei_propn_herb
@@ -1876,7 +1876,7 @@ def f_lwc_mu(cg, ck, rc_start, mei_initial, nem_ee, km, hp_mei, new, kw, zf1, zf
     evg_prior = fun.f_sa(evg, sen.sap['evg'], 1)     # * zf2, 1)
     ##Process the EVG REV: if EVG is not the target trait overwrite trait value with value from the dictionary or update the REV dictionary
     evg = f1_rev_update('evg', evg_prior, rev_trait_value)
-    ## proportion of fat in EBW gain
+    ## proportion of fat in EBW gain (% by wet weight)
     adipose_propn = f1_adipose_propn(cg, evg)
     ## proportion of fat in energy gain (% by energy)
     fat_propn = f1_weight_energy_conversion(cg, 0, weight=adipose_propn) / evg
