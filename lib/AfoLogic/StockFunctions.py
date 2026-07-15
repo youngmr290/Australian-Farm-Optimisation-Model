@@ -1929,9 +1929,11 @@ def f_lwc_mu(cg, ck, rc_start, mei_initial, nem_ee, km, hp_mei, new, kw, zf1, zf
     ###Step 10d: Update heat production associated with retained energy (metabolisable energy)
     ##Back calculate MEI if it is required
     mei_adjustment = 0  #set default value if back calculation function isn't called
-    rev_affects_energy = not(np.allclose(evg_prior, evg) and np.allclose(wbec_prior, wbec)
-            and np.allclose(d_fat_prior, d_fat) and np.allclose(d_muscle_prior, d_muscle)
-            and np.allclose(d_viscera_prior, d_viscera)) #any energy component is altered by the REV adjustments
+    rev_affects_energy = not(np.allclose(evg_prior, evg, equal_nan=True)
+                         and np.allclose(wbec_prior, wbec, equal_nan=True)
+                         and np.allclose(d_fat_prior, d_fat, equal_nan=True)
+                         and np.allclose(d_muscle_prior, d_muscle, equal_nan=True)
+                         and np.allclose(d_viscera_prior, d_viscera, equal_nan=True)) #any energy component is altered by the REV adjustments
     # if True:    #uncomment this line to force the back calculation
     if rev_affects_energy:
         if sen.sam['heat_loss'] == 1:
