@@ -1846,12 +1846,12 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     agedam_propn_da0e0b0xyg1 = agedam_propn_da0e0b0xyg1 / np.sum(agedam_propn_da0e0b0xyg1, axis=d_pos, keepdims=True) #scale unmasked slices to a total of 1
     agedam_propn_da0e0b0xyg2 = agedam_propn_da0e0b0xyg2 / np.sum(agedam_propn_da0e0b0xyg2, axis=d_pos, keepdims=True) #scale unmasked slices to a total of 1
     agedam_propn_da0e0b0xyg3 = agedam_propn_da0e0b0xyg3 / np.sum(agedam_propn_da0e0b0xyg3, axis=d_pos, keepdims=True) #scale unmasked slices to a total of 1
-    # fat_propn_wean_yg0, fat_propn_wean_yg1, fat_propn_wean_yg2, fat_propn_wean_yg3 = sfun.f1_c2g(uinp.parameters['i_fat_propn_wean_c2']
-    #                             , uinp.parameters['i_fat_wean_y'], a_c2_c0, i_g3_inc)
-    # muscle_propn_wean_yg0, muscle_propn_wean_yg1, muscle_propn_wean_yg2, muscle_propn_wean_yg3 = sfun.f1_c2g(uinp.parameters['i_muscle_propn_wean_c2']
-    #                             , uinp.parameters['i_muscle_wean_y'], a_c2_c0, i_g3_inc)
-    # viscera_propn_wean_yg0, viscera_propn_wean_yg1, viscera_propn_wean_yg2, viscera_propn_wean_yg3 = sfun.f1_c2g(uinp.parameters['i_viscera_propn_wean_c2']
-    #                             , uinp.parameters['i_viscera_wean_y'], a_c2_c0, i_g3_inc)
+    fat_propn_wean_yg0, fat_propn_wean_yg1, fat_propn_wean_yg2, fat_propn_wean_yg3 = sfun.f1_c2g(uinp.parameters['i_fat_propn_wean_c2']
+                                , uinp.parameters['i_fat_wean_y'], a_c2_c0, i_g3_inc)
+    muscle_propn_wean_yg0, muscle_propn_wean_yg1, muscle_propn_wean_yg2, muscle_propn_wean_yg3 = sfun.f1_c2g(uinp.parameters['i_muscle_propn_wean_c2']
+                                , uinp.parameters['i_muscle_wean_y'], a_c2_c0, i_g3_inc)
+    viscera_propn_wean_yg0, viscera_propn_wean_yg1, viscera_propn_wean_yg2, viscera_propn_wean_yg3 = sfun.f1_c2g(uinp.parameters['i_viscera_propn_wean_c2']
+                                , uinp.parameters['i_viscera_wean_y'], a_c2_c0, i_g3_inc)
     fat_propn_birth_yg0, fat_propn_birth_yg1, fat_propn_birth_yg2, fat_propn_birth_yg3 = sfun.f1_c2g(uinp.parameters['i_fat_propn_birth_c2']
                                 , uinp.parameters['i_fat_birth_y'], a_c2_c0, i_g3_inc) #only for yatf
     muscle_propn_birth_yg0, muscle_propn_birth_yg1, muscle_propn_birth_yg2, muscle_propn_birth_yg3 = sfun.f1_c2g(uinp.parameters['i_muscle_propn_birth_c2']
@@ -2536,31 +2536,46 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                                    , eqn_system = eqn_used_g3_q1p[7,0])
 
 
-    ##calc fat, muscle and viscera weight. No b axis on srw so that initial doesn't have a random effect from RR SA.
-    fat_initial_pa1e1b1nwzida0e0b0xyg0, muscle_initial_pa1e1b1nwzida0e0b0xyg0, muscle_initial_pa1e1b1nwzida0e0b0xyg0 \
-        = sfun.f1_body_composition(cg_cpsire, cn_cpsire, fun.f_slice(cx_cpsire, {x_pos: [0,1]})
-                                   , ebw_initial_pa1e1b1nwzida0e0b0xyg0, srw_female_pa1e1b1nwzida0e0b0xyg0
-                                   , eqn_system = eqn_used_g0_q1p[7,0])
-    fat_initial_pa1e1b1nwzida0e0b0xyg1, muscle_initial_pa1e1b1nwzida0e0b0xyg1, muscle_initial_pa1e1b1nwzida0e0b0xyg1 \
-        = sfun.f1_body_composition(cg_cpdams, cn_cpdams, fun.f_slice(cx_cpdams, {x_pos: [1,2]})
-                                   , ebw_initial_pa1e1b1nwzida0e0b0xyg1, srw_female_pa1e1b1nwzida0e0b0xyg1
-                                   , eqn_system = eqn_used_g1_q1p[7,0])
-    fat_initial_pa1e1b1nwzida0e0b0xyg3, muscle_initial_pa1e1b1nwzida0e0b0xyg3, muscle_initial_pa1e1b1nwzida0e0b0xyg3 \
-        = sfun.f1_body_composition(cg_cpoffs, cn_cpoffs, fun.f_slice(cx_cpoffs, {x_pos: mask_x})
-                                   , ebw_initial_pa1e1b1nwzida0e0b0xyg3, srw_female_pa1e1b1nwzida0e0b0xyg3
-                                   , eqn_system = eqn_used_g3_q1p[7,0])
+    ##calc fat, muscle and viscera weight using estimated fat % at weaning. See [Growth curve & partitioning.xlsx]
+    ###Sire
+    fat_initial_pa1e1b1nwzida0e0b0xyg0 = fat_propn_wean_yg0 * ebw_initial_pa1e1b1nwzida0e0b0xyg0
+    muscle_initial_pa1e1b1nwzida0e0b0xyg0  = muscle_propn_wean_yg0 * ebw_initial_pa1e1b1nwzida0e0b0xyg0
+    viscera_initial_pa1e1b1nwzida0e0b0xyg0 = viscera_propn_wean_yg0 * ebw_initial_pa1e1b1nwzida0e0b0xyg0
+    ###Dams
+    fat_initial_pa1e1b1nwzida0e0b0xyg1 = fat_propn_wean_yg1 * ebw_initial_pa1e1b1nwzida0e0b0xyg1
+    muscle_initial_pa1e1b1nwzida0e0b0xyg1  = muscle_propn_wean_yg1 * ebw_initial_pa1e1b1nwzida0e0b0xyg1
+    viscera_initial_pa1e1b1nwzida0e0b0xyg1 = viscera_propn_wean_yg1 * ebw_initial_pa1e1b1nwzida0e0b0xyg1
+    ###Offs
+    fat_initial_pa1e1b1nwzida0e0b0xyg3 = fat_propn_wean_yg3 * ebw_initial_pa1e1b1nwzida0e0b0xyg3
+    muscle_initial_pa1e1b1nwzida0e0b0xyg3  = muscle_propn_wean_yg3 * ebw_initial_pa1e1b1nwzida0e0b0xyg3
+    viscera_initial_pa1e1b1nwzida0e0b0xyg3 = viscera_propn_wean_yg3 * ebw_initial_pa1e1b1nwzida0e0b0xyg3
+
+    # ##calc fat, muscle and viscera weight using f1_body_composition() based on Oddy [Sheep calcs.xlsx] relationships.
+    # ### No b axis on srw so that initial doesn't have a random effect from RR SA.
+    # fat_initial_pa1e1b1nwzida0e0b0xyg0, muscle_initial_pa1e1b1nwzida0e0b0xyg0, viscera_initial_pa1e1b1nwzida0e0b0xyg0 \
+    #     = sfun.f1_body_composition(cg_cpsire, cn_cpsire, fun.f_slice(cx_cpsire, {x_pos: [0,1]})
+    #                                , ebw_initial_pa1e1b1nwzida0e0b0xyg0, srw_female_pa1e1b1nwzida0e0b0xyg0
+    #                                , eqn_system = eqn_used_g0_q1p[7,0])
+    # fat_initial_pa1e1b1nwzida0e0b0xyg1, muscle_initial_pa1e1b1nwzida0e0b0xyg1, viscera_initial_pa1e1b1nwzida0e0b0xyg1 \
+    #     = sfun.f1_body_composition(cg_cpdams, cn_cpdams, fun.f_slice(cx_cpdams, {x_pos: [1,2]})
+    #                                , ebw_initial_pa1e1b1nwzida0e0b0xyg1, srw_female_pa1e1b1nwzida0e0b0xyg1
+    #                                , eqn_system = eqn_used_g1_q1p[7,0])
+    # fat_initial_pa1e1b1nwzida0e0b0xyg3, muscle_initial_pa1e1b1nwzida0e0b0xyg3, viscera_initial_pa1e1b1nwzida0e0b0xyg3 \
+    #     = sfun.f1_body_composition(cg_cpoffs, cn_cpoffs, fun.f_slice(cx_cpoffs, {x_pos: mask_x})
+    #                                , ebw_initial_pa1e1b1nwzida0e0b0xyg3, srw_female_pa1e1b1nwzida0e0b0xyg3
+    #                                , eqn_system = eqn_used_g3_q1p[7,0])
 
     ##if stubble update fat, muscle and viscera weight   Stubble is using the same functions but with a custom m/d and b axis on srw
     if stubble:
-        fat_initial_pa1e1b1nwzida0e0b0xyg0, muscle_initial_pa1e1b1nwzida0e0b0xyg0, muscle_initial_pa1e1b1nwzida0e0b0xyg0 \
+        fat_initial_pa1e1b1nwzida0e0b0xyg0, muscle_initial_pa1e1b1nwzida0e0b0xyg0, viscera_initial_pa1e1b1nwzida0e0b0xyg0 \
             = sfun.f1_body_composition(cg_cpsire, cn_cpsire, fun.f_slice(cx_cpsire, {x_pos: [0,1]})
                                        , ebw_initial_pa1e1b1nwzida0e0b0xyg0, srw_female_pa1e1b1nwzida0e0b0xyg0
                                        , stubble['i_md'], eqn_system = eqn_used_g0_q1p[7,0])
-        fat_initial_pa1e1b1nwzida0e0b0xyg1, muscle_initial_pa1e1b1nwzida0e0b0xyg1, muscle_initial_pa1e1b1nwzida0e0b0xyg1 \
+        fat_initial_pa1e1b1nwzida0e0b0xyg1, muscle_initial_pa1e1b1nwzida0e0b0xyg1, viscera_initial_pa1e1b1nwzida0e0b0xyg1 \
             = sfun.f1_body_composition(cg_cpdams, cn_cpdams, fun.f_slice(cx_cpdams, {x_pos: [1,2]})
                                        , ebw_initial_pa1e1b1nwzida0e0b0xyg1, srw_female_pa1e1b1nwzida0e0b0xyg1
                                        , stubble['i_md'], eqn_system = eqn_used_g1_q1p[7,0])
-        fat_initial_pa1e1b1nwzida0e0b0xyg3, muscle_initial_pa1e1b1nwzida0e0b0xyg3, muscle_initial_pa1e1b1nwzida0e0b0xyg3 \
+        fat_initial_pa1e1b1nwzida0e0b0xyg3, muscle_initial_pa1e1b1nwzida0e0b0xyg3, viscera_initial_pa1e1b1nwzida0e0b0xyg3 \
             = sfun.f1_body_composition(cg_cpoffs, cn_cpoffs, fun.f_slice(cx_cpoffs, {x_pos: mask_x})
                                        , ebw_initial_pa1e1b1nwzida0e0b0xyg3, srw_female_pa1e1b1nwzida0e0b0xyg3
                                        , stubble['i_md'], eqn_system = eqn_used_g3_q1p[7,0])
@@ -3496,7 +3511,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         fd_min_start_dams = fd_initial_pa1e1b1nwzida0e0b0xyg1
         fat_start_dams = fat_initial_pa1e1b1nwzida0e0b0xyg1
         muscle_start_dams = muscle_initial_pa1e1b1nwzida0e0b0xyg1
-        viscera_start_dams = muscle_initial_pa1e1b1nwzida0e0b0xyg1
+        viscera_start_dams = viscera_initial_pa1e1b1nwzida0e0b0xyg1
         nw_start_dams = np.array([0.0])
         temp_lc_start_dams = np.array([15.0]) #this is calculated in the chill function, but it is required for the intake function so it is set to 0 for the first period.
         numbers_start_dams = numbers_initial_a1e1b1nwzida0e0b0xyg1
@@ -3583,9 +3598,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             foo_lact_ave_start = stubble['i_foo']
             ###using input proportions for body composition rather than the function because estimate of gutfill for yatf is poor
             # #todo improve the gut fill calculation for yatf and then calc using f_body_weight().
-            fat_start_yatf = ffcfw_start_yatf * stubble['i_fat_yatf']
-            muscle_start_yatf = ffcfw_start_yatf * stubble['i_muscle_yatf']
-            viscera_start_yatf = ffcfw_start_yatf * stubble['i_viscera_yatf']
+            fat_start_yatf = ebw_start_yatf * stubble['i_fat_yatf']
+            muscle_start_yatf = ebw_start_yatf * stubble['i_muscle_yatf']
+            viscera_start_yatf = ebw_start_yatf * stubble['i_viscera_yatf']
 
         ##Calculate the beginning ebw for yatf for either main model or stubble - use srw_female which has averaged p axis.
         ebw_start_yatf = sfun.f1_ffcfw2ebw(cg_cpyatf, cn_cpyatf, ffcfw_start_yatf, srw_female_pa1e1b1nwzida0e0b0xyg2, md_solid_yatf
