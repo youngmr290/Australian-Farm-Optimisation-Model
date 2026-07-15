@@ -865,6 +865,45 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         reports["ebw_pyatf"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, prod_weights=prod_weights, na_prodweights=na_prodweights
                                  , weights=weights, na_weights=na_weights, den_weights=den_weights, na_denweights=na_denweights, keys=keys
                                  , arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+    if report_run.loc['run_fat_pyatf', 'Run']:
+        ##Average start-of-period YATF fat mass with p, e & b axis.
+        type = 'stock'
+        prod = 'fat_yatf_k2Tvpa1e1b1nw8zixyg1'
+        na_prod = [0,1] #q,s
+        prod_weights = 'pe1b1_nyatf_numbers_weights_k2tvpa1e1b1nw8zixyg1'
+        na_prodweights = [0,1] #q,s
+        weights = 'dams_numbers_qsk2tvanwziy1g1'
+        na_weights = [5, 7, 8, 13]                  #p, e1, b1, x
+        den_weights = 'pe1b1_nyatf_numbers_weights_k2tvpa1e1b1nw8zixyg1'
+        na_denweights = [0,1] #q,s
+        keys = 'yatf_keys_qsk2tvpaebnwzixy1g1'
+        arith = f_update_default_controls(user_controls, 'fat_pyatf', 'arith', 1)
+        index = f_update_default_controls(user_controls, 'fat_pyatf', 'index', [5])      #p
+        cols = f_update_default_controls(user_controls, 'fat_pyatf', 'cols', [2,15, 10, 13])  #k2, g2, w8, x
+        axis_slice = f_update_default_controls(user_controls, 'fat_pyatf', 'axis_slice', {8: [2,None,1]}) #b with yatf
+        reports["fat_pyatf"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, prod_weights=prod_weights, na_prodweights=na_prodweights
+                                 , weights=weights, na_weights=na_weights, den_weights=den_weights, na_denweights=na_denweights, keys=keys
+                                 , arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+    if report_run.loc['run_fatper_pyatf', 'Run']:
+        ##Average start-of-period YATF fat percentage with p, e & b axis. Calculate the percentage before weighting.
+        type = 'stock'
+        prod = fun.f_divide(r_vals['stock']['fat_yatf_k2Tvpa1e1b1nw8zixyg1'],
+                            r_vals['stock']['ebw_yatf_k2Tvpa1e1b1nw8zixyg1']) * 100
+        na_prod = [0,1] #q,s
+        prod_weights = 'pe1b1_nyatf_numbers_weights_k2tvpa1e1b1nw8zixyg1'
+        na_prodweights = [0,1] #q,s
+        weights = 'dams_numbers_qsk2tvanwziy1g1'
+        na_weights = [5, 7, 8, 13]                  #p, e1, b1, x
+        den_weights = 'pe1b1_nyatf_numbers_weights_k2tvpa1e1b1nw8zixyg1'
+        na_denweights = [0,1] #q,s
+        keys = 'yatf_keys_qsk2tvpaebnwzixy1g1'
+        arith = f_update_default_controls(user_controls, 'fatper_pyatf', 'arith', 1)
+        index = f_update_default_controls(user_controls, 'fatper_pyatf', 'index', [5])      #p
+        cols = f_update_default_controls(user_controls, 'fatper_pyatf', 'cols', [2,15, 10, 13])  #k2, g2, w8, x
+        axis_slice = f_update_default_controls(user_controls, 'fatper_pyatf', 'axis_slice', {8: [2,None,1]}) #b with yatf
+        reports["fatper_pyatf"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, prod_weights=prod_weights, na_prodweights=na_prodweights
+                                 , weights=weights, na_weights=na_weights, den_weights=den_weights, na_denweights=na_denweights, keys=keys
+                                 , arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_ebw_cut_yatf', 'Run']:
         ##ebw for a select number of p periods
         type = 'stock'

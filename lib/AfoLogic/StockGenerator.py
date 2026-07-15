@@ -697,6 +697,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     o_cfat_start_tpyatf = np.zeros(tpg2, dtype =dtype)
     ###arrays for report variables
     r_ebw_start_tpyatf = np.zeros(tpg2, dtype =dtype)   # requires a variable separate from o_ffcfw_start_tpyatf so that it is only stored when days_period > 0
+    r_fat_start_tpyatf = np.zeros(tpg2, dtype=dtype)
     r_wean_ebw_tpyatf = np.zeros(tpg2, dtype =dtype)
     r_ebg_tpyatf = np.zeros(tpg2, dtype = dtype)
     r_evg_tpyatf = np.zeros(tpg2, dtype = dtype)
@@ -6879,6 +6880,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 #### Need a separate variable to o_ffcfw_start_tpyatf because that variable is non-zero all year and this affects the reported birth weight when averaging across the e & b axes
                 #### Store a zero value if yatf don't exist for this slice (e1 or i)
                 r_ebw_start_tpyatf[:, p:p+1] = ebw_start_yatf * (days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...] > 0) * (nyatf_b1nwzida0e0b0xyg > 0)
+                r_fat_start_tpyatf[:, p:p+1] = fat_start_yatf * (days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...] > 0) * (nyatf_b1nwzida0e0b0xyg > 0)
                 r_ebg_tpyatf[:, p:p+1] = ebg_yatf
                 r_evg_tpyatf[:, p:p+1] = evg_yatf
                 r_wbe_tpyatf[:, p:p+1] = wbe_yatf
@@ -10855,6 +10857,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                              * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,na,...]))
         r_fat_k2Tvpdams = (r_fat_tpdams[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
                            * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
+        r_fat_k2Tvpyatf = (r_fat_start_tpyatf[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
+                           * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
         r_fat_k3k5Tvpoffs = (r_fat_tpoffs[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg3 == index_vpa1e1b1nwzida0e0b0xyg3)
                              * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...])
                              * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,na,...]))
@@ -12366,6 +12370,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         fun.f1_make_r_val(r_vals,r_wbe_k2Tvpyatf,'wbe_yatf_k2Tvpa1e1b1nw8zixyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2Tvpa1e1b1nwzixyg1_shape)
         fun.f1_make_r_val(r_vals,r_wbe_k3k5Tvpoffs,'wbe_offs_k3k5Tvpnw8zida0e0b0xyg3', mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...],z_pos,k3k5Tvpnwzidae0b0xyg3_shape)
         fun.f1_make_r_val(r_vals,r_fat_k2Tvpdams,'fat_dams_k2Tvpa1e1b1nw8ziyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2Tvpa1e1b1nwziyg1_shape)
+        fun.f1_make_r_val(r_vals,r_fat_k2Tvpyatf,'fat_yatf_k2Tvpa1e1b1nw8zixyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2Tvpa1e1b1nwzixyg1_shape)
         fun.f1_make_r_val(r_vals,r_fat_k3k5Tvpoffs,'fat_offs_k3k5Tvpnw8zida0e0b0xyg3', mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...],z_pos,k3k5Tvpnwzidae0b0xyg3_shape)
         fun.f1_make_r_val(r_vals,r_lean_k2Tvpdams,'lean_dams_k2Tvpa1e1b1nw8ziyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2Tvpa1e1b1nwziyg1_shape)
         fun.f1_make_r_val(r_vals,r_lean_k3k5Tvpoffs,'lean_offs_k3k5Tvpnw8zida0e0b0xyg3', mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...],z_pos,k3k5Tvpnwzidae0b0xyg3_shape)
