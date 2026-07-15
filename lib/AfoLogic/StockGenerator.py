@@ -6609,11 +6609,14 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 # w_xxxx = w_start_xxxx + dw_xxxx
                 # c_xxxx = c_start_xxxx + dc_xxxx
                 ##Weight of fat (end)
-                fat_yatf = fat_start_yatf + d_fat_yatf * days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1]
+                fat_yatf = np.maximum(0, (fat_start_yatf + d_fat_yatf * days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1])
+                                      * (nyatf_b1nwzida0e0b0xyg > 0) * (days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1] > 0))
                 ##Weight of muscle (end)
-                muscle_yatf = muscle_start_yatf + d_muscle_yatf * days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1]
+                muscle_yatf = np.maximum(0, (muscle_start_yatf + d_muscle_yatf * days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1])
+                                         * (nyatf_b1nwzida0e0b0xyg > 0) * (days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1] > 0))
                 ##Weight of viscera (end)
-                viscera_yatf = viscera_start_yatf + d_viscera_yatf * days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1]
+                viscera_yatf = np.maximum(0, (viscera_start_yatf + d_viscera_yatf * days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1])
+                                          * (nyatf_b1nwzida0e0b0xyg > 0) * (days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1] > 0))
                 ##Weight of water (end)
                 ww_yatf = fat_yatf * (1 - cg_cpyatf[26, ...]) + muscle_yatf * (1 - cg_cpyatf[27, ...]) + viscera_yatf * (1 - cg_cpyatf[28, ...])
                 ##Weight of gutfill (end)
