@@ -279,15 +279,15 @@ def f1_stockpyomo_local(params, model, MP_lp_vars):
     ##energy intake
     model.p_co2e_p7zg0 = pe.Param(model.s_season_periods, model.s_season_types, model.s_groups_sire,
                                 initialize=params['p_co2e_p7zg0'],
-                                  default=0.0, mutable=False, doc='co2e sire (includes entric fermentation, manure, fuel)')
+                                  default=0.0, mutable=False, doc='co2e sire (includes enteric fermentation, manure, fuel)')
     model.p_co2e_p7k2tva1nwziyg1 = pe.Param(model.s_season_periods, model.s_k2_birth_dams, model.s_sale_dams, model.s_dvp_dams,
                                model.s_wean_times, model.s_nut_dams, model.s_lw_dams, model.s_season_types,
                                model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, initialize=params['p_co2e_p7k2tva1nwziyg1'],
-                                default=0.0, mutable=False, doc='co2e dams (includes entric fermentation, manure, fuel)')
+                                default=0.0, mutable=False, doc='co2e dams (includes enteric fermentation, manure, fuel)')
     model.p_co2e_p7k3k5tvnwziaxyg3 = pe.Param(model.s_season_periods, model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_sale_offs,
                                model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs, model.s_season_types, model.s_tol, model.s_wean_times,
                                model.s_gender, model.s_gen_merit_offs, model.s_groups_offs, initialize=params['p_co2e_p7k3k5tvnwziaxyg3'],
-                                default=0.0, mutable=False, doc='co2e offs (includes entric fermentation, manure, fuel)')
+                                default=0.0, mutable=False, doc='co2e offs (includes enteric fermentation, manure, fuel)')
 
 
     ##purchases

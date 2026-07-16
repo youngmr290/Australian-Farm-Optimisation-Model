@@ -895,12 +895,12 @@ def f1_efficiency_mu(ck, md_solid, km):
 
 def f1_weight_energy_conversion(cg, option, weight=None, energy=None):
     '''
-
+    Convert between weight and energy content of a energy component
     :param cg: Numpy array, sim parameters - weight change.
     :param option: 0 = fat, 1 = muscle, 2 = viscera, 3 = wool, 4 = conceptus, 5 = milk.
     :param weight: Numpy array of float, weight of component (fresh weight).
-    :param energy:
-    :return: Energy content of the component.
+    :param energy: Numpy array of float, energy content of component (MJ).
+    :return: Energy content of the component if passed weight or weight if passed energy.
     '''
     ## select the relevant coefficients for the component
     if option == 0:  #Fat
@@ -936,12 +936,12 @@ def f1_adipose_propn(cg, evg):
     :param cg: Numpy array, sim parameters - weight change.
     :param evg: Numpy array, energy value of the gain (MJ/kg empty body weight - wet weight).
     '''
-    adipose_energy = cg[20, ...] * cg[26, ...]   #MJ per kg of adipose tissue
-    # prot_energy = cg[21, ...] * cg[27, ...]   # calculation only allowing for muscle and excluding the viscera component
-    ##energy content of the protein averaged across muscle & viscera (See Working13 pg32 for derivation)
-    prot_energy = (cg[21, ...] * cg[27, ...] * (1 + cg[38, ...] / (1 - cg[38, ...]))
+    adipose_energy = cg[20, ...] * cg[26, ...]   #MJ per kg of adipose tissue (wet)
+    # muscle_energy = cg[21, ...] * cg[27, ...]   # calculation only allowing for muscle and excluding the viscera component
+    ##energy content averaged across muscle & viscera (wet) (See Working13 pg32 for derivation)
+    mv_energy = (cg[21, ...] * cg[27, ...] * (1 + cg[38, ...] / (1 - cg[38, ...]))
                    / (1 + (cg[38, ...] * cg[21, ...] * cg[27, ...]) / ((1 - cg[38, ...]) * cg[22, ...] * cg[28, ...])))
-    adipose_propn = (evg - prot_energy) / (adipose_energy - prot_energy)
+    adipose_propn = (evg - mv_energy) / (adipose_energy - mv_energy)
     return adipose_propn
 
 def f1_kg_cs(ck, belowmaint, km, kg_supp, mei_propn_supp, kg_fodd, mei_propn_herb
@@ -1067,7 +1067,7 @@ def f_energy_mu(cx, cm, lw, lean, mr_age, mei, km, i_steepness, density, foo, co
     bmei = 1 - km
     hp_mei = bmei * mei
     ##Equivalent of meme from CSIRO feeding standards. Estimate of MEI for a non-reproducing animals when RE==0
-    meme_cs = (emetab + egraze) / km + omer
+    meme_cs = (emetab + egraze + omer) / km
     ##Calculate hp_maint for comparison with the new feeding standards which include HP for MEI above maintenance
     return neme, hp_mei, meme_cs
 
@@ -1356,7 +1356,7 @@ def f_milk_cs(cl, srw, relsize_start, rc_birth_start, mei, meme, rc_start, ffcfw
                                                         - cl[23, ...] * rc_start * (milk_ratio - cl[24, ...] * rc_start))
         ##Milk production (per animal) based on suckling volume	(milk production per day of lactation)
         ### Based on the standard parameter values 'Suckling volume of young' is very rarely limiting milk production.
-        mp2 = np.minimum(mp1, np.mean(fun.f_slice(ffcfw75_exp_yatf, {i_x_pos: [1, None]}), axis=i_x_pos, keepdims=True) * mp2_age_y)   # averages female and castrates weight, ffcfw75 is metabolic weight
+        mp2 = np.minimum(mp1, ffcfw75_exp_yatf * mp2_age_y)
         ##Process the milk production REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
         mp2 = f1_rev_update('milk', mp2, rev_trait_value)
     else:
@@ -1707,7 +1707,7 @@ def f_heatloss_nfs(cc, ffcfw_start, rc_start, sl_start, temp_ave, temp_max, temp
     return total_heat_loss_m0p1
 
 
-def f_lwc_cs(cg, rc_start, mei, mem, new, zf1, zf2, kg, kw, rev_trait_value, nec = 0, kc = 1, nel = 0, kl = 1
+def f_lwc_cs(cg, rc_start, mei, mem, new, zf1, zf2, kg, kw, age, rev_trait_value, nec = 0, kc = 1, nel = 0, kl = 1
              , gest_propn = 0, lact_propn = 0, days_per_period=7, b_mask = 1):
     ##Note: The energy components of rev_trait_value are not active in this function. Have to be using f_lwc_nfs
 
@@ -1721,13 +1721,15 @@ def f_lwc_cs(cg, rc_start, mei, mem, new, zf1, zf2, kg, kw, rev_trait_value, nec
         warnings.warn(f"Negative maintenance detected: min={np.nanmin(maintenance):.6g}", RuntimeWarning)
         maintenance = np.maximum(0, maintenance)
     ##Level of feeding (maint = 0). Note: level is calculated elsewhere (differently) for use in Blaxter & Clapperton equations
-    level = (mei / maintenance) - 1
+    level = fun.f_divide(mei, maintenance) - 1
     ##Energy intake that is surplus to maintenance
     surplus_energy = mei - maintenance
     ##Net energy gain (based on ME) Note: will be negative if losing weight
     neg = kg * surplus_energy
     ##Energy Value of gain (MJ/kg EBW)
-    evg = cg[8, ...] - zf1 * (cg[9, ...] - cg[10, ...] * (level - 1)) + zf2 * cg[11, ...] * (rc_start - 1)
+    cg8 = f1_rev_sa(cg[8, ...], sen.saa['rev_evg'], age, sa_type=2)
+    cg9 = f1_rev_sa(cg[9, ...], sen.saa['rev_evg'], age, sa_type=2)
+    evg = cg8 - zf1 * (cg9 - cg[10, ...] * (level - 1)) + zf2 * cg[11, ...] * (rc_start - 1)
     ## Scale based on zf2. zf2 increases from 0 to 1 as z increases from 0.9 to 0.97
     evg = fun.f_sa(evg, sen.sap['evg'], 1)   # * zf2, 1)
     # ##Process the EVG REV: if EVG is not the target trait overwrite trait value with value from the dictionary or update the REV dictionary
@@ -1874,7 +1876,7 @@ def f_lwc_mu(cg, ck, rc_start, mei_initial, nem_ee, km, hp_mei, new, kw, zf1, zf
     evg_prior = fun.f_sa(evg, sen.sap['evg'], 1)     # * zf2, 1)
     ##Process the EVG REV: if EVG is not the target trait overwrite trait value with value from the dictionary or update the REV dictionary
     evg = f1_rev_update('evg', evg_prior, rev_trait_value)
-    ## proportion of fat in EBW gain
+    ## proportion of fat in EBW gain (% by wet weight)
     adipose_propn = f1_adipose_propn(cg, evg)
     ## proportion of fat in energy gain (% by energy)
     fat_propn = f1_weight_energy_conversion(cg, 0, weight=adipose_propn) / evg
@@ -1927,9 +1929,11 @@ def f_lwc_mu(cg, ck, rc_start, mei_initial, nem_ee, km, hp_mei, new, kw, zf1, zf
     ###Step 10d: Update heat production associated with retained energy (metabolisable energy)
     ##Back calculate MEI if it is required
     mei_adjustment = 0  #set default value if back calculation function isn't called
-    rev_affects_energy = not(np.allclose(evg_prior, evg) and np.allclose(wbec_prior, wbec)
-            and np.allclose(d_fat_prior, d_fat) and np.allclose(d_muscle_prior, d_muscle)
-            and np.allclose(d_viscera_prior, d_viscera)) #any energy component is altered by the REV adjustments
+    rev_affects_energy = not(np.allclose(evg_prior, evg, equal_nan=True)
+                         and np.allclose(wbec_prior, wbec, equal_nan=True)
+                         and np.allclose(d_fat_prior, d_fat, equal_nan=True)
+                         and np.allclose(d_muscle_prior, d_muscle, equal_nan=True)
+                         and np.allclose(d_viscera_prior, d_viscera, equal_nan=True)) #any energy component is altered by the REV adjustments
     # if True:    #uncomment this line to force the back calculation
     if rev_affects_energy:
         if sen.sam['heat_loss'] == 1:
@@ -4037,11 +4041,13 @@ def f1_body_composition(cg, cn, cx, ebw, srw, md=12.0, eqn_system = 0):
     ffcfw = f1_ebw2ffcfw(cg, cn, ebw, srw, md, eqn_system)
     ##Step 2. Calculate fat weight
     relsize = ffcfw / srw
-    fat = np.maximum(0, (cn[17, ...] * relsize + cn[18, ...] * relsize ** 2 + cn[19, ...]) * ffcfw)
-    ##Step 3. Calculate viscera weight
-    viscera = np.maximum(0, (cn[20, ...] * relsize + cn[21, ...] * relsize ** 2 + cn[22, ...]) * cx[22, ...] * srw)
-    ##Step 4. Calculate muscle weight as the remaining empty body weight
-    muscle = np.maximum(0, ebw - (fat + viscera))
+    fat = np.clip((cn[17, ...] * relsize + cn[18, ...] * relsize ** 2 + cn[19, ...]),0,1) * ebw
+    ##Step 2. Calculate viscera weight
+    # viscera = np.maximum(0, (cn[20, ...] * relsize + cn[21, ...] * relsize ** 2 + cn[22, ...]) * cx[22, ...] * srw)
+    lean = ebw - fat
+    viscera = lean * cg[39, ...]
+    ##Step 3. Calculate muscle weight as the remaining empty body weight
+    muscle = ebw - (fat + viscera)
     return fat, muscle, viscera
 
 

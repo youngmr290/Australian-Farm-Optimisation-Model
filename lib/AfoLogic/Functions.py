@@ -995,7 +995,7 @@ def f1_get_caller_info(skip=1, levels=1):
         return ("unknown_file", 0) if levels == 1 else [("unknown_file", 0)] * levels
 
 
-def f_slice_idx(arr, slice_specs):
+def f_slice_idx(arr, slice_specs, default=slice(None)):
     '''
     Build the slice index tuple from slice_specs, ignoring any boolean masks.
     Use for assignment: arr[fun.f_slice_idx(arr, specs) = value
@@ -1013,13 +1013,15 @@ def f_slice_idx(arr, slice_specs):
         return arr
 
     # Build a list of slice(None) — i.e. [:] — for every axis, as the default
-    sl_slices = [slice(None)] * arr.ndim
+    sl_slices = [default] * arr.ndim
 
     for axis, args in slice_specs.items():
         # Single value → interpret as start, with stop = start + 1 (preserves dimension)
         # Multi value  → unpack directly into slice(start, stop) or slice(start, stop, step)
-        if arr.shape[axis] == 1:  #don't slice if singleton axis
-            if args[0] != 0 or args[0] != -1:  #don't display warning if taking slice 0 or -1
+        if arr.shape[axis] == 1:  #don't slice if singleton axis. Warning if slice isn't 0 or 1
+            if isinstance(args, int) and (args == 0 or args == -1):  #don't display warning if taking slice 0 or -1 of the singleton
+                pass
+            elif args[0] == 0 or args[0] == -1:  #don't display warning if taking slice 0 or -1 of the singleton
                 pass
             else:
                 callers = f1_get_caller_info(skip=1, levels=3)
@@ -1029,8 +1031,8 @@ def f_slice_idx(arr, slice_specs):
         else:
             if isinstance(args, np.ndarray) and args.dtype == bool:  # Boolean mask → ignore
                 pass  # masks ignored — only supported in f_slice
-            elif isinstance(args, int):  # Int rather than a list can be single position shorthand
-                sl_slices[axis] = slice(args, args + 1)
+            elif isinstance(args, int):  # Int rather than a list is interpreted as an index (and the axis is collapsed)
+                sl_slices[axis] = args
             elif len(args) == 1:
                 start = args[0]
                 sl_slices[axis] = slice(start, start + 1)
@@ -1040,12 +1042,13 @@ def f_slice_idx(arr, slice_specs):
     return tuple(sl_slices)
 
 
-def f_slice(arr, slice_specs):
+def f_slice(arr, slice_specs, default=slice(None)):
     '''
     Calling this function with both mask array and slice args can cause erratic behaviour and is not recommended
     Slice a numpy array over multiple axes in a single call.
     Default values differ from python slicing. A single value is taken as the start and
     if stop is not specified it is start + 1 (rather than None). Default step is +1
+    An eception will be raised if the arg includes a combination of indexing (int type) and masking (bool type)
 
     Example:
         f_slice(arr, {b1_pos: [1, 5], e1_pos: [0]})
@@ -1068,21 +1071,31 @@ def f_slice(arr, slice_specs):
         return arr
 
     # Build and apply slices first via f_slice_idx (returns a view, ignoring masks)
-    result = arr[f_slice_idx(arr, slice_specs)]
+    result = arr[f_slice_idx(arr, slice_specs, default=default)]
 
     # Build a list of slice(None) — i.e. [:] — for every axis, as the default
-    sl_masks = [slice(None)] * arr.ndim
+    sl_masks = [default] * arr.ndim
 
+    mask_count = 0
+    int_count = 0
     for axis, args in slice_specs.items():
+        if isinstance(args, int):  # Int rather than a list is interpreted as an index (and the axis is collapsed)
+            int_count += 1
         # Single value → interpret as start, with stop = start + 1 (preserves dimension)
         # Multi value  → unpack directly into slice(start, stop) or slice(start, stop, step)
         if arr.shape[axis] == 1:  #don't mask if singleton axis, warning will show up in f_slice_idx()
             pass
         else:
             if isinstance(args, np.ndarray) and args.dtype == bool:  # Boolean mask → apply directly (fancy indexing, reduces axis to number of True values)
+                mask_count += 1
                 sl_masks[axis] = args
 
-    result = result[tuple(sl_masks)]
+    ##apply the mask if mask_count > 0
+    if mask_count > 0:   #the mask needs applying
+        if int_count > 0:
+            raise Exception('One or more axes have been indexed and collapsed so the mask would be applied incorrectly.')
+        else:
+            result = result[tuple(sl_masks)]
     return result
 
 

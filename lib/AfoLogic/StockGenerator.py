@@ -27,7 +27,6 @@ import functions from other modules
 # import datetime as dt
 # import pandas as pd
 import numpy as np
-# np.seterr(all='raise')   #uncomment this line to be able to debug any numpy floating point warnings
 import pickle as pkl
 #import matplotlib.pyplot as plt
 import time
@@ -87,14 +86,14 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     ################################
     ##Model inversion coefficients #
     ################################
+    ##set the genotype to report. This is the genotype of the c2 axis in Universal.xlsx
+    genotype = pinp.sheep['a_c2_c0'][0]  #2 is CFS for MLP & GEPEP traditional, 3 is GFS for GEPEP
     saa_srw = 0  #set default value for reporting later. Requires a separate variable because has 2 source coefficients
-    srw_parameter = 0  #set a value in case whole section is commented out
+    srw_parameter = uinp.parameters['i_srw_c2'][genotype]  #set a value in case whole section is commented out
     if calibrate_trait_values or o_trait_values is not None:
         # print(coefficients_c)   #only useful for debugging when not multiprocessing (workers=1, and not multiprocessing teams)
         n_coeff = coefficients_c.size
         n_traits = calibration_weights_p.size
-        ##set the genotype to report. This is the genotype of the c2 axis in Universal.xlsx
-        genotype = pinp.sheep['a_c2_c0'][0]    #2 is CFS for MLP & GEPEP traditional, 3 is GFS for GEPEP
 
         ##set default values for variables that are used in the calibration
         ### These can be saa passed from exp.xlsx. Reset to 0 here so not applied twice
@@ -107,7 +106,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         ##Comment any coefficients that aren't being calibrated
         j = 0
         #Standard fleece weight, SFW parameter
-        ##LiveEx: CFW is calibrated for A for whole of life. Y is by the scalar
+        ##CFW is calibrated for A for whole of life. Y is by the scalar
         w = p = y = h = a = None
         w = np.nan  #fleece growth prior to weaning is not carried forward to shearing
         # p = coefficients_c[j]; j += 1
@@ -118,7 +117,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         sen.saa['sfw_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         #Standard fibre diameter, SFD parameter
-        ##LiveEx: CFW is calibrated for A for whole of life. Y is by the scalar
+        ##FD is calibrated for A for whole of life. Y is by the scalar
         w = p = y = h = a = None
         w = np.nan  #fleece growth prior to weaning is not carried forward to shearing
         # p = coefficients_c[j]; j += 1
@@ -138,9 +137,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         # a = coefficients_c[j]; j += 1
         # sen.saa['iss_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
-        #Follicle number to calibrate staple length
-        # , cw[11] parameter
-        ##LiveEx: SL is calibrated for A and carried back.
+        #Follicle number to calibrate staple length, cw[11] parameter
+        ##SL is calibrated for A and carried back.
         w = p = y = h = a = None
         w = np.nan  #fleece growth prior to weaning is not carried forward to shearing
         # p = coefficients_c[j]; j += 1
@@ -150,29 +148,27 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         sen.saa['follicles_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         #Conception, cb1[24,25&26, 1] parameter
-        ##LiveEx: Conception only for adult stage
+        ##Conception only for adult stage
         w = p = y = h = a = None
         # w =
-        # p = np.nan  #post-wean is not a reproducing age group
-        # y = coefficients_c[j]; j += 1
+        # p = coefficients_c[j]; j += 1   #the Y joining is occurring during the post-wean age stage
         y = np.nan
         h = coefficients_c[j]; j += 1   #the A2 joining is occurring during the hogget age stage
         a = coefficients_c[j]; j += 1
         sen.saa['con_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         #Litter size, cb1[24,25&26, 2&3] parameter
-        ##LiveEx: Litter size only for adult stage
+        ##Litter size only for adult stage
         w = p = y = h = a = None
         # w =
-        # p = np.nan  #post-wean is not a reproducing age group
-        # y = coefficients_c[j]; j += 1
+        # p = coefficients_c[j]; j += 1   #the Y joining is occurring during the post-wean age stage
         y = np.nan
         h = coefficients_c[j]; j += 1   #the A2 joining is occurring during the hogget age stage
         a = coefficients_c[j]; j += 1
         sen.saa['ls_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         #Ewe rearing ability/lamb survival, cu6[8, -1] & cu2[8, -1] parameters
-        ##LiveEx: Ewe rearing ability only for adult stage
+        ##Ewe rearing ability only for adult stage
         w = p = y = h = a = None
         # w =
         # p = np.nan  #post-wean is not a reproducing age group
@@ -182,8 +178,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         a = coefficients_c[j]; j += 1
         sen.saa['era_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
-        #Standard reference weight to calibrate LW. Can also be used to match SRW calculated from ALW & Fat %
-        ##LiveEx: SRW being altered for all age groups with a fixed growth constant and YWT is being calibrated using PI
+        #Standard reference weight coefficient adjustments can be linked to target LW or to an estimate of SRW from ALW & Fat %
+        ##WT at younger ages can be calibrated by SRW age stage coefficients or by adjusting milk yield and the growth constant
         w = p = y = h = a = None
         # sen.saa['birth_weight'] = coefficients_c[j]; j += 1    #Birth weight, #todo still to decide how to control BWT
         w = np.nan  #wwt is changed with a separate coefficient
@@ -195,7 +191,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         # a = saa_srw = coefficients_c[j]; j += 1               #only this line or next line not both
         sen.saa['srw'] = saa_srw = coefficients_c[j]; j += 1  #included when WBE is included or the value is being set
         sen.saa['srw_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
-        srw_parameter = uinp.parameters['i_srw_c2'][genotype] + saa_srw  #parameter value for srw
+        srw_parameter = uinp.parameters['i_srw_c2'][genotype] + saa_srw  #actual parameter value for srw (for reporting)
 
         #Potential intake to calibrate Carcase fatness & WBE, ci[1] parameter
         ##LiveEx: Fit YWT and YFAT volunteers
@@ -296,6 +292,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         uinp.parameters['i_cw_c2'][idx] = fun.f_sa(uinp.parameters['i_cw_c2'][idx], sen.saa['yfd_scalar'], 2)
         idx = fun.f_slice_idx(uinp.parameters['i_cl_c2'], {0: [0]})
         uinp.parameters['i_cl_c2'][idx] = fun.f_sa(uinp.parameters['i_cl_c2'][idx], sen.saa['milk_yield'], 2)
+        sen.sam['pi_yatf'] = fun.f_sa(sen.sam['pi_yatf'], sen.saa['milk_yield'], 2)  #increase yatf PI of pasture as well as milk intake
         idx = fun.f_slice_idx(uinp.parameters['i_cn_c2'], {0: [1]})
         uinp.parameters['i_cn_c2'][idx] = fun.f_sa(uinp.parameters['i_cn_c2'][idx], sen.saa['growth_constant'], 2)
 
@@ -327,6 +324,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     k5_pos = sinp.stock['i_k5_pos']
     n_pos = sinp.stock['i_n_pos']
     p_pos = sinp.stock['i_p_pos']
+    t_pos = p_pos - 1
     w_pos = sinp.stock['i_w_pos']
     x_pos = sinp.stock['i_x_pos']
     y_pos = sinp.stock['i_y_pos']
@@ -637,11 +635,14 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     o_methane_me_saved_tpdams = np.zeros(tpg1, dtype =dtype)
     o_n2o_animal_tpdams = np.zeros(tpg1, dtype =dtype)
     o_cfw_tpdams = np.zeros(tpg1, dtype =dtype)
+    o_d_cfw_tpdams = np.zeros(tpg1, dtype =dtype)
     # o_gfw_tpdams = np.zeros(tpg1, dtype =dtype)
     o_sl_tpdams = np.zeros(tpg1, dtype =dtype)
     o_ss_tpdams = np.zeros(tpg1, dtype =dtype)
     o_fd_tpdams = np.zeros(tpg1, dtype =dtype)
     o_fd_min_tpdams = np.zeros(tpg1, dtype =dtype)
+    o_d_fd_tpdams = np.zeros(tpg1, dtype =dtype)
+    o_d_fl_tpdams = np.zeros(tpg1, dtype =dtype)
     o_rc_start_tpdams = np.ones(tpg1, dtype =dtype)
     o_relsize_start_tpdams = np.ones(tpg1, dtype =dtype)
     o_cs_start_tpdams = np.ones(tpg1, dtype =dtype) * 3
@@ -696,6 +697,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     o_cfat_start_tpyatf = np.zeros(tpg2, dtype =dtype)
     ###arrays for report variables
     r_ebw_start_tpyatf = np.zeros(tpg2, dtype =dtype)   # requires a variable separate from o_ffcfw_start_tpyatf so that it is only stored when days_period > 0
+    r_fat_start_tpyatf = np.zeros(tpg2, dtype=dtype)
     r_wean_ebw_tpyatf = np.zeros(tpg2, dtype =dtype)
     r_ebg_tpyatf = np.zeros(tpg2, dtype = dtype)
     r_evg_tpyatf = np.zeros(tpg2, dtype = dtype)
@@ -1717,6 +1719,23 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                                                 , p_index_pa1e1b1nwzida0e0b0xyg3==0), axis=0))
     a_n_pa1e1b1nwzida0e0b0xyg3 = (np.trunc(index_wzida0e0b0xyg3 / (n_fs_offs ** ((n_fvps_percondense_offs-1) - n_prior_fvps_pa1e1b1nwzida0e0b0xyg3))) % n_fs_offs).astype(int) #needs to be int so it can be an indice
 
+    ## Code to convert N33 to N11 for specified classes of animals in specified periods.
+    ### Useful to remove animals from the fs_opt, but can be used for any N33 trial.
+    ### Set the association a_n_p to 0 for animal classes and period so the feedsupply is effectively N11 for these classes and periods.
+    if sen.sav['partial_n11']:   #Control to include this code.
+        ### Create arrays that mask the periods to be excluded (True are excluded from fs_opt)
+        ###Current masks are set for the ewe lamb feed supply optimisation
+        ###Dam mask
+        ###Exclude NM dams (index_b1==0) in all p and all dams in periods after 2 tooth prejoining
+        period_pj_2tooth = prejoining_oa1e1b1nwzida0e0b0xyg1[1]/7    # the period of prejoining for 2-tooth ewes
+        dams_mask = np.logical_or(index_b1nwzida0e0b0xyg == 0, p_index_pa1e1b1nwzida0e0b0xyg >= period_pj_2tooth)
+        ###Offs mask
+        ###Exclude offspring of 2tooths and adults (index_d > 0)
+        offs_mask = index_da0e0b0xyg > 0
+        ###Set associations
+        a_n_pa1e1b1nwzida0e0b0xyg1 = fun.f_update(a_n_pa1e1b1nwzida0e0b0xyg1, 0, dams_mask)
+        a_n_pa1e1b1nwzida0e0b0xyg3 = fun.f_update(a_n_pa1e1b1nwzida0e0b0xyg3, 0, offs_mask)
+
 
     #######################
     ##Age, date, timing 1 #
@@ -1783,6 +1802,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     ####Weight
     srw_female_yg0, srw_female_yg1, srw_female_yg2, srw_female_yg3 = sfun.f1_c2g(uinp.parameters['i_srw_c2']
                                 , uinp.parameters['i_srw_y'], a_c2_c0, i_g3_inc) #srw of a female of the given genotype (this is the definition of the inputs)
+    srwfat_yg0, srwfat_yg1, srwfat_yg2, srwfat_yg3 = sfun.f1_c2g(uinp.parameters['i_srwfat_c2']
+                                , uinp.parameters['i_srw_y'], a_c2_c0, i_g3_inc) #fat content of an adult at the SRW
     muscle_target_female_yg0, muscle_target_female_yg1, muscle_target_female_yg2, muscle_target_female_yg3 = sfun.f1_c2g(uinp.parameters['i_muscle_target_c2']
                                 , uinp.parameters['i_muscle_target_y'], a_c2_c0, i_g3_inc)
     lw_initial_yg0, lw_initial_yg1, lw_initial_yatf, lw_initial_yg3 = sfun.f1_c2g(uinp.parameters['i_lw_initial_c2']
@@ -1825,12 +1846,12 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     agedam_propn_da0e0b0xyg1 = agedam_propn_da0e0b0xyg1 / np.sum(agedam_propn_da0e0b0xyg1, axis=d_pos, keepdims=True) #scale unmasked slices to a total of 1
     agedam_propn_da0e0b0xyg2 = agedam_propn_da0e0b0xyg2 / np.sum(agedam_propn_da0e0b0xyg2, axis=d_pos, keepdims=True) #scale unmasked slices to a total of 1
     agedam_propn_da0e0b0xyg3 = agedam_propn_da0e0b0xyg3 / np.sum(agedam_propn_da0e0b0xyg3, axis=d_pos, keepdims=True) #scale unmasked slices to a total of 1
-    # fat_propn_wean_yg0, fat_propn_wean_yg1, fat_propn_wean_yg2, fat_propn_wean_yg3 = sfun.f1_c2g(uinp.parameters['i_fat_propn_wean_c2']
-    #                             , uinp.parameters['i_fat_wean_y'], a_c2_c0, i_g3_inc)
-    # muscle_propn_wean_yg0, muscle_propn_wean_yg1, muscle_propn_wean_yg2, muscle_propn_wean_yg3 = sfun.f1_c2g(uinp.parameters['i_muscle_propn_wean_c2']
-    #                             , uinp.parameters['i_muscle_wean_y'], a_c2_c0, i_g3_inc)
-    # viscera_propn_wean_yg0, viscera_propn_wean_yg1, viscera_propn_wean_yg2, viscera_propn_wean_yg3 = sfun.f1_c2g(uinp.parameters['i_viscera_propn_wean_c2']
-    #                             , uinp.parameters['i_viscera_wean_y'], a_c2_c0, i_g3_inc)
+    fat_propn_wean_yg0, fat_propn_wean_yg1, fat_propn_wean_yg2, fat_propn_wean_yg3 = sfun.f1_c2g(uinp.parameters['i_fat_propn_wean_c2']
+                                , uinp.parameters['i_fat_wean_y'], a_c2_c0, i_g3_inc)
+    muscle_propn_wean_yg0, muscle_propn_wean_yg1, muscle_propn_wean_yg2, muscle_propn_wean_yg3 = sfun.f1_c2g(uinp.parameters['i_muscle_propn_wean_c2']
+                                , uinp.parameters['i_muscle_wean_y'], a_c2_c0, i_g3_inc)
+    viscera_propn_wean_yg0, viscera_propn_wean_yg1, viscera_propn_wean_yg2, viscera_propn_wean_yg3 = sfun.f1_c2g(uinp.parameters['i_viscera_propn_wean_c2']
+                                , uinp.parameters['i_viscera_wean_y'], a_c2_c0, i_g3_inc)
     fat_propn_birth_yg0, fat_propn_birth_yg1, fat_propn_birth_yg2, fat_propn_birth_yg3 = sfun.f1_c2g(uinp.parameters['i_fat_propn_birth_c2']
                                 , uinp.parameters['i_fat_birth_y'], a_c2_c0, i_g3_inc) #only for yatf
     muscle_propn_birth_yg0, muscle_propn_birth_yg1, muscle_propn_birth_yg2, muscle_propn_birth_yg3 = sfun.f1_c2g(uinp.parameters['i_muscle_propn_birth_c2']
@@ -2515,31 +2536,46 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                                    , eqn_system = eqn_used_g3_q1p[7,0])
 
 
-    ##calc fat, muscle and viscera weight. No b axis on srw so that initial doesn't have a random effect from RR SA.
-    fat_initial_pa1e1b1nwzida0e0b0xyg0, muscle_initial_pa1e1b1nwzida0e0b0xyg0, muscle_initial_pa1e1b1nwzida0e0b0xyg0 \
-        = sfun.f1_body_composition(cg_cpsire, cn_cpsire, fun.f_slice(cx_cpsire, {x_pos: [0,1]})
-                                   , ebw_initial_pa1e1b1nwzida0e0b0xyg0, srw_female_pa1e1b1nwzida0e0b0xyg0
-                                   , eqn_system = eqn_used_g0_q1p[7,0])
-    fat_initial_pa1e1b1nwzida0e0b0xyg1, muscle_initial_pa1e1b1nwzida0e0b0xyg1, muscle_initial_pa1e1b1nwzida0e0b0xyg1 \
-        = sfun.f1_body_composition(cg_cpdams, cn_cpdams, fun.f_slice(cx_cpdams, {x_pos: [1,2]})
-                                   , ebw_initial_pa1e1b1nwzida0e0b0xyg1, srw_female_pa1e1b1nwzida0e0b0xyg1
-                                   , eqn_system = eqn_used_g1_q1p[7,0])
-    fat_initial_pa1e1b1nwzida0e0b0xyg3, muscle_initial_pa1e1b1nwzida0e0b0xyg3, muscle_initial_pa1e1b1nwzida0e0b0xyg3 \
-        = sfun.f1_body_composition(cg_cpoffs, cn_cpoffs, fun.f_slice(cx_cpoffs, {x_pos: mask_x})
-                                   , ebw_initial_pa1e1b1nwzida0e0b0xyg3, srw_female_pa1e1b1nwzida0e0b0xyg3
-                                   , eqn_system = eqn_used_g3_q1p[7,0])
+    ##calc fat, muscle and viscera weight using estimated fat % at weaning. See [Growth curve & partitioning.xlsx]
+    ###Sire
+    fat_initial_pa1e1b1nwzida0e0b0xyg0 = fat_propn_wean_yg0 * ebw_initial_pa1e1b1nwzida0e0b0xyg0
+    muscle_initial_pa1e1b1nwzida0e0b0xyg0  = muscle_propn_wean_yg0 * ebw_initial_pa1e1b1nwzida0e0b0xyg0
+    viscera_initial_pa1e1b1nwzida0e0b0xyg0 = viscera_propn_wean_yg0 * ebw_initial_pa1e1b1nwzida0e0b0xyg0
+    ###Dams
+    fat_initial_pa1e1b1nwzida0e0b0xyg1 = fat_propn_wean_yg1 * ebw_initial_pa1e1b1nwzida0e0b0xyg1
+    muscle_initial_pa1e1b1nwzida0e0b0xyg1  = muscle_propn_wean_yg1 * ebw_initial_pa1e1b1nwzida0e0b0xyg1
+    viscera_initial_pa1e1b1nwzida0e0b0xyg1 = viscera_propn_wean_yg1 * ebw_initial_pa1e1b1nwzida0e0b0xyg1
+    ###Offs
+    fat_initial_pa1e1b1nwzida0e0b0xyg3 = fat_propn_wean_yg3 * ebw_initial_pa1e1b1nwzida0e0b0xyg3
+    muscle_initial_pa1e1b1nwzida0e0b0xyg3  = muscle_propn_wean_yg3 * ebw_initial_pa1e1b1nwzida0e0b0xyg3
+    viscera_initial_pa1e1b1nwzida0e0b0xyg3 = viscera_propn_wean_yg3 * ebw_initial_pa1e1b1nwzida0e0b0xyg3
+
+    # ##calc fat, muscle and viscera weight using f1_body_composition() based on Oddy [Sheep calcs.xlsx] relationships.
+    # ### No b axis on srw so that initial doesn't have a random effect from RR SA.
+    # fat_initial_pa1e1b1nwzida0e0b0xyg0, muscle_initial_pa1e1b1nwzida0e0b0xyg0, viscera_initial_pa1e1b1nwzida0e0b0xyg0 \
+    #     = sfun.f1_body_composition(cg_cpsire, cn_cpsire, fun.f_slice(cx_cpsire, {x_pos: [0,1]})
+    #                                , ebw_initial_pa1e1b1nwzida0e0b0xyg0, srw_female_pa1e1b1nwzida0e0b0xyg0
+    #                                , eqn_system = eqn_used_g0_q1p[7,0])
+    # fat_initial_pa1e1b1nwzida0e0b0xyg1, muscle_initial_pa1e1b1nwzida0e0b0xyg1, viscera_initial_pa1e1b1nwzida0e0b0xyg1 \
+    #     = sfun.f1_body_composition(cg_cpdams, cn_cpdams, fun.f_slice(cx_cpdams, {x_pos: [1,2]})
+    #                                , ebw_initial_pa1e1b1nwzida0e0b0xyg1, srw_female_pa1e1b1nwzida0e0b0xyg1
+    #                                , eqn_system = eqn_used_g1_q1p[7,0])
+    # fat_initial_pa1e1b1nwzida0e0b0xyg3, muscle_initial_pa1e1b1nwzida0e0b0xyg3, viscera_initial_pa1e1b1nwzida0e0b0xyg3 \
+    #     = sfun.f1_body_composition(cg_cpoffs, cn_cpoffs, fun.f_slice(cx_cpoffs, {x_pos: mask_x})
+    #                                , ebw_initial_pa1e1b1nwzida0e0b0xyg3, srw_female_pa1e1b1nwzida0e0b0xyg3
+    #                                , eqn_system = eqn_used_g3_q1p[7,0])
 
     ##if stubble update fat, muscle and viscera weight   Stubble is using the same functions but with a custom m/d and b axis on srw
     if stubble:
-        fat_initial_pa1e1b1nwzida0e0b0xyg0, muscle_initial_pa1e1b1nwzida0e0b0xyg0, muscle_initial_pa1e1b1nwzida0e0b0xyg0 \
+        fat_initial_pa1e1b1nwzida0e0b0xyg0, muscle_initial_pa1e1b1nwzida0e0b0xyg0, viscera_initial_pa1e1b1nwzida0e0b0xyg0 \
             = sfun.f1_body_composition(cg_cpsire, cn_cpsire, fun.f_slice(cx_cpsire, {x_pos: [0,1]})
                                        , ebw_initial_pa1e1b1nwzida0e0b0xyg0, srw_female_pa1e1b1nwzida0e0b0xyg0
                                        , stubble['i_md'], eqn_system = eqn_used_g0_q1p[7,0])
-        fat_initial_pa1e1b1nwzida0e0b0xyg1, muscle_initial_pa1e1b1nwzida0e0b0xyg1, muscle_initial_pa1e1b1nwzida0e0b0xyg1 \
+        fat_initial_pa1e1b1nwzida0e0b0xyg1, muscle_initial_pa1e1b1nwzida0e0b0xyg1, viscera_initial_pa1e1b1nwzida0e0b0xyg1 \
             = sfun.f1_body_composition(cg_cpdams, cn_cpdams, fun.f_slice(cx_cpdams, {x_pos: [1,2]})
                                        , ebw_initial_pa1e1b1nwzida0e0b0xyg1, srw_female_pa1e1b1nwzida0e0b0xyg1
                                        , stubble['i_md'], eqn_system = eqn_used_g1_q1p[7,0])
-        fat_initial_pa1e1b1nwzida0e0b0xyg3, muscle_initial_pa1e1b1nwzida0e0b0xyg3, muscle_initial_pa1e1b1nwzida0e0b0xyg3 \
+        fat_initial_pa1e1b1nwzida0e0b0xyg3, muscle_initial_pa1e1b1nwzida0e0b0xyg3, viscera_initial_pa1e1b1nwzida0e0b0xyg3 \
             = sfun.f1_body_composition(cg_cpoffs, cn_cpoffs, fun.f_slice(cx_cpoffs, {x_pos: mask_x})
                                        , ebw_initial_pa1e1b1nwzida0e0b0xyg3, srw_female_pa1e1b1nwzida0e0b0xyg3
                                        , stubble['i_md'], eqn_system = eqn_used_g3_q1p[7,0])
@@ -2757,7 +2793,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     rain_intake_pa1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(np.maximum(0, 1 - rain_pa1e1b1nwzida0e0b0xygp0[mask_p_offs_p] / ci_cpoffs[18, ..., na])
                                                         ,  weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg3p0, axis = -1)
     ##Proportion of peak intake due to time from birth
-    pi_age_y_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(cb1_cpdams[19, ..., na] * np.maximum(0,pimi_pa1e1b1nwzida0e0b0xyg1p0) ** ci_cpdams[9, ..., na]
+    pi_age_y_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(cl_cpdams[0, ..., na] * cb1_cpdams[19, ..., na] * np.maximum(0,pimi_pa1e1b1nwzida0e0b0xyg1p0) ** ci_cpdams[9, ..., na]
                         * np.exp(ci_cpdams[9, ..., na] * (1 - pimi_pa1e1b1nwzida0e0b0xyg1p0)), weights=age_y_adj_weights_pa1e1b1nwzida0e0b0xyg1p0, axis = -1) #maximum to stop error in power (not sure why the negatives were causing a problem)
     ##Peak milk production pattern (time from birth). Average for the days that the dam is lactating
     ## Includes genotype scalar for milk yield (cl_cpyatf[0]), using yatf so that saa_p11 is controlled by the age of yatf
@@ -2765,12 +2801,13 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                         * lmm_pa1e1b1nwzida0e0b0xyg1p0 ** cl_cpdams[3, ..., na]
                                         * np.exp(cl_cpdams[3, ..., na] * (1 - lmm_pa1e1b1nwzida0e0b0xyg1p0))
                                                 , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg2p0, axis = -1)
-    ##Suckling volume pattern. Includes genotype scalar for milk yield (cl[0]) and SA for potential intake of the young at foot.
+    ##Suckling volume pattern. Includes genotype scalar for milk yield (cl[0]) but excludes SA for potential intake of the young at foot
+    ### Separating gives flexibility for inclusion of PI of pasture in the Wwt calibration by adjusting sam['pi_yatf'].
     ## Average for the days that the dam is lactating
     mp2_age_y_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(cl_cpyatf[0, ..., na] * nyatf_b1nwzida0e0b0xyg[...,na]
-                                        * cl_cpdams[6, ..., na] * ( cl_cpdams[12, ..., na] + cl_cpdams[13, ..., na]
+                                        * cl_cpdams[6, ..., na] * (cl_cpdams[12, ..., na] + cl_cpdams[13, ..., na]
                                         * np.exp(-cl_cpdams[14, ..., na] * age_p0_pa1e1b1nwzida0e0b0xyg2p0))
-                                                , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg2p0, axis = -1) * sen.sam['pi_yatf']
+                                                , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg2p0, axis = -1)   # * sen.sam['pi_yatf']
     ##Pattern of conception efficiency (doy). Different methods are used to represent seasonality in the 3 conception functions
     ### cpg_doy_cs is for the GrazPlan equations to predict the seasonal effect on proportion greater than conception rate - active b1 axis
     cpg_doy_cs_pa1e1b1nwzida0e0b0xyg1 = np.nanmean(np.maximum(0,1 - cb1_cpdams[1, ..., na]
@@ -3474,7 +3511,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         fd_min_start_dams = fd_initial_pa1e1b1nwzida0e0b0xyg1
         fat_start_dams = fat_initial_pa1e1b1nwzida0e0b0xyg1
         muscle_start_dams = muscle_initial_pa1e1b1nwzida0e0b0xyg1
-        viscera_start_dams = muscle_initial_pa1e1b1nwzida0e0b0xyg1
+        viscera_start_dams = viscera_initial_pa1e1b1nwzida0e0b0xyg1
         nw_start_dams = np.array([0.0])
         temp_lc_start_dams = np.array([15.0]) #this is calculated in the chill function, but it is required for the intake function so it is set to 0 for the first period.
         numbers_start_dams = numbers_initial_a1e1b1nwzida0e0b0xyg1
@@ -3488,6 +3525,11 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         c_start_dams = np.array([0.0]) #passed as an argument to f_foetus_nfs() so needs to be defined prior to first assignment
         fs_w_reallocation_tpa1e1b1nw8zida0e0b0xyg1s9 = fun.f_expand(a_wstart_w1[:, na] == np.arange(w_start_len1),
                                                                    w_pos - 1, right_pos=-1, left_pos2=p_pos-3,right_pos2=w_pos - 1) #create default fs allocation - default means 1:1. This gets updated at period_is_condense.
+        ###Reshape ebw_start_dams to include e1 & b1 axis to remove e1b1 slicing errors in the first loop
+        target_shape = list(ebw_start_dams.shape)
+        target_shape[e1_pos] = len_e1
+        target_shape[b1_pos] = len_b1
+        ebw_start_dams = np.broadcast_to(ebw_start_dams, target_shape).copy()
 
         ##yatf
         d_cfw_history_start_p2g2[...] = np.nan
@@ -3556,9 +3598,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             foo_lact_ave_start = stubble['i_foo']
             ###using input proportions for body composition rather than the function because estimate of gutfill for yatf is poor
             # #todo improve the gut fill calculation for yatf and then calc using f_body_weight().
-            fat_start_yatf = ffcfw_start_yatf * stubble['i_fat_yatf']
-            muscle_start_yatf = ffcfw_start_yatf * stubble['i_muscle_yatf']
-            viscera_start_yatf = ffcfw_start_yatf * stubble['i_viscera_yatf']
+            fat_start_yatf = ebw_start_yatf * stubble['i_fat_yatf']
+            muscle_start_yatf = ebw_start_yatf * stubble['i_muscle_yatf']
+            viscera_start_yatf = ebw_start_yatf * stubble['i_viscera_yatf']
 
         ##Calculate the beginning ebw for yatf for either main model or stubble - use srw_female which has averaged p axis.
         ebw_start_yatf = sfun.f1_ffcfw2ebw(cg_cpyatf, cn_cpyatf, ffcfw_start_yatf, srw_female_pa1e1b1nwzida0e0b0xyg2, md_solid_yatf
@@ -4387,6 +4429,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                 index_p0 < days_period_pa1e1b1nwzida0e0b0xyg2[...,na][p:p+1])
                         ###Expected average metabolic LW of yatf during period
                         ffcfw75_exp_yatf = np.sum(ffcfw_exp_a1e1b1nwzida0e0b0xyg2p0 ** 0.75, axis=-1) / np.maximum(1, days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1, ...])
+                        ###Weighted average across the x-axis
+                        ffcfw75_exp_yatf = np.sum(ffcfw75_exp_yatf * gender_propn_xyg, axis=x_pos, keepdims=True)
 
                         temp0, temp1, temp2, temp3 = sfun.f_milk_cs(cl_cpdams, srw_pa1e1b1nwzida0e0b0xyg1
                                 , relsize_start_dams, rc_birth_dams, mei_dams, meme_cs_dams, rc_start_dams
@@ -4415,6 +4459,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                 index_p0 < days_period_pa1e1b1nwzida0e0b0xyg2[...,na][p:p+1])
                         ###Expected average metabolic LW of yatf during period
                         ffcfw75_exp_yatf = np.sum(ffcfw_exp_a1e1b1nwzida0e0b0xyg2p0 ** 0.75, axis=-1) / np.maximum(1, days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1, ...])
+                        ###Weighted average across the x-axis
+                        ffcfw75_exp_yatf = np.sum(ffcfw75_exp_yatf * gender_propn_xyg, axis=x_pos, keepdims=True)
 
                         temp0, temp1, temp2, temp3 = sfun.f_milk_cs(cl_cpdams, srw_pa1e1b1nwzida0e0b0xyg1
                                 , relsize_start_dams, rc_birth_dams, mei_dams, neme_mu_dams / km_dams, rc_start_dams
@@ -4850,7 +4896,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     eqn_used = (eqn_used_g0_q1p[eqn_group, p:p+1] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1,...] >0):
                         temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_lwc_cs(cg_cpsire, rc_start_sire, mei_sire
-                                , mem_sire, new_sire, zf1_sire, zf2_sire, kg_sire, kw_cs_pa1e1b1nwzida0e0b0xyg0, rev_trait_values['sire'][p])
+                                , mem_sire, new_sire, zf1_sire, zf2_sire, kg_sire, kw_cs_pa1e1b1nwzida0e0b0xyg0
+                                , age_pa1e1b1nwzida0e0b0xyg0[p:p+1], rev_trait_values['sire'][p])
                         if eqn_used:
                             ebg_sire = temp0
                             evg_sire = temp1
@@ -4868,7 +4915,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     eqn_used = (eqn_used_g1_q1p[eqn_group, p:p+1] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
                         temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_lwc_cs(cg_cpdams, rc_start_dams, mei_dams
-                                , mem_dams, new_dams, zf1_dams, zf2_dams, kg_dams, kw_cs_pa1e1b1nwzida0e0b0xyg1, rev_trait_values['dams'][p]
+                                , mem_dams, new_dams, zf1_dams, zf2_dams, kg_dams, kw_cs_pa1e1b1nwzida0e0b0xyg1
+                                , age_pa1e1b1nwzida0e0b0xyg1[p:p+1], rev_trait_values['dams'][p]
                                 , nec_dams, kc_cs_pa1e1b1nwzida0e0b0xyg1, nel_dams, kl_cs_dams
                                 , gest_propn_pa1e1b1nwzida0e0b0xyg1[p:p+1], lact_propn_pa1e1b1nwzida0e0b0xyg1[p:p+1])
                         if eqn_used:
@@ -4888,7 +4936,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     eqn_used = (eqn_used_g3_q1p[eqn_group, p:p+1] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1,...] >0):
                         temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_lwc_cs(cg_cpoffs, rc_start_offs, mei_offs
-                                , mem_offs, new_offs, zf1_offs, zf2_offs, kg_offs, kw_cs_pa1e1b1nwzida0e0b0xyg3, rev_trait_values['offs'][p])
+                                , mem_offs, new_offs, zf1_offs, zf2_offs, kg_offs, kw_cs_pa1e1b1nwzida0e0b0xyg3
+                                , age_cut_pa1e1b1nwzida0e0b0xyg3[p:p+1], rev_trait_values['offs'][p])
                         if eqn_used:
                             ebg_offs = temp0
                             evg_offs = temp1
@@ -5208,13 +5257,13 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 ##relative size and relative condition of the dams at mating are the determinants of conception
                 ## use the condition of dams in the 11 slice because mated animals can have a different feed supply
                 ## use dams in e[-1] because want the condition of the animal before it conceives. Note all e slices will have the same condition until conceived because they have the same feedsupply until scanning.
-                #todo Change the calculation of maternalLW to be based on ebw with the CSIRO gut fill so that changing diet quality doesn't affect repro.
-                ffcfw_e1b1sliced = fun.f_slice(ffcfw_start_dams, {e1_pos: [-1, None], b1_pos: [2, 3]}) #slice e1 & b1 axis
+                ##ffcfw based on empty body weight and CSIRO gut fill parameter so that gut fill/NV doesn't affect RR
+                ffcfw_e1b1sliced = fun.f_slice(ebw_start_dams, {e1_pos: [-1, None], b1_pos: [2, 3]}) * cg_cpdams[18, ...] #slice e1 & b1 axis
                 relsize_start_dams_e1b1sliced = fun.f_slice(relsize_start_dams, {e1_pos: [-1, None], b1_pos: [2, 3]}) #slice e1 & b1 axis
                 ebg_e1b1sliced = fun.f_slice(ebg_dams, {e1_pos: [-1, None], b1_pos: [2, 3]}) #slice e1 & b1 axis
                 nw_start_dams_e1b1sliced = fun.f_slice(nw_start_dams, {e1_pos: [-1, None], b1_pos: [2, 3]}) #slice e1 & b1 axis
                 gest_propn_b1sliced = gest_propn_pa1e1b1nwzida0e0b0xyg1[p:p+1]     # gest_propn_pa1e1b1nwzida0e0b0xyg1 does not have an active b1 axis
-                days_period_b1sliced = fun.f_slice(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1], {b1_pos: [2, 3]}) #slice b1 axis
+                days_period_b1sliced = days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1]   # days_period_pa1e1b1nwzida0e0b0xyg1 does not have an active b1 axis
 
                 t_w_mating = np.sum((ffcfw_e1b1sliced + ebg_e1b1sliced * cg_cpdams[18, ...]
                                      * (days_period_b1sliced * (1 - gest_propn_b1sliced) + cf_cpdams[4, ...] / 2))
@@ -5677,7 +5726,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p:p+1] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...] >0):
                     temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_lwc_cs(cg_cpyatf, rc_start_yatf, mei_yatf, mem_yatf
-                            , new_yatf, zf1_yatf, zf2_yatf, kg_yatf, kw_cs_pa1e1b1nwzida0e0b0xyg2, rev_trait_values['yatf'][p]
+                            , new_yatf, zf1_yatf, zf2_yatf, kg_yatf, kw_cs_pa1e1b1nwzida0e0b0xyg2
+                            , age_pa1e1b1nwzida0e0b0xyg2[p:p+1], rev_trait_values['yatf'][p]
                             , days_per_period=days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...], b_mask=(nyatf_b1nwzida0e0b0xyg>0))
                     if eqn_used:
                         ebg_yatf = temp0
@@ -5913,7 +5963,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 ###sire
                 eqn_used = (eqn_used_g0_q1p[eqn_group, p:p+1] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1,...] >0):
-                    temp0 = efun.f_stock_n2o_animal_nir(cl_cpsire, d_cfw_sire, relsize_start_sire, srw_pa1e1b1nwzida0e0b0xyg0, ebg_sire, mp=0, mc=0)
+                    temp0 = efun.f_stock_n2o_animal_nir(cl_cpsire, cg_cpsire, d_cfw_sire, d_muscle_sire, d_viscera_sire)
                     if eqn_used:
                         n2o_animal_sire = temp0
                     if eqn_compare:
@@ -5921,7 +5971,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 ###dams
                 eqn_used = (eqn_used_g1_q1p[eqn_group, p:p+1] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
-                    temp0 = efun.f_stock_n2o_animal_nir(cl_cpdams, d_cfw_dams, relsize_start_dams, srw_pa1e1b1nwzida0e0b0xyg1, ebg_dams, mp=mp2_dams)
+                    temp0 = efun.f_stock_n2o_animal_nir(cl_cpdams, cg_cpdams, d_cfw_dams, d_muscle_dams, d_viscera_dams, mp=mp2_dams)
                     if eqn_used:
                         n2o_animal_dams = temp0
                     if eqn_compare:
@@ -5929,7 +5979,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 ###yatf
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p:p+1] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...] >0):
-                    temp0 = efun.f_stock_n2o_animal_nir(cl_cpyatf, d_cfw_yatf, relsize_start_yatf, srw_pa1e1b1nwzida0e0b0xyg2, ebg_yatf, mc=mp2_yatf)
+                    temp0 = efun.f_stock_n2o_animal_nir(cl_cpyatf, cg_cpyatf, d_cfw_yatf, d_muscle_yatf, d_viscera_yatf, mc=mp2_yatf)
                     if eqn_used:
                         n2o_animal_yatf = temp0
                     if eqn_compare:
@@ -5937,7 +5987,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 ###offs
                 eqn_used = (eqn_used_g3_q1p[eqn_group, p:p+1] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1,...] >0):
-                    temp0 = efun.f_stock_n2o_animal_nir(cl_cpoffs, d_cfw_offs, relsize_start_offs, srw_pa1e1b1nwzida0e0b0xyg3, ebg_offs)
+                    temp0 = efun.f_stock_n2o_animal_nir(cl_cpoffs, cg_cpoffs, d_cfw_offs, d_muscle_offs, d_viscera_offs)
                     if eqn_used:
                         n2o_animal_offs = temp0
                     if eqn_compare:
@@ -6472,7 +6522,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 gw_sire = ffcfw_sire - ebw_sire
                 ##Whole body energy (calculated from fat, muscle and viscera weight, not including conceptus and wool)
                 wbe_sire = sfun.f_wbe_mu(cg_cpsire, fat_sire, muscle_sire, viscera_sire)
-                ##Clean fleece weight (end)
+                ##Clean fleece weight (end). Incorporates the proportion of the wool harvested (cfw_propn_yg)
                 cfw_sire = cfw_start_sire + d_cfw_sire * days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1] * cfw_propn_yg0
                 ##Greasy fleece weight (end)
                 gfw_sire = cfw_sire / cw_cpsire[3, ...]
@@ -6519,7 +6569,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 gw_dams = ffcfw_dams - ebw_dams
                 ##Whole body energy (calculated from fat, muscle and viscera weight, not including conceptus and wool)
                 wbe_dams = sfun.f_wbe_mu(cg_cpdams, fat_dams, muscle_dams, viscera_dams)
-                ##Clean fleece weight (end)
+                ##Clean fleece weight (end). Incorporates the proportion of the wool harvested (cfw_propn_yg)
                 cfw_dams = cfw_start_dams + d_cfw_dams * days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1] * cfw_propn_yg1
                 ##Greasy fleece weight (end)
                 gfw_dams = cfw_dams / cw_cpdams[3, ...]
@@ -6559,18 +6609,21 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 # w_xxxx = w_start_xxxx + dw_xxxx
                 # c_xxxx = c_start_xxxx + dc_xxxx
                 ##Weight of fat (end)
-                fat_yatf = fat_start_yatf + d_fat_yatf * days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1]
+                fat_yatf = np.maximum(0, (fat_start_yatf + d_fat_yatf * days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1])
+                                      * (nyatf_b1nwzida0e0b0xyg > 0) * (days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1] > 0))
                 ##Weight of muscle (end)
-                muscle_yatf = muscle_start_yatf + d_muscle_yatf * days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1]
+                muscle_yatf = np.maximum(0, (muscle_start_yatf + d_muscle_yatf * days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1])
+                                         * (nyatf_b1nwzida0e0b0xyg > 0) * (days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1] > 0))
                 ##Weight of viscera (end)
-                viscera_yatf = viscera_start_yatf + d_viscera_yatf * days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1]
+                viscera_yatf = np.maximum(0, (viscera_start_yatf + d_viscera_yatf * days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1])
+                                          * (nyatf_b1nwzida0e0b0xyg > 0) * (days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1] > 0))
                 ##Weight of water (end)
                 ww_yatf = fat_yatf * (1 - cg_cpyatf[26, ...]) + muscle_yatf * (1 - cg_cpyatf[27, ...]) + viscera_yatf * (1 - cg_cpyatf[28, ...])
                 ##Weight of gutfill (end)
                 gw_yatf = ffcfw_yatf - ebw_yatf
                 ##Whole body energy (calculated from fat, muscle and viscera weight, not including conceptus and wool)
                 wbe_yatf = sfun.f_wbe_mu(cg_cpyatf, fat_yatf, muscle_yatf, viscera_yatf)
-                ##Clean fleece weight (end)
+                ##Clean fleece weight (end). Incorporates the proportion of the wool harvested (cfw_propn_yg)
                 cfw_yatf = cfw_start_yatf + d_cfw_yatf * days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1] * cfw_propn_yg2
                 ##Greasy fleece weight (end)
                 gfw_yatf = cfw_yatf / cw_cpyatf[3, ...]
@@ -6618,7 +6671,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 gw_offs = ffcfw_offs - ebw_offs
                 ##Whole body energy (end - calculated from fat, muscle and viscera weight, not including  wool)
                 wbe_offs = sfun.f_wbe_mu(cg_cpoffs, fat_offs, muscle_offs, viscera_offs)
-                ##Clean fleece weight (end)
+                ##Clean fleece weight (end). Incorporates the proportion of the wool harvested (cfw_propn_yg)
                 cfw_offs = cfw_start_offs + d_cfw_offs * days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1] * cfw_propn_yg3
                 ##Greasy fleece weight (end)
                 gfw_offs = cfw_offs / cw_cpoffs[3, ...]
@@ -6755,10 +6808,13 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 o_methane_me_saved_tpdams[:, p:p+1] = methane_me_saved_dams
                 o_n2o_animal_tpdams[:, p:p+1] = n2o_animal_dams
                 o_cfw_tpdams[:, p:p+1] = cfw_dams
+                o_d_cfw_tpdams[:, p:p+1] = d_cfw_dams * days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1]
                 # o_gfw_tpdams[:, p:p+1] = gfw_dams
                 o_sl_tpdams[:, p:p+1] = sl_dams
                 o_fd_tpdams[:, p:p+1] = fd_dams
                 o_fd_min_tpdams[:, p:p+1] = fd_min_dams
+                o_d_fd_tpdams[:, p:p + 1] = d_fd_dams
+                o_d_fl_tpdams[:, p:p + 1] = d_fl_dams * days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1]
                 o_ss_tpdams[:, p:p+1] = ss_dams
                 o_n_sire_tpa1e1b1nwzida0e0b0xyg1g0p8[:, p:p+1] = n_sire_a1e1b1nwzida0e0b0xyg1g0p8
                 o_rc_start_tpdams[:, p:p+1] = rc_start_dams
@@ -6846,6 +6902,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 #### Need a separate variable to o_ffcfw_start_tpyatf because that variable is non-zero all year and this affects the reported birth weight when averaging across the e & b axes
                 #### Store a zero value if yatf don't exist for this slice (e1 or i)
                 r_ebw_start_tpyatf[:, p:p+1] = ebw_start_yatf * (days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...] > 0) * (nyatf_b1nwzida0e0b0xyg > 0)
+                r_fat_start_tpyatf[:, p:p+1] = fat_start_yatf * (days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...] > 0) * (nyatf_b1nwzida0e0b0xyg > 0)
                 r_ebg_tpyatf[:, p:p+1] = ebg_yatf
                 r_evg_tpyatf[:, p:p+1] = evg_yatf
                 r_wbe_tpyatf[:, p:p+1] = wbe_yatf
@@ -7668,116 +7725,208 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         return r_intake_f_tpdams, r_intake_f_tpoffs, o_ebg_tpdams, o_ebg_tpoffs
 
     ##if calibrating or reporting trait values: calculate the calibration variables for each production trait (p)
+    ###See DropBox [Calibration periods.xlsx] for slice numbers
     if calibrate_trait_values or o_trait_values is not None:
-        pcfw = o_cfw_tpdams[0,54,0,0,0,0,0,0,0,0,0,0,0,0,0,0]    #PCFW of NM ewes at 0.5yo
-        ycfw = o_cfw_tpdams[0,106,0,0,0,0,0,0,0,0,0,0,0,0,0,0]   #YCFW of NM ewes at 1.5yo
-        hcfw = o_cfw_tpdams[0,158,0,0,0,0,0,0,0,0,0,0,0,0,0,0]   #HCFW of NM ewes at 1.5yo
-        a2cfw = o_cfw_tpdams[0,158,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #A2CFW of single ewes at 2.5yo
-        a3cfw = o_cfw_tpdams[0,210,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #A3CFW of single ewes at 3.5yo
-        a4cfw = o_cfw_tpdams[0,262,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #A4CFW of single ewes at 4.5yo
-        a5cfw = o_cfw_tpdams[0,314,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #A5CFW of single ewes at 5.5yo
+        ##assign values to the p slices and ranges for the age stages. See
+        ###WT slices
+        b_wt_slc = {p_pos: [135,292,52], b1_pos: 2, x_pos: [0,2]}     #1st cycle single born female & castrate yatf of 2 tooth and adult ewes at birth, annually
+        w_wt_slc = {p_pos: [147,304,52], b1_pos: 2, x_pos: [0,2]}     #1st cycle single born female & castrate yatf of 2 tooth and adult ewes at weaning, annually
+        p_wt_slc = {p_pos: 63, b1_pos: 0}     #NM ewes mid point of p age stage
+        y_wt_slc = {p_pos: 84, b1_pos: 0}     #NM ewes mid point of y age stage
+        h_wt_slc = {p_pos: 110, b1_pos: 0}    #NM ewes prior to prejoining for 2yo lambing
+        a2_wt_slc = {p_pos: 162, b1_pos: 2}    #single bearing ewes prior to prejoining after 2yo lambing
+        a3_wt_slc = {p_pos: 214, b1_pos: 2}    #single bearing ewes prior to prejoining after 3yo lambing
+        a4_wt_slc = {p_pos: 266, b1_pos: 2}    #single bearing ewes prior to prejoining after 4yo lambing
+        a5_wt_slc = {p_pos: 318, b1_pos: 2}    #single bearing ewes prior to prejoining after 5yo lambing
+        ###Fleece slices
+        p_flc_slc = {p_pos: [52,73], b1_pos: 0}      #NM ewes duration of the p age stage
+        y_flc_slc = {p_pos: [73,95], b1_pos: 0}      #NM ewes duration of the y age stage
+        h_flc_slc = {p_pos: [95,125], b1_pos: 0}     #NM ewes duration of the h age stage
+        a2_flc_slc = {p_pos: [125,177], b1_pos: 2}    #single bearing ewes (11) duration of the a2 age stage
+        a3_flc_slc = {p_pos: [177,229], b1_pos: 2}    #single bearing ewes (11) duration of the a3 age stage
+        a4_flc_slc = {p_pos: [229,281], b1_pos: 2}    #single bearing ewes (11) duration of the a4 age stage
+        a5_flc_slc = {p_pos: [281,333], b1_pos: 2}    #single bearing ewes (11) duration of the a5 age stage
+        ###CON & LS slices
+        y_empty_slc = {p_pos: 67, b1_pos: 1}     #empty ewes after joining for 1yo lambing
+        y_mated_slc = {p_pos: 67, b1_pos: [1,5]}    #mated ewes after joining for 1yo lambing
+        y_preg_slc = {p_pos: 67, b1_pos: [2,5]}     #pregnant ewes after joining for 1yo lambing
+        a2_empty_slc = {p_pos: 112, b1_pos: 1}     #empty ewes after joining for 2yo lambing
+        a2_mated_slc = {p_pos: 112, b1_pos: [1,5]}    #mated ewes after joining for 2yo lambing
+        a2_preg_slc = {p_pos: 112, b1_pos: [2,5]}     #pregnant ewes after joining for 2yo lambing
+        a3_empty_slc = {p_pos: 164, b1_pos: 1}     #empty ewes after joining for 3yo lambing
+        a3_mated_slc = {p_pos: 164, b1_pos: [1,5]}    #mated ewes after joining for 3yo lambing
+        a3_preg_slc = {p_pos: 164, b1_pos: [2,5]}     #pregnant ewes after joining for 3yo lambing
+        a4_empty_slc = {p_pos: 216, b1_pos: 1}     #empty ewes after joining for 4yo lambing
+        a4_mated_slc = {p_pos: 216, b1_pos: [1,5]}    #mated ewes after joining for 4yo lambing
+        a4_preg_slc = {p_pos: 216, b1_pos: [2,5]}     #pregnant ewes after joining for 4yo lambing
+        a5_empty_slc = {p_pos: 268, b1_pos: 1}     #empty ewes after joining for 5yo lambing
+        a5_mated_slc = {p_pos: 268, b1_pos: [1,5]}    #mated ewes after joining for 5yo lambing
+        a5_preg_slc = {p_pos: 268, b1_pos: [2,5]}     #pregnant ewes after joining for 5yo lambing
+        ###ERA slices. Note b1 slice is handled in formula
+        y_lact_slc = {p_pos: 91}  #ewes after lambing for 1yo lambing
+        a2_lact_slc = {p_pos: 136}  #ewes after lambing for 2yo lambing
+        a3_lact_slc = {p_pos: 188}  #ewes after lambing for 3yo lambing
+        a4_lact_slc = {p_pos: 240}  #ewes after lambing for 4yo lambing
+        a5_lact_slc = {p_pos: 292}  #ewes after lambing for 5yo lambing
+
+        ##CFW values. Note: sum the p slices
+        pcfw = np.sum(fun.f_slice(o_d_cfw_tpdams, p_flc_slc, default=0))
+        ycfw = np.sum(fun.f_slice(o_d_cfw_tpdams, y_flc_slc, default=0))
+        hcfw = np.sum(fun.f_slice(o_d_cfw_tpdams, h_flc_slc, default=0))
+        a2cfw = np.sum(fun.f_slice(o_d_cfw_tpdams, a2_flc_slc, default=0))
+        a3cfw = np.sum(fun.f_slice(o_d_cfw_tpdams, a3_flc_slc, default=0))
+        a4cfw = np.sum(fun.f_slice(o_d_cfw_tpdams, a4_flc_slc, default=0))
+        a5cfw = np.sum(fun.f_slice(o_d_cfw_tpdams, a5_flc_slc, default=0))
         acfw = (a2cfw + a3cfw + a4cfw + a5cfw) / 4
-        pfd = o_fd_tpdams[0,54,0,0,0,0,0,0,0,0,0,0,0,0,0,0]     #PFD of NM ewes at 0.5yo
-        yfd = o_fd_tpdams[0,106,0,0,0,0,0,0,0,0,0,0,0,0,0,0]    #YFD of NM ewes at 1.5yo
-        hfd = o_fd_tpdams[0,158,0,0,0,0,0,0,0,0,0,0,0,0,0,0]    #HFD of NM ewes at 0.5yo
-        a2fd = o_fd_tpdams[0,158,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #A2FD of single ewes at 2.5yo
-        a3fd = o_fd_tpdams[0,210,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #A3FD of single ewes at 3.5yo
-        a4fd = o_fd_tpdams[0,262,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #A4FD of single ewes at 4.5yo
-        a5fd = o_fd_tpdams[0,314,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #A5FD of single ewes at 5.5yo
+
+        ##FD values. Note: FD weighted average on fibre length
+        fd_by_fl = o_d_fd_tpdams * o_d_fl_tpdams
+        pfd = fun.f_divide_float(np.sum(fun.f_slice(fd_by_fl, p_flc_slc, default=0))
+                          , np.sum(fun.f_slice(o_d_fl_tpdams, p_flc_slc, default=0)))
+        yfd = fun.f_divide_float(np.sum(fun.f_slice(fd_by_fl, y_flc_slc, default=0))
+                          , np.sum(fun.f_slice(o_d_fl_tpdams, y_flc_slc, default=0)))
+        hfd = fun.f_divide_float(np.sum(fun.f_slice(fd_by_fl, h_flc_slc, default=0))
+                          , np.sum(fun.f_slice(o_d_fl_tpdams, h_flc_slc, default=0)))
+        a2fd = fun.f_divide_float(np.sum(fun.f_slice(fd_by_fl, a2_flc_slc, default=0))
+                          , np.sum(fun.f_slice(o_d_fl_tpdams, a2_flc_slc, default=0)))
+        a3fd = fun.f_divide_float(np.sum(fun.f_slice(fd_by_fl, a3_flc_slc, default=0))
+                          , np.sum(fun.f_slice(o_d_fl_tpdams, a3_flc_slc, default=0)))
+        a4fd = fun.f_divide_float(np.sum(fun.f_slice(fd_by_fl, a4_flc_slc, default=0))
+                          , np.sum(fun.f_slice(o_d_fl_tpdams, a4_flc_slc, default=0)))
+        a5fd = fun.f_divide_float(np.sum(fun.f_slice(fd_by_fl, a5_flc_slc, default=0))
+                          , np.sum(fun.f_slice(o_d_fl_tpdams, a5_flc_slc, default=0)))
         afd = (a2fd + a3fd + a4fd + a5fd) / 4
-        pss = o_ss_tpdams[0,54,0,0,0,0,0,0,0,0,0,0,0,0,0,0]    #PSS of NM ewes at 3.5yo
-        yss = o_ss_tpdams[0,106,0,0,0,0,0,0,0,0,0,0,0,0,0,0]   #YSS of NM ewes at 3.5yo
-        hss = o_ss_tpdams[0,158,0,0,0,0,0,0,0,0,0,0,0,0,0,0]   #HSS of NM ewes at 3.5yo
-        a2ss = o_ss_tpdams[0,158,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #A2SS of single ewes at 2.5yo
-        a3ss = o_ss_tpdams[0,210,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #A3SS of single ewes at 3.5yo
-        a4ss = o_ss_tpdams[0,262,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #A4SS of single ewes at 4.5yo
-        a5ss = o_ss_tpdams[0,314,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #A5SS of single ewes at 5.5yo
+
+        ##SS values. Note: minimum cross-sectional area / average cross-sectional area
+        pfd_min = np.min(fun.f_slice(o_d_fd_tpdams, p_flc_slc, default=0))
+        cw16_sliced = fun.f_slice(cw_cpdams[16, ...], {}, default=0)
+        pss = pfd_min ** 2 / pfd ** 2 * cw16_sliced
+        yfd_min = np.min(fun.f_slice(o_d_fd_tpdams, y_flc_slc, default=0))
+        yss = yfd_min ** 2 / yfd ** 2 * cw16_sliced
+        hfd_min = np.min(fun.f_slice(o_d_fd_tpdams, h_flc_slc, default=0))
+        hss = hfd_min ** 2 / hfd ** 2 * cw16_sliced
+        a2fd_min = np.min(fun.f_slice(o_d_fd_tpdams, a2_flc_slc, default=0))
+        a2ss = a2fd_min ** 2 / a2fd ** 2 * cw16_sliced
+        a3fd_min = np.min(fun.f_slice(o_d_fd_tpdams, a3_flc_slc, default=0))
+        a3ss = a3fd_min ** 2 / a3fd ** 2 * cw16_sliced
+        a4fd_min = np.min(fun.f_slice(o_d_fd_tpdams, a4_flc_slc, default=0))
+        a4ss = a4fd_min ** 2 / a4fd ** 2 * cw16_sliced
+        a5fd_min = np.min(fun.f_slice(o_d_fd_tpdams, a5_flc_slc, default=0))
+        a5ss = a5fd_min ** 2 / a5fd ** 2 * cw16_sliced
         ass = (a2ss + a3ss + a4ss + a5ss) / 4
-        psl = o_sl_tpdams[0,54,0,0,0,0,0,0,0,0,0,0,0,0,0,0]     #PSL of NM ewes at 3.5yo
-        ysl = o_sl_tpdams[0,106,0,0,0,0,0,0,0,0,0,0,0,0,0,0]    #YSL of NM ewes at 3.5yo
-        hsl = o_sl_tpdams[0,158,0,0,0,0,0,0,0,0,0,0,0,0,0,0]    #HSL of NM ewes at 3.5yo
-        a2sl = o_sl_tpdams[0,158,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #A2SL of single ewes at 2.5yo
-        a3sl = o_sl_tpdams[0,210,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #A3SL of single ewes at 3.5yo
-        a4sl = o_sl_tpdams[0,262,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #A4SL of single ewes at 4.5yo
-        a5sl = o_sl_tpdams[0,314,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #A5SL of single ewes at 5.5yo
+
+        ##SL values. Note: sum of fibre length * staple length factor
+        d_sl = o_d_fl_tpdams * cw_cpdams[15, ...]
+        psl = np.sum(fun.f_slice(d_sl, p_flc_slc, default=0))
+        ysl = np.sum(fun.f_slice(d_sl, y_flc_slc, default=0))
+        hsl = np.sum(fun.f_slice(d_sl, h_flc_slc, default=0))
+        a2sl = np.sum(fun.f_slice(d_sl, a2_flc_slc, default=0))
+        a3sl = np.sum(fun.f_slice(d_sl, a3_flc_slc, default=0))
+        a4sl = np.sum(fun.f_slice(d_sl, a4_flc_slc, default=0))
+        a5sl = np.sum(fun.f_slice(d_sl, a5_flc_slc, default=0))
         asl = (a2sl + a3sl + a4sl + a5sl) / 4
-        ##proportion of preg is 1 - (number of dry (b[1]) divided by the number dry and pregnant (b[1:5]))
-        ycon = 1 - fun.f_divide(o_numbers_start_tpdams[0,59,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
-                         np.sum(o_numbers_start_tpdams[0,59,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0]))
-        a2con = 1 - fun.f_divide(o_numbers_start_tpdams[0,111,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
-                          np.sum(o_numbers_start_tpdams[0,111,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0]))
-        a3con = 1 - fun.f_divide(o_numbers_start_tpdams[0,163,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
-                          np.sum(o_numbers_start_tpdams[0,163,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0]))
-        a4con = 1 - fun.f_divide(o_numbers_start_tpdams[0,215,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
-                          np.sum(o_numbers_start_tpdams[0,215,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0]))
-        a5con = 1 - fun.f_divide(o_numbers_start_tpdams[0,267,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
-                          np.sum(o_numbers_start_tpdams[0,267,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0]))
-        acon = (a3con + a4con + a5con) / 3  #a2con is calibrated separately because separate 2 tooth coefficients
+
+        ##Proportion of preg = 1 - (number of empty divided by the number mated (empty + pregnant))
+        ycon = 1 - fun.f_divide_float(fun.f_slice(o_numbers_start_tpdams, y_empty_slc, default=0)
+                             , np.sum(fun.f_slice(o_numbers_start_tpdams, y_mated_slc, default=0)))
+        a2con = 1 - fun.f_divide_float(fun.f_slice(o_numbers_start_tpdams, a2_empty_slc, default=0)
+                              , np.sum(fun.f_slice(o_numbers_start_tpdams, a2_mated_slc, default=0)))
+        a3con = 1 - fun.f_divide_float(fun.f_slice(o_numbers_start_tpdams, a3_empty_slc, default=0)
+                              , np.sum(fun.f_slice(o_numbers_start_tpdams, a3_mated_slc, default=0)))
+        a4con = 1 - fun.f_divide_float(fun.f_slice(o_numbers_start_tpdams, a4_empty_slc, default=0)
+                              , np.sum(fun.f_slice(o_numbers_start_tpdams, a4_mated_slc, default=0)))
+        a5con = 1 - fun.f_divide_float(fun.f_slice(o_numbers_start_tpdams, a5_empty_slc, default=0)
+                              , np.sum(fun.f_slice(o_numbers_start_tpdams, a5_mated_slc, default=0)))
+        acon = (a3con + a4con + a5con) / 3
+
         ##Litter size is sum of the ewes weighted by # foetuses (np.dot with arange(4)) divided by pregnant ewes
-        yls = fun.f_divide(np.dot(o_numbers_start_tpdams[0,59,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0], np.arange(4))
-                         , np.sum(o_numbers_start_tpdams[0,59,0,0,2:5,0,0,0,0,0,0,0,0,0,0,0]))
-        a2ls = fun.f_divide(np.dot(o_numbers_start_tpdams[0,111,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0], np.arange(4))
-                          , np.sum(o_numbers_start_tpdams[0,111,0,0,2:5,0,0,0,0,0,0,0,0,0,0,0]))
-        a3ls = fun.f_divide(np.dot(o_numbers_start_tpdams[0,163,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0], np.arange(4))
-                          , np.sum(o_numbers_start_tpdams[0,163,0,0,2:5,0,0,0,0,0,0,0,0,0,0,0]))
-        a4ls = fun.f_divide(np.dot(o_numbers_start_tpdams[0, 215, 0, 0, 1:5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], np.arange(4))
-                          , np.sum(o_numbers_start_tpdams[0,215,0,0,2:5,0,0,0,0,0,0,0,0,0,0,0]))
-        a5ls = fun.f_divide(np.dot(o_numbers_start_tpdams[0,267,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0], np.arange(4))
-                          , np.sum(o_numbers_start_tpdams[0,267,0,0,2:5,0,0,0,0,0,0,0,0,0,0,0]))
+        ###np.dot only functions if the numbers array is indexed (not sliced)
+        yls = fun.f_divide_float(np.dot(fun.f_slice(o_numbers_start_tpdams, y_mated_slc, default=0), np.arange(4))
+                               , np.sum(fun.f_slice(o_numbers_start_tpdams, y_preg_slc, default=0)))
+        a2ls = fun.f_divide_float(np.dot(fun.f_slice(o_numbers_start_tpdams, a2_mated_slc, default=0), np.arange(4))
+                                , np.sum(fun.f_slice(o_numbers_start_tpdams, a2_preg_slc, default=0)))
+        a3ls = fun.f_divide_float(np.dot(fun.f_slice(o_numbers_start_tpdams, a3_mated_slc, default=0), np.arange(4))
+                                , np.sum(fun.f_slice(o_numbers_start_tpdams, a3_preg_slc, default=0)))
+        a4ls = fun.f_divide_float(np.dot(fun.f_slice(o_numbers_start_tpdams, a4_mated_slc, default=0), np.arange(4))
+                                , np.sum(fun.f_slice(o_numbers_start_tpdams, a4_preg_slc, default=0)))
+        a5ls = fun.f_divide_float(np.dot(fun.f_slice(o_numbers_start_tpdams, a5_mated_slc, default=0), np.arange(4))
+                                , np.sum(fun.f_slice(o_numbers_start_tpdams, a5_preg_slc, default=0)))
         als = (a3ls + a4ls + a5ls) / 3  #a2ls is calibrated separately because separate 2 tooth coefficients
-        ##twin survival is square root of the number of ewe with twins (BT22) after lambing / number before lambing
-        ##Square root is simpler to calculate than summing BTRT 22 * 2 & 21 * 1, but this will need to change if the assumption on survival of twins being independent is relaxed
-        yera = fun.f_divide(o_numbers_start_tpdams[0,84,0,0,3,0,0,0,0,0,0,0,0,0,0,0]
-                          , o_numbers_start_tpdams[0,80,0,0,3,0,0,0,0,0,0,0,0,0,0,0])**0.5
-        a2era = fun.f_divide(o_numbers_start_tpdams[0,136,0,0,3,0,0,0,0,0,0,0,0,0,0,0]
-                           , o_numbers_start_tpdams[0,132,0,0,3,0,0,0,0,0,0,0,0,0,0,0])**0.5
-        a3era = fun.f_divide(o_numbers_start_tpdams[0,188,0,0,3,0,0,0,0,0,0,0,0,0,0,0]
-                           , o_numbers_start_tpdams[0,184,0,0,3,0,0,0,0,0,0,0,0,0,0,0]) ** 0.5
-        a4era = fun.f_divide(o_numbers_start_tpdams[0,240,0,0,3,0,0,0,0,0,0,0,0,0,0,0]
-                           , o_numbers_start_tpdams[0,236,0,0,3,0,0,0,0,0,0,0,0,0,0,0]) ** 0.5
-        a5era = fun.f_divide(o_numbers_start_tpdams[0,292,0,0,3,0,0,0,0,0,0,0,0,0,0,0]
-                           , o_numbers_start_tpdams[0,288,0,0,3,0,0,0,0,0,0,0,0,0,0,0]) ** 0.5
+
+        ##ERA = twin survival is defined as survival of twin lambs from the ewes that survive
+        ### number of twin lambs at foot during lactation / 2 * number of twin bearing ewes
+        n_twin_lact = np.sum(o_numbers_start_tpdams * (nfoet_b1nwzida0e0b0xyg == 2) * nyatf_b1nwzida0e0b0xyg
+                             , axis=b1_pos, keepdims=True)
+        n_twin_preg = np.sum(o_numbers_start_tpdams * (nfoet_b1nwzida0e0b0xyg == 2) * 2
+                             , axis=b1_pos, keepdims=True)
+        yera = fun.f_divide_float(np.sum(fun.f_slice(n_twin_lact, y_lact_slc, default=0))
+                                , np.sum(fun.f_slice(n_twin_preg, y_lact_slc, default=0)))
+        a2era = fun.f_divide_float(np.sum(fun.f_slice(n_twin_lact, a2_lact_slc, default=0))
+                                 , np.sum(fun.f_slice(n_twin_preg, a2_lact_slc, default=0)))
+        a3era = fun.f_divide_float(np.sum(fun.f_slice(n_twin_lact, a3_lact_slc, default=0))
+                                 , np.sum(fun.f_slice(n_twin_preg, a3_lact_slc, default=0)))
+        a4era = fun.f_divide_float(np.sum(fun.f_slice(n_twin_lact, a4_lact_slc, default=0))
+                                 , np.sum(fun.f_slice(n_twin_preg, a4_lact_slc, default=0)))
+        a5era = fun.f_divide_float(np.sum(fun.f_slice(n_twin_lact, a5_lact_slc, default=0))
+                                 , np.sum(fun.f_slice(n_twin_preg, a5_lact_slc, default=0)))
         aera = (a2era + a3era + a4era + a5era) / 4  #a2era is included with the older adults because there aren't separate 2 tooth lamb survival coefficients
-        ##birth weight - #todo connect up birth weight of 1st cycle single born female yatf of 2 tooth and adult ewes
-        bwt = 0     # bwt = ( + + + )/4
-        ##weaning weight of 1st cycle single born female yatf of 2 tooth and adult ewes
-        wwt = (o_wean_w_tpyatf[0,147,0,0,2,0,0,0,0,0,0,0,0,0,0,0]
-             + o_wean_w_tpyatf[0,199,0,0,2,0,0,0,0,0,0,0,0,0,0,0]
-             + o_wean_w_tpyatf[0,251,0,0,2,0,0,0,0,0,0,0,0,0,0,0]
-             + o_wean_w_tpyatf[0,303,0,0,2,0,0,0,0,0,0,0,0,0,0,0]) / 4
-        pwt = 0     # pwt = o_ffcfw_tpdams[]     #Post wean weight of non-mated females at ?? months old
-        ywt = o_ffcfw_tpdams[0,85,0,0,0,0,0,0,0,0,0,0,0,0,0,0]     #Yearling weight of non-mated females ewes at 1yo
-        hwt = o_ffcfw_tpdams[0,111,0,0,0,0,0,0,0,0,0,0,0,0,0,0]    #Hogget weight of ewes at 1.5yo prior to prejoining, NM in previous year
-        awt = o_ffcfw_tpdams[0,215,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #Adult weight of ewes at 3.5yo prior to prejoining, BTRT 11 in previous year
-        pfat = 0    # o_cfat_start_tpdams[]     #Post wean fat depth of non-mated females at ?? months old
-        yfat = o_cfat_start_tpdams[0,85,0,0,0,0,0,0,0,0,0,0,0,0,0,0]     #Yearling fat depth of non-mated females ewes at 1yo
-        hfat = o_cfat_start_tpdams[0,111,0,0,0,0,0,0,0,0,0,0,0,0,0,0]    #Hogget fat depth of ewes at 1.5yo prior to prejoining, NM in previous year
-        afat = o_cfat_start_tpdams[0,215,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #Adult fat depth of ewes at 3.5yo prior to prejoining, BTRT 11 in previous year
-        pwbe = 0    # fun.f_divide(r_fat_tpdams[]
-                    #       , r_ebw_tpdams[])  #% of fat for Post weaning females
-        ywbe = fun.f_divide(r_fat_tpdams[0,85,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-                          , r_ebw_tpdams[0,85,0,0,0,0,0,0,0,0,0,0,0,0,0,0])  #% of fat for Yearling non-mated females ewes at 1yo
-        hwbe = fun.f_divide(r_fat_tpdams[0,111,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-                          , r_ebw_tpdams[0,111,0,0,0,0,0,0,0,0,0,0,0,0,0,0])  #% of fat for Hogget ewes at 1.5yo prior to prejoining, NM in previous year
-        awbe = fun.f_divide(r_fat_tpdams[0,215,0,0,2,0,0,0,0,0,0,0,0,0,0,0]
-                          , r_ebw_tpdams[0,215,0,0,2,0,0,0,0,0,0,0,0,0,0,0])  #% of fat for the dams at 3.5yo prior to prejoining, BTRT 11 in previous year
-        ##SRW based on ALW and Fat% of 3.5yo ewes prior to prejoining
+
+        ##WT Fleece free conceptus free weight
+        bwt = np.average(fun.f_slice(o_ffcfw_start_tpyatf, b_wt_slc, default=0))
+        wwt = np.average(fun.f_slice(o_wean_w_tpyatf, w_wt_slc, default=0))
+        pwt = fun.f_slice(o_ffcfw_tpdams, p_wt_slc, default=0)
+        ywt = fun.f_slice(o_ffcfw_tpdams, y_wt_slc, default=0)
+        hwt = fun.f_slice(o_ffcfw_tpdams, h_wt_slc, default=0)
+        a2wt = fun.f_slice(o_ffcfw_tpdams, a2_wt_slc, default=0)
+        a3wt = fun.f_slice(o_ffcfw_tpdams, a3_wt_slc, default=0)
+        a4wt = fun.f_slice(o_ffcfw_tpdams, a4_wt_slc, default=0)
+        a5wt = fun.f_slice(o_ffcfw_tpdams, a5_wt_slc, default=0)
+        awt = (a2wt + a3wt + a4wt + a5wt) / 4
+        ##C-site fat depth
+        pfat = fun.f_slice(o_cfat_start_tpdams, p_wt_slc, default=0)
+        yfat = fun.f_slice(o_cfat_start_tpdams, y_wt_slc, default=0)
+        hfat = fun.f_slice(o_cfat_start_tpdams, h_wt_slc, default=0)
+        a2fat = fun.f_slice(o_cfat_start_tpdams, a2_wt_slc, default=0)
+        a3fat = fun.f_slice(o_cfat_start_tpdams, a3_wt_slc, default=0)
+        a4fat = fun.f_slice(o_cfat_start_tpdams, a4_wt_slc, default=0)
+        a5fat = fun.f_slice(o_cfat_start_tpdams, a5_wt_slc, default=0)
+        afat = (a2fat + a3fat + a4fat + a5fat) / 4
+        ##WBE is Fat% (weight of fat divided by empty body weight)
+        pwbe = fun.f_divide_float(fun.f_slice(r_fat_tpdams, p_wt_slc, default=0)
+                                , fun.f_slice(r_ebw_tpdams, p_wt_slc, default=0))
+        ywbe = fun.f_divide_float(fun.f_slice(r_fat_tpdams, y_wt_slc, default=0)
+                                , fun.f_slice(r_ebw_tpdams, y_wt_slc, default=0))
+        hwbe = fun.f_divide_float(fun.f_slice(r_fat_tpdams, h_wt_slc, default=0)
+                                , fun.f_slice(r_ebw_tpdams, h_wt_slc, default=0))
+        a2wbe = fun.f_divide_float(fun.f_slice(r_fat_tpdams, a2_wt_slc, default=0)
+                                 , fun.f_slice(r_ebw_tpdams, a2_wt_slc, default=0))
+        a3wbe = fun.f_divide_float(fun.f_slice(r_fat_tpdams, a3_wt_slc, default=0)
+                                 , fun.f_slice(r_ebw_tpdams, a3_wt_slc, default=0))
+        a4wbe = fun.f_divide_float(fun.f_slice(r_fat_tpdams, a4_wt_slc, default=0)
+                                 , fun.f_slice(r_ebw_tpdams, a4_wt_slc, default=0))
+        a5wbe = fun.f_divide_float(fun.f_slice(r_fat_tpdams, a5_wt_slc, default=0)
+                                 , fun.f_slice(r_ebw_tpdams, a5_wt_slc, default=0))
+        awbe = (a2wbe + a3wbe + a4wbe + a5wbe) / 4
+
+        ##SRW based on ALW and Fat% of adult ewes prior to prejoining
         ###Estimating SRW as LW at 25% fat.
         ###The calculation assumes that muscle mass is constant and only fat mass changes as per Hutton's model
-        srw_from_fat = awt * (1 - awbe) / (1 - 0.25)   #todo add the std fat % for SRW as  parameters to uinp if the method works
-        # srw = awt / (1 + 1.54 * (awbe - 0.25))   # alternative formula that can be fitted to simulation data (see W18:p64)
+        srw_from_fat = awt * (1 - awbe) / (1 - srwfat_yg1)
+        # srw = awt / (1 + 1.54 * (awbe - srwfat_yg1))   # alternative formula that can be fitted to simulation data (see W18:p64)
         fat_at_srw = 1 - (awt / srw_parameter * (1 - awbe))     #estimated proportion of fat in the body at the srw
-        ##weaning weight of 1st cycle single born female yatf of 2 tooth and adult ewes
-        wcs = (o_cs_start_tpyatf[0,147,0,0,2,0,0,0,0,0,0,0,0,0,0,0]
-             + o_cs_start_tpyatf[0,199,0,0,2,0,0,0,0,0,0,0,0,0,0,0]
-             + o_cs_start_tpyatf[0,251,0,0,2,0,0,0,0,0,0,0,0,0,0,0]
-             + o_cs_start_tpyatf[0,303,0,0,2,0,0,0,0,0,0,0,0,0,0,0]) / 4
-        pcs = 0    # o_cs_start_tpdams[0,85,0,0,0,0,0,0,0,0,0,0,0,0,0,0]     #Post weaning CS of not mated females at ?? months old
-        ycs = o_cs_start_tpdams[0,85,0,0,0,0,0,0,0,0,0,0,0,0,0,0]     #Yearling CS of ewes at 1yo, NM in previous year
-        hcs = o_cs_start_tpdams[0,111,0,0,0,0,0,0,0,0,0,0,0,0,0,0]    #Hogget CS of ewes at 1.5yo prior to prejoining, NM in previous year
-        acs = o_cs_start_tpdams[0,215,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #Adult CS of ewes at 3.5yo prior to prejoining, BTRT 11 in previous year
-        # connect up periods for mortality of younger animals.
 
+        ##Condition score
+        wcs = np.average(fun.f_slice(o_cs_start_tpyatf, w_wt_slc))
+        pcs = fun.f_slice(o_cs_start_tpdams, p_wt_slc)
+        ycs = fun.f_slice(o_cs_start_tpdams, y_wt_slc)
+        hcs = fun.f_slice(o_cs_start_tpdams, h_wt_slc)
+        a2cs = fun.f_slice(o_cs_start_tpdams, a2_wt_slc)
+        a3cs = fun.f_slice(o_cs_start_tpdams, a3_wt_slc)
+        a4cs = fun.f_slice(o_cs_start_tpdams, a4_wt_slc)
+        a5cs = fun.f_slice(o_cs_start_tpdams, a5_wt_slc)
+        acs = (a2cs + a3cs + a4cs + a5cs) / 4
+
+        #todo connect up periods for mortality of younger animals.
         psurv = 0    # fun.f_divide(np.sum(o_numbers_start_tpdams[0,312,0,:,:,0,0,0,0,0,0,0,0,0,0,0])           #Mortality of ewes from yearling shearing to 5.5yo BTRT 11
                      #       , np.sum(o_numbers_start_tpdams[0,104,0,:,:,0,0,0,0,0,0,0,0,0,0,0]))
         ysurv = 0    # fun.f_divide(np.sum(o_numbers_start_tpdams[0,312,0,:,:,0,0,0,0,0,0,0,0,0,0,0])           #Mortality of ewes from yearling shearing to 5.5yo BTRT 11
@@ -7787,6 +7936,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         #todo  Maybe need a different definition of asurv for use with EV of breeding traits.
         asurv = fun.f_divide(np.sum(o_numbers_start_tpdams[0,312,0,:,:,0,0,0,0,0,0,0,0,0,0,0])           #Cumulative mortality of ewes from yearling shearing to 5.5yo BTRT 11
                            , np.sum(o_numbers_start_tpdams[0,104,0,:,:,0,0,0,0,0,0,0,0,0,0,0]))
+
+        ##LW profile to calibrate feed supply
         # elw1 = o_ffcfw_tpdams[0, 57, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]  #Ewe LW targets
         # elw2 = o_ffcfw_tpdams[0, 64, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         # elw3 = o_ffcfw_tpdams[0, 71, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -10728,6 +10879,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                              * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,na,...]))
         r_fat_k2Tvpdams = (r_fat_tpdams[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
                            * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
+        r_fat_k2Tvpyatf = (r_fat_start_tpyatf[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
+                           * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
         r_fat_k3k5Tvpoffs = (r_fat_tpoffs[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg3 == index_vpa1e1b1nwzida0e0b0xyg3)
                              * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...])
                              * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,na,...]))
@@ -12239,6 +12392,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         fun.f1_make_r_val(r_vals,r_wbe_k2Tvpyatf,'wbe_yatf_k2Tvpa1e1b1nw8zixyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2Tvpa1e1b1nwzixyg1_shape)
         fun.f1_make_r_val(r_vals,r_wbe_k3k5Tvpoffs,'wbe_offs_k3k5Tvpnw8zida0e0b0xyg3', mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...],z_pos,k3k5Tvpnwzidae0b0xyg3_shape)
         fun.f1_make_r_val(r_vals,r_fat_k2Tvpdams,'fat_dams_k2Tvpa1e1b1nw8ziyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2Tvpa1e1b1nwziyg1_shape)
+        fun.f1_make_r_val(r_vals,r_fat_k2Tvpyatf,'fat_yatf_k2Tvpa1e1b1nw8zixyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2Tvpa1e1b1nwzixyg1_shape)
         fun.f1_make_r_val(r_vals,r_fat_k3k5Tvpoffs,'fat_offs_k3k5Tvpnw8zida0e0b0xyg3', mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...],z_pos,k3k5Tvpnwzidae0b0xyg3_shape)
         fun.f1_make_r_val(r_vals,r_lean_k2Tvpdams,'lean_dams_k2Tvpa1e1b1nw8ziyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2Tvpa1e1b1nwziyg1_shape)
         fun.f1_make_r_val(r_vals,r_lean_k3k5Tvpoffs,'lean_offs_k3k5Tvpnw8zida0e0b0xyg3', mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...],z_pos,k3k5Tvpnwzidae0b0xyg3_shape)
@@ -12378,137 +12532,140 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         ##Slice the r_compare array and return the equation systems and p axes.
         try:  #Catch error when the variable doesn't exist, which for r_compare occurs if eqn_compare is false for a trial
             ##comment out either dams or offs because only one can be saved to Excel unless array names and df names are expanded.
-            array7_0a = r_compare7_q0q2tpdams[:, 0, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_0b = r_compare7_q0q2tpdams[:, 0, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_0c = r_compare7_q0q2tpdams[:, 0, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_1a = r_compare7_q0q2tpdams[:, 1, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_1b = r_compare7_q0q2tpdams[:, 1, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_1c = r_compare7_q0q2tpdams[:, 1, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_2a = r_compare7_q0q2tpdams[:, 2, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_2b = r_compare7_q0q2tpdams[:, 2, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_2c = r_compare7_q0q2tpdams[:, 2, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_3a = r_compare7_q0q2tpdams[:, 3, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_3b = r_compare7_q0q2tpdams[:, 3, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_3c = r_compare7_q0q2tpdams[:, 3, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_4a = r_compare7_q0q2tpdams[:, 4, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_4b = r_compare7_q0q2tpdams[:, 4, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_4c = r_compare7_q0q2tpdams[:, 4, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_5a = r_compare7_q0q2tpdams[:, 5, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_5b = r_compare7_q0q2tpdams[:, 5, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_5c = r_compare7_q0q2tpdams[:, 5, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_6a = r_compare7_q0q2tpdams[:, 6, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_6b = r_compare7_q0q2tpdams[:, 6, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_6c = r_compare7_q0q2tpdams[:, 6, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_7a = r_compare7_q0q2tpdams[:, 7, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_7b = r_compare7_q0q2tpdams[:, 7, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_7c = r_compare7_q0q2tpdams[:, 7, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_8a = r_compare7_q0q2tpdams[:, 8, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_8b = r_compare7_q0q2tpdams[:, 8, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_8c = r_compare7_q0q2tpdams[:, 8, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_9a = r_compare7_q0q2tpdams[:, 9, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_9b = r_compare7_q0q2tpdams[:, 9, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_9c = r_compare7_q0q2tpdams[:, 9, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_10a = r_compare7_q0q2tpdams[:, 10, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_10b = r_compare7_q0q2tpdams[:, 10, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_10c = r_compare7_q0q2tpdams[:, 10, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_13a = r_compare7_q0q2tpdams[:, 13, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_13b = r_compare7_q0q2tpdams[:, 13, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7_13c = r_compare7_q0q2tpdams[:, 13, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            arrayA = o_mei_solid_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # b1 axis (dry, single & twin) used in place of q0
-            arrayB = r_md_solid_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # b1 axis (dry, single & twin) used in place of q0
-            arrayC = nv_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # b1 axis (dry, single & twin) used in place of q0
-            arrayD = r_ebw_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # have used (dry, single & twin) in place of q0
-            arrayE = r_wbe_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # have used (dry, single & twin) in place of q0
-            arrayF = r_fat_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # have used (dry, single & twin) in place of q0
-            arrayG = r_muscle_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # have used (dry, single & twin) in place of q0
-            arrayH = r_viscera_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # have used (dry, single & twin) in place of q0
-            arrayI = r_w_f_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # have used (dry, single & twin) in place of q0
-            arrayJ = o_cfw_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # have used (dry, single & twin) in place of q0
+            t_slc = min(2, len_gen_t1 - 1)   #Set value for the t slice to 2 if generating with a t axis
+            array7_0a = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 0, t_pos: t_slc, p_pos: [0,None], b1_pos: 1}, default=0)
+            array7_0b = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 0, t_pos: t_slc, p_pos: [0,None], b1_pos: 2}, default=0)
+            array7_0c = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 0, t_pos: t_slc, p_pos: [0,None], b1_pos: 3}, default=0)
+            array7_1a = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 1, t_pos: t_slc, p_pos: [0,None], b1_pos: 1}, default=0)
+            array7_1b = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 1, t_pos: t_slc, p_pos: [0,None], b1_pos: 2}, default=0)
+            array7_1c = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 1, t_pos: t_slc, p_pos: [0,None], b1_pos: 3}, default=0)
+            array7_2a = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 2, t_pos: t_slc, p_pos: [0,None], b1_pos: 1}, default=0)
+            array7_2b = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 2, t_pos: t_slc, p_pos: [0,None], b1_pos: 2}, default=0)
+            array7_2c = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 2, t_pos: t_slc, p_pos: [0,None], b1_pos: 3}, default=0)
+            array7_3a = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 3, t_pos: t_slc, p_pos: [0,None], b1_pos: 1}, default=0)
+            array7_3b = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 3, t_pos: t_slc, p_pos: [0,None], b1_pos: 2}, default=0)
+            array7_3c = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 3, t_pos: t_slc, p_pos: [0,None], b1_pos: 3}, default=0)
+            array7_4a = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 4, t_pos: t_slc, p_pos: [0,None], b1_pos: 1}, default=0)
+            array7_4b = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 4, t_pos: t_slc, p_pos: [0,None], b1_pos: 2}, default=0)
+            array7_4c = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 4, t_pos: t_slc, p_pos: [0,None], b1_pos: 3}, default=0)
+            array7_5a = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 5, t_pos: t_slc, p_pos: [0,None], b1_pos: 1}, default=0)
+            array7_5b = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 5, t_pos: t_slc, p_pos: [0,None], b1_pos: 2}, default=0)
+            array7_5c = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 5, t_pos: t_slc, p_pos: [0,None], b1_pos: 3}, default=0)
+            array7_6a = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 6, t_pos: t_slc, p_pos: [0,None], b1_pos: 1}, default=0)
+            array7_6b = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 6, t_pos: t_slc, p_pos: [0,None], b1_pos: 2}, default=0)
+            array7_6c = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 6, t_pos: t_slc, p_pos: [0,None], b1_pos: 3}, default=0)
+            array7_7a = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 7, t_pos: t_slc, p_pos: [0,None], b1_pos: 1}, default=0)
+            array7_7b = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 7, t_pos: t_slc, p_pos: [0,None], b1_pos: 2}, default=0)
+            array7_7c = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 7, t_pos: t_slc, p_pos: [0,None], b1_pos: 3}, default=0)
+            array7_8a = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 8, t_pos: t_slc, p_pos: [0,None], b1_pos: 1}, default=0)
+            array7_8b = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 8, t_pos: t_slc, p_pos: [0,None], b1_pos: 2}, default=0)
+            array7_8c = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 8, t_pos: t_slc, p_pos: [0,None], b1_pos: 3}, default=0)
+            array7_9a = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 9, t_pos: t_slc, p_pos: [0,None], b1_pos: 1}, default=0)
+            array7_9b = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 9, t_pos: t_slc, p_pos: [0,None], b1_pos: 2}, default=0)
+            array7_9c = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 9, t_pos: t_slc, p_pos: [0,None], b1_pos: 3}, default=0)
+            array7_10a = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 10, t_pos: t_slc, p_pos: [0,None], b1_pos: 1}, default=0)
+            array7_10b = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 10, t_pos: t_slc, p_pos: [0,None], b1_pos: 2}, default=0)
+            array7_10c = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 10, t_pos: t_slc, p_pos: [0,None], b1_pos: 3}, default=0)
+            array7_13a = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 13, t_pos: t_slc, p_pos: [0,None], b1_pos: 1}, default=0)
+            array7_13b = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 13, t_pos: t_slc, p_pos: [0,None], b1_pos: 2}, default=0)
+            array7_13c = fun.f_slice(r_compare7_q0q2tpdams, {0: [0,None], 1: 13, t_pos: t_slc, p_pos: [0,None], b1_pos: 3}, default=0)
+            arrayA = fun.f_slice(o_mei_solid_tpdams, {t_pos: t_slc, p_pos: [0,None], b1_pos: [1,4]}, default=0).T   # b1 axis (dry, single & twin) used in place of q0
+            arrayB = fun.f_slice(r_md_solid_tpdams, {t_pos: t_slc, p_pos: [0,None], b1_pos: [1,4]}, default=0).T   # b1 axis (dry, single & twin) used in place of q0
+            arrayC = fun.f_slice(nv_tpdams, {t_pos: t_slc, p_pos: [0,None], b1_pos: [1,4]}, default=0).T   # b1 axis (dry, single & twin) used in place of q0
+            arrayD = fun.f_slice(r_ebw_tpdams, {t_pos: t_slc, p_pos: [0,None], b1_pos: [1,4]}, default=0).T   # have used (dry, single & twin) in place of q0
+            arrayE = fun.f_slice(r_wbe_tpdams, {t_pos: t_slc, p_pos: [0,None], b1_pos: [1,4]}, default=0).T   # have used (dry, single & twin) in place of q0
+            arrayF = fun.f_slice(r_fat_tpdams, {t_pos: t_slc, p_pos: [0,None], b1_pos: [1,4]}, default=0).T   # have used (dry, single & twin) in place of q0
+            arrayG = fun.f_slice(r_muscle_tpdams, {t_pos: t_slc, p_pos: [0,None], b1_pos: [1,4]}, default=0).T   # have used (dry, single & twin) in place of q0
+            arrayH = fun.f_slice(r_viscera_tpdams, {t_pos: t_slc, p_pos: [0,None], b1_pos: [1,4]}, default=0).T   # have used (dry, single & twin) in place of q0
+            arrayI = fun.f_slice(r_w_f_tpdams, {t_pos: t_slc, p_pos: [0,None], b1_pos: [1,4]}, default=0).T   # have used (dry, single & twin) in place of q0
+            arrayJ = fun.f_slice(o_cfw_tpdams, {t_pos: t_slc, p_pos: [0,None], b1_pos: [1,4]}, default=0).T   # have used (dry, single & twin) in place of q0
 
             ##calculations for the extra sheets
-            p_slc0 = {p_pos: [0]}
-            array_calc7_3a = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpdams, p_slc0), 0, weight=array7_3a)   #have to slice in case saa_p11 has been implemented
-            array_calc7_3b = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpdams, p_slc0), 0, weight=array7_3b)
-            array_calc7_3c = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpdams, p_slc0), 0, weight=array7_3c)
-            array_calc7_4a = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpdams, p_slc0), 1, weight=array7_4a)
-            array_calc7_4b = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpdams, p_slc0), 1, weight=array7_4b)
-            array_calc7_4c = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpdams, p_slc0), 1, weight=array7_4c)
-            array_calc7_5a = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpdams, p_slc0), 2, weight=array7_5a)
-            array_calc7_5b = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpdams, p_slc0), 2, weight=array7_5b)
-            array_calc7_5c = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpdams, p_slc0), 2, weight=array7_5c)
+            p_slc0 = {0: [0,None], p_pos: 0}    #all of the c axis and p[0]
+            array_calc7_3a = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpdams, p_slc0, default=0), 0, weight=array7_3a)   #have to slice in case saa_p11 has been implemented
+            array_calc7_3b = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpdams, p_slc0, default=0), 0, weight=array7_3b)
+            array_calc7_3c = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpdams, p_slc0, default=0), 0, weight=array7_3c)
+            array_calc7_4a = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpdams, p_slc0, default=0), 1, weight=array7_4a)
+            array_calc7_4b = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpdams, p_slc0, default=0), 1, weight=array7_4b)
+            array_calc7_4c = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpdams, p_slc0, default=0), 1, weight=array7_4c)
+            array_calc7_5a = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpdams, p_slc0, default=0), 2, weight=array7_5a)
+            array_calc7_5b = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpdams, p_slc0, default=0), 2, weight=array7_5b)
+            array_calc7_5c = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpdams, p_slc0, default=0), 2, weight=array7_5c)
             ###retained energy = df + dm + dv + dc + dw + dl
             array_calc7_6a = array_calc7_3a + array_calc7_4a + array_calc7_5a + array7_8a + array7_10a + array7_13a
             array_calc7_6b = array_calc7_3b + array_calc7_4b + array_calc7_5b + array7_8b + array7_10b + array7_13b
             array_calc7_6c = array_calc7_3c + array_calc7_4c + array_calc7_5c + array7_8c + array7_10c + array7_13c
-            array_calcF = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpdams, p_slc0), 0, weight=arrayF)
-            array_calcG = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpdams, p_slc0), 1, weight=arrayG)
-            array_calcH = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpdams, p_slc0), 2, weight=arrayH)
+            array_calcF = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpdams, p_slc0, default=0), 0, weight=arrayF)
+            array_calcG = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpdams, p_slc0, default=0), 1, weight=arrayG)
+            array_calcH = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpdams, p_slc0, default=0), 2, weight=arrayH)
 
-            ## Assign Offspring values to the array variables
-            # array7_0a = r_compare7_q0q2tpoffs[:, 0, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
-            # array7_0b = r_compare7_q0q2tpoffs[:, 0, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
-            # array7_0c = r_compare7_q0q2tpoffs[:, 0, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
-            # array7_1a = r_compare7_q0q2tpoffs[:, 1, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
-            # array7_1b = r_compare7_q0q2tpoffs[:, 1, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
-            # array7_1c = r_compare7_q0q2tpoffs[:, 1, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
-            # array7_2a = r_compare7_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
-            # array7_2b = r_compare7_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
-            # array7_2c = r_compare7_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
-            # array7_3a = r_compare7_q0q2tpoffs[:, 3, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
-            # array7_3b = r_compare7_q0q2tpoffs[:, 3, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
-            # array7_3c = r_compare7_q0q2tpoffs[:, 3, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
-            # array7_4a = r_compare7_q0q2tpoffs[:, 4, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
-            # array7_4b = r_compare7_q0q2tpoffs[:, 4, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
-            # array7_4c = r_compare7_q0q2tpoffs[:, 4, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
-            # array7_5a = r_compare7_q0q2tpoffs[:, 5, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
-            # array7_5b = r_compare7_q0q2tpoffs[:, 5, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
-            # array7_5c = r_compare7_q0q2tpoffs[:, 5, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
-            # array7_6a = r_compare7_q0q2tpoffs[:, 6, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
-            # array7_6b = r_compare7_q0q2tpoffs[:, 6, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
-            # array7_6c = r_compare7_q0q2tpoffs[:, 6, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
-            # array7_7a = r_compare9_q0q2tpoffs[:, 7, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
-            # array7_7b = r_compare9_q0q2tpoffs[:, 7, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
-            # array7_7c = r_compare9_q0q2tpoffs[:, 7, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
-            # array7_8a = r_compare9_q0q2tpoffs[:, 8, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
-            # array7_8b = r_compare9_q0q2tpoffs[:, 8, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
-            # array7_8c = r_compare9_q0q2tpoffs[:, 8, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
-            # array7_9a = r_compare17_q0q2tpoffs[:, 9, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
-            # array7_9b = r_compare17_q0q2tpoffs[:, 9, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
-            # array7_9c = r_compare17_q0q2tpoffs[:, 9, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
-            # array7_10a = r_compare18_q0q2tpoffs[:, 10, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
-            # array7_10b = r_compare18_q0q2tpoffs[:, 10, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
-            # array7_10c = r_compare18_q0q2tpoffs[:, 10, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
-            # array7_13a = r_compare18_q0q2tpoffs[:, 13, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
-            # array7_13b = r_compare18_q0q2tpoffs[:, 13, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
-            # array7_13c = r_compare18_q0q2tpoffs[:, 13, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
-            # arrayA = o_mei_solid_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # b1 axis (single, twin & triplet) used in place of q0
-            # arrayB = r_md_solid_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # b1 axis (single, twin & triplet) used in place of q0
-            # arrayC = nv_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # b1 axis (single, twin & triplet) used in place of q0
-            # arrayD = r_ebw_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # have used (single, twin & triplet) in place of q0
-            # arrayE = r_wbe_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # have used (single, twin & triplet) in place of q0
-            # arrayF = r_fat_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # have used (single, twin & triplet) in place of q0
-            # arrayG = r_muscle_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # have used (single, twin & triplet) in place of q0
-            # arrayH = r_viscera_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # have used (single, twin & triplet) in place of q0
-            # arrayI = r_w_f_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # have used (single, twin & triplet) in place of q0
-            # arrayJ = o_cfw_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # have used (single, twin & triplet) in place of q0
+            # ## Assign Offspring values to the array variables
+            # t_slc = 0   #Set value for the t slice to 2 if generating with a t axis
+            # array7_0a = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 0, t_pos: t_slc, p_pos: [0,None], b0_pos: 0, x_pos: 1}, default=0)
+            # array7_0b = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 0, t_pos: t_slc, p_pos: [0,None], b0_pos: 1, x_pos: 1}, default=0)
+            # array7_0c = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 0, t_pos: t_slc, p_pos: [0,None], b0_pos: 2, x_pos: 1}, default=0)
+            # array7_1a = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 1, t_pos: t_slc, p_pos: [0,None], b0_pos: 0, x_pos: 1}, default=0)
+            # array7_1b = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 1, t_pos: t_slc, p_pos: [0,None], b0_pos: 1, x_pos: 1}, default=0)
+            # array7_1c = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 1, t_pos: t_slc, p_pos: [0,None], b0_pos: 2, x_pos: 1}, default=0)
+            # array7_2a = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 2, t_pos: t_slc, p_pos: [0,None], b0_pos: 0, x_pos: 1}, default=0)
+            # array7_2b = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 2, t_pos: t_slc, p_pos: [0,None], b0_pos: 1, x_pos: 1}, default=0)
+            # array7_2c = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 2, t_pos: t_slc, p_pos: [0,None], b0_pos: 2, x_pos: 1}, default=0)
+            # array7_3a = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 3, t_pos: t_slc, p_pos: [0,None], b0_pos: 0, x_pos: 1}, default=0)
+            # array7_3b = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 3, t_pos: t_slc, p_pos: [0,None], b0_pos: 1, x_pos: 1}, default=0)
+            # array7_3c = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 3, t_pos: t_slc, p_pos: [0,None], b0_pos: 2, x_pos: 1}, default=0)
+            # array7_4a = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 4, t_pos: t_slc, p_pos: [0,None], b0_pos: 0, x_pos: 1}, default=0)
+            # array7_4b = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 4, t_pos: t_slc, p_pos: [0,None], b0_pos: 1, x_pos: 1}, default=0)
+            # array7_4c = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 4, t_pos: t_slc, p_pos: [0,None], b0_pos: 2, x_pos: 1}, default=0)
+            # array7_5a = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 5, t_pos: t_slc, p_pos: [0,None], b0_pos: 0, x_pos: 1}, default=0)
+            # array7_5b = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 5, t_pos: t_slc, p_pos: [0,None], b0_pos: 1, x_pos: 1}, default=0)
+            # array7_5c = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 5, t_pos: t_slc, p_pos: [0,None], b0_pos: 2, x_pos: 1}, default=0)
+            # array7_6a = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 6, t_pos: t_slc, p_pos: [0,None], b0_pos: 0, x_pos: 1}, default=0)
+            # array7_6b = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 6, t_pos: t_slc, p_pos: [0,None], b0_pos: 1, x_pos: 1}, default=0)
+            # array7_6c = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 6, t_pos: t_slc, p_pos: [0,None], b0_pos: 2, x_pos: 1}, default=0)
+            # array7_7a = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 7, t_pos: t_slc, p_pos: [0,None], b0_pos: 0, x_pos: 1}, default=0)
+            # array7_7b = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 7, t_pos: t_slc, p_pos: [0,None], b0_pos: 1, x_pos: 1}, default=0)
+            # array7_7c = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 7, t_pos: t_slc, p_pos: [0,None], b0_pos: 2, x_pos: 1}, default=0)
+            # array7_8a = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 8, t_pos: t_slc, p_pos: [0,None], b0_pos: 0, x_pos: 1}, default=0)
+            # array7_8b = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 8, t_pos: t_slc, p_pos: [0,None], b0_pos: 1, x_pos: 1}, default=0)
+            # array7_8c = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 8, t_pos: t_slc, p_pos: [0,None], b0_pos: 2, x_pos: 1}, default=0)
+            # array7_9a = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 9, t_pos: t_slc, p_pos: [0,None], b0_pos: 0, x_pos: 1}, default=0)
+            # array7_9b = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 9, t_pos: t_slc, p_pos: [0,None], b0_pos: 1, x_pos: 1}, default=0)
+            # array7_9c = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 9, t_pos: t_slc, p_pos: [0,None], b0_pos: 2, x_pos: 1}, default=0)
+            # array7_10a = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 10, t_pos: t_slc, p_pos: [0,None], b0_pos: 0, x_pos: 1}, default=0)
+            # array7_10b = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 10, t_pos: t_slc, p_pos: [0,None], b0_pos: 1, x_pos: 1}, default=0)
+            # array7_10c = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 10, t_pos: t_slc, p_pos: [0,None], b0_pos: 2, x_pos: 1}, default=0)
+            # array7_13a = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 13, t_pos: t_slc, p_pos: [0,None], b0_pos: 0, x_pos: 1}, default=0)
+            # array7_13b = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 13, t_pos: t_slc, p_pos: [0,None], b0_pos: 1, x_pos: 1}, default=0)
+            # array7_13c = fun.f_slice(r_compare7_q0q2tpoffs, {0: [0,None], 1: 13, t_pos: t_slc, p_pos: [0,None], b0_pos: 2, x_pos: 1}, default=0)
+            # arrayA = fun.f_slice(o_mei_solid_tpoffs, {t_pos: t_slc, p_pos: [0,None], b0_pos: [0,3], x_pos: 1}, default=0).T   # b0 axis (single, twin & triplet) used in place of q0
+            # arrayB = fun.f_slice(r_md_solid_tpoffs, {t_pos: t_slc, p_pos: [0,None], b0_pos: [0,3], x_pos: 1}, default=0).T   # b0 axis (single, twin & triplet) used in place of q0
+            # arrayC = fun.f_slice(nv_tpoffs, {t_pos: t_slc, p_pos: [0,None], b0_pos: [0,3], x_pos: 1}, default=0).T   # b0 axis (single, twin & triplet) used in place of q0
+            # arrayD = fun.f_slice(r_ebw_tpoffs, {t_pos: t_slc, p_pos: [0,None], b0_pos: [0,3], x_pos: 1}, default=0).T   # b0 axis (single, twin & triplet) used in place of q0
+            # arrayE = fun.f_slice(r_wbe_tpoffs, {t_pos: t_slc, p_pos: [0,None], b0_pos: [0,3], x_pos: 1}, default=0).T   # b0 axis (single, twin & triplet) used in place of q0
+            # arrayF = fun.f_slice(r_fat_tpoffs, {t_pos: t_slc, p_pos: [0,None], b0_pos: [0,3], x_pos: 1}, default=0).T   # b0 axis (single, twin & triplet) used in place of q0
+            # arrayG = fun.f_slice(r_muscle_tpoffs, {t_pos: t_slc, p_pos: [0,None], b0_pos: [0,3], x_pos: 1}, default=0).T   # b0 axis (single, twin & triplet) used in place of q0
+            # arrayH = fun.f_slice(r_viscera_tpoffs, {t_pos: t_slc, p_pos: [0,None], b0_pos: [0,3], x_pos: 1}, default=0).T   # b0 axis (single, twin & triplet) used in place of q0
+            # arrayI = fun.f_slice(r_w_f_tpoffs, {t_pos: t_slc, p_pos: [0,None], b0_pos: [0,3], x_pos: 1}, default=0).T   # b0 axis (single, twin & triplet) used in place of q0
+            # arrayJ = fun.f_slice(o_cfw_tpoffs, {t_pos: t_slc, p_pos: [0,None], b0_pos: [0,3], x_pos: 1}, default=0).T   # b0 axis (single, twin & triplet) used in place of q0
             #
             # ##calculations for the extra sheets
-            # array_calc7_3a = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpoffs, p_slc0), 0, weight=array7_3a)   #have to slice in case saa_p11 has been implemented
-            # array_calc7_3b = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpoffs, p_slc0), 0, weight=array7_3b)
-            # array_calc7_3c = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpoffs, p_slc0), 0, weight=array7_3c)
-            # array_calc7_4a = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpoffs, p_slc0), 1, weight=array7_4a)
-            # array_calc7_4b = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpoffs, p_slc0), 1, weight=array7_4b)
-            # array_calc7_4c = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpoffs, p_slc0), 1, weight=array7_4c)
-            # array_calc7_5a = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpoffs, p_slc0), 2, weight=array7_5a)
-            # array_calc7_5b = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpoffs, p_slc0), 2, weight=array7_5b)
-            # array_calc7_5c = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpoffs, p_slc0), 2, weight=array7_5c)
+            # p_slc0 = {0: [0, None], p_pos: 0}    #all of the c axis and p[0]
+            # array_calc7_3a = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpoffs, p_slc0, default=0), 0, weight=array7_3a)   #have to slice in case saa_p11 has been implemented
+            # array_calc7_3b = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpoffs, p_slc0, default=0), 0, weight=array7_3b)
+            # array_calc7_3c = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpoffs, p_slc0, default=0), 0, weight=array7_3c)
+            # array_calc7_4a = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpoffs, p_slc0, default=0), 1, weight=array7_4a)
+            # array_calc7_4b = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpoffs, p_slc0, default=0), 1, weight=array7_4b)
+            # array_calc7_4c = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpoffs, p_slc0, default=0), 1, weight=array7_4c)
+            # array_calc7_5a = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpoffs, p_slc0, default=0), 2, weight=array7_5a)
+            # array_calc7_5b = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpoffs, p_slc0, default=0), 2, weight=array7_5b)
+            # array_calc7_5c = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpoffs, p_slc0, default=0), 2, weight=array7_5c)
             # ###retained energy = df + dm + dv + dc + dw + dl
             # array_calc7_6a = array_calc7_3a + array_calc7_4a + array_calc7_5a + array7_8a + array7_10a + array7_13a
             # array_calc7_6b = array_calc7_3b + array_calc7_4b + array_calc7_5b + array7_8b + array7_10b + array7_13b
             # array_calc7_6c = array_calc7_3c + array_calc7_4c + array_calc7_5c + array7_8c + array7_10c + array7_13c
-            # array_calcF = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpoffs, p_slc0), 0, weight=arrayF)
-            # array_calcG = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpoffs, p_slc0), 1, weight=arrayG)
-            # array_calcH = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpoffs, p_slc0), 2, weight=arrayH)
+            # array_calcF = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpoffs, p_slc0, default=0), 0, weight=arrayF)
+            # array_calcG = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpoffs, p_slc0, default=0), 1, weight=arrayG)
+            # array_calcH = sfun.f1_weight_energy_conversion(fun.f_slice(cg_p_cpoffs, p_slc0, default=0), 2, weight=arrayH)
 
 
         except: #do not write the trial if any of the variables don't exist
@@ -12579,6 +12736,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             df_calcG = rfun.f_numpy2df(array_calcG, keys_bp, [1], [0])
             df_calcH = rfun.f_numpy2df(array_calcH, keys_bp, [1], [0])
 
+            ##Offspring arrays
             # df7_0a = rfun.f_numpy2df(array7_0a, keys_q0p3, [1], [0])
             # df7_0b = rfun.f_numpy2df(array7_0b, keys_q0p3, [1], [0])
             # df7_0c = rfun.f_numpy2df(array7_0c, keys_q0p3, [1], [0])

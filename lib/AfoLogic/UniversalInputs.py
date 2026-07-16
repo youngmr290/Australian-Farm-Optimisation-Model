@@ -256,6 +256,8 @@ def f_universal_inp_sa(uinp_defaults):
     sheep['ia_s8_s7'] = fun.f_sa(sheep['ia_s8_s7'], sen.sav['salep_score_type_s7'], 5)
     sheep['i_mobsize_scalar_l0'] = fun.f_sa(sheep['i_mobsize_scalar_l0'], sen.sav['mobsize_scalar_l0'], 5) #Relative mobsize at lambing across the b1 axis
     ###SAM
+    sheep['i_infrastructure_costfixed_h1'] = fun.f_sa(sheep['i_infrastructure_costfixed_h1'],sen.sam['stocki_fixed_h1'])
+    sheep['i_infrastructure_costvariable_h1'] = fun.f_sa(sheep['i_infrastructure_costvariable_h1'],sen.sam['stocki_variable_h1'])
     sheep['i_husb_operations_contract_cost_h2'] = fun.f_sa(sheep['i_husb_operations_contract_cost_h2'],sen.sam['husb_cost_h2'])
     sheep['i_husb_operations_muster_propn_h2'] = fun.f_sa(sheep['i_husb_operations_muster_propn_h2'], sen.sam['husb_mustering_h2'])
     sheep['i_husb_operations_labourreq_l2h2'] = fun.f_sa(sheep['i_husb_operations_labourreq_l2h2'],sen.sam['husb_labour_l2h2'])

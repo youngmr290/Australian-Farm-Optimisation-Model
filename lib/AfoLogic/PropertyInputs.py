@@ -328,6 +328,7 @@ def f_property_inp_sa(pinp_defaults):
     ##finance
     ###sav
     finance['capital_limit'] = fun.f_sa(finance['capital_limit'], sen.sav['capital_limit'], 5)
+    finance['land_asset_value'] = fun.f_sa(0, sen.sav['land_asset_value'], 5)   #todo add input to pinp: finance['land_asset_value']
     general['i_overheads'] = fun.f_sa(general['i_overheads'], sen.sav['overheads'], 5)
 
     ###sam
