@@ -532,20 +532,31 @@ def f_divide(numerator, denominator, dtype='float64', option=0):
     '''
     numerator, denominator = np.broadcast_arrays(numerator, denominator)
     result = np.zeros(numerator.shape, dtype=dtype) #make it a float in case the numerator is int
-    ##use ~np.isclose to capture when the denominator is 0 within rounding tolerances
-    mask = ~np.isclose(denominator.astype(float), 0) #astype float to handle timedeltas. timedelta / timedelta is a float so the final product needs to be a float anyway
-    result[mask] = numerator[mask]/denominator[mask]
+
+    denominator_float = denominator.astype(float) #astype float to handle timedeltas. timedelta / timedelta is a float so the final product needs to be a float anyway
+    denominator_is_zero = denominator_float == 0.0
+    valid = ~denominator_is_zero
+
+    result[valid] = numerator[valid] / denominator[valid]
 
     ##If option is 1 then return 1 if the numerator and the denominator are the same (both 0 or both inf)
-    #todo if useful sign could be included and np.inf / (-np.inf) could calculate to -1
     if option == 1:
-        mask = np.isclose(denominator, numerator)
-        result[mask] = 1
+        numerator_float = numerator.astype(float)
+        numerator_is_zero = numerator_float == 0.0
+
+        #  0 / 0 returns 1 under option 1.
+        both_zero = numerator_is_zero & denominator_is_zero
+        result[both_zero] = 1.0
+
+        # Same-sign infinities return 1; opposite-sign infinities return -1.
+        both_infinite = np.isinf(numerator_float) & np.isinf(denominator_float)
+        result[both_infinite] = (
+                np.sign(numerator_float[both_infinite])
+                * np.sign(denominator_float[both_infinite]))
 
     ##If option is 2 then return the numerator if the denominator is 0
     if option == 2:
-        mask = np.isclose(denominator.astype(float), 0)
-        result[mask] = numerator[mask]
+        result[denominator_is_zero] = numerator[denominator_is_zero]
 
     return result
 
