@@ -6946,7 +6946,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 #### the first fvp then the fs may not be good in the second fvp (because the w are clustered e.g. w9 is high fs in the first fvp followed by medium)
                 if len_gen_t3 > 1:
                     min_mort = min_mort[0]
-                if np.any(min_mort > 0.1):
+                if mort_flag_offs and np.any(min_mort > 0.1):
                     print('WARNING: HIGH MORTALITY OFFS: period ', p)
                     mort_flag_offs = False
                 if np.any(period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1:p+2]):
