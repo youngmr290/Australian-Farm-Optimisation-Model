@@ -3569,7 +3569,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         fd_min_start_offs = fd_initial_pa1e1b1nwzida0e0b0xyg3
         fat_start_offs = fat_initial_pa1e1b1nwzida0e0b0xyg3
         muscle_start_offs = muscle_initial_pa1e1b1nwzida0e0b0xyg3
-        viscera_start_offs = muscle_initial_pa1e1b1nwzida0e0b0xyg3
+        viscera_start_offs = viscera_initial_pa1e1b1nwzida0e0b0xyg3
         nw_start_offs = 0.0
         temp_lc_start_offs = np.array([15.0]) #this is calculated in the chill function, but it is required for the intake function so it is set to 0 for the first period.
         numbers_start_offs = numbers_initial_ida0e0b0xyg3
