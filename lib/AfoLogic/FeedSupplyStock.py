@@ -378,7 +378,7 @@ def f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1n
     ###Generating without t means that the t axis of pkl_fs is reduced to a singleton, then t & g will broadcast.
     if sinp.structuralsa['i_fs_use_pkl']:
         ###update the feedsupply with the pkl fs
-        t_feedsupply_tpa1e1b1j2wzida0e0b0xyg0 = pkl_fs['fs']['sire']
+        t_feedsupply_tpa1e1b1j2wzida0e0b0xyg0 = t_feedsupply_pa1e1b1j2wzida0e0b0xyg0[na]
         t_feedsupply_stpa1e1b1j2wzida0e0b0xyg1 = pkl_fs['fs']['dams']
         t_feedsupply_stpa1e1b1j2wzida0e0b0xyg3 = pkl_fs['fs']['offs']
 
