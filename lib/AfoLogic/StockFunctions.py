@@ -1056,7 +1056,7 @@ def f_energy_mu(cx, cm, lw, lean, mr_age, mei, km, i_steepness, density, foo, co
                 , mei_propn_milk=0):
     #Energy required for maintenance and efficiency of energy use for maintenance & growth
     ##Energy required at maint for metabolism
-    emetab = cx[10, ...] * cm[24, ...] * lean * mr_age * (1 + cm[26, ...] * mei_propn_milk)
+    emetab = cx[10, ...] * cm[24, ...] * lean * mr_age * (1 + cm[27, ...] * mei_propn_milk)
     ##Energy required for grazing (chewing, ruminating and walking)
     egraze = f_egraze(cm, lw, i_steepness, density, foo, confinement, intake_f, dmd)
     ##Energy associated with organ activity (organ ME requirement)
@@ -1083,7 +1083,7 @@ def f_energy_nfs(cm, cg, lw, fat, muscle, viscera, mei, km, i_steepness, density
     ###(1+cm26)*propn_milk is to represent the measured difference in MEm for milk fed vs pasture grazing lambs using lean mass.
     ### Difference might be due to differences in viscera. Milk fed lambs have small rumen and large abomasum,
     ### and the abomasum uses more energy than the rumen.
-    hp_fasting = (cm[20, ...] * f + cm[21, ...] * m + cm[22, ...] * v) * (1 + cm[26, ...] * mei_propn_milk)
+    hp_fasting = (cm[20, ...] * f + cm[21, ...] * m + cm[22, ...] * v) * (1 + cm[27, ...] * mei_propn_milk)
     ##Extra heat production associated with grazing (chewing, ruminating and walking)
     hp_graze = f_egraze(cm, lw, i_steepness, density, foo, confinement, intake_f, dmd)
     ##Heat produced by maintenance type functions (before ECold)

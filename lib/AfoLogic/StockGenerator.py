@@ -2775,13 +2775,13 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                         * age_p0_pa1e1b1nwzida0e0b0xyg3p0)), weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg3p0, axis = -1)
 
     ##Pattern of maintenance with age Graham etal 1974 lean equations
-    mr_agegraham_pa1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(np.maximum(cm_cpsire[4, ..., na], np.exp(-cm_cpsire[25, ..., na]
+    mr_agegraham_pa1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(np.maximum(cm_cpsire[26, ..., na], np.exp(-cm_cpsire[25, ..., na]
                                         * age_p0_pa1e1b1nwzida0e0b0xyg0p0)), weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg0p0, axis=-1)
-    mr_agegraham_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(np.maximum(cm_cpdams[4, ..., na], np.exp(-cm_cpdams[25, ..., na]
+    mr_agegraham_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(np.maximum(cm_cpdams[26, ..., na], np.exp(-cm_cpdams[25, ..., na]
                                         * age_p0_pa1e1b1nwzida0e0b0xyg1p0)), weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg1p0, axis=-1)
-    mr_agegraham_pa1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(np.maximum(cm_cpyatf[4, ..., na], np.exp(-cm_cpyatf[25, ..., na]
+    mr_agegraham_pa1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(np.maximum(cm_cpyatf[26, ..., na], np.exp(-cm_cpyatf[25, ..., na]
                                         * age_p0_pa1e1b1nwzida0e0b0xyg2p0)), weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg2p0, axis=-1)
-    mr_agegraham_pa1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(np.maximum(cm_cpoffs[4, ..., na], np.exp(-cm_cpoffs[25, ..., na]
+    mr_agegraham_pa1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(np.maximum(cm_cpoffs[26, ..., na], np.exp(-cm_cpoffs[25, ..., na]
                                         * age_p0_pa1e1b1nwzida0e0b0xyg3p0)), weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg3p0, axis=-1)
     ##Impact of rainfall on 'cold' intake increment
     rain_intake_pa1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(np.maximum(0, 1 - rain_pa1e1b1nwzida0e0b0xygp0 / ci_cpsire[18, ..., na])
