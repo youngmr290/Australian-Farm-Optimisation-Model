@@ -1733,25 +1733,36 @@ def f_lwc_cs(cg, rc_start, mei, mem, new, zf1, zf2, kg, kw, age, rev_trait_value
     ## Scale based on zf2. zf2 increases from 0 to 1 as z increases from 0.9 to 0.97
     evg = fun.f_sa(evg, sen.sap['evg'], 1)   # * zf2, 1)
     # ##Process the EVG REV: if EVG is not the target trait overwrite trait value with value from the dictionary or update the REV dictionary
-    # ###Note: REV[evg] does very little in the CSIRO feeding system (nothing if REV[ebg] is active), because partitioning is controlled by pcg formula.
     # evg = f1_rev_update('evg', evg, rev_trait_value)
-    ##Protein content of gain (kg/kg EBW) (some uncertainty for sign associated with zf2.
-    ### GrazFeed documentation had +ve however, this implies that PCG increases when BC > 1. So changed to -ve
-    #todo check this equation when converting to a heat production based model.
-    pcg = cg[12, ...] + zf1 * (cg[13, ...] - cg[14, ...] * (level - 1)) - zf2 * cg[15, ...] * (rc_start - 1)
+    #Protein content of gain (kg/kg EBW) (some uncertainty for sign associated with zf2.
+    ## GrazFeed documentation had +ve however, this implies that PCG increases when BC > 1. So changed to -ve
+    # #todo check this equation when converting to a heat production based model.
+    # pcg = cg[12, ...] + zf1 * (cg[13, ...] - cg[14, ...] * (level - 1)) - zf2 * cg[15, ...] * (rc_start - 1)
+
     ##Empty bodyweight gain
     ebg = neg / evg
-    ##Protein gain (protein MJ)
-    pg = f1_weight_energy_conversion(cg, 1, weight=pcg * ebg)
-    ##Allocate total protein gain to muscle and viscera using rule of thumb that 10% of total protein energy is viscera (Viscera is 13% of wet weight of protein)
-    mg = 0.9 * pg
-    vg = 0.1 * pg
-    ##fat gain (fat MJ)
-    fg = (neg - pg)
-    ## Fat, Muscle & Viscera wet weight
-    d_fat = f1_weight_energy_conversion(cg, 0, energy=fg)
-    d_muscle = f1_weight_energy_conversion(cg, 1, energy=mg)
-    d_viscera = f1_weight_energy_conversion(cg, 2, energy=vg)
+    ## proportion of fat in EBW gain (% by wet weight)
+    adipose_propn = f1_adipose_propn(cg, evg)
+    ## energy gained as fat (MJ)
+    d_fat = ebg * adipose_propn
+    ##Protein gain (MJ)
+    d_lean = ebg * (1 - adipose_propn)
+    ##Allocate total protein gain to muscle and viscera using rule of thumb that Viscera is approx 13% of lean weight (10% of total protein energy)
+    d_muscle = (1 - cg[39, ...]) * d_lean
+    d_viscera = cg[39, ...] * d_lean
+
+    # ##Protein gain (protein MJ)   #todo Delete protein code when fully tested
+    # pg = f1_weight_energy_conversion(cg, 1, weight=pcg * ebg)
+    # ##Allocate total protein gain to muscle and viscera using rule of thumb that 10% of total protein energy is viscera (Viscera is 13% of wet weight of protein)
+    # mg = 0.9 * pg  (1 - cg[38, ...]) * pg
+    # vg = 0.1 * pg       cg[38, ...] * pg
+    # ##fat gain (fat MJ)
+    # fg = (neg - pg)
+    # ## Fat, Muscle & Viscera wet weight
+    # d_fat = f1_weight_energy_conversion(cg, 0, energy=fg)
+    # d_muscle = f1_weight_energy_conversion(cg, 1, energy=mg)
+    # d_viscera = f1_weight_energy_conversion(cg, 2, energy=vg)
+
     ##Process the Liveweight REV: if LW is not the target trait overwrite trait value with value from the dictionary or update the REV dictionary
     ###Note: In the CSIRO feeding standards, holding the LW trait constant is also holding the energy content of the
     ### body constant because the body composition calculations do not alter the energy available to be mobilised
