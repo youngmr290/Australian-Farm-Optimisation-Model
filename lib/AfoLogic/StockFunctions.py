@@ -804,7 +804,8 @@ def f_potential_intake_cs(ci, srw, relsize_start, rc_start, temp_lc, temp_ave, t
         pi: daily potential intake
     '''
     ##Condition factor on PI
-    picf= np.minimum(1, rc_start * (ci[20, ...] - rc_start) / (ci[20, ...] - 1))
+    rc_start_adj = np.maximum(1, rc_start)
+    picf= rc_start_adj * (ci[20, ...] - rc_start_adj) / (ci[20, ...] - 1)
     ##Lactation adjustment (RC at parturition) - only active for dams
     la = 1 + ci[15, ...] * (rc_birth_start - 1)
     ##Lactation factor on PI - dam only
@@ -1056,7 +1057,7 @@ def f_energy_mu(cx, cm, lw, lean, mr_age, mei, km, i_steepness, density, foo, co
                 , mei_propn_milk=0):
     #Energy required for maintenance and efficiency of energy use for maintenance & growth
     ##Energy required at maint for metabolism
-    emetab = cx[10, ...] * cm[24, ...] * lean * mr_age * (1 + cm[26, ...] * mei_propn_milk)
+    emetab = cx[10, ...] * cm[24, ...] * lean * mr_age * (1 + cm[27, ...] * mei_propn_milk)
     ##Energy required for grazing (chewing, ruminating and walking)
     egraze = f_egraze(cm, lw, i_steepness, density, foo, confinement, intake_f, dmd)
     ##Energy associated with organ activity (organ ME requirement)
@@ -1083,7 +1084,7 @@ def f_energy_nfs(cm, cg, lw, fat, muscle, viscera, mei, km, i_steepness, density
     ###(1+cm26)*propn_milk is to represent the measured difference in MEm for milk fed vs pasture grazing lambs using lean mass.
     ### Difference might be due to differences in viscera. Milk fed lambs have small rumen and large abomasum,
     ### and the abomasum uses more energy than the rumen.
-    hp_fasting = (cm[20, ...] * f + cm[21, ...] * m + cm[22, ...] * v) * (1 + cm[26, ...] * mei_propn_milk)
+    hp_fasting = (cm[20, ...] * f + cm[21, ...] * m + cm[22, ...] * v) * (1 + cm[27, ...] * mei_propn_milk)
     ##Extra heat production associated with grazing (chewing, ruminating and walking)
     hp_graze = f_egraze(cm, lw, i_steepness, density, foo, confinement, intake_f, dmd)
     ##Heat produced by maintenance type functions (before ECold)
@@ -1733,25 +1734,36 @@ def f_lwc_cs(cg, rc_start, mei, mem, new, zf1, zf2, kg, kw, age, rev_trait_value
     ## Scale based on zf2. zf2 increases from 0 to 1 as z increases from 0.9 to 0.97
     evg = fun.f_sa(evg, sen.sap['evg'], 1)   # * zf2, 1)
     # ##Process the EVG REV: if EVG is not the target trait overwrite trait value with value from the dictionary or update the REV dictionary
-    # ###Note: REV[evg] does very little in the CSIRO feeding system (nothing if REV[ebg] is active), because partitioning is controlled by pcg formula.
     # evg = f1_rev_update('evg', evg, rev_trait_value)
-    ##Protein content of gain (kg/kg EBW) (some uncertainty for sign associated with zf2.
-    ### GrazFeed documentation had +ve however, this implies that PCG increases when BC > 1. So changed to -ve
-    #todo check this equation when converting to a heat production based model.
-    pcg = cg[12, ...] + zf1 * (cg[13, ...] - cg[14, ...] * (level - 1)) - zf2 * cg[15, ...] * (rc_start - 1)
+    #Protein content of gain (kg/kg EBW) (some uncertainty for sign associated with zf2.
+    ## GrazFeed documentation had +ve however, this implies that PCG increases when BC > 1. So changed to -ve
+    # #todo check this equation when converting to a heat production based model.
+    # pcg = cg[12, ...] + zf1 * (cg[13, ...] - cg[14, ...] * (level - 1)) - zf2 * cg[15, ...] * (rc_start - 1)
+
     ##Empty bodyweight gain
     ebg = neg / evg
-    ##Protein gain (protein MJ)
-    pg = f1_weight_energy_conversion(cg, 1, weight=pcg * ebg)
-    ##Allocate total protein gain to muscle and viscera using rule of thumb that 10% of total protein energy is viscera (Viscera is 13% of wet weight of protein)
-    mg = 0.9 * pg
-    vg = 0.1 * pg
-    ##fat gain (fat MJ)
-    fg = (neg - pg)
-    ## Fat, Muscle & Viscera wet weight
-    d_fat = f1_weight_energy_conversion(cg, 0, energy=fg)
-    d_muscle = f1_weight_energy_conversion(cg, 1, energy=mg)
-    d_viscera = f1_weight_energy_conversion(cg, 2, energy=vg)
+    ## proportion of fat in EBW gain (% by wet weight)
+    adipose_propn = f1_adipose_propn(cg, evg)
+    ## energy gained as fat (MJ)
+    d_fat = ebg * adipose_propn
+    ##Protein gain (MJ)
+    d_lean = ebg * (1 - adipose_propn)
+    ##Allocate total protein gain to muscle and viscera using rule of thumb that Viscera is approx 13% of lean weight (10% of total protein energy)
+    d_muscle = (1 - cg[39, ...]) * d_lean
+    d_viscera = cg[39, ...] * d_lean
+
+    # ##Protein gain (protein MJ)   #todo Delete protein code when fully tested
+    # pg = f1_weight_energy_conversion(cg, 1, weight=pcg * ebg)
+    # ##Allocate total protein gain to muscle and viscera using rule of thumb that 10% of total protein energy is viscera (Viscera is 13% of wet weight of protein)
+    # mg = 0.9 * pg  (1 - cg[38, ...]) * pg
+    # vg = 0.1 * pg       cg[38, ...] * pg
+    # ##fat gain (fat MJ)
+    # fg = (neg - pg)
+    # ## Fat, Muscle & Viscera wet weight
+    # d_fat = f1_weight_energy_conversion(cg, 0, energy=fg)
+    # d_muscle = f1_weight_energy_conversion(cg, 1, energy=mg)
+    # d_viscera = f1_weight_energy_conversion(cg, 2, energy=vg)
+
     ##Process the Liveweight REV: if LW is not the target trait overwrite trait value with value from the dictionary or update the REV dictionary
     ###Note: In the CSIRO feeding standards, holding the LW trait constant is also holding the energy content of the
     ### body constant because the body composition calculations do not alter the energy available to be mobilised
@@ -4112,7 +4124,7 @@ def f_sale_value(cn, cx, o_rc_tpg, o_ffcfw_tpg, o_z_tpg, dressp_adj_yg, dressper
     ##Dressing percentage to adjust price grid from $/kg DW to $/kg LW
     ### It is easier to convert the price to $/kg LW than it is to convert a distribution of LW and fat score to a distribution of dressed weight and fat score
     ### because dressing percentage changes with fat score.
-    dresspercent_for_price_s7s6tpg = pinp.sheep['i_dressp'] + dressp_adj_yg + cx[1, ...] + dresspercent_adj_s6tpg + dresspercent_adj_s7tpg[:,na,...]
+    dresspercent_for_price_s7s6tpg = pinp.sheep['i_dressp'] + dressp_adj_yg + cx[0, ...] + dresspercent_adj_s6tpg + dresspercent_adj_s7tpg[:,na,...]
     ##Dressing percentage is set to 100% if price type is $/kg LW or $/hd
     dresspercent_for_price_s7s6tpg = fun.f_update(dresspercent_for_price_s7s6tpg, 1, price_type_s7tpg[:,na,...] >= 1)
     ##Create the grid prices in $/kg LW
@@ -4123,7 +4135,7 @@ def f_sale_value(cn, cx, o_rc_tpg, o_ffcfw_tpg, o_z_tpg, dressp_adj_yg, dressper
     ###Interploate DP adjustment based on the average FS of the animals
     dressp_adj_fs_tpg= np.interp(fs_tpg, uinp.sheep['i_salep_score_range_s8s6'][0, ...], uinp.sheep['i_salep_dressp_adj_s6']).astype(dtype)
     ###Average Dressing percentage including effects of genotype, fat score and age (which varies with the grid).
-    dresspercent_for_wt_s7tpg = pinp.sheep['i_dressp'] + dressp_adj_yg + cx[1, ...] + dressp_adj_fs_tpg + dresspercent_adj_s7tpg
+    dresspercent_for_wt_s7tpg = pinp.sheep['i_dressp'] + dressp_adj_yg + cx[0, ...] + dressp_adj_fs_tpg + dresspercent_adj_s7tpg
     ###Dressing percentage is 100% if price type is $/kg LW or $/hd
     dresspercent_wt_s7tpg = fun.f_update(dresspercent_for_wt_s7tpg, 1, price_type_s7tpg >= 1)
     ###Scale ffcfw to the units in the grid
