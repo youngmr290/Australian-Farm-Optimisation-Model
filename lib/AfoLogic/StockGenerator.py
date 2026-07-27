@@ -2665,24 +2665,24 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     lmm_pa1e1b1nwzida0e0b0xyg1p0 = (age_p0_pa1e1b1nwzida0e0b0xyg2p0 + cl_cpdams[1, ..., na]) / cl_cpdams[2, ..., na]
 
     ##Proportion of SRW with age
-    srw_age_pa1e1b1nwzida0e0b0xyg0 = 1 - fun.f_weighted_average(1 - np.exp(-cn_cpsire[1, ..., na]
+    srw_age_pa1e1b1nwzida0e0b0xyg0 = 1 - fun.f_weighted_average(1 - np.exp(-fun.f_slice(cx_cpsire[1], {x_pos: [0,1]})[..., na]
                     * age_p0_pa1e1b1nwzida0e0b0xyg0p0 / srw_p_pa1e1b1nwzida0e0b0xyg0[..., na] ** cn_cpsire[2, ..., na])
                     , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg0p0, axis = -1)
-    srw_age_pa1e1b1nwzida0e0b0xyg1 = 1 - fun.f_weighted_average(1 - np.exp(-cn_cpdams[1, ..., na]
+    srw_age_pa1e1b1nwzida0e0b0xyg1 = 1 - fun.f_weighted_average(1 - np.exp(-fun.f_slice(cx_cpdams[1], {x_pos: [1,2]})[..., na]
                     * age_p0_pa1e1b1nwzida0e0b0xyg1p0 / srw_p_pa1e1b1nwzida0e0b0xyg1[..., na] ** cn_cpdams[2, ..., na])
                     , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg1p0, axis = -1)
-    srw_age_pa1e1b1nwzida0e0b0xyg2 = (1 - fun.f_weighted_average(1 - np.exp(-cn_cpyatf[1, ..., na]
+    srw_age_pa1e1b1nwzida0e0b0xyg2 = (1 - fun.f_weighted_average(1 - np.exp(-fun.f_slice(cx_cpyatf[1], {x_pos: mask_x})[..., na]
                     * age_p0_pa1e1b1nwzida0e0b0xyg2p0 / srw_p_pa1e1b1nwzida0e0b0xyg2[..., na] ** cn_cpyatf[2, ..., na])
                     , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg2p0, axis = -1)
                     * (nyatf_b1nwzida0e0b0xyg > 0))
-    srw_age_pa1e1b1nwzida0e0b0xyg3 = 1 - fun.f_weighted_average(1 - np.exp(-cn_cpoffs[1, ..., na]
+    srw_age_pa1e1b1nwzida0e0b0xyg3 = 1 - fun.f_weighted_average(1 - np.exp(-fun.f_slice(cx_cpoffs[1], {x_pos: mask_x})[..., na]
                     * age_p0_pa1e1b1nwzida0e0b0xyg3p0 / srw_p_pa1e1b1nwzida0e0b0xyg3[..., na] ** cn_cpoffs[2, ..., na])
                     , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg3p0, axis = -1)
 
-    #srw_age_pa1e1b1nwzida0e0b0xyg0 = np.nanmean(np.exp(-cn_cpsire[1, ..., na] * age_p0_pa1e1b1nwzida0e0b0xyg0p0 / srw_b0xyg0[..., na] ** cn_cpsire[2, ..., na]), axis = -1)
-    #srw_age_pa1e1b1nwzida0e0b0xyg1 = np.nanmean(np.exp(-cn_cpdams[1, ..., na] * age_p0_pa1e1b1nwzida0e0b0xyg1p0 / srw_b0xyg1[..., na] ** cn_cpdams[2, ..., na]), axis = -1)
-    #srw_age_pa1e1b1nwzida0e0b0xyg2 = np.nanmean(np.exp(-cn_cpyatf[1, ..., na] * age_p0_pa1e1b1nwzida0e0b0xyg2p0 / srw_b1xyg2[..., na] ** cn_cpyatf[2, ..., na]), axis = -1)
-    #srw_age_pa1e1b1nwzida0e0b0xyg3 = np.nanmean(np.exp(-cn_cpoffs[1, ..., na] * age_p0_pa1e1b1nwzida0e0b0xyg3p0 / srw_b0xyg3[..., na] ** cn_cpoffs[2, ..., na]), axis = -1)
+    #srw_age_pa1e1b1nwzida0e0b0xyg0 = np.nanmean(np.exp(-cx_cpsire[1, ..., 0, :, :, na] * age_p0_pa1e1b1nwzida0e0b0xyg0p0 / srw_b0xyg0[..., na] ** cn_cpsire[2, ..., na]), axis = -1)
+    #srw_age_pa1e1b1nwzida0e0b0xyg1 = np.nanmean(np.exp(-cx_cpdams[1, ..., 1, :, :, na] * age_p0_pa1e1b1nwzida0e0b0xyg1p0 / srw_b0xyg1[..., na] ** cn_cpdams[2, ..., na]), axis = -1)
+    #srw_age_pa1e1b1nwzida0e0b0xyg2 = np.nanmean(np.exp(-cx_cpyatf[1, ..., mask_x, :, :, na] * age_p0_pa1e1b1nwzida0e0b0xyg2p0 / srw_b1xyg2[..., na] ** cn_cpyatf[2, ..., na]), axis = -1)
+    #srw_age_pa1e1b1nwzida0e0b0xyg3 = np.nanmean(np.exp(-cx_cpoffs[1, ..., mask_x, :, :, na] * age_p0_pa1e1b1nwzida0e0b0xyg3p0 / srw_b0xyg3[..., na] ** cn_cpoffs[2, ..., na]), axis = -1)
 
     ##age factor wool part 1- reduces fleece growth early in life based on Lyne 1961 & follicle maturation
     af1_wool_pa1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(cw_cpsire[5, ..., na] + (1 - cw_cpsire[5, ..., na])
@@ -2942,12 +2942,18 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     d_cfw_ave_p_pa1e1b1nwzida0e0b0xyg3 = sfw_p_pa1e1b1nwzida0e0b0xyg3 / 364
 
     ##Expected relative size
-    relsize_exp_pa1e1b1nwzida0e0b0xyg0  = 1 - (1 - w_b_std_b0_pa1e1b1nwzida0e0b0xyg0 / srw_p_pa1e1b1nwzida0e0b0xyg0) * np.exp(-cn_cpsire[1, ...]
-                                                * agedam_lamb1st_a1e1b1nwzida0e0b0xyg0 / (srw_p_pa1e1b1nwzida0e0b0xyg0**cn_cpsire[2, ...]))
-    relsize_exp_pa1e1b1nwzida0e0b0xyg1  = 1 - (1 - w_b_std_b0_pa1e1b1nwzida0e0b0xyg1 / srw_p_pa1e1b1nwzida0e0b0xyg1) * np.exp(-cn_cpdams[1, ...]
-                                                * agedam_lamb1st_a1e1b1nwzida0e0b0xyg1 / (srw_p_pa1e1b1nwzida0e0b0xyg1**cn_cpdams[2, ...]))
-    relsize_exp_pa1e1b1nwzida0e0b0xyg3  = 1 - (1 - w_b_std_b0_pa1e1b1nwzida0e0b0xyg3 / srw_p_pa1e1b1nwzida0e0b0xyg3) * np.exp(-cn_cpoffs[1, ...]
-                                                * agedam_lamb1st_a1e1b1nwzida0e0b0xyg3 / (srw_p_pa1e1b1nwzida0e0b0xyg3**cn_cpoffs[2, ...]))
+    relsize_exp_pa1e1b1nwzida0e0b0xyg0  = (1 - (1 - w_b_std_b0_pa1e1b1nwzida0e0b0xyg0 / srw_p_pa1e1b1nwzida0e0b0xyg0)
+                                            * np.exp(-fun.f_slice(cx_cpsire[1], {x_pos: [0,1]})
+                                                     * agedam_lamb1st_a1e1b1nwzida0e0b0xyg0
+                                                     / (srw_p_pa1e1b1nwzida0e0b0xyg0**cn_cpsire[2, ...])))
+    relsize_exp_pa1e1b1nwzida0e0b0xyg1  = (1 - (1 - w_b_std_b0_pa1e1b1nwzida0e0b0xyg1 / srw_p_pa1e1b1nwzida0e0b0xyg1)
+                                            * np.exp(-fun.f_slice(cx_cpdams[1], {x_pos: [1,2]})
+                                                     * agedam_lamb1st_a1e1b1nwzida0e0b0xyg1
+                                                     / (srw_p_pa1e1b1nwzida0e0b0xyg1**cn_cpdams[2, ...])))
+    relsize_exp_pa1e1b1nwzida0e0b0xyg3  = (1 - (1 - w_b_std_b0_pa1e1b1nwzida0e0b0xyg3 / srw_p_pa1e1b1nwzida0e0b0xyg3)
+                                            * np.exp(-fun.f_slice(cx_cpoffs[1], {x_pos: mask_x})
+                                                     * agedam_lamb1st_a1e1b1nwzida0e0b0xyg3
+                                                     / (srw_p_pa1e1b1nwzida0e0b0xyg3**cn_cpoffs[2, ...])))
 
     ##adjust ce sim param (#todo ce12 &13 could be scaled by relsize (similar to ce15))
     ###sire & dams use ce_cp because want averaged d axis for expected birth weight

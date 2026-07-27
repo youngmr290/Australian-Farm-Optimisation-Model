@@ -4124,7 +4124,7 @@ def f_sale_value(cn, cx, o_rc_tpg, o_ffcfw_tpg, o_z_tpg, dressp_adj_yg, dressper
     ##Dressing percentage to adjust price grid from $/kg DW to $/kg LW
     ### It is easier to convert the price to $/kg LW than it is to convert a distribution of LW and fat score to a distribution of dressed weight and fat score
     ### because dressing percentage changes with fat score.
-    dresspercent_for_price_s7s6tpg = pinp.sheep['i_dressp'] + dressp_adj_yg + cx[1, ...] + dresspercent_adj_s6tpg + dresspercent_adj_s7tpg[:,na,...]
+    dresspercent_for_price_s7s6tpg = pinp.sheep['i_dressp'] + dressp_adj_yg + cx[0, ...] + dresspercent_adj_s6tpg + dresspercent_adj_s7tpg[:,na,...]
     ##Dressing percentage is set to 100% if price type is $/kg LW or $/hd
     dresspercent_for_price_s7s6tpg = fun.f_update(dresspercent_for_price_s7s6tpg, 1, price_type_s7tpg[:,na,...] >= 1)
     ##Create the grid prices in $/kg LW
@@ -4135,7 +4135,7 @@ def f_sale_value(cn, cx, o_rc_tpg, o_ffcfw_tpg, o_z_tpg, dressp_adj_yg, dressper
     ###Interploate DP adjustment based on the average FS of the animals
     dressp_adj_fs_tpg= np.interp(fs_tpg, uinp.sheep['i_salep_score_range_s8s6'][0, ...], uinp.sheep['i_salep_dressp_adj_s6']).astype(dtype)
     ###Average Dressing percentage including effects of genotype, fat score and age (which varies with the grid).
-    dresspercent_for_wt_s7tpg = pinp.sheep['i_dressp'] + dressp_adj_yg + cx[1, ...] + dressp_adj_fs_tpg + dresspercent_adj_s7tpg
+    dresspercent_for_wt_s7tpg = pinp.sheep['i_dressp'] + dressp_adj_yg + cx[0, ...] + dressp_adj_fs_tpg + dresspercent_adj_s7tpg
     ###Dressing percentage is 100% if price type is $/kg LW or $/hd
     dresspercent_wt_s7tpg = fun.f_update(dresspercent_for_wt_s7tpg, 1, price_type_s7tpg >= 1)
     ###Scale ffcfw to the units in the grid
