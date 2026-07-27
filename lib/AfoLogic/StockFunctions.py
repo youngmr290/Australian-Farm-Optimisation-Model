@@ -804,7 +804,8 @@ def f_potential_intake_cs(ci, srw, relsize_start, rc_start, temp_lc, temp_ave, t
         pi: daily potential intake
     '''
     ##Condition factor on PI
-    picf= np.minimum(1, rc_start * (ci[20, ...] - rc_start) / (ci[20, ...] - 1))
+    rc_start_adj = np.maximum(1, rc_start)
+    picf= rc_start_adj * (ci[20, ...] - rc_start_adj) / (ci[20, ...] - 1)
     ##Lactation adjustment (RC at parturition) - only active for dams
     la = 1 + ci[15, ...] * (rc_birth_start - 1)
     ##Lactation factor on PI - dam only
