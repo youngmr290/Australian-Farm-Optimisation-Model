@@ -26,7 +26,7 @@ def f_stock_ch4_animal_bc(ch, intake_f, intake_s, md_solid, level):
     generated the animal profile.
 
     Note, in Blaxter and Clapperton 1965 there is an error in table 5 (it should be b=2.37-0.05D (required to make figure 3 work))
-    and there is an error CH4 equation derived from table 4 and 5. It should be CH4 (kcal/100kcal feed) = 1.30 + 0.112D + L (2.37 -0.05D).
+    and there is an error CH4 equation derived from table 4 and 5. It should be CH4 (kcal/100kcal of feed [gross energy]) = 1.30 + 0.112D + L (2.37 -0.05D).
     In the 2012 tech paper these error were fixed. This is the equation used below.
 
     Note 2: When they are lactating the ewes intake doubles (or more) and there is a corresponding increase in the
@@ -65,7 +65,7 @@ def f_stock_ch4_feed_bc(intake, md):
     emissions are calculated for the animal component of the emissions.
 
     Note, in Blaxter and Clapperton 1965 there is an error in table 5 (it should be b=2.37-0.05D (required to make figure 3 work))
-    and there is an error CH4 equation derived from table 4 and 5. It should be CH4 (kcal/100kcal feed) = 1.30 + 0.112D + L (2.37 -0.05D).
+    and there is an error CH4 equation derived from table 4 and 5. It should be CH4 (kcal/100kcal of feed [gross energy]) = 1.30 + 0.112D + L (2.37 -0.05D).
     In the 2012 tech paper these error were fixed. This is the equation used below.
 
     :param intake: dry matter intake of the feed-stuff decision variable (kg).
