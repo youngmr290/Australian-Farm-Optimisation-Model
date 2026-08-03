@@ -1513,6 +1513,8 @@ def f_fibre_mu(cw_g, cc_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_p
             , sfd_a0e0b0xyg, wge_a0e0b0xyg, af_cfw_g, af_fd_g, dlf_wool_g, kw_g, days_period_g, age, sfw_ltwadj_g, sfd_ltwadj_g
             , rev_trait_value, nec_g1=0, kc_g1=1, nel_g1=0, kl_g1=1, gest_propn_g1=0, lact_propn_g1=0, sam_pi=1):
     ##Wool growth is a copy of CSIRO but with different calculation of energy stored and heat production
+    ##Uses terminology of wool base as used in the IWTO testing standards.
+    ## WB is clean dry fibre (no residual dirt or grease). CFW includes moisture and residual grease and dirt.
     ##Energy content of wool is specified as MJ/kg of wool base (following Young 2024)
     ##adjust wge, cfw_ave, new_min & sfd for the LTW adjustments (CFW is a scalar and FD is an addition)
     wbge_a0e0b0xyg = wge_a0e0b0xyg * sfw_ltwadj_g / cw_g[22, ...]
@@ -1528,7 +1530,7 @@ def f_fibre_mu(cw_g, cc_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_p
     mel_g1 = fun.f_divide(nel_g1, kl_g1)
     mew_min_g = fun.f_divide(new_min_g, kw_g)
     mew_xs_g = np.maximum(mew_min_g * relsize_start_g, mei_g - (mec_g1 * gest_propn_g1 + mel_g1 * lact_propn_g1))
-    ##Wool growth (wool base - clean dry fibre) if there was no lag
+    ##Wool growth (wool base) if there was no lag
     d_wb_nolag_g = cw_g[8, ...] * wbge_a0e0b0xyg * af_cfw_g * dlf_wool_g * mew_xs_g
     d_wb_nolag_g = f1_rev_sa(d_wb_nolag_g, sen.sam['rev_cfw'], age, sa_type=0)
     ##Process the CFW REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
