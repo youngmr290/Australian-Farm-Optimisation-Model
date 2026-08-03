@@ -806,6 +806,8 @@ def f_potential_intake_cs(ci, srw, relsize_start, rc_start, temp_lc, temp_ave, t
     ##Condition factor on PI
     rc_start_adj = np.maximum(1, rc_start)
     picf= rc_start_adj * (ci[20, ...] - rc_start_adj) / (ci[20, ...] - 1)
+    ##Age factor on PI
+    piz= relsize_start * (ci[2, ...] - relsize_start)
     ##Lactation adjustment (RC at parturition) - only active for dams
     la = 1 + ci[15, ...] * (rc_birth_start - 1)
     ##Lactation factor on PI - dam only
@@ -821,7 +823,7 @@ def f_potential_intake_cs(ci, srw, relsize_start, rc_start, temp_lc, temp_ave, t
     ##Temperature factor on PI
     pitf = np.minimum(1, pitf_high) * np.maximum(1, pitf_low)
     ##Potential intake
-    pi = ci[1, ...] * srw * relsize_start * (ci[2, ...] - relsize_start) * picf * pitf * pilf * sam_pi
+    pi = ci[1, ...] * srw * piz * picf * pitf * pilf * sam_pi
     ##Potential intake of pasture - young at foot only. Note milk intake is not removed because PI of yatf is for solids
     pi = pi * piyf     # milk DM intake = mp2 / cl[6, ...] * cl[25, ...]
     ##Potential intake of pasture - young at foot only
@@ -831,8 +833,58 @@ def f_potential_intake_cs(ci, srw, relsize_start, rc_start, temp_lc, temp_ave, t
     return np.maximum(0,pi)
 
 
-def f_potential_intake_mu(srw):
-    pi = 0.028 * srw
+def f_potential_intake_mu(ci, srw, relsize_start, rc_start, temp_lc, temp_ave, temp_max, temp_min, rain_intake, rev_trait_value
+                          , rc_birth_start=1, pi_age_y=0, lb_start=0, piyf=1, period_between_birthwean=1, sam_pi=1):
+    '''Copy of f_potential_intake_cs() but with different coefficients for PI and the effect of varying z.
+    Parameters:
+        ci:
+        srw:
+        relsize_start:
+        rc_start:
+        temp_lc:
+        temp_ave:
+        temp_max:
+        temp_min:
+        rain_intake:
+        rev_trait_value: Dictionary of the production levels for the sheep class and period
+        rc_birth_start:
+        pi_age_y:
+        lb_start:
+        piyf:
+        period_between_birthwean:
+        sam_pi: sensitivity multiplier on PI. Applied as an intermediate SAM so that it can be differentially applied by age
+
+    Return:
+        pi: daily potential intake
+    '''
+    ##Condition factor on PI
+    rc_start_adj = np.maximum(1, rc_start)
+    picf= rc_start_adj * (ci[20, ...] - rc_start_adj) / (ci[20, ...] - 1)
+    ##Age factor on PI
+    piz= relsize_start * (ci[22, ...] - relsize_start) / (ci[22, ...] - 1)
+    ##Lactation adjustment (RC at parturition) - only active for dams
+    la = 1 + ci[15, ...] * (rc_birth_start - 1)
+    ##Lactation factor on PI - dam only
+    pilf = 1 + pi_age_y * la * lb_start
+    ##Temperature function
+    piax = np.arccos(np.clip((temp_ave - temp_lc) / (0.5 * (temp_max - temp_min)),-1,1))
+    ##Temperature below the lower critical temp
+    tlow = piax * (temp_lc - temp_ave) + 0.5 * np.sin(piax) * (temp_max - temp_min) / np.pi
+    ##Temperature factor on PI - high temperatures
+    pitf_high = 1 - ci[5, ...] * (temp_ave - ci[6, ...])
+    ##Temperature factor on PI - low temperatures
+    pitf_low = 1 + ci[17,...] * tlow * rain_intake
+    ##Temperature factor on PI
+    pitf = np.minimum(1, pitf_high) * np.maximum(1, pitf_low)
+    ##Potential intake
+    pi = ci[21, ...] * srw * piz * picf * pitf * pilf * sam_pi
+    ##Potential intake of pasture - young at foot only. Note milk intake is not removed because PI of yatf is for solids
+    pi = pi * piyf     # milk DM intake = mp2 / cl[6, ...] * cl[25, ...]
+    ##Potential intake of pasture - young at foot only
+    pi = pi * period_between_birthwean
+    ##Process the potential intake REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
+    pi = f1_rev_update('intake', pi, rev_trait_value)
+    # pi = 0.028 * srw
     return np.maximum(0,pi)
 
 

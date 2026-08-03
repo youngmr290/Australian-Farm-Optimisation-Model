@@ -4078,13 +4078,17 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                         if eqn_compare:
                             r_compare4_q0q2tpoffs[eqn_system, 0, :, p:p+1, ...] = temp0
 
-                ###murdoch #todo function doesn't exist yet, add args when it is built
+                ###murdoch
                 eqn_system = 1 # mu = 1
                 if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                     ###sire
                     eqn_used = (eqn_used_g0_q1p[eqn_group, p:p+1] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1,...] >0):
-                        temp0 = sfun.f_potential_intake_mu(srw_pa1e1b1nwzida0e0b0xyg0)
+                        temp0 = sfun.f_potential_intake_mu(ci_cpsire, srw_pa1e1b1nwzida0e0b0xyg0, relsize_start_sire
+                                            , rc_start_sire, temp_lc_start_sire
+                                            , temp_ave_pa1e1b1nwzida0e0b0xyg[p:p+1], temp_max_pa1e1b1nwzida0e0b0xyg[p:p+1]
+                                            , temp_min_pa1e1b1nwzida0e0b0xyg[p:p+1], rain_intake_pa1e1b1nwzida0e0b0xyg0[p:p+1]
+                                            , rev_trait_values['sire'][p], sam_pi = sam_pi_sire)
                         if eqn_used:
                             pi_sire = temp0
                         if eqn_compare:
@@ -4092,7 +4096,13 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     ###dams
                     eqn_used = (eqn_used_g1_q1p[eqn_group, p:p+1] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
-                        temp0 = sfun.f_potential_intake_mu(srw_pa1e1b1nwzida0e0b0xyg1)
+                        temp0 = sfun.f_potential_intake_mu(ci_cpdams, srw_pa1e1b1nwzida0e0b0xyg1, relsize_start_dams
+                                            , rc_start_dams, temp_lc_start_dams
+                                            , temp_ave_pa1e1b1nwzida0e0b0xyg[p:p+1], temp_max_pa1e1b1nwzida0e0b0xyg[p:p+1]
+                                            , temp_min_pa1e1b1nwzida0e0b0xyg[p:p+1], rain_intake_pa1e1b1nwzida0e0b0xyg1[p:p+1]
+                                            , rev_trait_values['dams'][p], rc_birth_start = rc_birth_dams
+                                            , pi_age_y = pi_age_y_pa1e1b1nwzida0e0b0xyg1[p:p+1]
+                                            , lb_start = lb_start_dams, sam_pi = sam_pi_dams)
                         if eqn_used:
                             pi_dams = temp0
                         if eqn_compare:
@@ -4100,7 +4110,11 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     ###offs
                     eqn_used = (eqn_used_g3_q1p[eqn_group, p:p+1] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1,...] >0):
-                        temp0 = sfun.f_potential_intake_mu(srw_pa1e1b1nwzida0e0b0xyg3)
+                        temp0 = sfun.f_potential_intake_mu(ci_cpoffs, srw_pa1e1b1nwzida0e0b0xyg3, relsize_start_offs
+                                            , rc_start_offs, temp_lc_start_offs
+                                            , temp_ave_pa1e1b1nwzida0e0b0xyg[p:p+1], temp_max_pa1e1b1nwzida0e0b0xyg[p:p+1]
+                                            , temp_min_pa1e1b1nwzida0e0b0xyg[p:p+1], rain_intake_pa1e1b1nwzida0e0b0xyg3[p:p+1]
+                                            , rev_trait_values['offs'][p], sam_pi = sam_pi_offs)
                         if eqn_used:
                             pi_offs = temp0
                         if eqn_compare:
@@ -5462,6 +5476,22 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p:p+1] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...] >0):
                     temp0 = sfun.f_potential_intake_cs(ci_cpyatf, srw_pa1e1b1nwzida0e0b0xyg2, relsize_start_yatf, rc_start_yatf, temp_lc_start_yatf
+                                        , temp_ave_pa1e1b1nwzida0e0b0xyg[p:p+1], temp_max_pa1e1b1nwzida0e0b0xyg[p:p+1]
+                                        , temp_min_pa1e1b1nwzida0e0b0xyg[p:p+1], rain_intake_pa1e1b1nwzida0e0b0xyg2[p:p+1]
+                                        , rev_trait_values['yatf'][p], piyf = piyf_pa1e1b1nwzida0e0b0xyg2[p:p+1]
+                                        , period_between_birthwean = period_between_birthwean_pa1e1b1nwzida0e0b0xyg1[p:p+1]
+                                        , sam_pi = sam_pi_yatf)
+                    if eqn_used:
+                        pi_yatf = temp0
+                    if eqn_compare:
+                        r_compare4_q0q2tpyatf[eqn_system, 0, :, p:p+1, ...] = temp0
+            eqn_system = 1 # mu = 1
+            if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
+                ###yatf
+                eqn_used = (eqn_used_g2_q1p[eqn_group, p:p+1] == eqn_system)
+                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...] >0):
+                    temp0 = sfun.f_potential_intake_mu(ci_cpyatf, srw_pa1e1b1nwzida0e0b0xyg2, relsize_start_yatf
+                                        , rc_start_yatf, temp_lc_start_yatf
                                         , temp_ave_pa1e1b1nwzida0e0b0xyg[p:p+1], temp_max_pa1e1b1nwzida0e0b0xyg[p:p+1]
                                         , temp_min_pa1e1b1nwzida0e0b0xyg[p:p+1], rain_intake_pa1e1b1nwzida0e0b0xyg2[p:p+1]
                                         , rev_trait_values['yatf'][p], piyf = piyf_pa1e1b1nwzida0e0b0xyg2[p:p+1]
