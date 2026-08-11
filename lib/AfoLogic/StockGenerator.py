@@ -101,6 +101,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         sen.saa['yfd_scalar'] = 0.0
         sen.saa['milk_yield'] = 0.0
         sen.saa['growth_constant'] = 0.0
+        sen.saa['pi_z_constant'] = 0.0
         sen.saa['srw'] = 0.0
 
         ##Comment any coefficients that aren't being calibrated
@@ -199,6 +200,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         w = np.nan  #intake pre-weaning is handled with the cl[0] parameter, which is intake of milk
         # p = coefficients_c[j]; j += 1
         # y = coefficients_c[j]; j += 1
+        sen.saa['pi_z_constant'] = coefficients_c[j]; j += 1    #ci[22] parameter which alters the scaling of PI by z
         # h = np.nan  #no hfat
         a = coefficients_c[j]; j += 1  #np.nan when SRW is an active calibration coefficient
         sen.saa['pi_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
@@ -295,6 +297,10 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         sen.sam['pi_yatf'] = fun.f_sa(sen.sam['pi_yatf'], sen.saa['milk_yield'], 2)  #increase yatf PI of pasture as well as milk intake
         idx = fun.f_slice_idx(uinp.parameters['i_cn_c2'], {0: [1]})
         uinp.parameters['i_cn_c2'][idx] = fun.f_sa(uinp.parameters['i_cn_c2'][idx], sen.saa['growth_constant'], 2)
+        idx = fun.f_slice_idx(uinp.parameters['i_ci_c2'], {0: [2]})   #slice 2 CFS coefficient
+        uinp.parameters['i_ci_c2'][idx] = fun.f_sa(uinp.parameters['i_ci_c2'][idx], sen.saa['pi_z_constant'], 2)
+        idx = fun.f_slice_idx(uinp.parameters['i_ci_c2'], {0: [22]})   #slice 22 GFS coefficient
+        uinp.parameters['i_ci_c2'][idx] = fun.f_sa(uinp.parameters['i_ci_c2'][idx], sen.saa['pi_z_constant'], 2)
 
     # else:   #not calibrate_trait_values
     #     ## assign the zero values to the saa coefficients (for printing later).

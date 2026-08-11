@@ -569,6 +569,7 @@ def create_sa():
     saa['yfd_scalar'] = 0.0          #Genotype calibration: Adjust scalar for yfd genotype params
     saa['milk_yield'] = 0.0          #Genotype calibration: Adjust cl_yatf[0] parameter which alters milk production, lamb milk intake and ewe PI during lactation
     saa['growth_constant'] = 0.0     #Genotype calibration: Adjust growth constant (k) param
+    saa['pi_z_constant'] = 0.0       #Genotype calibration: Adjust c1[2] & c1[22] parameters, PI z scalar constant
     saa['srw'] = 0.0                 #Genotype calibration: Adjust SRW
 
     ##SAA on slices of the livestock parameters using the age stage axis
