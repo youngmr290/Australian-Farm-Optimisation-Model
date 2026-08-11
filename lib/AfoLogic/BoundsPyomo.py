@@ -243,7 +243,6 @@ def f1_boundarypyomo_local(params, model):
                                                              model.s_season_types, rule=f_crop_grazing_intensity,
                                                              doc='crop consumed per hectare of grazable crop')
 
-
         ##bnd numbers of dams at prejoining
         if total_dams_eqbound_inc:
             '''
