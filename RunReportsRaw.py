@@ -21,11 +21,11 @@ start = time.time()
 ## If no arg passed in or the experiment is not set up with custom col in report_run then default col is used
 report_run = pd.read_excel(relativeFile.findExcel('exp.xlsx'), sheet_name='RunReport', index_col=[0], header=[0,1], engine='openpyxl')
 try:
-    exp_group = int(sys.argv[3])  # reads in as string so need to convert to int, the script path is the first value hence take the second.
+    report_group = int(sys.argv[3])  # reads in as string so need to convert to int, the script path is the first value hence take the second.
 except:  # in case no arg passed to python
-    exp_group = "Default"
+    report_group = "Default"
 try:
-    report_run = report_run.loc[:,('Run',exp_group)]
+    report_run = report_run.loc[:,('Run',report_group)]
 except KeyError:  # in case the experiment is not set up with custom report_run
     report_run = report_run.loc[:,('Run',"Default")]
 report_run = report_run.to_frame()
@@ -47,12 +47,12 @@ def f_report(processor, trials, non_exist_trials):
     for i, trial_name in enumerate(trials):
         ###run
         if i % frequency == 0:
-            print(f"{time.ctime()} processed trial {i}/{len(trials)-1}: {trial_name}")  #, flush=True)  # \r to overwrite each time and flush to force the print
+            print(f"{time.ctime()} processed trial {i+1}/{len(trials)}: {trial_name}")  #, flush=True)  # \r to overwrite each time and flush to force the print
         lp_vars, r_vals = rfun.load_pkl(trial_name)
         reports = rep.f_run_report(lp_vars,r_vals, report_run, trial_name, user_controls=user_controls)
         ###stack
         stacked_reps = rve.f_concat_reports(stacked_reps, reports, report_run, trial_name)
-    print("All trials processed")  # Final newline after loop completes
+    print(f"All trials processed {time.ctime()}")  # Final newline after loop completes
 
     ##save to excel
     rve.f_save_reports(report_run, stacked_reps, processor)
@@ -82,7 +82,13 @@ if __name__ == '__main__':
     trials, non_exist_trials = rfun.f_errors(trial_outdated,trials)
 
     ##clear the old report.xlsx
-    reports = relativeFile.find(__file__, "./Output", "Report*.xlsx")
+    ##set the group of trials being run. If no argument is passed in then all trials are run. To pass in argument need to run via terminal.
+    try:
+        exp_group = int(sys.argv[1]) #reads in as string so need to convert to int, the script path is the first value hence take the second.
+    except (IndexError, ValueError) as e: #in case no arg passed to python
+        exp_group = None
+
+    reports = relativeFile.find(__file__, "./Output", f"Report*_{exp_group}.xlsx")
     for f in glob.glob(reports):
         os.remove(f)
 
@@ -112,5 +118,4 @@ if __name__ == '__main__':
         pool.starmap(f_report, args)
 
     end = time.time()
-    # print("Reports successfully completed")
     print(f'Reporting successfully completed at: {time.ctime()}, total time taken: {end - start:.2f}')

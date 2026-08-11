@@ -400,7 +400,8 @@ def f_var_reshape(lp_vars, r_vals):
     d_vars['base']['dams_numbers_qsk2tvanwziy1g1'] = dams_numbers_qsk2tvanwziy1g1
     d_vars['qsz_weighted']['dams_numbers_qsk2tvanwziy1g1'] = dams_numbers_qsk2tvanwziy1g1 * prob_qsz[...,na,na,na,na,na,na,:,na,na,na]
     ###prog
-    prog_numbers_qsk3k5twzia0xg2 = f_vars2np(lp_vars, 'v_prog', r_vals['stock']['prog_keys_qsk3k5twzia0xg2']).astype(float)
+    maskz8_zia0xg2 = r_vals['stock']['maskz8_zia0xg2']
+    prog_numbers_qsk3k5twzia0xg2 = f_vars2np(lp_vars, 'v_prog', r_vals['stock']['prog_keys_qsk3k5twzia0xg2'], maskz8_zia0xg2, z_pos=-5).astype(float)
     d_vars['base']['prog_numbers_qsk3k5twzia0xg2'] = prog_numbers_qsk3k5twzia0xg2
     d_vars['qsz_weighted']['prog_numbers_qsk3k5twzia0xg2'] = prog_numbers_qsk3k5twzia0xg2 * prob_qsz[...,na,na,na,na,:,na,na,na,na]
     ###offs
@@ -561,7 +562,9 @@ def f_price_summary(lp_vars, r_vals, option, grid, weight, score):
 def f_summary(lp_vars, r_vals, trial):
     '''Returns a simple 1 row summary of the trial (season results are averaged)'''
     summary_df = pd.DataFrame(index=[trial], columns=['profit', 'profit max', 'profit min', 'profit stdev', 'risk neutral obj', 'utility',
-                                                      'SR', 'SR max', 'SR min', 'SR stdev', 'Pas %', 'Pas % max', 'Pas % min', 'Pas % stdev',
+                                                      'SR NW', 'SR NW max', 'SR NW min', 'SR NW stdev',
+                                                      'SR MJ', 'SR MJ max', 'SR MJ min', 'SR MJ stdev',
+                                                      'Pas %', 'Pas % max', 'Pas % min', 'Pas % stdev',
                                                       'Ewes mated',
                                                       'Cereal %', 'Cereal % max', 'Cereal % min', 'Cereal % stdev',
                                                       'Canola %', 'Canola % max', 'Canola % min', 'Canola % stdev',
@@ -579,13 +582,22 @@ def f_summary(lp_vars, r_vals, trial):
     summary_df.loc[trial, 'risk neutral obj'] = f_profit(lp_vars, r_vals, option=1)
     ##utility
     summary_df.loc[trial, 'utility'] = f_profit(lp_vars, r_vals, option=2)
-    ##total dse/ha in fp0
-    summary_df.loc[trial, 'SR'] = round(f_dse(lp_vars, r_vals, method=r_vals['stock']['dse_type'], per_ha=True, summary1=True)[0],1)
-    SR_max = round(f_dse(lp_vars, r_vals, method=r_vals['stock']['dse_type'], per_ha=True, summary1=True)[1],1)
-    SR_min = round(f_dse(lp_vars, r_vals, method=r_vals['stock']['dse_type'], per_ha=True, summary1=True)[2],1)
-    summary_df.loc[trial, 'SR max'] = SR_max * np.logical_not(SR_min==SR_max) #sets min/max to 0 if range is 0 so the cols get hidden
-    summary_df.loc[trial, 'SR min'] = SR_min * np.logical_not(SR_min==SR_max) #sets min/max to 0 if range is 0 so the cols get hidden
-    summary_df.loc[trial, 'SR stdev'] = f_dse(lp_vars, r_vals, method=r_vals['stock']['dse_type'], per_ha=True, summary1=True)[3]
+    ##total dse/ha in fp0 (DSE type 0 - NW)
+    sr_mean, sr_max, sr_min, sr_stdev = f_dse(lp_vars, r_vals, method=0, per_ha=True, summary1=True)
+    summary_df.loc[trial, 'SR NW'] = round(sr_mean,1)
+    SR_max = round(sr_max,1)
+    SR_min = round(sr_min,1)
+    summary_df.loc[trial, 'SR NW max'] = SR_max * np.logical_not(SR_min==SR_max) #sets min/max to 0 if range is 0 so the cols get hidden
+    summary_df.loc[trial, 'SR NW min'] = SR_min * np.logical_not(SR_min==SR_max) #sets min/max to 0 if range is 0 so the cols get hidden
+    summary_df.loc[trial, 'SR NW stdev'] = round(sr_stdev,1)
+    ##total dse/ha in fp0 (DSE type 1 - MJ)
+    sr_mean, sr_max, sr_min, sr_stdev = f_dse(lp_vars, r_vals, method=1, per_ha=True, summary1=True)
+    summary_df.loc[trial, 'SR MJ'] = round(sr_mean,1)
+    SR_max = round(sr_max,1)
+    SR_min = round(sr_min,1)
+    summary_df.loc[trial, 'SR MJ max'] = SR_max * np.logical_not(SR_min==SR_max) #sets min/max to 0 if range is 0 so the cols get hidden
+    summary_df.loc[trial, 'SR MJ min'] = SR_min * np.logical_not(SR_min==SR_max) #sets min/max to 0 if range is 0 so the cols get hidden
+    summary_df.loc[trial, 'SR MJ stdev'] = round(sr_stdev,1)
     ##total dams mated
     type = 'stock'
     prod = 'dvp_is_mating_vzig1'
@@ -595,7 +607,7 @@ def f_summary(lp_vars, r_vals, trial):
     arith = 2
     index = []
     cols = []
-    axis_slice = {2:[1,None,1], 3:[2,None,1]} #slice off the not mate k1 slice (we only want mated dams) and slice off the sold animals so we dont count dams that are sold at prejoining (there is a sale opp at the start of dvp).
+    axis_slice = {2:[1,None,1], 3:[2,None,1]} #slice off the not mate k1 slice (we only want mated dams) and slice off the sold animals so we don't count dams that are sold at prejoining (there is a sale opp at the start of dvp).
     dams_mated = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     summary_df.loc[trial, 'Ewes mated'] = round(dams_mated.squeeze(),0)
     ##pasture %
@@ -997,6 +1009,8 @@ def f_mach_summary(lp_vars, r_vals, option=0):
         rot_area_qs_rzl = rot_area_qszrl_p7.iloc[:,-1].unstack([3,2,4]) # slice p7[-1]
         chem_time_rzl = r_vals['crop']['chem_time_ha_rzl_n'].sum(axis=1)
         fert_time_rzl = r_vals['crop']['fert_time_rzl_n'].sum(axis=1)
+        chem_time_rzl.index = chem_time_rzl.index.set_names(rot_area_qs_rzl.columns.names) # allign level names - Pandas MultiIndex alignment can fail if the level names differ, even when the actual labels match.
+        fert_time_rzl.index = fert_time_rzl.index.set_names(rot_area_qs_rzl.columns.names) # allign level names - Pandas MultiIndex alignment can fail if the level names differ, even when the actual labels match.
         spraying_time_qs_z = rot_area_qs_rzl.mul(chem_time_rzl, axis=1).groupby(axis=1, level=1).sum()  # mul area and sum lmu and rot
         spreading_time_qs_z = rot_area_qs_rzl.mul(fert_time_rzl, axis=1).groupby(axis=1, level=1).sum()  # mul area and sum lmu and rot
 
@@ -1115,12 +1129,13 @@ def f_grain_sup_summary(lp_vars, r_vals, option=0):
 
     :param option: int:
 
-            #. return dict with sup cost and revenue from grain sales
-            #. return total supplement fed in each feed period
-            #. return total of each grain supplement fed in each feed period in each season
-            #. return total of each grain supplement fed in each feed period for each feed pool in each season
-            #. return total sup fed (weighted by season prob)
-            #. return total grain/hay produced on farm.
+            0. return dict with sup cost and revenue from grain sales
+            1. return total supplement fed in each feed period
+            2. return total of each grain supplement fed in each feed period in each season
+            3. return total of each grain supplement fed in each feed period for each feed pool in each season
+            4. return total sup fed (weighted by season prob)
+            5. return total grain/hay produced on farm.
+            6. return total sup fed by p6 and k (weighted by season prob)
 
     '''
     ##z masks to uncluster lp_vars
@@ -1128,28 +1143,31 @@ def f_grain_sup_summary(lp_vars, r_vals, option=0):
     maskz8_zp6 = r_vals['pas']['mask_fp_z8var_p6z'].T
 
     ##grain fed
-    grain_fed_qszk3gvp6 = f_vars2df(lp_vars, 'v_sup_con', maskz8_zp6[:,na,na,na,:], z_pos=-5)
+    grain_fed_qszk3fp6 = f_vars2df(lp_vars, 'v_sup_con', maskz8_zp6[na,na,:,na,na,:], z_pos=-4)
 
     if option == 1:
-        grain_fed_qszp6 = grain_fed_qszk3gvp6.groupby(level=(0, 1, 2, 6)).sum()  # sum feed pool, landuse and grain pool
+        grain_fed_qszp6 = grain_fed_qszk3fp6.groupby(level=(0, 1, 2, 5)).sum()  # sum feed pool and landuse
         return grain_fed_qszp6.to_frame()
 
     if option == 2:
-        grain_fed_qszk3p6 = grain_fed_qszk3gvp6.groupby(level=(0, 1, 2, 3, 6)).sum()  # sum feed pool and grain pool
+        grain_fed_qszk3p6 = grain_fed_qszk3fp6.groupby(level=(0, 1, 2, 3, 5)).sum()  # sum feed pool
         return grain_fed_qszk3p6
 
     if option == 3:
-        grain_fed_qszk3fp6 = grain_fed_qszk3gvp6.groupby(level=(0, 1, 2, 3, 5, 6)).sum()  # sum grain pool
         return grain_fed_qszk3fp6
 
-    if option == 4:
+    if option == 4 or option == 6:
         keys_q = r_vals['zgen']['keys_q']
         keys_s = r_vals['zgen']['keys_s']
         keys_z = r_vals['zgen']['keys_z']
         index_qsz = pd.MultiIndex.from_product([keys_q, keys_s, keys_z])
         z_prob_qsz = r_vals['zgen']['z_prob_qsz']
         z_prob_qsz = pd.Series(z_prob_qsz.ravel(), index=index_qsz)
-        grain_fed_qsz = grain_fed_qszk3gvp6.groupby(level=(0,1,2)).sum() #sum all axis except season ones (q,s,z)
+        if option == 6:
+            grain_fed_qsz_kp6 = grain_fed_qszk3fp6.groupby(level=(0,1,2,3,5)).sum().unstack([-1,-2]) #sum nv pool
+            grain_fed_p6_k = grain_fed_qsz_kp6.mul(z_prob_qsz, axis=0).sum().unstack()
+            return round(grain_fed_p6_k, 1)
+        grain_fed_qsz = grain_fed_qszk3fp6.groupby(level=(0,1,2)).sum() #sum all axis except season ones (q,s,z)
         ###stdev and range
         grain_fed_mean = grain_fed_qsz.mul(z_prob_qsz).sum()
         ma_grain_fed_qsz = np.ma.masked_array(grain_fed_qsz, z_prob_qsz == 0)
@@ -1163,41 +1181,43 @@ def f_grain_sup_summary(lp_vars, r_vals, option=0):
         ##create dict to store grain variables
         grain = {}
         ##prices
-        grains_sale_price_zk1s2gq_p7 = r_vals['crop']['grain_price'].stack([0,2]).reorder_levels([4,0,1,2,3]).sort_index()
-        grains_buy_price_zk3s2gq_p7 = r_vals['sup']['buy_grain_price'].stack([0,2]).reorder_levels([4,0,1,2,3]).sort_index()
+        grains_sale_price_zk1s2q_p7 = r_vals['crop']['grain_price'].stack([0,2]).reorder_levels([3,0,1,2]).sort_index()
+        grains_buy_price_zk3s2q_p7 = r_vals['sup']['buy_grain_price'].stack([0,2]).reorder_levels([3,0,1,2]).sort_index()
 
         ##grain purchased
-        grain_purchased_qsp7zk3s2g = f_vars2df(lp_vars,'v_buy_product', mask_season_p7z[:,:,na,na,na], z_pos=-4)
-        grain_purchased_qszk3s2g = grain_purchased_qsp7zk3s2g.groupby(level=(0,1,3,4,5,6)).sum()  # sum p7
-        grain_purchased_zk3s2gqs = grain_purchased_qszk3s2g.reorder_levels([2,3,4,5,0,1]) .sort_index()#change the order so that reindexing works (new levels being added must be at the end)
+        grain_purchased_qsp7zk3s2 = f_vars2df(lp_vars,'v_buy_product', mask_season_p7z[na,na,:,:,na,na], z_pos=-3)
+        grain_purchased_qszk3s2 = grain_purchased_qsp7zk3s2.groupby(level=(0,1,3,4,5)).sum()  # sum p7
+        grain_purchased_zk3s2qs = grain_purchased_qszk3s2.reorder_levels([2,3,4,0,1]).sort_index()#change the order so that reindexing works (new levels being added must be at the end)
 
         ##grain sold
-        grain_sold_qsp7zk1s2g = f_vars2df(lp_vars,'v_sell_product', mask_season_p7z[:,:,na,na,na], z_pos=-4)
-        grain_sold_qszk1s2g = grain_sold_qsp7zk1s2g.groupby(level=(0,1,3,4,5,6)).sum()  # sum p7
-        grain_sold_zk1s2gqs = grain_sold_qszk1s2g.reorder_levels([2,3,4,5,0,1]).sort_index() #change the order so that reindexing works (new levels being added must be at the end)
+        grain_sold_qsp7zk1s2 = f_vars2df(lp_vars,'v_sell_product', mask_season_p7z[na,na,:,:,na,na], z_pos=-3)
+        grain_sold_qszk1s2 = grain_sold_qsp7zk1s2.groupby(level=(0,1,3,4,5)).sum()  # sum p7
+        grain_sold_zk1s2qs = grain_sold_qszk1s2.reorder_levels([2,3,4,0,1]).sort_index() #change the order so that reindexing works (new levels being added must be at the end)
 
         ##grain fed - s2 axis added because sup feed is allocated to a given s2 slice and therefore the variable doesn't have an active s2 axis
         sup_s2_ks2 = r_vals['sup']['sup_s2_k_s2'].stack()
-        grain_fed_qszk3g = grain_fed_qszk3gvp6.groupby(level=(0, 1, 2, 3, 4)).sum()  # sum feed pool and feed period
-        grain_fed_qszg_k3s2 = grain_fed_qszk3g.unstack(3).mul(sup_s2_ks2, axis=1, level=0)
-        grain_fed_zk3s2gqs = grain_fed_qszg_k3s2.stack([0,1]).reorder_levels([2,4,5,3,0,1]).sort_index() #change the order so that reindexing works (new levels being added must be at the end)
+        grain_fed_qszk3 = grain_fed_qszk3fp6.groupby(level=(0, 1, 2, 3)).sum()  # sum feed pool and feed period
+        grain_fed_qsz_k3s2 = grain_fed_qszk3.unstack(3).mul(sup_s2_ks2, axis=1, level=0)
+        grain_fed_zk3s2qs = grain_fed_qsz_k3s2.stack([0,1]).reorder_levels([2,3,4,0,1]).sort_index() #change the order so that reindexing works (new levels being added must be at the end)
 
         ##total grain produced by crop enterprise
-        grain_transferred_crop_to_sheep_zk3s2gqs = grain_fed_zk3s2gqs - grain_purchased_zk3s2gqs
-        grain_transferred_crop_to_sheep_zk1s2gqs = grain_transferred_crop_to_sheep_zk3s2gqs.reindex(grain_sold_zk1s2gqs.index).fillna(0)
-        total_grain_produced_zk1s2gqs = grain_sold_zk1s2gqs + grain_transferred_crop_to_sheep_zk1s2gqs  # total grain produced by crop enterprise
+        grain_transferred_crop_to_sheep_zk3s2qs = grain_fed_zk3s2qs - grain_purchased_zk3s2qs
+        grain_transferred_crop_to_sheep_zk1s2qs = grain_transferred_crop_to_sheep_zk3s2qs.reindex(grain_sold_zk1s2qs.index).fillna(0)
+        total_grain_produced_zk1s2qs = grain_sold_zk1s2qs + grain_transferred_crop_to_sheep_zk1s2qs  # total grain produced by crop enterprise
         if option==5:
-            return total_grain_produced_zk1s2gqs
-        grains_sale_price_zk1s2gqs_p7 = grains_sale_price_zk1s2gq_p7.reindex(total_grain_produced_zk1s2gqs.index, axis=0)
-        rev_grain_k1_p7zqs = grains_sale_price_zk1s2gqs_p7.mul(total_grain_produced_zk1s2gqs, axis=0).unstack([0,4,5]).groupby(axis=0, level=0).sum()  # sum grain pool and s2
+            return total_grain_produced_zk1s2qs
+        grains_sale_price_zk1s2qs_p7 = grains_sale_price_zk1s2q_p7.reindex(total_grain_produced_zk1s2qs.index.droplevel(-1), axis=0)
+        grains_sale_price_zk1s2qs_p7.index = total_grain_produced_zk1s2qs.index
+        rev_grain_k1_p7zqs = grains_sale_price_zk1s2qs_p7.mul(total_grain_produced_zk1s2qs, axis=0).unstack([0,3,4]).groupby(axis=0, level=0).sum()  # sum s2
         grain['rev_grain_k1_p7zqs'] = rev_grain_k1_p7zqs
 
         ##supplementary cost: cost = sale_price * (grain_fed - grain_purchased) + buy_price * grain_purchased
         ###cost of grain transferred from cropping enterprise (this is only the k3 crops that exist in k1 set hence use k1 axis)
-        sup_transferred_exp_zqs_p7 = grains_sale_price_zk1s2gqs_p7.mul(grain_transferred_crop_to_sheep_zk1s2gqs, axis=0).groupby(axis=0, level=(0, 4, 5)).sum()  # sum grain pool & landuse & s2
+        sup_transferred_exp_zqs_p7 = grains_sale_price_zk1s2qs_p7.mul(grain_transferred_crop_to_sheep_zk1s2qs, axis=0).groupby(axis=0, level=(0, 3, 4)).sum()  # sum landuse & s2
         ###cost of purchases
-        grains_buy_price_zk3s2gqs_p7 = grains_buy_price_zk3s2gq_p7.reindex(grain_purchased_zk3s2gqs.index, axis=0)
-        buy_sup_exp_zqs_p7 = grains_buy_price_zk3s2gqs_p7.mul(grain_purchased_zk3s2gqs, axis=0).groupby(axis=0,level=(0,4,5)).sum()  # sum grain pool & landuse & s2
+        grains_buy_price_zk3s2qs_p7 = grains_buy_price_zk3s2q_p7.reindex(grain_purchased_zk3s2qs.index.droplevel(-1), axis=0)
+        grains_buy_price_zk3s2qs_p7.index = grain_purchased_zk3s2qs.index
+        buy_sup_exp_zqs_p7 = grains_buy_price_zk3s2qs_p7.mul(grain_purchased_zk3s2qs, axis=0).groupby(axis=0,level=(0,3,4)).sum()  # sum landuse & s2
         total_sup_exp_zqs_p7 = sup_transferred_exp_zqs_p7 + buy_sup_exp_zqs_p7
         grain['sup_exp_p7zqs'] = total_sup_exp_zqs_p7.unstack([0,1,2])
         return grain
@@ -1388,12 +1408,13 @@ def f_stock_cash_summary(lp_vars, r_vals):
     return stocksale_qszp7, wool_qszp7, husbcost_qszp7, supcost_qsz_p7, purchasecost_qszp7, trade_value_qszp7
 
 
-def f_labour_summary(lp_vars, r_vals, option=0):
+def f_labour_summary(lp_vars, r_vals, option=0, pasture_area_propn=1):
     '''
     :param option:
 
         #. return total labour cost
         #. return amount for each enterprise
+        #. return estimated stock labour cost
 
     '''
     ##mask to uncluster lp_vars
@@ -1445,6 +1466,76 @@ def f_labour_summary(lp_vars, r_vals, option=0):
         casual_fixed_qsp5z_w = f_vars2df(lp_vars, 'v_fixed_labour_casual', maskz8_p5z[:,na,:], z_pos=-1).unstack(-2)
         fixed_labour = pd.concat([manager_fixed_qsp5z_w, prem_fixed_qsp5z_w, casual_fixed_qsp5z_w], axis=1).sum(axis=1, level=0)
         return sheep_labour, crop_labour, fixed_labour
+
+    ##estimated stock labour cost
+    if option == 2:
+        index_qsz = pd.MultiIndex.from_product([keys_q, keys_s, keys_z])
+        index_qsp5z = pd.MultiIndex.from_product([keys_q, keys_s, keys_p5, keys_z])
+        z_prob_qsz = pd.Series(r_vals['zgen']['z_prob_qsz'].ravel(), index=index_qsz)
+
+        def f_labour_hours(var_key):
+            labour = f_vars2df(lp_vars, var_key, maskz8_p5z[:,na,:], z_pos=-1)
+            return labour.groupby(level=[0, 1, 2, 4]).sum()
+
+        def f_add(series_a, series_b):
+            return series_a.add(series_b, fill_value=0)
+
+        def f_stock_hours(sheep_hours, crop_hours, fixed_hours):
+            # Crop labour includes operations that also occur on pasture paddocks, mainly fertiliser and
+            # reseeding. Allocate 20% of the pasture-area share of crop labour to stock because pasture
+            # paddocks require less labour per hectare than crop paddocks.
+            return f_add(sheep_hours, f_add(fixed_hours * pasture_area_propn,
+                                            crop_hours * pasture_area_propn * 0.2))
+
+        def f_alloc_cost(cost, stock_hours, total_hours):
+            # Permanent and manager costs are annual staff costs for all work. Allocate their cost to
+            # stock using the stock share of manager/permanent hours used across the year.
+            propn = stock_hours.div(total_hours).replace([np.inf, -np.inf], 0).fillna(0)
+            return cost.mul(propn, fill_value=0)
+
+        def f_expected_total(qsz):
+            return qsz.reindex(index_qsz).mul(z_prob_qsz).sum()
+
+        ###manager
+        manager_sheep_qsp5z = f_labour_hours('v_sheep_labour_manager')
+        manager_crop_qsp5z = f_labour_hours('v_phase_labour_manager')
+        manager_fixed_qsp5z = f_labour_hours('v_fixed_labour_manager')
+        manager_stock_hours_qsz = f_stock_hours(manager_sheep_qsp5z, manager_crop_qsp5z, manager_fixed_qsp5z).groupby(level=[0, 1, 3]).sum()
+        manager_total_hours_qsz = f_add(f_add(manager_sheep_qsp5z, manager_crop_qsp5z),
+                                        manager_fixed_qsp5z).groupby(level=[0, 1, 3]).sum()
+        quantity_manager_qs = f_vars2np(lp_vars, 'v_quantity_manager', qs)
+        manager_cost_z = r_vals['lab']['manager_cost_p7z'].sum(axis=0)
+        manager_cost_qsz = pd.Series((quantity_manager_qs[:,:,na] * manager_cost_z[na,na,:]
+                                      * r_vals['zgen']['mask_qs'][:,:,na]).ravel(), index=index_qsz)
+        manager_stock_cost_qsz = f_alloc_cost(manager_cost_qsz, manager_stock_hours_qsz, manager_total_hours_qsz)
+
+        ###permanent
+        prem_sheep_qsp5z = f_labour_hours('v_sheep_labour_permanent')
+        prem_crop_qsp5z = f_labour_hours('v_phase_labour_permanent')
+        prem_fixed_qsp5z = f_labour_hours('v_fixed_labour_permanent')
+        prem_stock_hours_qsz = f_stock_hours(prem_sheep_qsp5z, prem_crop_qsp5z, prem_fixed_qsp5z).groupby(level=[0, 1, 3]).sum()
+        prem_total_hours_qsz = f_add(f_add(prem_sheep_qsp5z, prem_crop_qsp5z),
+                                     prem_fixed_qsp5z).groupby(level=[0, 1, 3]).sum()
+        quantity_perm_qs = f_vars2np(lp_vars, 'v_quantity_perm', qs)
+        perm_cost_z = r_vals['lab']['perm_cost_p7z'].sum(axis=0)
+        prem_cost_qsz = pd.Series((quantity_perm_qs[:,:,na] * perm_cost_z[na,na,:]
+                                   * r_vals['zgen']['mask_qs'][:,:,na]).ravel(), index=index_qsz)
+        prem_stock_cost_qsz = f_alloc_cost(prem_cost_qsz, prem_stock_hours_qsz, prem_total_hours_qsz)
+
+        ###casual
+        casual_sheep_qsp5z = f_labour_hours('v_sheep_labour_casual')
+        casual_crop_qsp5z = f_labour_hours('v_phase_labour_casual')
+        casual_fixed_qsp5z = f_labour_hours('v_fixed_labour_casual')
+        casual_stock_hours_qsp5z = f_stock_hours(casual_sheep_qsp5z, casual_crop_qsp5z, casual_fixed_qsp5z)
+        quantity_casual_qsp5z = f_vars2np(lp_vars, 'v_quantity_casual', qsp5z, maskz8_p5z, z_pos=-1)
+        casual_cost_p5z = r_vals['lab']['casual_cost_p7zp5'].sum(axis=0).T
+        casual_cost_qsp5z = pd.Series((quantity_casual_qsp5z * casual_cost_p5z[na,na,:,:]).ravel(),
+                                      index=index_qsp5z)
+        casual_total_hours_qsp5z = f_add(f_add(casual_sheep_qsp5z, casual_crop_qsp5z), casual_fixed_qsp5z)
+        casual_stock_cost_qsz = f_alloc_cost(casual_cost_qsp5z, casual_stock_hours_qsp5z,
+                                                    casual_total_hours_qsp5z).groupby(level=[0, 1, 3]).sum()
+
+        return f_expected_total(f_add(f_add(manager_stock_cost_qsz, prem_stock_cost_qsz), casual_stock_cost_qsz))
 
 
 def f_dep_summary(lp_vars, r_vals):
@@ -1929,8 +2020,7 @@ def f_crop_summary(lp_vars, r_vals, option):
     fodder_percent_qszk = fun.f_divide(biomass_fodder_qszk, total_biomass_qszk) * 100
 
     ##grain harvested
-    total_grain_and_hay_produced_zk1s2gqs = f_grain_sup_summary(lp_vars, r_vals, option=5)
-    total_grain_and_hay_produced_zk1s2qs = total_grain_and_hay_produced_zk1s2gqs.groupby(level=(0,1,2,4,5)).sum() #sum grain pools (note price has already been adjusted for propn of seconds)
+    total_grain_and_hay_produced_zk1s2qs = f_grain_sup_summary(lp_vars, r_vals, option=5)
     total_grain_produced_zk1qs = total_grain_and_hay_produced_zk1s2qs.unstack(2).loc[:,'Harv']
     total_grain_produced_qsz_k1 = total_grain_produced_zk1qs.unstack(1).reorder_levels([1,2,0], axis=0)
 
@@ -2043,7 +2133,8 @@ def f_profit(lp_vars, r_vals, option=0):
 def f_stock_pasture_summary(r_vals, build_df=True, keys=None, type=None, index=[], cols=[], arith=0,
                             prod=np.array([1]), na_prod=[], weights=None, na_weights=[], axis_slice={},
                             na_denweights=[], den_weights=1, na_prodweights=[], prod_weights=1,
-                            den_assoc=None, na_den_assoc=[], assoc_axis=0):
+                            den_assoc=None, na_den_assoc=[], assoc_axis=0, den_weights2=1,
+                            na_denweights2=[]):
     '''
 
     ..Note::
@@ -2073,6 +2164,8 @@ def f_stock_pasture_summary(r_vals, build_df=True, keys=None, type=None, index=[
     :key na_weights (optional, default = []): list: position to add new axis
     :key den_weights (optional, default = 1): str: key to variable used to weight the denominator in the weighted average (required p6 reporting)
     :key na_denweights (optional, default = []): list: position to add new axis
+    :key den_weights2 (optional, default = 1): str: key to second variable used to weight the denominator in weighted average calcs.
+    :key na_denweights2 (optional, default = []): list: position to add new axis
     :key den_assoc (optional, default = None): str: key to variable used as an association (np.take_along) for the weight of the denominator in the weighted average (required for wean % report)
     :key prod_weights (optional, default = 1): str: keys to r_vals referencing array used to weight production.
     :key na_prodweights (optional, default = []): list: position to add new axis
@@ -2131,6 +2224,12 @@ def f_stock_pasture_summary(r_vals, build_df=True, keys=None, type=None, index=[
     else:
         prod_weights = np.array([prod_weights])
 
+    ##optional second denominator weight - used to apply masks to the denominator in weighted average calcs
+    if isinstance(den_weights2, str):
+        den_weights2 = r_vals[den_weights2]
+    else:
+        den_weights2 = np.array([den_weights2])
+
     ##den weight - used in weighted average calc (default is 1)
     if isinstance(den_weights, str):
         den_weights = r_vals[den_weights]
@@ -2140,12 +2239,20 @@ def f_stock_pasture_summary(r_vals, build_df=True, keys=None, type=None, index=[
         den_assoc = r_vals[den_assoc]
 
     ##other manipulation
-    prod, weights, den_weights, prod_weights, den_assoc = f_add_axis(prod, na_prod, prod_weights, na_prodweights, weights, na_weights, den_weights, na_denweights, den_assoc, na_den_assoc)
-    prod, prod_weights, weights, den_weights, keys = f_slice(prod, prod_weights, weights, den_weights, keys, arith, axis_slice)
+    prod, weights, den_weights, prod_weights, den_weights2, den_assoc = f_add_axis(prod, na_prod, prod_weights,
+                                                                                   na_prodweights, weights,
+                                                                                   na_weights, den_weights,
+                                                                                   na_denweights, den_assoc,
+                                                                                   na_den_assoc, den_weights2,
+                                                                                   na_denweights2)
+    prod, prod_weights, weights, den_weights, den_weights2, keys = f_slice(prod, prod_weights, weights, den_weights,
+                                                                           den_weights2, keys, arith,
+                                                                           axis_slice)
     ##perform arith. if an axis is not reported it is included in the arith and the axis disappears
     report_idx = index + cols
     arith_axis = list(set(range(len(prod.shape))) - set(report_idx))
-    prod = f_arith(prod, prod_weights, weights, den_weights, arith, arith_axis, den_assoc, assoc_axis)
+    prod = f_arith(prod, prod_weights, weights, den_weights, arith, arith_axis, den_assoc, assoc_axis,
+                   den_weights2)
     ##check for errors
     f_numpy2df_error(prod, weights, arith_axis, index, cols)
     if build_df:
@@ -2537,6 +2644,61 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
     feed_budget.index = pd.MultiIndex.from_frame(idx) # Convert back to MultiIndex
 
     return feed_budget.astype(float).round(2)
+
+
+def f_dmi_summary(lp_vars, r_vals, option=0):
+    '''
+    Summary of dry matter intake from feed decision variables.
+
+    :param option: int:
+            0. season probability weighted total DMI by feed source.
+            1. DMI by q, s, z, p6 and feed source.
+            2. season probability weighted DMI by p6 and feed source.
+    '''
+    keys_q = r_vals['zgen']['keys_q']
+    keys_s = r_vals['zgen']['keys_s']
+    keys_z = r_vals['zgen']['keys_z']
+    keys_p6 = r_vals['pas']['keys_p6']
+    index_qszp6 = pd.MultiIndex.from_product([keys_q, keys_s, keys_z, keys_p6], names=['q', 's', 'z', 'p6'])
+
+    def f_qsp6z_to_series(array_qsp6z, name):
+        array_qszp6 = np.moveaxis(array_qsp6z, [0, 1, 2, 3], [0, 1, 3, 2])
+        return pd.Series(array_qszp6.ravel(), index=index_qszp6, name=name)
+
+    def f_qszp6_to_series(array_qszp6, name):
+        return pd.Series(array_qszp6.ravel(), index=index_qszp6, name=name)
+
+    grn_consumed_qgop6lzt = r_vals['pas']['cons_grnha_t_qgop6lzt']
+    grn_dmi_qsfgop6lzt = d_vars['base']['greenpas_ha_qsfgop6lzt'] * grn_consumed_qgop6lzt[:, na, na, ...]
+    green = f_qsp6z_to_series(np.sum(grn_dmi_qsfgop6lzt, axis=(2, 3, 4, 6, 8)), 'Green Pas')
+
+    dry = f_qsp6z_to_series(np.sum(d_vars['base']['drypas_consumed_qsfdp6zlt'], axis=(2, 3, 6, 7)), 'Dry Pas')
+    nap = f_qsp6z_to_series(np.sum(d_vars['base']['nap_consumed_qsfdp6zt'], axis=(2, 3, 6)), 'Dry Crop Paddock Pas')
+    poc = f_qsp6z_to_series(np.sum(d_vars['base']['poc_consumed_qsfp6lz'], axis=(2, 4)), 'Green Crop Paddock Pas')
+    stub = f_qszp6_to_series(np.sum(d_vars['base']['stub_qszp6fks1s2'], axis=(4, 5, 6, 7)), 'Crop Residue')
+    crop = f_qsp6z_to_series(np.sum(d_vars['base']['crop_consumed_qsfkp6p5zl'], axis=(2, 3, 5, 7)), 'Crop Graze')
+    saltbush = f_qszp6_to_series(np.sum(d_vars['base']['v_tonnes_sb_consumed_qszp6fl'], axis=(4, 5)), 'Saltbush')
+
+    sup = f_grain_sup_summary(lp_vars, r_vals, option=3)
+    sup = sup.groupby(level=(0, 1, 2, 5)).sum()
+    sup.index = sup.index.set_names(['q', 's', 'z', 'p6'])
+    sup.name = 'Supplement'
+
+    dmi_qszp6_source = pd.concat([green, dry, nap, poc, stub, crop, saltbush, sup], axis=1).fillna(0)
+
+    if option == 1:
+        return dmi_qszp6_source
+
+    z_prob_qsz = pd.Series(r_vals['zgen']['z_prob_qsz'].ravel(),
+                           index=pd.MultiIndex.from_product([keys_q, keys_s, keys_z], names=['q', 's', 'z']))
+    weighted = dmi_qszp6_source.mul(z_prob_qsz, axis=0)
+
+    if option == 2:
+        return weighted.groupby(level='p6').sum()
+
+    summary = weighted.sum(axis=0).to_frame('DMI (t)')
+    summary.loc['Total', 'DMI (t)'] = summary['DMI (t)'].sum()
+    return summary
 
 
 def f_sup_per_dse(lp_vars, r_vals):
@@ -3083,6 +3245,380 @@ def f_grazing_summary(lp_vars, r_vals):
     graze_info_qsztlp6o_ig = f_numpy2df(graze_info_iqsgop6lzt, keys_iqsgop6lzt, [1,2,7,8,6,5,4], [0,3])
     return graze_info_qsztlp6o_ig
 
+def f_sheep_summary(lp_vars, r_vals):
+    '''Returns the sheep reconciliation summary used to build the whole-farm sheep report.'''
+    def f_sheep_age_label(age_label):
+        if age_label == 'Lambs':
+            return age_label
+        if isinstance(age_label, str) and age_label.endswith(' yr old'):
+            age = float(age_label.split()[0]) - 0.5
+            return '%.1fyrs old' % age
+        return age_label
+
+    def f_sale_price_prog():
+        sale_numbers_xg = f_stock_pasture_summary(r_vals, type='stock', weights='prog_numbers_qsk3k5twzia0xg2',
+                                                  keys='prog_keys_qsk3k5twzia0xg2', arith=2, index=[9, 10],
+                                                  cols=[], axis_slice={4: [0, 1, 1]})
+        sale_price_xg = f_stock_pasture_summary(r_vals, type='stock', prod='salevalue_p7qk3k5twzia0xg2',
+                                                na_prod=[2], weights='prog_numbers_qsk3k5twzia0xg2',
+                                                na_weights=[0], den_weights='wean_alloc_p7k3zg2',
+                                                na_denweights=[1, 2, 4, 5, 6, 8, 9, 10],
+                                                keys='prog_keys_p7qsk3k5twzia0xg2', arith=1, index=[10, 11],
+                                                cols=[], axis_slice={5: [0, 1, 1]})
+        try:
+            female_numbers = sale_numbers_xg.loc[(slice(None), ['BBB', 'BBM']), :].loc['F']
+            female_prices = sale_price_xg.loc[(slice(None), ['BBB', 'BBM']), :].loc['F']
+        except KeyError:
+            female_numbers = sale_numbers_xg.loc[('F', 'BBB'), :]
+            female_prices = sale_price_xg.loc[('F', 'BBB'), :]
+        female_price = fun.f_divide_float(np.sum(female_prices.values * female_numbers.values),
+                                          np.sum(female_numbers.values))
+        wether_crossy_numbers = sale_numbers_xg.values.sum() - female_numbers.values.sum()
+        wether_crossy_dollars = (sale_price_xg.values * sale_numbers_xg.values).sum() - (female_prices.values * female_numbers.values).sum()
+        wether_crossy_price = fun.f_divide_float(wether_crossy_dollars, wether_crossy_numbers)
+        return female_price, wether_crossy_price, female_numbers.values.sum()
+
+    def f_qsz_expected_total(qsz):
+        keys_q = r_vals['zgen']['keys_q']
+        keys_s = r_vals['zgen']['keys_s']
+        keys_z = r_vals['zgen']['keys_z']
+        z_prob_qsz = pd.Series(r_vals['zgen']['z_prob_qsz'].ravel(),
+                               index=pd.MultiIndex.from_product([keys_q, keys_s, keys_z]))
+        return qsz.reindex(z_prob_qsz.index).mul(z_prob_qsz).sum()
+
+    def f_p7zqs_expected_total(p7zqs):
+        qsz = p7zqs.groupby(level=(2, 3, 1)).sum()
+        return f_qsz_expected_total(qsz)
+
+    def f_sheep_machinery_cost():
+        exp_mach_k_p7zqs, mach_insurance_p7z = f_mach_summary(lp_vars, r_vals)
+        pasture_landuses = r_vals['rot']['all_pastures']
+        pasture_mach_p7zqs = exp_mach_k_p7zqs.loc[exp_mach_k_p7zqs.index.isin(pasture_landuses)].sum(axis=0)
+        total_mach_p7zqs = exp_mach_k_p7zqs.sum(axis=0)
+        pasture_mach = f_p7zqs_expected_total(pasture_mach_p7zqs)
+        total_mach = f_p7zqs_expected_total(total_mach_p7zqs)
+        pasture_mach_propn = fun.f_divide_float(pasture_mach, total_mach)
+
+        keys_q = r_vals['zgen']['keys_q']
+        keys_s = r_vals['zgen']['keys_s']
+        keys_z = r_vals['zgen']['keys_z']
+        mach_insurance_z = mach_insurance_p7z.unstack(0).sum(axis=1)
+        mach_insurance_qsz = mach_insurance_z.reindex(pd.MultiIndex.from_product([keys_q, keys_s, keys_z]), level=-1)
+        mach_insurance = f_qsz_expected_total(mach_insurance_qsz)
+
+        mach_detail = f_mach_summary(lp_vars, r_vals, option=4)
+        variable_dep_qsz = mach_detail.xs('Variable depreciation', level='Subtype')['item']
+        fixed_dep_qsz = mach_detail.xs('Fixed depreciation', level='Subtype')['item']
+        mach_dep = f_qsz_expected_total(variable_dep_qsz + fixed_dep_qsz)
+        return pasture_mach + pasture_mach_propn * (mach_insurance + mach_dep)
+
+    def f_supplement_cost_by_animal_course():
+        _, _, _, supcost_qsz_p7, _, _ = f_stock_cash_summary(lp_vars, r_vals)
+        supcost_qsz = supcost_qsz_p7.sum(axis=1)
+
+        def f_expand_to_index(series, target_index, nlevels):
+            align_index = pd.MultiIndex.from_tuples([idx[:nlevels] for idx in target_index])
+            return pd.Series(series.reindex(align_index).fillna(0).to_numpy(), index=target_index)
+
+        def f_expected_cost_by_y(cost_qszp6fy):
+            cost_qszy = cost_qszp6fy.groupby(level=(0, 1, 2, 5)).sum()
+            qsz_index = pd.MultiIndex.from_tuples([idx[:3] for idx in cost_qszy.index])
+            keys_q = r_vals['zgen']['keys_q']
+            keys_s = r_vals['zgen']['keys_s']
+            keys_z = r_vals['zgen']['keys_z']
+            z_prob_qsz = pd.Series(r_vals['zgen']['z_prob_qsz'].ravel(),
+                                   index=pd.MultiIndex.from_product([keys_q, keys_s, keys_z]))
+            z_prob = pd.Series(z_prob_qsz.reindex(qsz_index).to_numpy(), index=cost_qszy.index)
+            return cost_qszy.mul(z_prob).groupby(level=3).sum()
+
+        def f_year_mask_from_anchor(anchor_yv):
+            v_idx = np.arange(anchor_yv.shape[1]).reshape((1, -1) + (1,) * (anchor_yv.ndim - 2))
+            idx_anchor_y = np.argmax(anchor_yv.astype(bool), axis=1)
+            idx_next_anchor_y = np.roll(idx_anchor_y, shift=-1, axis=0)
+            idx_next_anchor_y[-1, ...] = anchor_yv.shape[1]
+            return np.logical_and(v_idx >= idx_anchor_y[:, na, ...], v_idx < idx_next_anchor_y[:, na, ...])
+
+        mei_sire = f_stock_pasture_summary(r_vals, type='stock', prod='mei_sire_p6fzg0',
+                                           na_prod=[0, 1], weights='sire_numbers_qszg0',
+                                           na_weights=[2, 3], keys='sire_keys_qsp6fzg0',
+                                           arith=2, index=[0, 1, 4, 2, 3],
+                                           cols=[]).squeeze()
+
+        stock_r_vals = r_vals['stock']
+        dams_p6f_keys = list(stock_r_vals['dams_keys_qsk2p6ftvanwziy1g1'])
+        offs_p6f_keys = list(stock_r_vals['offs_keys_qsk3k5p6ftvnwziaxyg3'])
+        stock_r_vals['dams_keys_qsk2p6ftyvanwziy1g1'] = (
+            dams_p6f_keys[:6]
+            + [stock_r_vals['dams_keys_qsk2tyvanwziy1g1'][4]]
+            + dams_p6f_keys[6:]
+        )
+        stock_r_vals['offs_keys_qsk3k5p6ftyvnwziaxyg3'] = (
+            offs_p6f_keys[:7]
+            + [stock_r_vals['offs_keys_qsk3k5tyvnwziaxyg3'][5]]
+            + offs_p6f_keys[7:]
+        )
+        # The animal-course report anchors on mating/weaning, but MEI needs all DVPs in that course year.
+        stock_r_vals['dvp_is_year_yvzig1'] = f_year_mask_from_anchor(stock_r_vals['dvp_is_mating_or_weaning_yvzig1'])
+        stock_r_vals['dvp_is_year_yvzixg3'] = f_year_mask_from_anchor(stock_r_vals['dvp_is_shear_or_weaning_yvzixg3'])
+        mei_dams_qszp6fy = f_stock_pasture_summary(r_vals, type='stock', prod='mei_dams_k2p6ftva1nw8ziyg1',
+                                                   na_prod=[0, 1, 6], weights='dams_numbers_qsk2tvanwziy1g1',
+                                                   na_weights=[3, 4, 6],
+                                                   prod_weights='dvp_is_year_yvzig1',
+                                                   na_prodweights=[0, 1, 2, 3, 4, 5, 8, 9, 10, 13],
+                                                   keys='dams_keys_qsk2p6ftyvanwziy1g1',
+                                                   arith=2, index=[0, 1, 11, 3, 4, 6],
+                                                   cols=[]).squeeze()
+        mei_offs_qszp6fy = f_stock_pasture_summary(r_vals, type='stock', prod='mei_offs_k3k5p6ftvnw8ziaxyg3',
+                                                   na_prod=[0, 1, 7], weights='offs_numbers_qsk3k5tvnwziaxyg3',
+                                                   na_weights=[4, 5, 7],
+                                                   prod_weights='dvp_is_year_yvzixg3',
+                                                   na_prodweights=[0, 1, 2, 3, 4, 5, 6, 9, 10, 13, 15],
+                                                   keys='offs_keys_qsk3k5p6ftyvnwziaxyg3',
+                                                   arith=2, index=[0, 1, 11, 4, 5, 7],
+                                                   cols=[]).squeeze()
+
+        grain_fed_qszk3fp6 = f_grain_sup_summary(lp_vars, r_vals, option=3)
+        grain_fed_qszp6f = grain_fed_qszk3fp6.groupby(level=(0, 1, 2, 5, 4)).sum()
+        total_sup_qsz = grain_fed_qszp6f.groupby(level=(0, 1, 2)).sum()
+        total_sup_qszp6f = total_sup_qsz.reindex(pd.MultiIndex.from_tuples([idx[:3] for idx in grain_fed_qszp6f.index])).to_numpy()
+        sup_share_qszp6f = grain_fed_qszp6f.divide(pd.Series(total_sup_qszp6f, index=grain_fed_qszp6f.index)
+                                                   .mask(np.isclose(total_sup_qszp6f, 0))).fillna(0)
+        supcost_qszp6f = sup_share_qszp6f * f_expand_to_index(supcost_qsz, sup_share_qszp6f.index, 3)
+
+        dams_mei_qszp6f = mei_dams_qszp6fy.groupby(level=(0, 1, 2, 3, 4)).sum()
+        offs_mei_qszp6f = mei_offs_qszp6fy.groupby(level=(0, 1, 2, 3, 4)).sum()
+        ewe_mei_qszp6f = mei_sire.add(dams_mei_qszp6f, fill_value=0) #include sire mei in with ewes
+        total_mei_qszp6f = ewe_mei_qszp6f.add(offs_mei_qszp6f, fill_value=0)
+
+        ewe_share_qszp6f = ewe_mei_qszp6f.divide(total_mei_qszp6f.mask(np.isclose(total_mei_qszp6f, 0))).fillna(0)
+        offs_share_qszp6f = offs_mei_qszp6f.divide(total_mei_qszp6f.mask(np.isclose(total_mei_qszp6f, 0))).fillna(0)
+        ewe_supcost_qszp6f = supcost_qszp6f.mul(ewe_share_qszp6f, fill_value=0)
+        offs_supcost_qszp6f = supcost_qszp6f.mul(offs_share_qszp6f, fill_value=0)
+
+        dams_mei_qszp6f_expanded = f_expand_to_index(dams_mei_qszp6f, mei_dams_qszp6fy.index, 5)
+        dams_mei_share_qszp6fy = mei_dams_qszp6fy.divide(dams_mei_qszp6f_expanded
+                                             .mask(np.isclose(dams_mei_qszp6f_expanded, 0))).fillna(0)
+        dams_supcost_y = f_expected_cost_by_y(dams_mei_share_qszp6fy * f_expand_to_index(ewe_supcost_qszp6f, mei_dams_qszp6fy.index, 5))
+
+        offs_mei_qszp6f_expanded = f_expand_to_index(offs_mei_qszp6f, mei_offs_qszp6fy.index, 5)
+        offs_mei_share_qszp6fy = mei_offs_qszp6fy.divide(offs_mei_qszp6f_expanded
+                                             .mask(np.isclose(offs_mei_qszp6f_expanded, 0))).fillna(0)
+        wethers_crossys_supcost_y = f_expected_cost_by_y(offs_mei_share_qszp6fy * f_expand_to_index(offs_supcost_qszp6f, mei_offs_qszp6fy.index, 5))
+
+        return dams_supcost_y.sum(), wethers_crossys_supcost_y.sum(), dams_supcost_y, wethers_crossys_supcost_y
+
+    pnl = f_profitloss_table(lp_vars, r_vals, option=2)
+    pasture_area_propn = round(f_area_summary(lp_vars, r_vals, option=5)[0], 0) / 100
+    wool_income = pnl.loc[('Revenue', 'wool'), 'Full year']
+    sheep_trading_income = pnl.loc[('Revenue', 'sheep sales'), 'Full year']
+    fixed_cost = pnl.loc[('Expense', 'fixed'), 'Full year'] * pasture_area_propn
+    husbandry_cost = pnl.loc[('Expense', 'stock husb and infra'), 'Full year']
+    ewe_supplement_cost, wethers_crossys_supplement_cost, dams_supplement_cost_y, wethers_crossys_supplement_cost_y = f_supplement_cost_by_animal_course()
+    supplement_cost = ewe_supplement_cost + wethers_crossys_supplement_cost
+    purchase_cost = pnl.loc[('Expense', 'stock purchase'), 'Full year']
+    pasture_cost = (pnl.loc[('Expense', 'pasture'), 'Full year']
+                    + pnl.loc[('Expense', 'salt land pasture'), 'Full year'])
+    machinery_cost = f_sheep_machinery_cost()
+    labour_cost = f_labour_summary(lp_vars, r_vals, option=2, pasture_area_propn=pasture_area_propn)
+    total_income = wool_income + sheep_trading_income
+    total_costs = (fixed_cost + husbandry_cost + supplement_cost + purchase_cost + pasture_cost
+                   + machinery_cost + labour_cost)
+
+    numbers_dams, numbers_wethers_crossys, _ = f_stock_numbers_summary(r_vals)
+    female_prog_price, wether_crossy_prog_price, female_prog_sold = f_sale_price_prog()
+    female_prog_sold = round(female_prog_sold, 0)
+
+    dams = numbers_dams.rename(columns={'Open Numbers': 'Open', 'Sales': 'Sell'})
+    dams = dams.loc[:, ['Open', 'Births', 'Sell']]
+    type = 'stock'
+    prod = 'dvp_is_mating_or_weaning_yvzig1'
+    na_prod = [0, 1, 2, 3, 6, 7, 8, 11]
+    weights = 'dams_numbers_qsk2tvanwziy1g1'
+    na_weights = [4] #y (year)
+    keys = 'dams_keys_qsk2tyvanwziy1g1'
+    arith = 2
+    index = [4] #y
+    cols = []
+    axis_slice = {2: [1, None, 1], 3: [2, None, 1]}  # mated k2 groups, excluding prejoining sale slices.
+    mated_dams_y = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+                                            na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols,
+                                            axis_slice=axis_slice)
+    mated_dams_y = mated_dams_y.squeeze().reindex(dams.index).fillna(0)
+    mated_dams_y.iloc[0] = 0
+
+    sale_price_dams_y = f_stock_pasture_summary(r_vals, type='stock', prod='salevalue_p7qk2tva1nwziyg1',
+                                                na_prod=[2, 5], weights='dams_numbers_qsk2tvanwziy1g1',
+                                                na_weights=[0, 5], den_weights='alloc_p7k2vzig1',
+                                                na_denweights=[1, 2, 4, 5, 7, 8, 9, 12],
+                                                prod_weights='dvp_is_sale_tyvzig1',
+                                                na_prodweights=[0, 1, 2, 3, 7, 8, 9, 12],
+                                                den_weights2='dvp_is_sale_tyvzig1',
+                                                na_denweights2=[0, 1, 2, 3, 7, 8, 9, 12],
+                                                keys='dams_keys_p7qsk2tyvanwziy1g1', arith=1, index=[5],
+                                                cols=[])
+    sale_price_dams_y = sale_price_dams_y.squeeze().reindex(numbers_dams.index).fillna(0)
+    # Lamb sale price blends dam sales with prog sucker sales.
+    female_total_lamb_sold = numbers_dams['Sales'].iloc[0]
+    sale_price_dams_y.iloc[0] = fun.f_divide_float(
+        sale_price_dams_y.iloc[0] * (female_total_lamb_sold - female_prog_sold)
+        + female_prog_price * female_prog_sold,
+        female_total_lamb_sold
+    )
+
+    cfw_dams_y = f_stock_pasture_summary(r_vals, type='stock', prod='cfw_hdmob_k2tva1nwziyg1',
+                                         na_prod=[0, 1, 4], weights='dams_numbers_qsk2tvanwziy1g1',
+                                         na_weights=[4], prod_weights='dvp_is_shearing_k2tyva1nwziyg1',
+                                         na_prodweights=[0, 1],
+                                         den_weights2='dvp_is_shearing_k2tyva1nwziyg1',
+                                         na_denweights2=[0, 1],
+                                         keys='dams_keys_qsk2tyvanwziy1g1', arith=1, index=[4],
+                                         cols=[]).squeeze().reindex(numbers_dams.index).fillna(0)
+    fd_dams_y = f_stock_pasture_summary(r_vals, type='stock', prod='fd_hdmob_k2tva1nwziyg1',
+                                        na_prod=[0, 1, 4], weights='dams_numbers_qsk2tvanwziy1g1',
+                                        na_weights=[4], prod_weights='dvp_is_shearing_k2tyva1nwziyg1',
+                                        na_prodweights=[0, 1],
+                                        den_weights2='dvp_is_shearing_k2tyva1nwziyg1',
+                                        na_denweights2=[0, 1],
+                                        keys='dams_keys_qsk2tyvanwziy1g1', arith=1, index=[4],
+                                        cols=[]).squeeze().reindex(numbers_dams.index).fillna(0)
+    woolvalue_dams_y = f_stock_pasture_summary(r_vals, type='stock', prod='woolvalue_p7qk2tva1nwziyg1',
+                                               na_prod=[2, 5], weights='dams_numbers_qsk2tvanwziy1g1',
+                                               na_weights=[0, 5], den_weights='alloc_p7k2vzig1',
+                                               na_denweights=[1, 2, 4, 5, 7, 8, 9, 12],
+                                               prod_weights='dvp_is_shearing_k2tyva1nwziyg1',
+                                               na_prodweights=[0, 1],
+                                               den_weights2='dvp_is_shearing_k2tyva1nwziyg1',
+                                               na_denweights2=[0, 1],
+                                               keys='dams_keys_p7qsk2tyvanwziy1g1', arith=1, index=[5],
+                                               cols=[]).squeeze().reindex(numbers_dams.index).fillna(0)
+    shorn_dams_y = f_stock_pasture_summary(r_vals, type='stock',
+                                           weights='dams_numbers_qsk2tvanwziy1g1',
+                                           na_weights=[4],
+                                           prod_weights='dvp_is_shearing_k2tyva1nwziyg1',
+                                           na_prodweights=[0, 1],
+                                           keys='dams_keys_qsk2tyvanwziy1g1', arith=2, index=[4],
+                                           cols=[]).squeeze().reindex(numbers_dams.index).fillna(0)
+
+    dams.insert(2, 'Mated', mated_dams_y)
+    dams.insert(4, 'Shorn', shorn_dams_y)
+    dams.insert(5, '$/hd', sale_price_dams_y)
+    dams.loc[np.isclose(dams['Sell'], 0), '$/hd'] = 0
+    dams['cfw/hd'] = cfw_dams_y
+    dams['fd'] = fd_dams_y
+    dams['wool $/hd'] = woolvalue_dams_y
+    dams['Sup cost'] = dams_supplement_cost_y.reindex(numbers_dams.index).fillna(0)
+
+    wethers_crossys = pd.DataFrame(index=numbers_wethers_crossys.index)
+    wethers_crossys['Open'] = numbers_wethers_crossys['Open Numbers']
+    wethers_crossys['Births'] = numbers_wethers_crossys['Births']
+    wethers_crossys['Mated'] = 0
+    wethers_crossys['Sell'] = numbers_wethers_crossys['Sales (months of age)'].sum(axis=1)
+
+    sale_price_wethers_crossys_y = f_stock_pasture_summary(r_vals, type='stock',
+                                                           prod='salevalue_p7qk3k5tvnwziaxyg3',
+                                                           na_prod=[2, 6],
+                                                           weights='offs_numbers_qsk3k5tvnwziaxyg3',
+                                                           na_weights=[0, 6],
+                                                           den_weights='alloc_p7k3vzixg3',
+                                                           na_denweights=[1, 2, 4, 5, 6, 8, 9, 12, 14],
+                                                           prod_weights='dvp_is_sale_tyvzixg3',
+                                                           na_prodweights=[0, 1, 2, 3, 4, 8, 9, 12, 14],
+                                                           den_weights2='dvp_is_sale_tyvzixg3',
+                                                           na_denweights2=[0, 1, 2, 3, 4, 8, 9, 12, 14],
+                                                           keys='offs_keys_p7qsk3k5tyvnwziaxyg3',
+                                                           arith=1, index=[6], cols=[])
+    sale_price_wethers_crossys_y = sale_price_wethers_crossys_y.squeeze().reindex(numbers_wethers_crossys.index).fillna(0)
+    # Lamb sale price blends offs sales with prog sucker sales.
+    wether_crossy_total_lamb_sold = numbers_wethers_crossys['Sales (months of age)'].sum(axis=1).iloc[0]
+    wether_crossy_prog_sold = numbers_wethers_crossys[('Sales (months of age)', 'Weaning')].iloc[0]
+    sale_price_wethers_crossys_y.iloc[0] = fun.f_divide_float(
+        sale_price_wethers_crossys_y.iloc[0] * (wether_crossy_total_lamb_sold - wether_crossy_prog_sold)
+        + wether_crossy_prog_price * wether_crossy_prog_sold,
+        wether_crossy_total_lamb_sold
+    )
+
+    cfw_wethers_crossys_y = f_stock_pasture_summary(r_vals, type='stock', prod='cfw_hdmob_k3k5tvnwziaxyg3',
+                                                    na_prod=[0, 1, 5],
+                                                    weights='offs_numbers_qsk3k5tvnwziaxyg3', na_weights=[5],
+                                                    prod_weights='dvp_is_shearing_k3k5tyvnwziaxyg3',
+                                                    na_prodweights=[0, 1],
+                                                    den_weights2='dvp_is_shearing_k3k5tyvnwziaxyg3',
+                                                    na_denweights2=[0, 1],
+                                                    keys='offs_keys_qsk3k5tyvnwziaxyg3', arith=1, index=[5],
+                                                    cols=[]).squeeze().reindex(numbers_wethers_crossys.index).fillna(0)
+    fd_wethers_crossys_y = f_stock_pasture_summary(r_vals, type='stock', prod='fd_hdmob_k3k5tvnwziaxyg3',
+                                                   na_prod=[0, 1, 5],
+                                                   weights='offs_numbers_qsk3k5tvnwziaxyg3', na_weights=[5],
+                                                   prod_weights='dvp_is_shearing_k3k5tyvnwziaxyg3',
+                                                   na_prodweights=[0, 1],
+                                                   den_weights2='dvp_is_shearing_k3k5tyvnwziaxyg3',
+                                                   na_denweights2=[0, 1],
+                                                   keys='offs_keys_qsk3k5tyvnwziaxyg3', arith=1, index=[5],
+                                                   cols=[]).squeeze().reindex(numbers_wethers_crossys.index).fillna(0)
+    woolvalue_wethers_crossys_y = f_stock_pasture_summary(r_vals, type='stock',
+                                                          prod='woolvalue_p7qk3k5tvnwziaxyg3', na_prod=[2, 6],
+                                                          weights='offs_numbers_qsk3k5tvnwziaxyg3', na_weights=[0, 6],
+                                                          den_weights='alloc_p7k3vzixg3',
+                                                          na_denweights=[1, 2, 4, 5, 6, 8, 9, 10, 13],
+                                                          prod_weights='dvp_is_shearing_k3k5tyvnwziaxyg3',
+                                                          na_prodweights=[0, 1],
+                                                          den_weights2='dvp_is_shearing_k3k5tyvnwziaxyg3',
+                                                          na_denweights2=[0, 1],
+                                                          keys='offs_keys_p7qsk3k5tyvnwziaxyg3',
+                                                          arith=1, index=[6], cols=[])
+    woolvalue_wethers_crossys_y = woolvalue_wethers_crossys_y.squeeze().reindex(numbers_wethers_crossys.index).fillna(0)
+    shorn_wethers_crossys_y = f_stock_pasture_summary(r_vals, type='stock',
+                                                      weights='offs_numbers_qsk3k5tvnwziaxyg3',
+                                                      na_weights=[5],
+                                                      prod_weights='dvp_is_shearing_k3k5tyvnwziaxyg3',
+                                                      na_prodweights=[0, 1],
+                                                      keys='offs_keys_qsk3k5tyvnwziaxyg3',
+                                                      arith=2, index=[5], cols=[]
+                                                      ).squeeze().reindex(numbers_wethers_crossys.index).fillna(0)
+
+    wethers_crossys['Shorn'] = shorn_wethers_crossys_y
+    wethers_crossys['$/hd'] = sale_price_wethers_crossys_y
+    wethers_crossys.loc[np.isclose(wethers_crossys['Sell'], 0), '$/hd'] = 0
+    wethers_crossys['cfw/hd'] = cfw_wethers_crossys_y
+    wethers_crossys['fd'] = fd_wethers_crossys_y
+    wethers_crossys['wool $/hd'] = woolvalue_wethers_crossys_y
+    wethers_crossys['Sup cost'] = wethers_crossys_supplement_cost_y.reindex(numbers_wethers_crossys.index).fillna(0)
+
+    sheep_summary = pd.concat([dams, wethers_crossys], keys=['Dams', 'Wethers & crossbreds'])
+    sheep_summary = sheep_summary.rename(index=f_sheep_age_label, level=1)
+    dollars = pd.DataFrame(index=pd.MultiIndex.from_tuples([
+        ('Income', 'Wool (NIB)'),
+        ('Income', 'Sheep Trading'),
+        ('Income', 'TOTAL INCOME'),
+        ('Costs', 'Fixed'),
+        ('Costs', 'Husbandry'),
+        ('Costs', 'Ewe supplement'),
+        ('Costs', 'Wethers & crossbreds supplement'),
+        ('Costs', 'Purchases'),
+        ('Costs', 'Pasture'),
+        ('Costs', 'Machinery'),
+        ('Costs', 'Labour'),
+        ('Costs', 'Total Costs'),
+        ('Margin', 'Margin'),
+    ]), columns=sheep_summary.columns.union(['Total $'], sort=False), dtype=float)
+    dollars.loc[('Income', 'Wool (NIB)'), 'Total $'] = wool_income
+    dollars.loc[('Income', 'Sheep Trading'), 'Total $'] = sheep_trading_income
+    dollars.loc[('Income', 'TOTAL INCOME'), 'Total $'] = total_income
+    dollars.loc[('Costs', 'Fixed'), 'Total $'] = fixed_cost
+    dollars.loc[('Costs', 'Husbandry'), 'Total $'] = husbandry_cost
+    dollars.loc[('Costs', 'Ewe supplement'), 'Total $'] = ewe_supplement_cost
+    dollars.loc[('Costs', 'Wethers & crossbreds supplement'), 'Total $'] = wethers_crossys_supplement_cost
+    dollars.loc[('Costs', 'Purchases'), 'Total $'] = purchase_cost
+    dollars.loc[('Costs', 'Pasture'), 'Total $'] = pasture_cost
+    dollars.loc[('Costs', 'Machinery'), 'Total $'] = machinery_cost
+    dollars.loc[('Costs', 'Labour'), 'Total $'] = labour_cost
+    dollars.loc[('Costs', 'Total Costs'), 'Total $'] = total_costs
+    dollars.loc[('Margin', 'Margin'), 'Total $'] = total_income - total_costs
+    sheep_summary = pd.concat([sheep_summary, dollars])
+    return sheep_summary.round({'Open': 0, 'Births': 0, 'Mated': 0, 'Sell': 0, 'Shorn': 0, '$/hd': 1,
+                                'cfw/hd': 1, 'fd': 1, 'wool $/hd': 1, 'sup cost': 0, 'Total $': 0})
+
+
 ############################
 # reports for web app      #
 ############################
@@ -3103,8 +3639,30 @@ def f_stock_numbers_summary(r_vals):
         female_prog_sold = numbers_prog_g_x.loc[['BBB','BBM'],'F'] #wrapped in try incase BBM are not included in the trial. Note BBT are added with wethers.
     except KeyError:
         female_prog_sold = numbers_prog_g_x.loc['BBB', 'F']
+    female_prog_sold = np.sum(female_prog_sold)
     ###wether & crossy prog sold
     wether_prog_sold = numbers_prog_g_x.values.sum() - female_prog_sold
+
+    ##prog ffcfw sold
+    type = 'stock'
+    prod = 'sale_ffcfw_k3k5twziaxyg2'
+    na_prod = [0,1] #q,s
+    weights = 'prog_numbers_qsk3k5twzia0xg2'
+    na_weights = []
+    keys = 'prog_keys_qsk3k5twzia0xg2'
+    arith = 2
+    index = [10] #g
+    cols = [9] #gender
+    axis_slice = {4:[0,1,1]} #sale suckers
+    ebw_prog_g_x = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod,
+                                            weights=weights, na_weights=na_weights, keys=keys, arith=arith,
+                                            index=index, cols=cols, axis_slice=axis_slice)
+    try:
+        female_prog_ffcfw = ebw_prog_g_x.loc[['BBB','BBM'],'F'] #wrapped in try incase BBM are not included in the trial. Note BBT are added with wethers.
+    except KeyError:
+        female_prog_ffcfw = ebw_prog_g_x.loc['BBB', 'F']
+    female_prog_ffcfw = np.sum(female_prog_ffcfw)
+    wether_prog_ffcfw = fun.f_divide(ebw_prog_g_x.values.sum() - female_prog_ffcfw, wether_prog_sold)
 
     ##dam numbers open
     type = 'stock'
@@ -3139,7 +3697,7 @@ def f_stock_numbers_summary(r_vals):
     ###dams sold each year
     sale_numbers_dams_y = sale_numbers_dams_y_tv.sum(axis=1)
     #add female prog that were sold
-    sale_numbers_dams_y.iloc[0] = female_prog_sold
+    sale_numbers_dams_y.iloc[0] += female_prog_sold
     
     ###concat open, birth and sale
     numbers_dams = pd.DataFrame()
@@ -3178,6 +3736,22 @@ def f_stock_numbers_summary(r_vals):
     cols = [4,6] #v,t
     sale_numbers_offs_y_tv = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
                                                na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols)
+    ##ffcfw at sale for offs.
+    type = 'stock'
+    prod = 'sale_ffcfw_k3k5tvnwziaxyg3'
+    na_prod = [0,1,5] #q,s,y
+    prod_weights = 'dvp_is_sale_tyvzixg3'
+    na_prodweights = [0,1,2,3,7,8,11,13]
+    weights = 'offs_numbers_qsk3k5tvnwziaxyg3'
+    na_weights = [5] #y (year)
+    keys = 'offs_keys_qsk3k5tyvnwziaxyg3'
+    arith = 1
+    index = [5] #y
+    cols = [4,6] #t,v
+    sale_ffcfw_offs_y_tv = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod,
+                                                  prod_weights=prod_weights, na_prodweights=na_prodweights,
+                                                  weights=weights, na_weights=na_weights, keys=keys,
+                                                  arith=arith, index=index, cols=cols)
     ###age at sale
     type = 'stock'
     prod = 'saleage_k3k5tvnwziaxyg3'
@@ -3190,21 +3764,28 @@ def f_stock_numbers_summary(r_vals):
     saleage_offs_tv = f_stock_pasture_summary(r_vals, type=type, prod=prod, weights=weights,na_weights=na_weights,
                                               keys=keys, arith=arith, index=index, cols=cols)
     ###add sale age as headers
-    sale_numbers_offs_y_tv.columns = np.round(saleage_offs_tv.values.squeeze() / 30, 0) #div 30 to convert to months
+    sale_age_cols = np.round(saleage_offs_tv.values.squeeze() / 30, 0) #div 30 to convert to months
+    sale_numbers_offs_y_tv.columns = sale_age_cols
     sale_numbers_offs_y_tv = sale_numbers_offs_y_tv.sort_index(axis=1)
+    sale_ffcfw_offs_y_tv.columns = sale_age_cols
+    sale_ffcfw_offs_y_tv = sale_ffcfw_offs_y_tv.sort_index(axis=1)
     ####add wether and crossy prog that were sold (they need to be included in the number of lambs born)
     sale_numbers_offs_y_tv.insert(0, "Weaning",0)
     sale_numbers_offs_y_tv.iloc[0,0] = wether_prog_sold
+    sale_ffcfw_offs_y_tv.insert(0, "Weaning", 0)
+    sale_ffcfw_offs_y_tv.iloc[0,0] = wether_prog_ffcfw
     ###sum cols with same sale age (to stop error when concat the report with other trials because of duplicate col names)
     sale_numbers_offs_y_tv = sale_numbers_offs_y_tv.groupby(sale_numbers_offs_y_tv.columns, axis=1).sum()
-    
+    sale_ffcfw_offs_y_tv = sale_ffcfw_offs_y_tv.groupby(sale_ffcfw_offs_y_tv.columns, axis=1).sum()
+
     ###concat open, birth and sale
     numbers_offs = pd.concat([sale_numbers_offs_y_tv], keys=['Sales (months of age)'], axis=1)
     numbers_offs.insert(0, "Open Numbers", open_numbers_offs_y)
     numbers_offs.insert(1, "Births", 0) #add empty col
     numbers_offs.iloc[0,1] = wethers_born
+    ffcfw_offs = pd.concat([sale_ffcfw_offs_y_tv], keys=['FFCFW at sale (kg)'], axis=1)
 
-    return numbers_dams.round(0), numbers_offs.round(0)
+    return numbers_dams.round(0), numbers_offs.round(0), ffcfw_offs.round(1)
 
 def f_pasture_area_analysis(lp_vars, r_vals, trial):
     '''Returns a simple 1 row summary of the trial (season results are averaged)'''
@@ -3224,7 +3805,7 @@ def f_pasture_area_analysis(lp_vars, r_vals, trial):
     arith = 2
     index = []
     cols = []
-    axis_slice = {2: [1, None, 1], 3: [2, None, 1]}  # slice off the not mate k1 slice (we only want mated dams) and slice off the sold animals so we dont count dams that are sold at prejoining (there is a sale opp at the start of dvp).
+    axis_slice = {2: [1, None, 1], 3: [2, None, 1]}  # slice off the not mate k1 slice (we only want mated dams) and slice off the sold animals so we don't count dams that are sold at prejoining (there is a sale opp at the start of dvp).
     dams_mated = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     summary_df.loc[trial, 'Ewes mated'] = dams_mated.squeeze()
     ##pasture %
@@ -3258,7 +3839,7 @@ def f_stocking_rate_analysis(lp_vars, r_vals, trial):
     arith = 2
     index = []
     cols = []
-    axis_slice = {2: [1, None, 1], 3: [2, None, 1]}  # slice off the not mate k1 slice (we only want mated dams) and slice off the sold animals so we dont count dams that are sold at prejoining (there is a sale opp at the start of dvp).
+    axis_slice = {2: [1, None, 1], 3: [2, None, 1]}  # slice off the not mate k1 slice (we only want mated dams) and slice off the sold animals so we don't count dams that are sold at prejoining (there is a sale opp at the start of dvp).
     dams_mated = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     summary_df.loc[trial, 'Ewes mated'] = round(dams_mated.squeeze(),0)
     ##pasture area
@@ -3297,7 +3878,7 @@ def f_lupin_analysis(lp_vars, r_vals, trial):
             legume_area = np.sum(legume_area_qsz * z_prob_qsz.ravel())
             summary_df.loc[trial, '{0} Area'.format(legume_name)] = fun.f_divide(legume_area, total_legume_area)
             ##expected legume income - uses average legume yield in all rotations on the base lmu (this matches the yield graph on web app)
-            legume_price_qp7z = r_vals['crop']['grain_price'].loc[(legume_key,"Harv","firsts"),:]
+            legume_price_qp7z = r_vals['crop']['grain_price'].loc[(legume_key,"Harv"),:]
             legume_price_qz = legume_price_qp7z.groupby(level=(0,2)).sum() #sum p7 - price should only exist in one p7 period
             legume_price = np.sum(legume_price_qz.unstack().values[:,na,:] * z_prob_qsz) #avevrage price across q and z
             expected_yields_k_z = r_vals['crop']['base_yields_k_z']
@@ -3374,7 +3955,7 @@ def f_saleage_analysis(lp_vars, r_vals, trial):
     arith = 2
     index = []
     cols = []
-    axis_slice = {2: [1, None, 1], 3: [2, None, 1]}  # slice off the not mate k1 slice (we only want mated dams) and slice off the sold animals so we dont count dams that are sold at prejoining (there is a sale opp at the start of dvp).
+    axis_slice = {2: [1, None, 1], 3: [2, None, 1]}  # slice off the not mate k1 slice (we only want mated dams) and slice off the sold animals so we don't count dams that are sold at prejoining (there is a sale opp at the start of dvp).
     dams_mated = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     summary_df.loc[trial, 'Ewes mated'] = round(dams_mated.squeeze(),0)
     ##ave wether sale price
@@ -3604,7 +4185,7 @@ def mp_report(lp_vars, r_vals, option=1):
     sale_numbers_dams_y_qsz = sale_numbers_dams_qszy.unstack().T
     sale_numbers_dams_y_qsz = sale_numbers_dams_y_qsz.reindex(sale_numbers_dams_qszy.index.unique(-1)) #put "lambs" back at the top of the y axis.
     ####add female prog that were sold
-    sale_numbers_dams_y_qsz.iloc[0] = female_prog_sold_qsz
+    sale_numbers_dams_y_qsz.iloc[0] += female_prog_sold_qsz
     sale_numbers_dams_y_qsz = round(sale_numbers_dams_y_qsz, 0)
 
     ##sale offs numbers
@@ -3688,7 +4269,7 @@ def mp_report(lp_vars, r_vals, option=1):
     arith = 2
     index = []
     cols = [0,1,8] #q,s,z
-    axis_slice = {2: [1, None, 1], 3: [2, None, 1]}  # slice off the not mate k1 slice (we only want mated dams) and slice off the sold animals so we dont count dams that are sold at prejoining (there is a sale opp at the start of dvp).
+    axis_slice = {2: [1, None, 1], 3: [2, None, 1]}  # slice off the not mate k1 slice (we only want mated dams) and slice off the sold animals so we don't count dams that are sold at prejoining (there is a sale opp at the start of dvp).
     dams_mated_qsz = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     summary_df.loc['Ewes mated',:] = round(dams_mated_qsz.squeeze(),0)
     ###prog weaned
@@ -3825,7 +4406,8 @@ def f_numpy2df_error(prod, weights, arith_axis, index, cols):
     return
 
 
-def f_add_axis(prod, na_prod, prod_weights, na_prodweights, weights, na_weights, den_weights, na_denweights, den_assoc, na_den_assoc):
+def f_add_axis(prod, na_prod, prod_weights, na_prodweights, weights, na_weights, den_weights, na_denweights,
+               den_assoc, na_den_assoc, den_weights2, na_denweights2):
     '''
     Adds new axis if required.
 
@@ -3839,12 +4421,13 @@ def f_add_axis(prod, na_prod, prod_weights, na_prodweights, weights, na_weights,
     den_weights = np.expand_dims(den_weights, na_denweights)
     prod = np.expand_dims(prod, na_prod)
     prod_weights = np.expand_dims(prod_weights, na_prodweights)
+    den_weights2 = np.expand_dims(den_weights2, na_denweights2)
     if den_assoc is not None:
         den_assoc = np.expand_dims(den_assoc, na_den_assoc)
-    return prod, weights, den_weights, prod_weights, den_assoc
+    return prod, weights, den_weights, prod_weights, den_weights2, den_assoc
 
 
-def f_slice(prod, prod_weights, weights, den_weights, keys, arith, axis_slice):
+def f_slice(prod, prod_weights, weights, den_weights, den_weights2, keys, arith, axis_slice):
     '''
     Slices the prod, weights and key arrays
 
@@ -3856,7 +4439,8 @@ def f_slice(prod, prod_weights, weights, den_weights, keys, arith, axis_slice):
     :return: prod array
     '''
     ## if arith is being conducted these arrays need to be the same size so slicing can work
-    prod, prod_weights, weights, den_weights = np.broadcast_arrays(prod, prod_weights, weights, den_weights)
+    prod, prod_weights, weights, den_weights, den_weights2 = np.broadcast_arrays(prod, prod_weights, weights,
+                                                                                 den_weights, den_weights2)
 
     ##slice axis - slice the keys and the array - if user hasn't specified slice the whole axis will be included
     sl = [slice(None)] * prod.ndim
@@ -3872,10 +4456,11 @@ def f_slice(prod, prod_weights, weights, den_weights, keys, arith, axis_slice):
     prod_weights = prod_weights[tuple(sl)]
     weights = weights[tuple(sl)]
     den_weights = den_weights[tuple(sl)]
-    return prod, prod_weights, weights, den_weights, keys
+    den_weights2 = den_weights2[tuple(sl)]
+    return prod, prod_weights, weights, den_weights, den_weights2, keys
 
 
-def f_arith(prod, prod_weights, weight, den_weights, arith, axis, den_assoc=None, assoc_axis=0):
+def f_arith(prod, prod_weights, weight, den_weights, arith, axis, den_assoc=None, assoc_axis=0, den_weights2=1):
     '''
     option 0: return production param averaged across all axis that are not reported.
     option 1: return weighted average of production param (using denominator weight returns production per day the animal is on hand)
@@ -3902,7 +4487,9 @@ def f_arith(prod, prod_weights, weight, den_weights, arith, axis, den_assoc=None
         prod = np.mean(prod, tuple(axis), keepdims=keepdims)
     ##option 1
     if arith == 1:
-        prod = fun.f_weighted_average(prod, weight, tuple(axis), keepdims=keepdims, den_weights=den_weights, den_assoc=den_assoc, assoc_axis=assoc_axis)
+        prod = fun.f_weighted_average(prod, weight, tuple(axis), keepdims=keepdims,
+                                      den_weights=den_weights * den_weights2, den_assoc=den_assoc,
+                                      assoc_axis=assoc_axis)
     ##option 2
     if arith == 2:
         prod = np.sum(prod * weight, tuple(axis), keepdims=keepdims)

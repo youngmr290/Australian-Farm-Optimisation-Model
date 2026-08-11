@@ -16,8 +16,8 @@ from . import StructuralInputs as sinp
 from . import Sensitivity as sen
 
 
-def stock_precalcs(params, r_vals, nv, pkl_fs_info, pkl_fs):
-    sgen.generator(params, r_vals, nv, pkl_fs_info, pkl_fs)
+def stock_precalcs(params, r_vals, nv, pkl_fs_info, pkl_fs, o_trait_values=None):
+    sgen.generator(params=params, r_vals=r_vals, nv=nv, pkl_fs_info=pkl_fs_info, pkl_fs=pkl_fs, o_trait_values=o_trait_values)
 
 
 
@@ -135,14 +135,25 @@ def f1_stockpyomo_local(params, model, MP_lp_vars):
     model.p_mei_sire = pe.Param(model.s_feed_periods, model.s_feed_pools, model.s_season_types, model.s_groups_sire,
                                 initialize=params['p_mei_sire'],
                                   default=0.0, mutable=False, doc='energy requirement sire')
+    model.p_methane_me_saved_sire = pe.Param(model.s_feed_periods, model.s_feed_pools, model.s_season_types, model.s_groups_sire,
+                                initialize=params['p_methane_me_saved_sire'],
+                                  default=0.0, mutable=False, doc='ME saved from methane reduction sire')
     model.p_mei_dams = pe.Param(model.s_k2_birth_dams, model.s_feed_periods, model.s_feed_pools, model.s_sale_dams,
                                model.s_dvp_dams, model.s_wean_times, model.s_nut_dams, model.s_lw_dams, model.s_season_types, 
                                model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, initialize=params['p_mei_dams'],
                                 default=0.0, mutable=False, doc='energy requirement dams')
+    model.p_methane_me_saved_dams = pe.Param(model.s_k2_birth_dams, model.s_feed_periods, model.s_feed_pools, model.s_sale_dams,
+                               model.s_dvp_dams, model.s_wean_times, model.s_nut_dams, model.s_lw_dams, model.s_season_types,
+                               model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, initialize=params['p_methane_me_saved_dams'],
+                                default=0.0, mutable=False, doc='ME saved from methane reduction dams')
     model.p_mei_offs = pe.Param(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_feed_periods, model.s_feed_pools, model.s_sale_offs,
                                model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs, model.s_season_types, model.s_tol, model.s_wean_times,
                                model.s_gender, model.s_gen_merit_offs, model.s_groups_offs, initialize=params['p_mei_offs'],
                                 default=0.0, mutable=False, doc='energy requirement offs')
+    model.p_methane_me_saved_offs = pe.Param(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_feed_periods, model.s_feed_pools, model.s_sale_offs,
+                               model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs, model.s_season_types, model.s_tol, model.s_wean_times,
+                               model.s_gender, model.s_gen_merit_offs, model.s_groups_offs, initialize=params['p_methane_me_saved_offs'],
+                                default=0.0, mutable=False, doc='ME saved from methane reduction offs')
 
     ##potential intake
     model.p_pi_sire = pe.Param(model.s_feed_periods, model.s_feed_pools, model.s_season_types, model.s_groups_sire,
@@ -268,15 +279,15 @@ def f1_stockpyomo_local(params, model, MP_lp_vars):
     ##energy intake
     model.p_co2e_p7zg0 = pe.Param(model.s_season_periods, model.s_season_types, model.s_groups_sire,
                                 initialize=params['p_co2e_p7zg0'],
-                                  default=0.0, mutable=False, doc='co2e sire (includes entric fermentation, manure, fuel)')
+                                  default=0.0, mutable=False, doc='co2e sire (includes enteric fermentation, manure, fuel)')
     model.p_co2e_p7k2tva1nwziyg1 = pe.Param(model.s_season_periods, model.s_k2_birth_dams, model.s_sale_dams, model.s_dvp_dams,
                                model.s_wean_times, model.s_nut_dams, model.s_lw_dams, model.s_season_types,
                                model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, initialize=params['p_co2e_p7k2tva1nwziyg1'],
-                                default=0.0, mutable=False, doc='co2e dams (includes entric fermentation, manure, fuel)')
+                                default=0.0, mutable=False, doc='co2e dams (includes enteric fermentation, manure, fuel)')
     model.p_co2e_p7k3k5tvnwziaxyg3 = pe.Param(model.s_season_periods, model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_sale_offs,
                                model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs, model.s_season_types, model.s_tol, model.s_wean_times,
                                model.s_gender, model.s_gen_merit_offs, model.s_groups_offs, initialize=params['p_co2e_p7k3k5tvnwziaxyg3'],
-                                default=0.0, mutable=False, doc='co2e offs (includes entric fermentation, manure, fuel)')
+                                default=0.0, mutable=False, doc='co2e offs (includes enteric fermentation, manure, fuel)')
 
 
     ##purchases
@@ -640,7 +651,7 @@ def f_con_progR(model):
     a progeny variable before being transferred to either offspring or dam variables (see prog2dams and prog2offs).
 
     '''
-    #todo v_prog requires a y axis
+    #todo v_prog requires a y axis & constraint doesnt need to exist if Z not active at weaning.
     def progR(model, q,s,k3, k5, a, z, i9, x, y1, g1, w9):
         if pe.value(model.p_wyear_inc_qs[q, s]) and any(pe.value(model.p_npw_req[k3, t2, x, g1]) for t2 in model.s_sale_prog):
             return (- sum(model.v_dams[q,s,k5, t1, v1, a, n1, w18, z, i, y1, g1] * model.p_npw[k3, k5, t1, v1, a, n1, w18, z, i, x, y1, g1, w9, i9] #pass in the k5 set to dams - each slice of k5 aligns with a slice in k2 e.g. 11 and 22. we don't need other k2 slices e.g. nm
@@ -831,6 +842,25 @@ def f_stock_me(model,q,s,p6,f,z):
                       for k3 in model.s_k3_damage_offs for k5 in model.s_k5_birth_offs for t3 in model.s_sale_offs for v3 in model.s_dvp_offs
                       for n3 in model.s_nut_offs for w3 in model.s_lw_offs for x in model.s_gender for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs
                       if pe.value(model.p_mei_offs[k3,k5,p6,f,t3,v3,n3,w3,z,i,a,x,y3,g3]) != 0)
+               for a in model.s_wean_times for i in model.s_tol)
+
+
+def f_stock_methane_me_saved(model,q,s,p6,f,z):
+    '''
+    Calculate methane-reduction energy captured from livestock activities.
+
+    Used in global constraint (con_me). See CorePyomo
+    '''
+
+    return sum(model.v_sire[q,s,g0] * model.p_methane_me_saved_sire[p6,f,z,g0] for g0 in model.s_groups_sire)\
+           + sum(sum(model.v_dams[q,s,k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_methane_me_saved_dams[k2,p6,f,t1,v1,a,n1,w1,z,i,y1,g1]
+                     for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
+                     for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams
+                     if pe.value(model.p_methane_me_saved_dams[k2,p6,f,t1,v1,a,n1,w1,z,i,y1,g1]) != 0)
+                + sum(model.v_offs[q,s,k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3]  * model.p_methane_me_saved_offs[k3,k5,p6,f,t3,v3,n3,w3,z,i,a,x,y3,g3]
+                      for k3 in model.s_k3_damage_offs for k5 in model.s_k5_birth_offs for t3 in model.s_sale_offs for v3 in model.s_dvp_offs
+                      for n3 in model.s_nut_offs for w3 in model.s_lw_offs for x in model.s_gender for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs
+                      if pe.value(model.p_methane_me_saved_offs[k3,k5,p6,f,t3,v3,n3,w3,z,i,a,x,y3,g3]) != 0)
                for a in model.s_wean_times for i in model.s_tol)
 
 

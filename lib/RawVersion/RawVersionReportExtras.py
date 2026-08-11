@@ -28,9 +28,12 @@ def f_create_report_dfs(non_exist_trials):
     reports["stacked_profitarea"] = pd.DataFrame()  # profit by land area
     reports["stacked_feed"] = pd.DataFrame()  # feed budget
     reports["stacked_feed2"] = pd.DataFrame()  # feed budget
+    reports["stacked_dmi"] = pd.DataFrame()  # dry matter intake summary
     reports["stacked_grazing"] = pd.DataFrame()  # grazing summary
     reports["stacked_ewe_numbers_summary"] = pd.DataFrame()  # grazing summary
     reports["stacked_wethers_n_crossys_numbers_summary"] = pd.DataFrame()  # grazing summary
+    reports["stacked_wethers_n_crossys_weight_summary"] = pd.DataFrame()  # wether and crossbred sale weights
+    reports["stacked_sheep_summary"] = pd.DataFrame()  # sheep summary
     reports["stacked_emissions"] = pd.DataFrame()  # GHG emission summary
     reports["stacked_season_nodes"] = pd.DataFrame()  # season periods
     reports["stacked_feed_periods"] = pd.DataFrame()  # feed periods
@@ -58,7 +61,9 @@ def f_create_report_dfs(non_exist_trials):
     reports["stacked_ebw_pdams"] = pd.DataFrame()  # empty body weight dams (large array with p, e and b axis)
     reports["stacked_ebw_cut_dams"] = pd.DataFrame()  #empty body weight dams for select p period
     reports["stacked_fat_dams"] = pd.DataFrame()  # fat mass dams (DVP)
+    reports["stacked_fatper_dams"] = pd.DataFrame()  # fat as a percentage of EBW for dams (DVP)
     reports["stacked_fat_pdams"] = pd.DataFrame()  # fat mass dams (large array with p, e and b axis)
+    reports["stacked_fatper_pdams"] = pd.DataFrame()  # fat as a percentage of EBW for dams (large array with p, e and b axis)
     reports["stacked_fat_cut_dams"] = pd.DataFrame()  # fat mass dams for select p period
     reports["stacked_muscle_dams"] = pd.DataFrame()  # muscle mass dams (DVP)
     reports["stacked_muscle_cut_dams"] = pd.DataFrame()  # muscle mass dams for select p period
@@ -76,13 +81,19 @@ def f_create_report_dfs(non_exist_trials):
     reports["stacked_mei_pdams"] = pd.DataFrame()  # metabolisable intake for dams (large array with p, e and b axis)
     reports["stacked_pi_pdams"] = pd.DataFrame()  # potential intake for dams (large array with p, e and b axis)
     reports["stacked_ebw_pyatf"] = pd.DataFrame()  # empty body weight yatf (large array with p, e and b axis)
+    reports["stacked_fat_pyatf"] = pd.DataFrame()  # fat mass yatf (large array with p, e and b axis)
+    reports["stacked_fatper_pyatf"] = pd.DataFrame()  # fat as a percentage of EBW for yatf (large array with p, e and b axis)
     reports["stacked_ebw_cut_yatf"] = pd.DataFrame()  #empty body weight yatf for select p period
     reports["stacked_wbe_pyatf"] = pd.DataFrame()  # wbe profile yatf (large array with p, e and b axis)
     reports["stacked_ebw_prog"] = pd.DataFrame()  # empty body weight prog (with e and b axis)
     reports["stacked_ebw_offs"] = pd.DataFrame()  # empty body weight offs (DVP)
+    reports["stacked_fatper_offs"] = pd.DataFrame()  # fat as a percentage of EBW for offs (DVP)
     reports["stacked_ebw_poffs"] = pd.DataFrame()  # empty body weight offs (large array with p, e and b axis)
     reports["stacked_wbe_offs"] = pd.DataFrame()  # whole body energy content offs (DVP)
     reports["stacked_wbe_poffs"] = pd.DataFrame()  # wbe profile offs (large array with p, e and b axis)
+    reports["stacked_fat_poffs"] = pd.DataFrame()  # fat mass offs (large array with p, e and b axis)
+    reports["stacked_fatper_poffs"] = pd.DataFrame()  # fat as a percentage of EBW for offs (large array with p, e and b axis)
+    reports["stacked_lean_poffs"] = pd.DataFrame()  # lean mass offs (large array with p, e and b axis)
     reports["stacked_cs_poffs"] = pd.DataFrame()  # condition score offs (large array with p, e and b axis)
     reports["stacked_fs_poffs"] = pd.DataFrame()  # fat score offs (large array with p, e and b axis)
     reports["stacked_nv_poffs"] = pd.DataFrame()  # diet nutritive value for offs (large array with p, e and b axis)
@@ -202,6 +213,10 @@ def f_concat_reports(stacked_reports, reports, report_run, trial_name):
         feed = pd.concat([reports["feed_total"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
         stacked_reports["stacked_feed2"] = rfun.f_append_dfs(stacked_reports["stacked_feed2"], feed)
 
+    if report_run.loc['run_dmi', 'Run']:
+        dmi = pd.concat([reports["dmi"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
+        stacked_reports["stacked_dmi"] = rfun.f_append_dfs(stacked_reports["stacked_dmi"], dmi)
+
     if report_run.loc['run_feedbudget', 'Run']:
         grazing = pd.concat([reports["grazing"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
         stacked_reports["stacked_grazing"] = rfun.f_append_dfs(stacked_reports["stacked_grazing"], grazing)
@@ -209,8 +224,15 @@ def f_concat_reports(stacked_reports, reports, report_run, trial_name):
     if report_run.loc['run_numbers_summary', 'Run']:
         ewe_numbers_summary = pd.concat([reports["ewe_numbers_summary"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
         wethers_n_crossys_numbers_summary = pd.concat([reports["wethers_n_crossys_numbers_summary"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
+        wethers_n_crossys_weight_summary = pd.concat([reports["wethers_n_crossys_weight_summary"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
         stacked_reports["stacked_ewe_numbers_summary"] = rfun.f_append_dfs(stacked_reports["stacked_ewe_numbers_summary"], ewe_numbers_summary)
         stacked_reports["stacked_wethers_n_crossys_numbers_summary"] = rfun.f_append_dfs(stacked_reports["stacked_wethers_n_crossys_numbers_summary"], wethers_n_crossys_numbers_summary)
+        stacked_reports["stacked_wethers_n_crossys_weight_summary"] = rfun.f_append_dfs(stacked_reports["stacked_wethers_n_crossys_weight_summary"], wethers_n_crossys_weight_summary)
+
+    if report_run.loc['run_sheep_summary', 'Run']:
+        sheep_summary = pd.concat([reports["sheep_summary"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
+        stacked_reports["stacked_sheep_summary"] = rfun.f_append_dfs(stacked_reports["stacked_sheep_summary"], sheep_summary)
+        stacked_reports["stacked_sheep_summary"] = f_align_stacked_report_index(stacked_reports["stacked_sheep_summary"])
 
     if report_run.loc['run_emissions', 'Run']:
         grazing = pd.concat([reports["emissions"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
@@ -326,9 +348,17 @@ def f_concat_reports(stacked_reports, reports, report_run, trial_name):
         fat_dams = pd.concat([reports["fat_dams"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
         stacked_reports["stacked_fat_dams"] = rfun.f_append_dfs(stacked_reports["stacked_fat_dams"], fat_dams)
 
+    if report_run.loc['run_fatper_dams', 'Run']:
+        fatper_dams = pd.concat([reports["fatper_dams"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
+        stacked_reports["stacked_fatper_dams"] = rfun.f_append_dfs(stacked_reports["stacked_fatper_dams"], fatper_dams)
+
     if report_run.loc['run_fat_pdams', 'Run']:
         fat_pdams = pd.concat([reports["fat_pdams"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
         stacked_reports["stacked_fat_pdams"] = rfun.f_append_dfs(stacked_reports["stacked_fat_pdams"], fat_pdams)
+
+    if report_run.loc['run_fatper_pdams', 'Run']:
+        fatper_pdams = pd.concat([reports["fatper_pdams"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
+        stacked_reports["stacked_fatper_pdams"] = rfun.f_append_dfs(stacked_reports["stacked_fatper_pdams"], fatper_pdams)
 
     if report_run.loc['run_fat_cut_dams', 'Run']:
         fat_cut_dams = pd.concat([reports["fat_cut_dams"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
@@ -398,6 +428,14 @@ def f_concat_reports(stacked_reports, reports, report_run, trial_name):
         ebw_pyatf = pd.concat([reports["ebw_pyatf"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
         stacked_reports["stacked_ebw_pyatf"] = rfun.f_append_dfs(stacked_reports["stacked_ebw_pyatf"], ebw_pyatf)
 
+    if report_run.loc['run_fat_pyatf', 'Run']:
+        fat_pyatf = pd.concat([reports["fat_pyatf"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
+        stacked_reports["stacked_fat_pyatf"] = rfun.f_append_dfs(stacked_reports["stacked_fat_pyatf"], fat_pyatf)
+
+    if report_run.loc['run_fatper_pyatf', 'Run']:
+        fatper_pyatf = pd.concat([reports["fatper_pyatf"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
+        stacked_reports["stacked_fatper_pyatf"] = rfun.f_append_dfs(stacked_reports["stacked_fatper_pyatf"], fatper_pyatf)
+
     if report_run.loc['run_ebw_cut_yatf', 'Run']:
         ebw_cut_dams = pd.concat([reports["ebw_cut_yatf"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
         stacked_reports["stacked_ebw_cut_yatf"] = rfun.f_append_dfs(stacked_reports["stacked_ebw_cut_yatf"], ebw_cut_dams)
@@ -414,6 +452,10 @@ def f_concat_reports(stacked_reports, reports, report_run, trial_name):
         ebw_offs = pd.concat([reports["ebw_offs"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
         stacked_reports["stacked_ebw_offs"] = rfun.f_append_dfs(stacked_reports["stacked_ebw_offs"], ebw_offs)
 
+    if report_run.loc['run_fatper_offs', 'Run']:
+        fatper_offs = pd.concat([reports["fatper_offs"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
+        stacked_reports["stacked_fatper_offs"] = rfun.f_append_dfs(stacked_reports["stacked_fatper_offs"], fatper_offs)
+
     if report_run.loc['run_ebw_poffs', 'Run']:
         ebw_poffs = pd.concat([reports["ebw_poffs"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
         stacked_reports["stacked_ebw_poffs"] = rfun.f_append_dfs(stacked_reports["stacked_ebw_poffs"], ebw_poffs)
@@ -425,6 +467,18 @@ def f_concat_reports(stacked_reports, reports, report_run, trial_name):
     if report_run.loc['run_wbe_poffs', 'Run']:
         wbe_poffs = pd.concat([reports["wbe_poffs"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
         stacked_reports["stacked_wbe_poffs"] = rfun.f_append_dfs(stacked_reports["stacked_wbe_poffs"], wbe_poffs)
+
+    if report_run.loc['run_fat_poffs', 'Run']:
+        fat_poffs = pd.concat([reports["fat_poffs"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
+        stacked_reports["stacked_fat_poffs"] = rfun.f_append_dfs(stacked_reports["stacked_fat_poffs"], fat_poffs)
+
+    if report_run.loc['run_fatper_poffs', 'Run']:
+        fatper_poffs = pd.concat([reports["fatper_poffs"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
+        stacked_reports["stacked_fatper_poffs"] = rfun.f_append_dfs(stacked_reports["stacked_fatper_poffs"], fatper_poffs)
+
+    if report_run.loc['run_lean_poffs', 'Run']:
+        lean_poffs = pd.concat([reports["lean_poffs"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
+        stacked_reports["stacked_lean_poffs"] = rfun.f_append_dfs(stacked_reports["stacked_lean_poffs"], lean_poffs)
 
     if report_run.loc['run_cs_poffs', 'Run']:
         cs_poffs = pd.concat([reports["cs_poffs"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
@@ -639,13 +693,40 @@ def f_concat_reports(stacked_reports, reports, report_run, trial_name):
 
     return stacked_reports
 
+
+def f_align_stacked_report_index(stacked_report):
+    """Give every trial in a stacked report the same non-Trial row index."""
+    if stacked_report.empty:
+        return stacked_report
+
+    trial_level = 'Trial'
+    if not isinstance(stacked_report.index, pd.MultiIndex) or trial_level not in stacked_report.index.names:
+        return stacked_report
+
+    index_names = stacked_report.index.names
+    trial_level_pos = index_names.index(trial_level)
+    trials = stacked_report.index.get_level_values(trial_level_pos).unique()
+    inner_index = stacked_report.index.droplevel(trial_level_pos).unique()
+    full_index = pd.MultiIndex.from_tuples(
+        [(trial, *inner_row) for trial in trials for inner_row in inner_index],
+        names=index_names,
+    )
+    return stacked_report.reindex(full_index).fillna(0)
+
+
 def f_save_reports(report_run, reports, processor):
     ####################################
     #run between trial reports and save#
     ####################################
     print("Writing to Excel")
+    ##set the group of trials being run. If no argument is passed in then all trials are run. To pass in argument need to run via terminal.
+    try:
+        exp_group = int(sys.argv[1]) #reads in as string so need to convert to int, the script path is the first value hence take the second.
+    except (IndexError, ValueError) as e: #in case no arg passed to python
+        exp_group = None
+
     ##first check that Excel is not open (Microsoft puts a lock on files, so they can't be updated from elsewhere while open)
-    report_file_path = relativeFile.find(__file__, "../../Output", "Report{0}.xlsx".format(processor))
+    report_file_path = relativeFile.find(__file__, "../../Output", f"Report{processor}_{exp_group}.xlsx")
     if os.path.isfile(report_file_path): #to check if report.xl exists
         while True:   # repeat until the try statement succeeds
             try:
@@ -675,6 +756,12 @@ def f_save_reports(report_run, reports, processor):
     df_settings = rfun.f_df2xl(writer, reports["stacked_non_exist"],'Non-exist',df_settings,option=0,colstart=0)
     if report_run.loc['run_summary', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_summary"], 'summary', df_settings, option=xl_display_mode)
+    if report_run.loc['run_mp_summary', 'Run']:
+        df_settings = rfun.f_df2xl(writer, reports["stacked_mp"], 'MP_summary', df_settings, option=xl_display_mode)
+    if report_run.loc['run_pnl', 'Run']:
+        df_settings = rfun.f_df2xl(writer, reports["stacked_pnl"], 'pnl', df_settings, option=xl_display_mode)
+    if report_run.loc['run_sheep_summary', 'Run']:
+        df_settings = rfun.f_df2xl(writer, reports["stacked_sheep_summary"], 'sheep_summary', df_settings, option=xl_display_mode)
     if report_run.loc['run_areasum', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_areasum"], 'areasum', df_settings, option=xl_display_mode)
     if report_run.loc['run_cropsum', 'Run']:
@@ -685,8 +772,6 @@ def f_save_reports(report_run, reports, processor):
         df_settings = rfun.f_df2xl(writer, reports["stacked_numbers_qsz"], 'numbers_qsz', df_settings, option=xl_display_mode)
     if report_run.loc['run_croparea_qsz', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_croparea_qsz"], 'croparea_qsz', df_settings, option=xl_display_mode)
-    if report_run.loc['run_pnl', 'Run']:
-        df_settings = rfun.f_df2xl(writer, reports["stacked_pnl"], 'pnl', df_settings, option=xl_display_mode)
     if report_run.loc['run_trees', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_trees"], 'trees', df_settings, option=xl_display_mode)
     if report_run.loc['run_mach', 'Run']:
@@ -713,10 +798,13 @@ def f_save_reports(report_run, reports, processor):
     if report_run.loc['run_feedbudget', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_feed"], 'feed_budget', df_settings, option=xl_display_mode)
         df_settings = rfun.f_df2xl(writer, reports["stacked_feed2"], 'feed_budget_total', df_settings, option=xl_display_mode)
+    if report_run.loc['run_dmi', 'Run']:
+        df_settings = rfun.f_df2xl(writer, reports["stacked_dmi"], 'dmi', df_settings, option=xl_display_mode)
         df_settings = rfun.f_df2xl(writer, reports["stacked_grazing"], 'grazing_summary', df_settings, option=xl_display_mode)
     if report_run.loc['run_numbers_summary', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_ewe_numbers_summary"], 'ewe_numbers_summary', df_settings, option=xl_display_mode)
         df_settings = rfun.f_df2xl(writer, reports["stacked_wethers_n_crossys_numbers_summary"], 'wethers_n_xb_numbers_summary', df_settings, option=xl_display_mode)
+        df_settings = rfun.f_df2xl(writer, reports["stacked_wethers_n_crossys_weight_summary"], 'wether_n_xb_weight_summary', df_settings, option=xl_display_mode)
     if report_run.loc['run_emissions', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_emissions"], 'emissions', df_settings, option=xl_display_mode)
     if report_run.loc['run_deepflow', 'Run']:
@@ -763,8 +851,12 @@ def f_save_reports(report_run, reports, processor):
         df_settings = rfun.f_df2xl(writer, reports["stacked_ebw_cut_dams"], 'ebw_cut_dams', df_settings, option=xl_display_mode)
     if report_run.loc['run_fat_dams', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_fat_dams"], 'fat_dams', df_settings, option=xl_display_mode)
+    if report_run.loc['run_fatper_dams', 'Run']:
+        df_settings = rfun.f_df2xl(writer, reports["stacked_fatper_dams"], 'fatper_dams', df_settings, option=xl_display_mode)
     if report_run.loc['run_fat_pdams', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_fat_pdams"], 'fat_pdams', df_settings, option=xl_display_mode)
+    if report_run.loc['run_fatper_pdams', 'Run']:
+        df_settings = rfun.f_df2xl(writer, reports["stacked_fatper_pdams"], 'fatper_pdams', df_settings, option=xl_display_mode)
     if report_run.loc['run_fat_cut_dams', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_fat_cut_dams"], 'fat_cut_dams', df_settings, option=xl_display_mode)
     if report_run.loc['run_muscle_dams', 'Run']:
@@ -799,6 +891,10 @@ def f_save_reports(report_run, reports, processor):
         df_settings = rfun.f_df2xl(writer, reports["stacked_pi_pdams"], 'pi_pdams', df_settings, option=xl_display_mode)
     if report_run.loc['run_ebw_pyatf', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_ebw_pyatf"], 'ebw_pyatf', df_settings, option=xl_display_mode)
+    if report_run.loc['run_fat_pyatf', 'Run']:
+        df_settings = rfun.f_df2xl(writer, reports["stacked_fat_pyatf"], 'fat_pyatf', df_settings, option=xl_display_mode)
+    if report_run.loc['run_fatper_pyatf', 'Run']:
+        df_settings = rfun.f_df2xl(writer, reports["stacked_fatper_pyatf"], 'fatper_pyatf', df_settings, option=xl_display_mode)
     if report_run.loc['run_ebw_cut_yatf', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_ebw_cut_yatf"], 'ebw_cut_yatf', df_settings, option=xl_display_mode)
     if report_run.loc['run_wbe_pyatf', 'Run']:
@@ -807,12 +903,20 @@ def f_save_reports(report_run, reports, processor):
         df_settings = rfun.f_df2xl(writer, reports["stacked_ebw_prog"], 'ebw_prog', df_settings, option=xl_display_mode)
     if report_run.loc['run_ebw_offs', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_ebw_offs"], 'ebw_offs', df_settings, option=xl_display_mode)
+    if report_run.loc['run_fatper_offs', 'Run']:
+        df_settings = rfun.f_df2xl(writer, reports["stacked_fatper_offs"], 'fatper_offs', df_settings, option=xl_display_mode)
     if report_run.loc['run_ebw_poffs', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_ebw_poffs"], 'ebw_poffs', df_settings, option=xl_display_mode)
     if report_run.loc['run_wbe_offs', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_wbe_offs"], 'wbe_offs', df_settings, option=xl_display_mode)
     if report_run.loc['run_wbe_poffs', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_wbe_poffs"], 'wbe_poffs', df_settings, option=xl_display_mode)
+    if report_run.loc['run_fat_poffs', 'Run']:
+        df_settings = rfun.f_df2xl(writer, reports["stacked_fat_poffs"], 'fat_poffs', df_settings, option=xl_display_mode)
+    if report_run.loc['run_fatper_poffs', 'Run']:
+        df_settings = rfun.f_df2xl(writer, reports["stacked_fatper_poffs"], 'fatper_poffs', df_settings, option=xl_display_mode)
+    if report_run.loc['run_lean_poffs', 'Run']:
+        df_settings = rfun.f_df2xl(writer, reports["stacked_lean_poffs"], 'lean_poffs', df_settings, option=xl_display_mode)
     if report_run.loc['run_cs_poffs', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_cs_poffs"], 'cs_poffs', df_settings, option=xl_display_mode)
     if report_run.loc['run_fs_poffs', 'Run']:
@@ -914,11 +1018,10 @@ def f_save_reports(report_run, reports, processor):
         df_settings = rfun.f_df2xl(writer, reports["stacked_fodder"], 'fodder_analysis', df_settings, option=xl_display_mode)
     if report_run.loc['run_perennial', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_perennial"], 'perennial_analysis', df_settings, option=xl_display_mode)
-    if report_run.loc['run_mp_summary', 'Run']:
-        df_settings = rfun.f_df2xl(writer, reports["stacked_mp"], 'MP_summary', df_settings, option=xl_display_mode)
+
 
 
     df_settings.to_excel(writer, 'df_settings')
     writer.close()
 
-    print("Report complete. Processor: {0}".format(processor))
+    print(f"Report complete. Processor: {processor}")

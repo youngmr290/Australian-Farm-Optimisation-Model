@@ -6,11 +6,16 @@ Functions used across the model (multi module functions). These functions don't 
 """
 import pandas as pd
 import numpy as np
-import pickle as pkl
-from dateutil import relativedelta as rdelta
-import os.path
+# import pickle as pkl
+# from dateutil import relativedelta as rdelta
+# import os.path
 import pyomo.environ as pe
 import copy
+from contextlib import contextmanager
+from typing import Any, Dict
+import inspect as ins
+import os
+from scipy.special import expit
 
 #this module shouldn't import other AFO modules
 from . import Exceptions as exc #can import exceptions because exceptions imports no modules
@@ -53,7 +58,7 @@ def cartesian_product_simple_transpose(arrays):
 def searchsort_multiple_dim(a, v, axis_a0, axis_v0, axis_a1=None, axis_v1=None, side='left'):
     '''
     Find the indices into a sorted array 'a' such that, if the corresponding elements in 'v' were inserted before the indices, the order of 'a' would be preserved.
-    It does this iteratively down the specified axis (therefore the specified axis must be present in both 'a' and 'v'
+    It does this iteratively down the specified axis (therefore the specified axis must be present in both 'a' and 'v')
 
     Parameters:
         a: 3-D array_like
@@ -154,9 +159,9 @@ def f1_searchsorted_looped(a, v, axis, side='left'):
     return result
 
 
-def f1_unique_count(a, axes, weights=None, threshold=0.0):
+def f1_unique_count(a, axes, weights=None, threshold=0.0, atol=0.0):
     """
-    Count unique values along given axes.
+    Count unique values along given axes with the unique values calculated with a tolerance.
     Values whose relative weight < threshold are excluded.
 
     Parameters
@@ -168,6 +173,9 @@ def f1_unique_count(a, axes, weights=None, threshold=0.0):
         Broadcastable to a. If None, equal weights assumed.
     threshold : float
         Mask out entries with relative weight < threshold.
+    atol : float
+        Absolute tolerance for the differences.
+        Note: values that are close together can still be counted as unique if they fall either side of the integer comparison
 
     Returns
     -------
@@ -207,7 +215,11 @@ def f1_unique_count(a, axes, weights=None, threshold=0.0):
     for i in range(flat.shape[1]):
         col = flat[:, i]
         col = col[~np.isnan(col)]  # ignore masked values
-        counts[i] = np.unique(col).size
+        #implement the tolerance by dividing by atol and converting to an int (int is quicker for unique than a rounded float)
+        if atol == 0:
+            counts[i] = np.unique(col).size
+        else:
+            counts[i] = np.unique((col // atol).astype(int)).size
 
     counts = counts.reshape(rest_shape)
 
@@ -253,8 +265,19 @@ def f1_percentile_weighted(values, weights, axes):
     values_flat = values_moved.reshape(*rest_shape, n)
     weights_flat = weights_moved.reshape(*rest_shape, n)
 
-    # argsort values along packed axis
-    order = np.argsort(values_flat, axis=-1)
+    # # argsort values along packed axis
+    # order = np.argsort(values_flat, axis=-1)
+
+    #lexsort on both criteria, values (weight of the animals) ascending and separate ties based on weights (number of animals)
+    ##The tie breaker is largest groups first for lighter animals (< median weight) and largest groups last for the heavier animals
+    ##This means that the largest groups will be at the lower and higher end of the sort on values
+    median_v = np.median(values_flat)    #note: this is the median over all the groups, not just within the tuple of axes
+    direction = np.where(values_flat < median_v, -1, 1)
+    tie_breaker = direction * weights_flat
+
+    # Now sort values ascending
+    order = np.lexsort((tie_breaker, values_flat), axis=-1)  # with a tie breaker (ascending)
+    # order = np.argsort(values_flat, axis=-1)    # sort without a tie breaker
 
     # reorder weights
     weights_sorted = np.take_along_axis(weights_flat, order, axis=-1)
@@ -458,7 +481,7 @@ def f_update(existing_value, new_value, mask_for_new):
 
 def f_weighted_average(array, weights, axis, keepdims=False, non_zero=False, den_weights=1, den_assoc=None, assoc_axis=0):
     '''
-    Calculates weighted average (similar to np.average however this will handle:
+    Calculates weighted average, similar to np.average, however this will handle:
         if the sum of the weights is 0 (np.average doesn't handle this)
         keeping the axis (using the keepdims argument)
     'non-zero' handles how the average is calculated
@@ -502,26 +525,38 @@ def f_divide(numerator, denominator, dtype='float64', option=0):
     If the denominator = 0 then return value depends on 'option'
      option == 0 then return 0
      option == 1 then return 1 if the numerator is also 0
+     option == 2 then return numerator
 
      option == 1 will also return 1 if both the numerator and denominator are np.inf
 
     '''
     numerator, denominator = np.broadcast_arrays(numerator, denominator)
     result = np.zeros(numerator.shape, dtype=dtype) #make it a float in case the numerator is int
-    ##use ~np.isclose to capture when the denominator is 0 within rounding tolerances
-    mask = ~np.isclose(denominator.astype(float), 0) #astype float to handle timedeltas. timedelta / timedelta is a float so the final product needs to be a float anyway
-    result[mask] = numerator[mask]/denominator[mask]
+
+    denominator_float = denominator.astype(float) #astype float to handle timedeltas. timedelta / timedelta is a float so the final product needs to be a float anyway
+    denominator_is_zero = denominator_float == 0.0
+    valid = ~denominator_is_zero
+
+    result[valid] = numerator[valid] / denominator[valid]
 
     ##If option is 1 then return 1 if the numerator and the denominator are the same (both 0 or both inf)
-    #todo if useful sign could be included and np.inf / (-np.inf) could calculate to -1
     if option == 1:
-        mask = np.isclose(denominator, numerator)
-        result[mask] = 1
+        numerator_float = numerator.astype(float)
+        numerator_is_zero = numerator_float == 0.0
+
+        #  0 / 0 returns 1 under option 1.
+        both_zero = numerator_is_zero & denominator_is_zero
+        result[both_zero] = 1.0
+
+        # Same-sign infinities return 1; opposite-sign infinities return -1.
+        both_infinite = np.isinf(numerator_float) & np.isinf(denominator_float)
+        result[both_infinite] = (
+                np.sign(numerator_float[both_infinite])
+                * np.sign(denominator_float[both_infinite]))
 
     ##If option is 2 then return the numerator if the denominator is 0
     if option == 2:
-        mask = np.isclose(denominator.astype(float), 0)
-        result[mask] = numerator[mask]
+        result[denominator_is_zero] = numerator[denominator_is_zero]
 
     return result
 
@@ -689,7 +724,7 @@ def f_clean_dict(d):
         if type(d[k]) is dict:  # check if value is a dict. if so go a level deeper
             f_clean_dict(d[k])
         else:
-            if d[k] == None:
+            if d[k] is None:
                 d[k] = 0
     return d
 
@@ -747,7 +782,7 @@ def f1_get_value(series, key):
 
 def f_back_transform(x):
     ''' Back transform a value using a derivation of exp(x) / (1 + exp(x))'''
-    return 1 / (1 + np.exp(-x))
+    return expit(x) #more stable than np.exp(x) / (1 + np.exp(x))
 
 def f_sig(x,a,b):
     ''' Sig function CSIRO equation 124 ^the equation below is the sig function from SheepExplorer'''
@@ -843,6 +878,7 @@ def f_solve_cubic_for_logistic_multidim(a, b, c, d):
     cut_off01 = np.log(x_roots)   #todo an error here is most likely due to incorrect specification of the b1[24 or 25] parameters in Universal.xlsx or RR == 0 or LS == 1.0
     return cut_off01
 
+
 def f_logistic_integral(x, L, k, x0, offset):
     """
     Indefinite integral of the logistic function:
@@ -870,6 +906,7 @@ def f_logistic_integral(x, L, k, x0, offset):
         Value of the indefinite integral at x (up to a constant).
     """
     return offset*x + (L - offset)/k * np.log(1 + np.exp(k*(x - x0)))
+
 
 def f_combined_integral(x, offset, k, x0, a, mu, sigma, x_anchor):
     """
@@ -932,23 +969,146 @@ def f_combined_integral(x, offset, k, x0, a, mu, sigma, x_anchor):
         tail = 1.0 * (x - x_anchor)
         return head + tail
 
-def f_dynamic_slice(arr, axis, start, stop, step=1, axis2=None, start2=None, stop2=None, step2=1):
+
+def f1_get_caller_info(skip=1, levels=1):
+    """
+    Return information about the caller of the function that called this one.
+
+    Parameters
+    ----------
+    skip : int, default=1
+        - skip=0 → info about f1_get_caller_info itself
+        - skip=1 → info about the function that called f1_get_caller_info (recommended)
+        - skip=2 → one level further up
+    Returns
+    -------
+    If levels == 1:  (filename, lineno)
+    If levels > 1:   list of (filename, lineno) tuples
+    """
+
+    try:
+        stack = ins.stack()
+        results=[]
+
+        for i in range(levels):
+            idx = skip + i
+            if idx >= len(stack):
+                results.append(("unknown_file", 0))
+                continue
+
+            frame_info = stack[idx]
+            short_file = os.path.basename(frame_info.filename or "unknown_file")
+            results.append((short_file, frame_info.lineno))
+
+        return results[0] if levels == 1 else results
+
+    except (IndexError, AttributeError, TypeError):
+        return ("unknown_file", 0) if levels == 1 else [("unknown_file", 0)] * levels
+
+
+def f_slice_idx(arr, slice_specs, default=slice(None)):
+    '''
+    Build the slice index tuple from slice_specs, ignoring any boolean masks.
+    Use for assignment: arr[fun.f_slice_idx(arr, specs) = value
+    Note1: boolean masks are not supported for assignment use case.
+    Note2: can't assign to fun.f_slice(arr, specs) = value
+
+    See f_slice for more description
+
+    :param arr: numpy array to slice
+    :param slice_specs: dict of {axis: args} - see f_slice for full description
+    :return: tuple of slices, one per axis
+    '''
     ##check if arr is int - this is the case for the first loop because arr may be initialised as 0
-    if type(arr)==int:
+    if type(arr) == int:
         return arr
-    else:
-        ##first axis slice if it is not singleton
-        if arr.shape[axis]!=1:
-            sl = [slice(None)] * arr.ndim
-            sl[axis] = slice( start, stop, step)
-            arr = arr[tuple(sl)]
-        if axis2 is not None:
-            ##second axis slice if required and not singleton
-            if arr.shape[axis2] != 1:
-                sl = [slice(None)] * arr.ndim
-                sl[axis2] = slice( start2, stop2, step2)
-                arr = arr[tuple(sl)]
+
+    # Build a list of slice(None) — i.e. [:] — for every axis, as the default
+    sl_slices = [default] * arr.ndim
+
+    for axis, args in slice_specs.items():
+        # Single value → interpret as start, with stop = start + 1 (preserves dimension)
+        # Multi value  → unpack directly into slice(start, stop) or slice(start, stop, step)
+        if arr.shape[axis] == 1:  #don't slice if singleton axis. Warning if slice isn't 0 or 1
+            if isinstance(args, int) and (args == 0 or args == -1):  #don't display warning if taking slice 0 or -1 of the singleton
+                pass
+            elif args[0] == 0 or args[0] == -1:  #don't display warning if taking slice 0 or -1 of the singleton
+                pass
+            else:
+                callers = f1_get_caller_info(skip=1, levels=3)
+                locations = [f"{file}:{line}" for file, line in callers]
+                print(f'*** Warning, Trying to slice a singleton axis ({axis}) '
+                      f'in {" and ".join(locations)}')
+        else:
+            if isinstance(args, np.ndarray) and args.dtype == bool:  # Boolean mask → ignore
+                pass  # masks ignored — only supported in f_slice
+            elif isinstance(args, int):  # Int rather than a list is interpreted as an index (and the axis is collapsed)
+                sl_slices[axis] = args
+            elif len(args) == 1:
+                start = args[0]
+                sl_slices[axis] = slice(start, start + 1)
+            else:
+                sl_slices[axis] = slice(*args)
+
+    return tuple(sl_slices)
+
+
+def f_slice(arr, slice_specs, default=slice(None)):
+    '''
+    Calling this function with both mask array and slice args can cause erratic behaviour and is not recommended
+    Slice a numpy array over multiple axes in a single call.
+    Default values differ from python slicing. A single value is taken as the start and
+    if stop is not specified it is start + 1 (rather than None). Default step is +1
+    An eception will be raised if the arg includes a combination of indexing (int type) and masking (bool type)
+
+    Example:
+        f_slice(arr, {b1_pos: [1, 5], e1_pos: [0]})
+            would return b1: dry, single, twin and triplet and e1: first cycle using slicing.
+        f_slice(arr, {x_pos: np.array([False, True, False])})
+            would return second element of x axis using fancy indexing
+
+    :param arr: numpy array to slice
+    :param slice_specs: dict of {axis: args} where args is an int or a list (or tuple) of 1, 2, or 3 values, or boolean mask array
+           - np.ndarray (bool)                 → boolean mask applied along axis (fancy indexing, returns copy)
+           - Single value  [start]             → slice(start, start+1)  e.g. single position, dimension preserved
+           - Two values    [start, stop]       → slice(start, stop)
+           - Three values  [start, stop, step] → slice(start, stop, step)
+       Note: if an axis is passed multiple times in the dictionary, only the last instance is used.
+    :return: sliced only - returns view of arr, masked - returns a copy of arr
+
+    '''
+    ##check if arr is int - this is the case for the first loop because arr may be initialised as 0
+    if type(arr) == int:
         return arr
+
+    # Build and apply slices first via f_slice_idx (returns a view, ignoring masks)
+    result = arr[f_slice_idx(arr, slice_specs, default=default)]
+
+    # Build a list of slice(None) — i.e. [:] — for every axis, as the default
+    sl_masks = [default] * arr.ndim
+
+    mask_count = 0
+    int_count = 0
+    for axis, args in slice_specs.items():
+        if isinstance(args, int):  # Int rather than a list is interpreted as an index (and the axis is collapsed)
+            int_count += 1
+        # Single value → interpret as start, with stop = start + 1 (preserves dimension)
+        # Multi value  → unpack directly into slice(start, stop) or slice(start, stop, step)
+        if arr.shape[axis] == 1:  #don't mask if singleton axis, warning will show up in f_slice_idx()
+            pass
+        else:
+            if isinstance(args, np.ndarray) and args.dtype == bool:  # Boolean mask → apply directly (fancy indexing, reduces axis to number of True values)
+                mask_count += 1
+                sl_masks[axis] = args
+
+    ##apply the mask if mask_count > 0
+    if mask_count > 0:   #the mask needs applying
+        if int_count > 0:
+            raise Exception('One or more axes have been indexed and collapsed so the mask would be applied incorrectly.')
+        else:
+            result = result[tuple(sl_masks)]
+    return result
+
 
 def f_nD_interp(x, xp, yp, axis):
     '''
@@ -1277,7 +1437,7 @@ def f1_make_pyomo_dict(param, index, loop_axis_pos=None, index_loop_axis_pos=Non
         index_masked = np.array([])
         for i in range(param.shape[loop_axis_pos]):
             ###mask out values=0
-            param_cut = f_dynamic_slice(param, loop_axis_pos, start=i, stop=i+1)
+            param_cut = f_slice(param, {loop_axis_pos: [i, i+1]})
             mask = param_cut != 0
             param_masked = np.concatenate([param_masked,param_cut[mask]],0).astype(dtype)  # applying the mask does the raveling and squeezing of singleton axis
             mask = mask.ravel() #needs to be 1d to mask the index
@@ -1305,9 +1465,6 @@ def f1_make_pyomo_dict(param, index, loop_axis_pos=None, index_loop_axis_pos=Non
     ##make index a tuple and zip with param and make dict
     tup = tuple(map(tuple,index_masked))
     return dict(zip(tup, param_masked))
-
-import numpy as np
-na = np.newaxis
 
 
 def build_active_index(
@@ -1689,4 +1846,34 @@ def f1_lmuregion_to_lmufarmer(dict, key1, a_lmuregion_lmufarmer, lmu_axis, lmu_f
         dict[key1].iloc[:,:] = np.take_along_axis(dict[key1].values, a_lmuregion_lmufarmer, lmu_axis)
     else:
         dict[key1] = np.take_along_axis(dict[key1], a_lmuregion_lmufarmer, lmu_axis)
+
+def f1_slices_to_str(array_name, slices):
+    """
+    Convert a list of slice objects into an indexing string like arr1[2:5,1:4,:]
+    Useful for reporting action carried out on blocks within multi-dimensional arrays
+    """
+
+    def fmt(s):
+        if s == slice(None):  # the most common case
+            return ':'
+
+        start = s.start if s.start is not None else ''
+        stop = s.stop if s.stop is not None else ''
+        step = s.step if s.step is not None else 1
+
+        if step == 1:  # step=1 is the default → omit it
+            if start == 0 and stop == '':
+                return ':'
+            elif start == 0:
+                return f':{stop}'
+            elif stop == '':
+                return f'{start}:'
+            else:
+                return f'{start}:{stop}'
+        else:  # explicit step
+            start_str = str(start) if start != 0 else ''
+            return f'{start_str}:{stop}:{step}'.strip(':') or ':'
+
+    parts = [fmt(sl) for sl in slices]
+    return f"{array_name}[{','.join(parts)}]"
 

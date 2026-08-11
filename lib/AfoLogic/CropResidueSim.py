@@ -77,19 +77,20 @@ if __name__=="__main__":
     ###############
     #User control #
     ###############
-    trial = 31   #Count the number of rows (starting at 0) offset from the Default trial
+    trial = 1   #this will run the first trial in the exp_group (so you need to set the exp group in the script params)
 
     ######
     #Run #
     ######
     ##load excel data and experiment data
     exp_data, exp_group_bool, trial_pinp = exp.f_read_exp()
+    exp_data = exp.f_group_exp(exp_data, exp_group_bool)
     sinp_defaults, uinp_defaults, pinp_defaults = dxl.f_load_excel_default_inputs(trial_pinp=trial_pinp)
     d_rot_info = dxl.f_load_phases()
     cat_propn_s1_ks2 = dxl.f_load_stubble()
 
     ##select property for the current trial
-    property = trial_pinp.loc[trial]
+    property = trial_pinp.iloc[trial]
 
     ##process user SA
     user_sa = rve.f_process_user_sa(exp_data, trial)
@@ -128,11 +129,9 @@ if __name__=="__main__":
     mask_p_offs_p = p_index_p<=(n_sim_periods_offs-1)
 
     ###scale trial start to the correct yr in the sim based on animal age
-    add_yrs_t = np.ceil((date_start_p[0] - trial_commencement_date_t) / 364)
-    # sub_yrs = np.ceil(np.maximum(0, (item_start - end_of_periods).astype('timedelta64[D]').astype(int) / 365))
-    trial_commencement_date_t = trial_commencement_date_t + add_yrs_t * 364
     ####scale for animal age
-    trial_commencement_date_t = trial_commencement_date_t + uinp.stubble['animal_age_t'] * 364
+    trial_commencement_date_t = trial_commencement_date_t + uinp.stubble['i_sim_yr_t'] * 364
+    lambing_date_yatf_t = uinp.stubble['lambing_date_t'] + uinp.stubble['i_sim_yr_t'] * 364
 
     ##general info
     b0_pos = sinp.stock['i_b0_pos']
@@ -187,8 +186,10 @@ if __name__=="__main__":
         ##call stock gen
         stubble_inp['shear_date'] = uinp.stubble['shear_date_t'][t]
         stubble_inp['lambing_date'] = uinp.stubble['lambing_date_t'][t]
+        stubble_inp['lambing_date_yatf'] = lambing_date_yatf_t[t]
         stubble_inp['a_c2_c0'] = uinp.stubble['a_c2_c0t'][:,t]
         stubble_inp['i_g3_inc'] = uinp.stubble['i_g3_inc_g3t'][:,t]
+        stubble_inp['i_srw'] = uinp.stubble['i_srw'][t]
         stubble_inp['i_sr'] = stocking_rate_t[t]
         stubble_inp['i_ws'] = uinp.stubble['i_ws_t'][t]
         stubble_inp['i_rain'] = uinp.stubble['i_rain_t'][t]
@@ -208,7 +209,7 @@ if __name__=="__main__":
         stubble_inp['i_muscle_yatf'] = uinp.stubble['i_muscle_yatf_t'][t]
         stubble_inp['i_viscera_yatf'] = uinp.stubble['i_viscera_yatf_t'][t]
         stubble_inp['i_foo'] = uinp.stubble['i_foo_t'][t]
-        stubble_inp['i_sup_intake'] = uinp.stubble['i_sup_intake_t'][t]
+        stubble_inp['i_sup_intake'] = uinp.stubble['i_sup_intake_pt'][:,t]
         stubble_inp['p_start'] = p_start_trial_t[t]
         stubble_inp['p_end'] = p_end_t[t]
         stubble_inp['lw'] = trial_lw_tp[t,:]

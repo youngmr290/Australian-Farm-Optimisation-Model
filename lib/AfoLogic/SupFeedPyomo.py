@@ -27,10 +27,10 @@ def f1_suppyomo_local(params, model):
     ############
     # variable #
     ############
-    model.v_buy_product = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, model.s_supp_feeds, model.s_biomass_uses, model.s_grain_pools, bounds=(0,None),
-                               doc='tonnes of grain/baled product in each pool purchased for sup feeding')
-    model.v_sup_con = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_supp_feeds, model.s_grain_pools, model.s_feed_pools, model.s_feed_periods,
-                             bounds=(0,None), doc='tonnes of grain/baled product consumed in each pool')
+    model.v_buy_product = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, model.s_supp_feeds, model.s_biomass_uses, bounds=(0,None),
+                               doc='tonnes of grain/baled product purchased for sup feeding')
+    model.v_sup_con = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_supp_feeds, model.s_feed_pools, model.s_feed_periods,
+                             bounds=(0,None), doc='tonnes of grain/baled product consumed')
 
     #########
     #param  #
@@ -63,11 +63,11 @@ def f1_suppyomo_local(params, model):
     model.p_sup_md = pe.Param(model.s_feed_pools, model.s_supp_feeds, model.s_feed_periods, model.s_season_types, initialize=params['md_tonne'] , default = 0.0, doc='md per tonne of grain fed')
 
     ##price buy grain
-    model.p_buy_grain_price = pe.Param(model.s_sequence_year, model.s_season_periods, model.s_season_types, model.s_grain_pools, model.s_supp_feeds, model.s_biomass_uses,
+    model.p_buy_grain_price = pe.Param(model.s_sequence_year, model.s_season_periods, model.s_season_types, model.s_supp_feeds, model.s_biomass_uses,
                                        model.s_c1, initialize=params['buy_grain_price'], default = 0.0, doc='price to buy grain from neighbour')
 
     ##wc buy grain
-    model.p_buy_grain_wc = pe.Param(model.s_sequence_year, model.s_enterprises, model.s_season_periods, model.s_season_types, model.s_grain_pools,
+    model.p_buy_grain_wc = pe.Param(model.s_sequence_year, model.s_enterprises, model.s_season_periods, model.s_season_types,
                                     model.s_supp_feeds, model.s_biomass_uses, initialize=params['buy_grain_wc'], default = 0.0, doc='wc to buy grain from neighbour')
 
     ##buy_grain_prov_mz
@@ -81,6 +81,10 @@ def f1_suppyomo_local(params, model):
 
     ##sup emissions
     model.co2e_sup_fk = pe.Param(model.s_feed_pools, model.s_supp_feeds, initialize=params['co2e_sup_fk'] , default = 0.0, doc='emissions per tonne of grain consumed/fed')
+
+    model.methane_me_saved_sup_fk = pe.Param(model.s_feed_pools, model.s_supp_feeds,
+                                             initialize=params['methane_me_saved_sup_fk'], default = 0.0,
+                                             doc='ME saved from methane reduction per tonne of supplement consumed/fed')
 
     ##a_p6_p7
     model.p_a_p6_p7 = pe.Param(model.s_season_periods, model.s_feed_periods, model.s_season_types, initialize=params['a_p6_p7'], default = 0.0, doc='link between p6 and m')
@@ -98,9 +102,19 @@ def f_sup_feeding_cost(model,q,s,p7,z):
     Used in global constraint (con_profit). See CorePyomo
     '''
 
-    return sum(model.v_sup_con[q,s,z,k3,g,f,p6] * model.p_sup_cost[p7,z,p6,k3,f]
-               for f in model.s_feed_pools for g in model.s_grain_pools for k3 in model.s_supp_feeds for p6 in model.s_feed_periods
+    return sum(model.v_sup_con[q,s,z,k3,f,p6] * model.p_sup_cost[p7,z,p6,k3,f]
+               for f in model.s_feed_pools for k3 in model.s_supp_feeds for p6 in model.s_feed_periods
                if pe.value(model.p_sup_cost[p7,z,p6,k3,f])!=0)
+
+
+def f_sup_methane_additive_cost(model,q,s,p7,z):
+    '''
+    Calculate the feed additive cost for selected supplement consumption.
+
+    Used in global constraint (con_profit). See CorePyomo
+    '''
+    return sum(model.v_sup_con[q,s,z,k3,f,p6] * 1000 * model.p_methane_additive_cost * model.p_a_p6_p7[p7,p6,z]
+               for f in model.s_feed_pools for k3 in model.s_supp_feeds for p6 in model.s_feed_periods)
 
 def f_sup_wc(model,q,s,c0,p7,z):
     '''
@@ -109,8 +123,8 @@ def f_sup_wc(model,q,s,c0,p7,z):
     Used in global constraint (con_workingcap). See CorePyomo
     '''
 
-    return sum(model.v_sup_con[q,s,z,k3,g,f,p6] * model.p_sup_wc[c0,p7,z,p6,k3,f]
-               for f in model.s_feed_pools for g in model.s_grain_pools for k3 in model.s_supp_feeds for p6 in model.s_feed_periods
+    return sum(model.v_sup_con[q,s,z,k3,f,p6] * model.p_sup_wc[c0,p7,z,p6,k3,f]
+               for f in model.s_feed_pools for k3 in model.s_supp_feeds for p6 in model.s_feed_periods
                if pe.value(model.p_sup_wc[c0,p7,z,p6,k3,f])!=0)
 
 def f_sup_me(model,q,s,p6,f,z):
@@ -120,8 +134,19 @@ def f_sup_me(model,q,s,p6,f,z):
     Used in global constraint (con_me). See CorePyomo
     '''
 
-    return sum(model.v_sup_con[q,s,z,k3,g,f,p6] * model.p_sup_md[f,k3,p6,z] for g in model.s_grain_pools for k3 in model.s_supp_feeds
+    return sum(model.v_sup_con[q,s,z,k3,f,p6] * model.p_sup_md[f,k3,p6,z] for k3 in model.s_supp_feeds
                if pe.value(model.p_sup_md[f,k3,p6,z])!=0)
+
+
+def f_sup_methane_me_saved(model,q,s,p6,f,z):
+    '''
+    Calculate methane-reduction energy captured from consuming supplement.
+
+    Used in global constraint (con_me). See CorePyomo
+    '''
+
+    return sum(model.v_sup_con[q,s,z,k3,f,p6] * model.methane_me_saved_sup_fk[f,k3] for k3 in model.s_supp_feeds
+               if pe.value(model.methane_me_saved_sup_fk[f,k3])!=0)
 
 def f_sup_vol(model,q,s,p6,f,z):
     '''
@@ -130,7 +155,7 @@ def f_sup_vol(model,q,s,p6,f,z):
     Used in global constraint (con_vol). See CorePyomo
     '''
 
-    return sum(model.v_sup_con[q,s,z,k3,g,f,p6] * model.p_sup_vol[f,k3,p6,z] for g in model.s_grain_pools for k3 in model.s_supp_feeds
+    return sum(model.v_sup_con[q,s,z,k3,f,p6] * model.p_sup_vol[f,k3,p6,z] for k3 in model.s_supp_feeds
                if pe.value(model.p_sup_vol[f,k3,p6,z])!=0)
 
 def f_sup_dep(model,q,s,p7,z):
@@ -141,8 +166,8 @@ def f_sup_dep(model,q,s,p7,z):
     Used in global constraint (con_dep). See CorePyomo
     '''
 
-    return model.p_confinement_dep + sum(model.v_sup_con[q,s,z,k3,g,f,p6] * model.p_sup_dep[p7,p6,z,k3]
-               for f in model.s_feed_pools for g in model.s_grain_pools for k3 in model.s_supp_feeds for p6 in model.s_feed_periods
+    return model.p_confinement_dep + sum(model.v_sup_con[q,s,z,k3,f,p6] * model.p_sup_dep[p7,p6,z,k3]
+               for f in model.s_feed_pools for k3 in model.s_supp_feeds for p6 in model.s_feed_periods
                if pe.value(model.p_sup_dep[p7,p6,z,k3])!=0)
 
 def f_sup_asset(model,q,s,p7,z):
@@ -152,8 +177,8 @@ def f_sup_asset(model,q,s,p7,z):
     Used in global constraint (con_asset). See CorePyomo
     '''
 
-    return sum(model.v_sup_con[q,s,z,k3,g,f,p6] * model.p_sup_asset[p7,p6,z,k3]
-               for f in model.s_feed_pools for g in model.s_grain_pools for k3 in model.s_supp_feeds for p6 in model.s_feed_periods
+    return sum(model.v_sup_con[q,s,z,k3,f,p6] * model.p_sup_asset[p7,p6,z,k3]
+               for f in model.s_feed_pools for k3 in model.s_supp_feeds for p6 in model.s_feed_periods
                if pe.value(model.p_sup_asset[p7,p6,z,k3])!=0)
 
 def f_sup_labour(model,q,s,p5,z):
@@ -163,8 +188,8 @@ def f_sup_labour(model,q,s,p5,z):
     Used in global constraint (con_labour_any). See CorePyomo
     '''
 
-    return sum(model.v_sup_con[q,s,z,k3,g,f,p6] * model.p_sup_labour[p5,p6,z,k3,f]
-               for f in model.s_feed_pools for g in model.s_grain_pools for k3 in model.s_supp_feeds for p6 in model.s_feed_periods
+    return sum(model.v_sup_con[q,s,z,k3,f,p6] * model.p_sup_labour[p5,p6,z,k3,f]
+               for f in model.s_feed_pools for k3 in model.s_supp_feeds for p6 in model.s_feed_periods
                if pe.value(model.p_sup_labour[p5,p6,z,k3,f])!=0)
 
 def f_sup_emissions(model,q,s,p6,z):
@@ -174,15 +199,15 @@ def f_sup_emissions(model,q,s,p6,z):
     Used in global constraint (con_emissions). See BoundPyomo
     '''
 
-    return sum(model.v_sup_con[q,s,z,k3,g,f,p6] * model.co2e_sup_fk[f,k3] for f in model.s_feed_pools
-               for g in model.s_grain_pools for k3 in model.s_supp_feeds
+    return sum(model.v_sup_con[q,s,z,k3,f,p6] * model.co2e_sup_fk[f,k3] for f in model.s_feed_pools
+               for k3 in model.s_supp_feeds
                if pe.value(model.p_mask_season_p6z[p6,z])!=0)
 
 
-    
-    
-    
-    
+
+
+
+
     
     
     

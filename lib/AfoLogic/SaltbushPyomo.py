@@ -82,6 +82,10 @@ def f1_saltbushpyomo_local(params,model, MP_lp_vars):
                                      initialize=params['co2e_sb_zp6'], default=0, mutable=False,
                                      doc='Emissions from consuming 1t of saltbush (just the saltbush not the understory).')
 
+    model.methane_me_saved_sb_zp6 = pe.Param(model.s_season_types, model.s_feed_periods,
+                                     initialize=params['methane_me_saved_sb_zp6'], default=0, mutable=False,
+                                     doc='ME saved from methane reduction per tonne of saltbush consumed.')
+
     ###################################
     #call local constraints           #
     ###################################
@@ -204,6 +208,32 @@ def f_saltbush_me(model,q,s,z,p6,f):
         return sum(model.v_tonnes_sb_consumed[q,s,z,p6,f,l] * model.p_sb_md[z,p6,f] for l in model.s_lmus)
     else:
         return 0
+
+
+def f_saltbush_methane_me_saved(model,q,s,z,p6,f):
+    '''
+    Calculate methane-reduction energy captured from saltbush consumption.
+
+    Used in global constraint (con_me). See CorePyomo
+    '''
+    if pinp.general['pas_inc_t'][3]:
+        return sum(model.v_tonnes_sb_consumed[q,s,z,p6,f,l] * model.methane_me_saved_sb_zp6[z,p6] for l in model.s_lmus)
+    else:
+        return 0
+
+
+def f_saltbush_methane_additive_cost(model,q,s,z,p7):
+    '''
+    Calculate the feed additive cost for selected saltbush consumption.
+
+    Used in global constraint (con_profit). See CorePyomo
+    '''
+    if pinp.general['pas_inc_t'][3]:
+        return sum(model.v_tonnes_sb_consumed[q,s,z,p6,f,l] * 1000 * model.p_methane_additive_cost * model.p_a_p6_p7[p7,p6,z]
+                   for p6 in model.s_feed_periods for f in model.s_feed_pools for l in model.s_lmus)
+    else:
+        return 0
+
 
 def f_saltbush_vol(model,q,s,z,p6,f):
     '''

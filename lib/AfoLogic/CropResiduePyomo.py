@@ -91,7 +91,7 @@ def f1_stubpyomo_local(params, model, MP_lp_vars):
         suffix_sets=[model.s_stub_cat, model.s_biomass_uses],
     )
 
-    ###special set use in the constraints when summing the z8 axis - this stops summing z8 that dont exist. The alternative would be to
+    ###special set use in the constraints when summing the z8 axis - this stops summing z8 that don't exist. The alternative would be to
     def f1_init_z_by_p6k(model, p6, k):
         return params['stub_z8_by_p6k'].get((p6, k), [])
     model.s_stub_z8_by_p6k = pe.Set(model.s_feed_periods, model.s_crops, initialize=f1_init_z_by_p6k)
@@ -146,6 +146,11 @@ def f1_stubpyomo_local(params, model, MP_lp_vars):
 
     model.co2e_stub_cons_p6zks1 = pe.Param(model.s_stub_base_p6zks1, initialize=params['co2e_stub_cons_p6zks1'],
                                 default = 0.0, mutable=False, doc='kgs of co2e saved by the consumption of 1t stubble for each crop')
+
+    model.methane_me_saved_stub_p6zks1 = pe.Param(model.s_stub_base_p6zks1,
+                                initialize=params['methane_me_saved_stub_p6zks1'],
+                                default = 0.0, mutable=False,
+                                doc='ME saved from methane reduction per tonne of stubble consumed')
 
     model.co2e_stub_production_zk = pe.Param(model.s_season_types, model.s_crops, initialize=params['co2e_stub_production_zk'],
                                 default = 0.0, mutable=False, doc='kgs of co2e produced from a 1t of crop residue at harvest')
@@ -321,6 +326,32 @@ def f_cropresidue_me(model,q,s,p6,f,z):
     Used in global constraint (con_me). See CorePyomo
     '''
     return sum(model.v_stub_con[q,s,z,p6,f,k,sc,s2] * model.p_stub_md[f,p6,z,k,sc]
+               for k in model.s_stub_k_by_p6z[p6, z]
+               for sc in model.s_stub_cat
+               for s2 in model.s_biomass_uses)
+
+
+def f_cropresidue_methane_me_saved(model,q,s,p6,f,z):
+    '''
+    Calculate methane-reduction energy captured from selected stubble consumption.
+
+    Used in global constraint (con_me). See CorePyomo
+    '''
+    return sum(model.v_stub_con[q,s,z,p6,f,k,sc,s2] * model.methane_me_saved_stub_p6zks1[p6,z,k,sc]
+               for k in model.s_stub_k_by_p6z[p6, z]
+               for sc in model.s_stub_cat
+               for s2 in model.s_biomass_uses)
+
+
+def f_cropresidue_methane_additive_cost(model,q,s,p7,z):
+    '''
+    Calculate the feed additive cost for selected stubble consumption.
+
+    Used in global constraint (con_profit). See CorePyomo
+    '''
+    return sum(model.v_stub_con[q,s,z,p6,f,k,sc,s2] * 1000 * model.p_methane_additive_cost * model.p_a_p6_p7[p7,p6,z]
+               for p6 in model.s_feed_periods
+               for f in model.s_feed_pools
                for k in model.s_stub_k_by_p6z[p6, z]
                for sc in model.s_stub_cat
                for s2 in model.s_biomass_uses)

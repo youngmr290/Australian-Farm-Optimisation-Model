@@ -59,8 +59,9 @@ from . import TreePyomo as treepy
 #Exp loop               #
 #########################
 
-def exp(solver_method, user_data, property, trial_name, trial_description, sinp_defaults, uinp_defaults, pinp_defaults,
-        d_rot_info, cat_propn_s1_ks2, pkl_fs, print_debug_output, a_lmuregion_lmufarmer=None, mp_lp_vars_path='pkl/pkl_lp_vars_MP Initial position.pkl'):
+def exp(solver_method, user_data, property, trial_name, trial_description, sinp_defaults, uinp_defaults, pinp_defaults
+        , d_rot_info, cat_propn_s1_ks2, pkl_fs, print_debug_output, a_lmuregion_lmufarmer=None
+        , mp_lp_vars_path='pkl/pkl_lp_vars_MP Initial position.pkl'):
 
     ##can use logger to get status on multiprocessing
     # logger.info('Received {}'.format(row))
@@ -151,6 +152,7 @@ def exp(solver_method, user_data, property, trial_name, trial_description, sinp_
 
     ##call precalcs
     precalc_start = time.time()
+
     zgenpy.season_precalcs(params['zgen'],r_vals['zgen'])
     rotpy.rotation_precalcs(params['rot'],r_vals['rot'])
     phspy.crop_precalcs(params['crop'],r_vals['crop'])

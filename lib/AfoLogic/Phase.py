@@ -106,8 +106,10 @@ def f_farmgate_grain_price(k_type, r_vals={}):
 
     The farm gate grain price [#]_ is calculated for each grain pool. Different grain pools are included to
     represent different grain qualities. Depending on the grain variety used, and the season and the farmers skill,
-    the grain produced will change quality and hence receive a different price. The price received by the farmer is the
-    market price received less any selling costs. The selling costs includes the transport costs which are
+    the grain produced will change quality and hence receive a different price.
+    The price received by the farmer is the weighted average price across each grain pool
+    (if is hard to sort grain into quality group prior to selling therefore a farmer can sell the good grain and retain the seconds)
+    less any selling costs. The selling costs includes the transport costs which are
     dependent on the location of the modelled farm, and the selling fees which often includes receival
     and testing fees, and government levies.
 
@@ -157,12 +159,6 @@ def f_farmgate_grain_price(k_type, r_vals={}):
     ##seconds price
     grain_price_seconds_ks2 = grain_price_firsts_ks2.mul(1-grain_price_info_df['seconds_discount'], level=0)
 
-    ##get the price of firsts and seconds for each grain
-    price_df = pd.DataFrame(columns=['firsts','seconds'])
-    ###populate df
-    price_df['firsts'] = grain_price_firsts_ks2
-    price_df['seconds'] = grain_price_seconds_ks2
-
     ##calc grain price before selling cost - for crop_summary report
     propn_firsts_k = grain_price_info_df[['prop_firsts']].squeeze()
     propn_seconds_k = grain_price_info_df[['prop_seconds']].squeeze()
@@ -175,24 +171,28 @@ def f_farmgate_grain_price(k_type, r_vals={}):
              + uinp.price['flagfall'])
     tolls= grain_price_info_df['grain_tolls']
     total_fees= cartage+tolls
-    farmgate_price_ks2_g = price_df.sub(total_fees, axis=0, level=0).clip(0)
+    farmgate_price_ks2 = ave_price_ks2.sub(total_fees, axis=0, level=0).clip(0)
 
     ##scale by c1 & z
     keys_z = zfun.f_keys_z()
     keys_c1 = grain_price_scalar_c1_z.index
-    new_index_c1zg = pd.MultiIndex.from_product([keys_c1,keys_z,farmgate_price_ks2_g.columns])
-    farmgate_price_ks2g_c1z = farmgate_price_ks2_g.reindex(new_index_c1zg, axis=1, level=2).stack()
-    farmgate_price_ks2g_c1z = farmgate_price_ks2g_c1z.mul(grain_price_scalar_c1_z.stack(), axis=1)
-    farmgate_price_ks2gc1_z = farmgate_price_ks2g_c1z.stack(0)
+    new_index_c1z = pd.MultiIndex.from_product([keys_c1,keys_z])
+    farmgate_price_ks2_c1z = pd.DataFrame(
+        np.repeat(farmgate_price_ks2.values[:, None], len(new_index_c1z), axis=1),
+        index=farmgate_price_ks2.index,
+        columns=new_index_c1z,
+    )
+    farmgate_price_ks2_c1z = farmgate_price_ks2_c1z.mul(grain_price_scalar_c1_z.stack(), axis=1)
+    farmgate_price_ks2c1_z = farmgate_price_ks2_c1z.stack(0)
 
     ##add q axis
     keys_q = np.array(['q%s' % i for i in range(len_q)])
     keys_k = grain_price_info_df.index
     q_grain_price_scalar_q_k = pd.DataFrame(sam_q_grain_price_scalar_qk, index = keys_q, columns=keys_k) #have to slice len_q because SAM was initiliased with a big number (because q is unknown because it can be changed by SA)
-    farmgate_price_s2gc1z_qk = farmgate_price_ks2gc1_z.stack().unstack(0).mul(q_grain_price_scalar_q_k.stack(), axis=1, level=1)
-    farmgate_price_ks2gc1_qz = farmgate_price_s2gc1z_qk.stack(1).unstack(-2).reorder_levels([-1,0,1,2], axis=0)
+    farmgate_price_s2c1z_qk = farmgate_price_ks2c1_z.stack().unstack(0).mul(q_grain_price_scalar_q_k.stack(), axis=1, level=1)
+    farmgate_price_ks2c1_qz = farmgate_price_s2c1z_qk.stack(1).unstack(-2).reorder_levels([-1,0,1], axis=0)
     ##return
-    return farmgate_price_ks2gc1_qz
+    return farmgate_price_ks2c1_qz
 
 
 def f_grain_price(r_vals):
@@ -204,7 +204,7 @@ def f_grain_price(r_vals):
 
     '''
     ##get grain price - accounts for tolls and other fees
-    farmgate_price_ks2gc1_qz=f_farmgate_grain_price(k_type="k1", r_vals=r_vals)
+    farmgate_price_ks2c1_qz=f_farmgate_grain_price(k_type="k1", r_vals=r_vals)
 
     ##allocate farm gate grain price for each cashflow period and calc interest
     start = np.array([pinp.crop['i_grain_income_date']])
@@ -219,32 +219,32 @@ def f_grain_price(r_vals):
     new_index_c0p7z = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z])
     grain_wc_allocation_c0p7z = pd.Series(grain_wc_allocation_c0p7z.ravel(), index=new_index_c0p7z)
 
-    farmgate_price_ks2gc1q_z = farmgate_price_ks2gc1_qz.stack(0)
+    farmgate_price_ks2c1q_z = farmgate_price_ks2c1_qz.stack(0)
     # cols_p7zg = pd.MultiIndex.from_product([keys_p7, keys_z, farm_gate_price_k_g.columns])
     # grain_income_allocation_p7zg = grain_income_allocation_p7z.reindex(cols_p7zg, axis=1)#adds level to header so i can mul in the next step
     # grain_price =  farm_gate_price_k_g.mul(grain_income_allocation_p7zg,axis=1, level=-1)
-    grain_price_ks2gc1q_p7z = farmgate_price_ks2gc1q_z.mul(grain_income_allocation_p7z,axis=1, level=-1)
-    grain_price_ks2gc1_qp7z = grain_price_ks2gc1q_p7z.unstack(-1).reorder_levels([2,0,1], axis=1)
+    grain_price_ks2c1q_p7z = farmgate_price_ks2c1q_z.mul(grain_income_allocation_p7z,axis=1, level=-1)
+    grain_price_ks2c1_qp7z = grain_price_ks2c1q_p7z.unstack(-1).reorder_levels([2,0,1], axis=1)
     # cols_c0p7zg = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z, farm_gate_price_k_g.columns])
     # grain_wc_allocation_c0p7zg = grain_wc_allocation_c0p7z.reindex(cols_c0p7zg, axis=1)#adds level to header so i can mul in the next step
     # grain_price_wc =  farm_gate_price_k_g.mul(grain_wc_allocation_c0p7zg,axis=1, level=-1)
-    grain_price_wc_ks2gc1q_c0p7z = farmgate_price_ks2gc1q_z.mul(grain_wc_allocation_c0p7z,axis=1, level=-1)
-    grain_price_wc_ks2gc1_qc0p7z = grain_price_wc_ks2gc1q_c0p7z.unstack(-1).reorder_levels([3,0,1,2], axis=1)
+    grain_price_wc_ks2c1q_c0p7z = farmgate_price_ks2c1q_z.mul(grain_wc_allocation_c0p7z,axis=1, level=-1)
+    grain_price_wc_ks2c1_qc0p7z = grain_price_wc_ks2c1q_c0p7z.unstack(-1).reorder_levels([3,0,1,2], axis=1)
 
     ##average c1 axis for wc and report
     c1_prob = uinp.price_variation['prob_c1']
-    r_grain_price_ks2g_qp7z = grain_price_ks2gc1_qp7z.mul(c1_prob, axis=0, level=-1).groupby(axis=0, level=[0,1,2]).sum()
-    grain_price_wc_ks2g_qc0p7z = grain_price_wc_ks2gc1_qc0p7z.mul(c1_prob, axis=0, level=-1).groupby(axis=0, level=[0,1,2]).sum()
+    r_grain_price_ks2_qp7z = grain_price_ks2c1_qp7z.mul(c1_prob, axis=0, level=-1).groupby(axis=0, level=[0,1]).sum()
+    grain_price_wc_ks2_qc0p7z = grain_price_wc_ks2c1_qc0p7z.mul(c1_prob, axis=0, level=-1).groupby(axis=0, level=[0,1]).sum()
 
     ##store r_vals
     ###make z8 mask - used to uncluster
     date_season_node_p7z = per.f_season_periods()[:-1,...] #slice off end date p7
     mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
     ###store
-    fun.f1_make_r_val(r_vals, r_grain_price_ks2g_qp7z, 'grain_price', mask_season_p7z, z_pos=-1)
-    grain_price_qp7zgks2c1 = grain_price_ks2gc1_qp7z.unstack([2,0,1,3]).sort_index()
-    grain_price_wc_qc0p7zgks2 = grain_price_wc_ks2g_qc0p7z.unstack([2,0,1]).sort_index()
-    return grain_price_qp7zgks2c1, grain_price_wc_qc0p7zgks2
+    fun.f1_make_r_val(r_vals, r_grain_price_ks2_qp7z, 'grain_price', mask_season_p7z, z_pos=-1)
+    grain_price_qp7zks2c1 = grain_price_ks2c1_qp7z.unstack([0,1,2]).sort_index()
+    grain_price_wc_qc0p7zks2 = grain_price_wc_ks2_qc0p7z.unstack([0,1]).sort_index()
+    return grain_price_qp7zks2c1, grain_price_wc_qc0p7zks2
 # a=grain_price()
 
 #########################
@@ -372,7 +372,7 @@ def f_rot_biomass(for_stub=False, for_insurance=False, r_vals=None):
     keys_q = np.array(['q%s' % i for i in range(len_q)])
     q_crop_yield_scalar_q_k = pd.DataFrame(sen.sam['q_crop_yield_scalar_Qk'][0:len_q, pinp.crop_landuse_mask_k1],
                                             index=keys_q, columns=keys_k)  # have to slice len_q because SAM was initiliased with a big number (because q is unknown because it can be changed by SA)
-    ###mul - bit convoluted because we dont want r and k on different axes because that increase array size a lot.
+    ###mul - bit convoluted because we don't want r and k on different axes because that increase array size a lot.
     biomass_rk_p7zl = biomass_rkl_p7z.unstack(2)
     q_crop_yield_scalar_rkq = q_crop_yield_scalar_q_k.reindex(biomass_rk_p7zl.index, axis=1).fillna(1).unstack()
     biomass_rkq_p7zl = biomass_rk_p7zl.reindex(q_crop_yield_scalar_rkq.index, axis=0)
@@ -423,26 +423,9 @@ def f_biomass2product(r_vals=None):
     return biomass2product_ks2
 
 
-def f_grain_pool_proportions():
-    '''Calculate the proportion of grain in each pool.
-
-    The total adjusted yield is split into two pools (firsts and seconds) to represent the grain that does
-    and does not meet the quality specifications. Grain that does not meet the specifications is downgraded
-    and sold for a discount. Each grain pool is represented as a separate grain transfer constraint, providing
-    the option for the model to optimise the grain outcome. For example, the model has the option to sell high
-    quality grain (firsts) to market and retain the lower quality grain (seconds) for livestock feed.
-
-    '''
-    grain_price_info_df = uinp.price['grain_price_info']
-    mask_k4 = grain_price_info_df["is_crop"].values  # this is mask_k1_is_k4
-    prop = grain_price_info_df[['prop_firsts','prop_seconds']].iloc[mask_k4, :].iloc[pinp.crop_landuse_mask_k1,:]
-    prop.columns = sinp.general['grain_pools']
-    return prop.stack()
-
-
 #######
 #fert #    
-#######    
+#######
 
 def f1_fert_cost_allocation():
     '''
@@ -700,7 +683,7 @@ def f_fert_cost(r_vals={}, option=1):
     fert_by_soil_nl = fert_by_soil.stack() #read in fert by soil
     fert_rz_nl = base_fert_rz_n.mul(fert_by_soil_nl,axis=1,level=0)
 
-    ##calculate fertiliser on non arable pasture paddocks (non-arable crop paddocks dont get crop (see function docs))
+    ##calculate fertiliser on non arable pasture paddocks (non-arable crop paddocks don't get crop (see function docs))
     nap_fert_rz_nl = fert_rz_nl.mul(nap_fert_scalar_r, axis=0, level=0)
 
     ##account for arable area
@@ -1162,13 +1145,10 @@ def f_insurance(r_vals):
     '''
     ##weight c1 to get average price
     c1_prob = uinp.price_variation['prob_c1']
-    farmgate_price_ks2gc1_qz = f_farmgate_grain_price(k_type="k1")
-    farmgate_price_ks2g_qz = farmgate_price_ks2gc1_qz.mul(c1_prob,axis=0,level=-1).groupby(axis=0,level=[0,1,2]).sum()
-    ##combine each grain pool to get average price
-    grain_pool_proportions_kg = f_grain_pool_proportions()
+    farmgate_price_ks2c1_qz = f_farmgate_grain_price(k_type="k1")
+    farmgate_price_ks2_qz = farmgate_price_ks2c1_qz.mul(c1_prob,axis=0,level=-1).groupby(axis=0,level=[0,1]).sum()
     ###take q[0] under assumption insurance is based on average price.
-    farmgate_price_kg_zs2 = farmgate_price_ks2g_qz.stack(1).iloc[:,0].unstack([-1,1])
-    ave_price_k_zs2 = farmgate_price_kg_zs2.mul(grain_pool_proportions_kg, axis=0).groupby(axis=0, level=0).sum()
+    ave_price_k_zs2 = farmgate_price_ks2_qz.stack(1).iloc[:,0].unstack([-1,1])
     ##calc insurance cost per tonne
     grain_price_info_df = uinp.price['grain_price_info']
     mask_k4 = grain_price_info_df["is_crop"].values  # this is mask_k1_is_k4
@@ -1553,7 +1533,6 @@ def f1_crop_params(params,r_vals):
     spreader_sprayer_dep_p7zlr, increment_spreader_sprayer_dep_p7zlr = f_spraying_spreading_dep(r_vals)
     biomass = f_rot_biomass(r_vals=r_vals)
     biomass2product_ks2 = f_biomass2product(r_vals)
-    propn = f_grain_pool_proportions()
     grain_price, grain_wc = f_grain_price(r_vals)
     phasesow_req = f_phase_sow_req()
     sow_prov_p7p5zk, can_sow_p5zk = f_sow_prov()
@@ -1562,7 +1541,6 @@ def f1_crop_params(params,r_vals):
     f_deepflow(r_vals)
 
     ##create params
-    params['grain_pool_proportions'] = propn.to_dict()
     params['grain_price'] = grain_price.to_dict()
     params['grain_wc'] = grain_wc.to_dict()
     params['phase_sow_req'] = phasesow_req.to_dict()

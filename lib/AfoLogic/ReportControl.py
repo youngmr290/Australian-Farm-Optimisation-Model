@@ -138,12 +138,18 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         dams_cols = f_update_default_controls(user_controls, 'feed_total', 'dams_cols', []) #birth opp
         offs_cols = f_update_default_controls(user_controls, 'feed_total', 'offs_cols', []) #shear opp
         reports["feed_total"] = rfun.f_feed_budget(lp_vars, r_vals, option=option, nv_option=nv_option, dams_cols=dams_cols, offs_cols=offs_cols, residue_cols=residue_cols)
+    if report_run.loc['run_dmi', 'Run']:
+        option = f_update_default_controls(user_controls, 'dmi', 'option', 0)  #0 total by source, 1 q/s/z/p6 by source, 2 p6 by source
+        reports["dmi"] = rfun.f_dmi_summary(lp_vars, r_vals, option=option)
     if report_run.loc['run_feedbudget', 'Run']:
         reports["grazing"] = rfun.f_grazing_summary(lp_vars, r_vals)
     if report_run.loc['run_numbers_summary', 'Run']:
-        ewe_numbers_summary, wethers_n_crossys_numbers_summary = rfun.f_stock_numbers_summary(r_vals)
+        ewe_numbers_summary, wethers_n_crossys_numbers_summary, wethers_n_crossys_weight_summary = rfun.f_stock_numbers_summary(r_vals)
         reports["ewe_numbers_summary"] = ewe_numbers_summary
         reports["wethers_n_crossys_numbers_summary"] = wethers_n_crossys_numbers_summary
+        reports["wethers_n_crossys_weight_summary"] = wethers_n_crossys_weight_summary
+    if report_run.loc['run_sheep_summary', 'Run']:
+        reports["sheep_summary"] = rfun.f_sheep_summary(lp_vars, r_vals)
     if report_run.loc['run_emissions', 'Run']:
         option = f_update_default_controls(user_controls, 'emissions', 'option', 1)
         reports["emissions"] = rfun.f_emission_summary(lp_vars, r_vals, option)
@@ -305,7 +311,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         arith = f_update_default_controls(user_controls, 'salevalue_prog', 'arith', 1)
         index = f_update_default_controls(user_controls, 'salevalue_prog', 'index', [6]) #w
         cols = f_update_default_controls(user_controls, 'salevalue_prog', 'cols', [0, 11, 5])    #cashflow period, g2, t
-        axis_slice = f_update_default_controls(user_controls, 'salevalue_prog', 'axis_slice', {})
+        axis_slice = f_update_default_controls(user_controls, 'salevalue_prog', 'axis_slice', {5:[0,1,1]}) #only sale suckers
         reports["salevalue_prog"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
                                                                  na_weights=na_weights, den_weights=den_weights, na_denweights=na_denweights,
                                                                  keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
@@ -471,6 +477,18 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         axis_slice = f_update_default_controls(user_controls, 'fat_dams', 'axis_slice', {})
         reports["fat_dams"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+    if report_run.loc['run_fatper_dams', 'Run']:
+        type = 'stock'
+        prod = fun.f_divide(r_vals['stock']['fat_k2tva1nwziyg1'], r_vals['stock']['ebw_k2tva1nwziyg1']) * 100
+        na_prod = [0,1] #q,s
+        weights = 'dams_numbers_qsk2tvanwziy1g1'
+        keys = 'dams_keys_qsk2tvanwziy1g1'
+        arith = f_update_default_controls(user_controls, 'fatper_dams', 'arith', 1)
+        index = f_update_default_controls(user_controls, 'fatper_dams', 'index', [4])      #DVP
+        cols = f_update_default_controls(user_controls, 'fatper_dams', 'cols', [2]) #k2
+        axis_slice = f_update_default_controls(user_controls, 'fatper_dams', 'axis_slice', {})
+        reports["fatper_dams"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+                               keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_fat_pdams', 'Run']:
         ##Average dam fat mass with p, e & b axis. fat is adjusted for animals that are sold but not adjusted by mortality (Ie if the light ones all die then the weighting of fat by p should change)
         ## because it adds an extra level of complexity for minimal gain (to include mort both the numerator and denominator need to be adjusted).
@@ -490,6 +508,27 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         cols = f_update_default_controls(user_controls, 'fat_pdams', 'cols', []) #b1
         axis_slice = f_update_default_controls(user_controls, 'fat_pdams', 'axis_slice', {})
         reports['fat_pdams'] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights
+                                 , na_weights=na_weights, prod_weights=prod_weights, na_prodweights=na_prodweights
+                                 , den_weights=den_weights, na_denweights=na_denweights, keys=keys, arith=arith
+                                 , index=index, cols=cols, axis_slice=axis_slice)
+    if report_run.loc['run_fatper_pdams', 'Run']:
+        ##Average dam fat percentage with p, e & b axis. Calculate the percentage for each animal slice before weighting.
+        type = 'stock'
+        prod = fun.f_divide(r_vals['stock']['fat_dams_k2Tvpa1e1b1nw8ziyg1'],
+                            r_vals['stock']['ebw_dams_k2Tvpa1e1b1nw8ziyg1']) * 100
+        na_prod = [0,1] #q,s
+        prod_weights = 'pe1b1_numbers_weights_k2tvpa1e1b1nw8ziyg1'
+        na_prodweights = [0,1] #q,s
+        weights = 'dams_numbers_qsk2tvanwziy1g1'
+        na_weights = [5, 7, 8]
+        den_weights = 'pe1b1_numbers_weights_k2tvpa1e1b1nw8ziyg1'
+        na_denweights = [0,1] #q,s
+        keys = 'dams_keys_qsk2tvpaebnwziy1g1'
+        arith = f_update_default_controls(user_controls, 'fatper_pdams', 'arith', 1)
+        index = f_update_default_controls(user_controls, 'fatper_pdams', 'index', [5])      #p
+        cols = f_update_default_controls(user_controls, 'fatper_pdams', 'cols', [])
+        axis_slice = f_update_default_controls(user_controls, 'fatper_pdams', 'axis_slice', {})
+        reports['fatper_pdams'] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights
                                  , na_weights=na_weights, prod_weights=prod_weights, na_prodweights=na_prodweights
                                  , den_weights=den_weights, na_denweights=na_denweights, keys=keys, arith=arith
                                  , index=index, cols=cols, axis_slice=axis_slice)
@@ -826,6 +865,45 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         reports["ebw_pyatf"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, prod_weights=prod_weights, na_prodweights=na_prodweights
                                  , weights=weights, na_weights=na_weights, den_weights=den_weights, na_denweights=na_denweights, keys=keys
                                  , arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+    if report_run.loc['run_fat_pyatf', 'Run']:
+        ##Average start-of-period YATF fat mass with p, e & b axis.
+        type = 'stock'
+        prod = 'fat_yatf_k2Tvpa1e1b1nw8zixyg1'
+        na_prod = [0,1] #q,s
+        prod_weights = 'pe1b1_nyatf_numbers_weights_k2tvpa1e1b1nw8zixyg1'
+        na_prodweights = [0,1] #q,s
+        weights = 'dams_numbers_qsk2tvanwziy1g1'
+        na_weights = [5, 7, 8, 13]                  #p, e1, b1, x
+        den_weights = 'pe1b1_nyatf_numbers_weights_k2tvpa1e1b1nw8zixyg1'
+        na_denweights = [0,1] #q,s
+        keys = 'yatf_keys_qsk2tvpaebnwzixy1g1'
+        arith = f_update_default_controls(user_controls, 'fat_pyatf', 'arith', 1)
+        index = f_update_default_controls(user_controls, 'fat_pyatf', 'index', [5])      #p
+        cols = f_update_default_controls(user_controls, 'fat_pyatf', 'cols', [2,15, 10, 13])  #k2, g2, w8, x
+        axis_slice = f_update_default_controls(user_controls, 'fat_pyatf', 'axis_slice', {8: [2,None,1]}) #b with yatf
+        reports["fat_pyatf"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, prod_weights=prod_weights, na_prodweights=na_prodweights
+                                 , weights=weights, na_weights=na_weights, den_weights=den_weights, na_denweights=na_denweights, keys=keys
+                                 , arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+    if report_run.loc['run_fatper_pyatf', 'Run']:
+        ##Average start-of-period YATF fat percentage with p, e & b axis. Calculate the percentage before weighting.
+        type = 'stock'
+        prod = fun.f_divide(r_vals['stock']['fat_yatf_k2Tvpa1e1b1nw8zixyg1'],
+                            r_vals['stock']['ebw_yatf_k2Tvpa1e1b1nw8zixyg1']) * 100
+        na_prod = [0,1] #q,s
+        prod_weights = 'pe1b1_nyatf_numbers_weights_k2tvpa1e1b1nw8zixyg1'
+        na_prodweights = [0,1] #q,s
+        weights = 'dams_numbers_qsk2tvanwziy1g1'
+        na_weights = [5, 7, 8, 13]                  #p, e1, b1, x
+        den_weights = 'pe1b1_nyatf_numbers_weights_k2tvpa1e1b1nw8zixyg1'
+        na_denweights = [0,1] #q,s
+        keys = 'yatf_keys_qsk2tvpaebnwzixy1g1'
+        arith = f_update_default_controls(user_controls, 'fatper_pyatf', 'arith', 1)
+        index = f_update_default_controls(user_controls, 'fatper_pyatf', 'index', [5])      #p
+        cols = f_update_default_controls(user_controls, 'fatper_pyatf', 'cols', [2,15, 10, 13])  #k2, g2, w8, x
+        axis_slice = f_update_default_controls(user_controls, 'fatper_pyatf', 'axis_slice', {8: [2,None,1]}) #b with yatf
+        reports["fatper_pyatf"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, prod_weights=prod_weights, na_prodweights=na_prodweights
+                                 , weights=weights, na_weights=na_weights, den_weights=den_weights, na_denweights=na_denweights, keys=keys
+                                 , arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_ebw_cut_yatf', 'Run']:
         ##ebw for a select number of p periods
         type = 'stock'
@@ -901,6 +979,18 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         axis_slice = f_update_default_controls(user_controls, 'ebw_offs', 'axis_slice', {})
         reports["ebw_offs"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+    if report_run.loc['run_fatper_offs', 'Run']:
+        type = 'stock'
+        prod = fun.f_divide(r_vals['stock']['fat_k3k5tvnwziaxyg3'], r_vals['stock']['ebw_k3k5tvnwziaxyg3']) * 100
+        na_prod = [0,1] #q,s
+        weights = 'offs_numbers_qsk3k5tvnwziaxyg3'
+        keys = 'offs_keys_qsk3k5tvnwziaxyg3'
+        arith = f_update_default_controls(user_controls, 'fatper_offs', 'arith', 1)
+        index = f_update_default_controls(user_controls, 'fatper_offs', 'index', [5])      #DVP
+        cols = f_update_default_controls(user_controls, 'fatper_offs', 'cols', [13, 2, 3, 4])  #g3, dam age, BTRT, t
+        axis_slice = f_update_default_controls(user_controls, 'fatper_offs', 'axis_slice', {})
+        reports["fatper_offs"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+                               keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_ebw_poffs', 'Run']:
         ##Average offs ebw with p, e & b axis. ebw is adjusted for animals that are sold but not adjusted by mortality
         ## because it adds an extra level of complexity for minimal gain (to include mort both the numerator and denominator need to be adjusted).
@@ -955,6 +1045,70 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         reports["wbe_poffs"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, prod_weights=prod_weights, na_prodweights=na_prodweights
                                  , weights=weights, na_weights=na_weights, den_weights=den_weights, na_denweights=na_denweights
                                  , keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+    if report_run.loc['run_fat_poffs', 'Run']:
+        ##Average offs fat with p, e & b axis. fat is adjusted for animals that are sold but not adjusted by mortality
+        ## because it adds an extra level of complexity for minimal gain (to include mort both the numerator and denominator need to be adjusted).
+        ##Denom (numbers) also needs to be weighted because of the new axis (p,e&b) being added and then summed in the weighted average.
+        type = 'stock'
+        prod = 'fat_offs_k3k5Tvpnw8zida0e0b0xyg3'
+        na_prod = [0,1] #q,s
+        prod_weights = 'pde0b0_numbers_weights_k3k5tvpnw8zida0e0b0xyg3' #weight prod for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off-hand)
+        na_prodweights = [0,1] #q,s
+        weights = 'offs_numbers_qsk3k5tvnwziaxyg3'
+        na_weights = [6, 11, 13, 14]
+        den_weights = 'pde0b0_numbers_weights_k3k5tvpnw8zida0e0b0xyg3' #weight numbers for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off-hand)
+        na_denweights = [0,1] #q,s
+        keys = 'offs_keys_qsk3k5tvpnwzidaebxyg3'
+        arith = f_update_default_controls(user_controls, 'fat_poffs', 'arith', 1)
+        index = f_update_default_controls(user_controls, 'fat_poffs', 'index', [6])  #p
+        cols = f_update_default_controls(user_controls, 'fat_poffs', 'cols', [])
+        axis_slice = f_update_default_controls(user_controls, 'fat_poffs', 'axis_slice', {})
+        reports["fat_poffs"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, prod_weights=prod_weights, na_prodweights=na_prodweights
+                                 , weights=weights, na_weights=na_weights, den_weights=den_weights, na_denweights=na_denweights
+                                 , keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+    if report_run.loc['run_fatper_poffs', 'Run']:
+        ##Average offspring fat percentage with p, e & b axis. Calculate the percentage for each animal slice before weighting.
+        type = 'stock'
+        prod = fun.f_divide(r_vals['stock']['fat_offs_k3k5Tvpnw8zida0e0b0xyg3'],
+                            r_vals['stock']['ebw_offs_k3k5Tvpnw8zida0e0b0xyg3']) * 100
+        na_prod = [0,1] #q,s
+        prod_weights = 'pde0b0_numbers_weights_k3k5tvpnw8zida0e0b0xyg3'
+        na_prodweights = [0,1] #q,s
+        weights = 'offs_numbers_qsk3k5tvnwziaxyg3'
+        na_weights = [6, 11, 13, 14]
+        den_weights = 'pde0b0_numbers_weights_k3k5tvpnw8zida0e0b0xyg3'
+        na_denweights = [0,1] #q,s
+        keys = 'offs_keys_qsk3k5tvpnwzidaebxyg3'
+        arith = f_update_default_controls(user_controls, 'fatper_poffs', 'arith', 1)
+        index = f_update_default_controls(user_controls, 'fatper_poffs', 'index', [6])  #p
+        cols = f_update_default_controls(user_controls, 'fatper_poffs', 'cols', [])
+        axis_slice = f_update_default_controls(user_controls, 'fatper_poffs', 'axis_slice', {})
+        reports["fatper_poffs"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, prod_weights=prod_weights, na_prodweights=na_prodweights
+                                 , weights=weights, na_weights=na_weights, den_weights=den_weights, na_denweights=na_denweights
+                                 , keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+
+    if report_run.loc['run_lean_poffs', 'Run']:
+        ##Average offs lean with p, e & b axis. lean is adjusted for animals that are sold but not adjusted by mortality
+        ## because it adds an extra level of complexity for minimal gain (to include mort both the numerator and denominator need to be adjusted).
+        ##Denom (numbers) also needs to be weighted because of the new axis (p,e&b) being added and then summed in the weighted average.
+        type = 'stock'
+        prod = 'lean_offs_k3k5Tvpnw8zida0e0b0xyg3'
+        na_prod = [0,1] #q,s
+        prod_weights = 'pde0b0_numbers_weights_k3k5tvpnw8zida0e0b0xyg3' #weight prod for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off-hand)
+        na_prodweights = [0,1] #q,s
+        weights = 'offs_numbers_qsk3k5tvnwziaxyg3'
+        na_weights = [6, 11, 13, 14]
+        den_weights = 'pde0b0_numbers_weights_k3k5tvpnw8zida0e0b0xyg3' #weight numbers for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off-hand)
+        na_denweights = [0,1] #q,s
+        keys = 'offs_keys_qsk3k5tvpnwzidaebxyg3'
+        arith = f_update_default_controls(user_controls, 'lean_poffs', 'arith', 1)
+        index = f_update_default_controls(user_controls, 'lean_poffs', 'index', [6])  #p
+        cols = f_update_default_controls(user_controls, 'lean_poffs', 'cols', [])
+        axis_slice = f_update_default_controls(user_controls, 'lean_poffs', 'axis_slice', {})
+        reports["lean_poffs"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, prod_weights=prod_weights, na_prodweights=na_prodweights
+                                 , weights=weights, na_weights=na_weights, den_weights=den_weights, na_denweights=na_denweights
+                                 , keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+
     if report_run.loc['run_cs_poffs', 'Run']:
         ##Average offs cs with p, e & b axis. 
         ##Denom (numbers) also needs to be weighted because of the new axis (p,e&b) being added and then summed in the weighted average.
@@ -1389,7 +1543,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_supcon', 'Run']:
         #returns consumption in each FP
-        option = f_update_default_controls(user_controls, 'supcon', 'option', 1)
+        option = f_update_default_controls(user_controls, 'supcon', 'option', 6)
         reports["supcon"] = rfun.f_grain_sup_summary(lp_vars, r_vals, option=option)
 
     if report_run.loc['run_supdsecon', 'Run']:

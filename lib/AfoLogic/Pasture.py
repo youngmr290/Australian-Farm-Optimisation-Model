@@ -499,15 +499,22 @@ def f_pasture(params, r_vals, nv):
     elif uinp.sheep['i_eqn_used_g1_q1p7'][12, 0] == 1:  #Baxter and Claperton
         grn_md_grnha_qgop6lzt = fsfun.f1_dmd_to_md(dmd_diet_grnha_qgop6lzt)
         stock_ch4_grnpas_qgop6lzt = efun.f_stock_ch4_feed_bc(cons_grnha_t_qgop6lzt*1000, grn_md_grnha_qgop6lzt)
+    stock_ch4_grnpas_qgop6lzt, methane_me_saved_grnpas_qgop6lzt = efun.f_methane_reduction(
+        stock_ch4_grnpas_qgop6lzt, sen.sam['methane_yield'], sen.sav['methane_capture'])
+    mask_greenfeed_exists_qgop6lzt = mask_greenfeed_exists_p6zt[na, na, na, :, na, :, :]
+    stock_ch4_grnpas_qgop6lzt = stock_ch4_grnpas_qgop6lzt * mask_greenfeed_exists_qgop6lzt
+    methane_me_saved_grnpas_qgop6lzt = methane_me_saved_grnpas_qgop6lzt * mask_greenfeed_exists_qgop6lzt
 
     ##livestock nitrous oxide emissions linked to the consumption of green pasture - note that the equation system used is the one selected for dams in p1
     if uinp.sheep['i_eqn_used_g1_q1p7'][13, 0] == 0:  # National Greenhouse Gas Inventory Report
         stock_n2o_grnpas_qgop6lzt = efun.f_stock_n2o_feed_nir(cons_grnha_t_qgop6lzt*1000, dmd_diet_grnha_qgop6lzt, i_grn_cp_p6zt[:,na,:,:])
+    stock_n2o_grnpas_qgop6lzt = stock_n2o_grnpas_qgop6lzt * mask_greenfeed_exists_qgop6lzt
 
     ##residue nitrous oxide emissions - two separate calls because consumption doesnt reduce below ground biomass emissions (it does reduce future growth but doesnt the existing below ground biomass does not change)
     grnpas_n2o_residue_growth_qgop6lzt = efun.f_pas_residue_n2o_nir(pgr_grnha_qgop6lzt, RBG_t, NCAG_t, NCBG_t)
     grnpas_n2o_residue_cons_qgop6lzt = efun.f_pas_residue_n2o_nir(- cons_grnha_t_qgop6lzt*1000, RBG_t, NCAG_t, NCBG_t)
     grnpas_n2o_residue_qgop6lzt = grnpas_n2o_residue_growth_qgop6lzt + grnpas_n2o_residue_cons_qgop6lzt
+    grnpas_n2o_residue_qgop6lzt = grnpas_n2o_residue_qgop6lzt * mask_greenfeed_exists_qgop6lzt
 
     ##residue nitrous oxide emissions from consumption of 1t or growth of 1kg of pasture
     ## used for grn germination, dry pas consumption, nap production and consumption
@@ -550,19 +557,26 @@ def f_pasture(params, r_vals, nv):
     elif uinp.sheep['i_eqn_used_g1_q1p7'][12, 0] == 1:  #Baxter and Claperton
         dry_md_dp6zt = fsfun.f1_dmd_to_md(dry_dmd_dp6zt)
         stock_ch4_drypas_dp6zt = efun.f_stock_ch4_feed_bc(1000, dry_md_dp6zt)
+    stock_ch4_drypas_dp6zt, methane_me_saved_drypas_dp6zt = efun.f_methane_reduction(
+        stock_ch4_drypas_dp6zt, sen.sam['methane_yield'], sen.sav['methane_capture'])
+    stock_ch4_drypas_dp6zt = stock_ch4_drypas_dp6zt * mask_dryfeed_exists_p6zt
+    methane_me_saved_drypas_dp6zt = methane_me_saved_drypas_dp6zt * mask_dryfeed_exists_p6zt
 
     ##livestock nitrous oxide emissions linked to the consumption of 1t of dry pasture - note that the equation system used is the one selected for dams in p1
     if uinp.sheep['i_eqn_used_g1_q1p7'][13, 0] == 0:  # National Greenhouse Gas Inventory Report
         stock_n2o_drypas_dp6zt = efun.f_stock_n2o_feed_nir(1000, dry_dmd_dp6zt, i_dry_cp_p6zt)
+    stock_n2o_drypas_dp6zt = stock_n2o_drypas_dp6zt * mask_dryfeed_exists_p6zt
 
 
     ######
     #poc #
     ######
+    mask_poc_exists_p6zt = np.logical_and(i_poc_foo_p6zt > 0, i_poc_dmd_p6zt > 0)
+    mask_poc_exists_p6z = mask_poc_exists_p6zt[..., 0]
     ##call poc function - info about poc can be found in function doc string.
     poc_con_p6lz, poc_md_fp6z, poc_vol_fp6z = pfun.f_poc(cu3, cu4, i_poc_intake_daily_p6lzt, i_poc_dmd_p6zt, i_poc_foo_p6zt
                                                          , i_legume_zt, i_hr_scalar_zt, i_pasture_stage_p6zt
-                                                         , nv_is_not_confinement_f, me_threshold_fp6zt, i_me_eff_gainlose_p6zt)
+                                                         , nv_is_not_confinement_f, me_threshold_fp6zt, i_me_eff_gainlose_p6zt, mask_poc_exists_p6zt)
     poc_vol_fp6z = poc_vol_fp6z/ (1 + sen.sap['pi'])
 
     ##livestock methane emissions linked to the consumption of 1t of poc - note that the equation system used is the one selected for dams in p1
@@ -571,10 +585,15 @@ def f_pasture(params, r_vals, nv):
     elif uinp.sheep['i_eqn_used_g1_q1p7'][12, 0] == 1:  #Baxter and Claperton
         poc_md_p6z = fsfun.f1_dmd_to_md(i_poc_dmd_p6zt[..., 0])
         stock_ch4_poc_p6z = efun.f_stock_ch4_feed_bc(1000, poc_md_p6z)
+    stock_ch4_poc_p6z, methane_me_saved_poc_p6z = efun.f_methane_reduction(
+        stock_ch4_poc_p6z, sen.sam['methane_yield'], sen.sav['methane_capture'])
+    stock_ch4_poc_p6z = stock_ch4_poc_p6z * mask_poc_exists_p6z
+    methane_me_saved_poc_p6z = methane_me_saved_poc_p6z * mask_poc_exists_p6z
 
     ##livestock nitrous oxide emissions linked to the consumption of 1t of poc - note that the equation system used is the one selected for dams in p1
     if uinp.sheep['i_eqn_used_g1_q1p7'][13, 0] == 0:  # National Greenhouse Gas Inventory Report
         stock_n2o_poc_p6z = efun.f_stock_n2o_feed_nir(1000, i_poc_dmd_p6zt[:, :, 0], i_grn_cp_p6zt[:, :, 0]) #slice t for annual
+    stock_n2o_poc_p6z = stock_n2o_poc_p6z * mask_poc_exists_p6z
 
 
     ######
@@ -636,10 +655,13 @@ def f_pasture(params, r_vals, nv):
     senesce_grnha_qdgop6lzt = senesce_grnha_qdgop6lzt * mask_fp_z8var_p6lzt
     poc_vol_fp6z = poc_vol_fp6z * mask_fp_z8var_p6z
     stock_ch4_grnpas_qgop6lzt = stock_ch4_grnpas_qgop6lzt * mask_fp_z8var_p6lzt
+    methane_me_saved_grnpas_qgop6lzt = methane_me_saved_grnpas_qgop6lzt * mask_fp_z8var_p6lzt
     stock_n2o_grnpas_qgop6lzt = stock_n2o_grnpas_qgop6lzt * mask_fp_z8var_p6lzt
     stock_ch4_drypas_dp6zt = stock_ch4_drypas_dp6zt * mask_fp_z8var_p6zt
+    methane_me_saved_drypas_dp6zt = methane_me_saved_drypas_dp6zt * mask_fp_z8var_p6zt
     stock_n2o_drypas_dp6zt = stock_n2o_drypas_dp6zt * mask_fp_z8var_p6zt
     stock_ch4_poc_p6z = stock_ch4_poc_p6z * mask_fp_z8var_p6z
+    methane_me_saved_poc_p6z = methane_me_saved_poc_p6z * mask_fp_z8var_p6z
     stock_n2o_poc_p6z = stock_n2o_poc_p6z * mask_fp_z8var_p6z
     grnpas_n2o_residue_qgop6lzt = grnpas_n2o_residue_qgop6lzt * mask_fp_z8var_p6lzt
     n2o_pas_residue_v_phase_growth_qp6lrzt = n2o_pas_residue_v_phase_growth_qp6lrzt * mask_fp_z8var_p6lrzt
@@ -715,8 +737,11 @@ def f_pasture(params, r_vals, nv):
     params['p_foo_end_grnha_qgop6lzt'] = fun.f1_make_pyomo_dict(foo_end_grnha_qgop6lzt, arrays_qgop6lzt)
 
     params['p_me_cons_grnha_qfgop6lzt'] = fun.f1_make_pyomo_dict(me_cons_grnha_qfgop6lzt, arrays_qfgop6lzt)
+    params['p_methane_me_saved_grnpas_qgop6lzt'] = fun.f1_make_pyomo_dict(methane_me_saved_grnpas_qgop6lzt, arrays_qgop6lzt)
+    params['p_cons_grnha_t_qgop6lzt'] = fun.f1_make_pyomo_dict(cons_grnha_t_qgop6lzt, arrays_qgop6lzt)
 
     params['p_dry_mecons_t_fdp6zt'] = fun.f1_make_pyomo_dict(dry_mecons_t_fdp6zt, arrays_fdp6zt)
+    params['p_methane_me_saved_drypas_dp6zt'] = fun.f1_make_pyomo_dict(methane_me_saved_drypas_dp6zt, arrays_dp6zt)
 
     params['p_volume_grnha_qfgop6lzt'] = fun.f1_make_pyomo_dict(volume_grnha_qfgop6lzt, arrays_qfgop6lzt)
 
@@ -729,6 +754,7 @@ def f_pasture(params, r_vals, nv):
     params['p_poc_con_p6lz'] = fun.f1_make_pyomo_dict(poc_con_p6lz, arrays_p6lz)
 
     params['p_poc_md_fp6z'] = fun.f1_make_pyomo_dict(poc_md_fp6z, arrays_fp6z)
+    params['p_methane_me_saved_poc_p6z'] = fun.f1_make_pyomo_dict(methane_me_saved_poc_p6z, arrays_p6z8)
 
     params['p_co2e_grnpas_qgop6lzt'] = fun.f1_make_pyomo_dict(co2e_grnpas_qgop6lzt, arrays_qgop6lzt)
     params['p_co2e_drypas_cons_dp6zt'] = fun.f1_make_pyomo_dict(co2e_drypas_cons_dp6zt, arrays_dp6zt)
@@ -775,10 +801,13 @@ def f_pasture(params, r_vals, nv):
     fun.f1_make_r_val(r_vals,poc_md_fp6z,'poc_md_fp6z',mask_fp_z8var_p6z,z_pos=-1)
     ###emissions
     fun.f1_make_r_val(r_vals,stock_ch4_grnpas_qgop6lzt,'stock_ch4_grnpas_qgop6lzt',mask_fp_z8var_p6lzt,z_pos=-2)
+    fun.f1_make_r_val(r_vals,methane_me_saved_grnpas_qgop6lzt,'methane_me_saved_grnpas_qgop6lzt',mask_fp_z8var_p6lzt,z_pos=-2)
     fun.f1_make_r_val(r_vals,stock_n2o_grnpas_qgop6lzt,'stock_n2o_grnpas_qgop6lzt',mask_fp_z8var_p6lzt,z_pos=-2)
     fun.f1_make_r_val(r_vals,stock_ch4_drypas_dp6zt,'stock_ch4_drypas_dp6zt',mask_fp_z8var_p6zt,z_pos=-2)
+    fun.f1_make_r_val(r_vals,methane_me_saved_drypas_dp6zt,'methane_me_saved_drypas_dp6zt',mask_fp_z8var_p6zt,z_pos=-2)
     fun.f1_make_r_val(r_vals,stock_n2o_drypas_dp6zt,'stock_n2o_drypas_dp6zt',mask_fp_z8var_p6zt,z_pos=-2)
     fun.f1_make_r_val(r_vals,stock_ch4_poc_p6z,'stock_ch4_poc_p6z',mask_fp_z8var_p6z,z_pos=-1)
+    fun.f1_make_r_val(r_vals,methane_me_saved_poc_p6z,'methane_me_saved_poc_p6z',mask_fp_z8var_p6z,z_pos=-1)
     fun.f1_make_r_val(r_vals,stock_n2o_poc_p6z,'stock_n2o_poc_p6z',mask_fp_z8var_p6z,z_pos=-1)
     fun.f1_make_r_val(r_vals,pas_n2o_residue_cons_t,'pas_n2o_residue_cons_t')
     fun.f1_make_r_val(r_vals,grnpas_n2o_residue_qgop6lzt,'grnpas_n2o_residue_qgop6lzt',mask_fp_z8var_p6lzt,z_pos=-2)

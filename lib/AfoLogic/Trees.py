@@ -155,7 +155,7 @@ def f_adjacent_land_production_scalar():
     protected_side_area_l = (belt_length_l * number_of_belts * distance_between_belts * propn_trees_adjacent) / 10000 # Convert m² to hectares
 
     # Calculate the fraction of the available LMU area (excluding tree area) that is on the protected side
-    propn_lmu_protected_l = np.minimum(1, protected_side_area_l  / lmu_area_without_trees_l) # Ensure the fraction is not greater than 1 (cant shelter more than 100% of lmu)   
+    propn_lmu_protected_l = protected_side_area_l  / lmu_area_without_trees_l # If protected propn is greater than 1 that esentialy means there should be a cost on other LMU. But we just allocate a larger cost to the current LMU.
 
     # Assuming symmetry, the fraction on the non-protected side of trees is the same
     propn_lmu_nonprotected_l = propn_lmu_protected_l
@@ -404,7 +404,7 @@ def f_sequestration(r_vals, mask_season_p7z):
     
     ##calc average sequestration per year for GHG report
     annual_sequestration_l = np.mean(annual_sequestration_yl, axis=0)
-    co2e_fuel = np.mean(co2e_fuel_y[1:], axis=0) #dont include slice 0 in the average since slice 0 is not a real year. It just exists to account for initial costs etc.
+    co2e_fuel = np.mean(co2e_fuel_y[1:], axis=0) #don't include slice 0 in the average since slice 0 is not a real year. It just exists to account for initial costs etc.
     co2e_sold_l = (annual_sequestration_l - co2e_fuel) * include_carbon_credit
     
     #sequestration income and costs per ha

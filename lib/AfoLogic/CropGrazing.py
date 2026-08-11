@@ -23,6 +23,7 @@ from . import FeedsupplyFunctions as fsfun
 from . import Functions as fun
 from . import SeasonalFunctions as zfun
 from . import EmissionFunctions as efun
+from . import Sensitivity as sen
 
 na = np.newaxis
 
@@ -361,6 +362,8 @@ def f_cropgraze_emissions(r_vals):
     elif uinp.sheep['i_eqn_used_g1_q1p7'][12, 0] == 1:  #Baxter and Claperton
         crop_md_kp6z = fsfun.f1_dmd_to_md(crop_dmd_kp6z)
         stock_ch4_cropgraze_kp6z = efun.f_stock_ch4_feed_bc(1000, crop_md_kp6z)
+    stock_ch4_cropgraze_kp6z, methane_me_saved_cropgraze_kp6z = efun.f_methane_reduction(
+        stock_ch4_cropgraze_kp6z, sen.sam['methane_yield'], sen.sav['methane_capture'])
 
     ##livestock nitrous oxide emissions linked to the consumption of 1t of saltbush - note that the equation system used is the one selected for dams in p1
     if uinp.sheep['i_eqn_used_g1_q1p7'][13, 0] == 0:  # National Greenhouse Gas Inventory Report
@@ -371,13 +374,15 @@ def f_cropgraze_emissions(r_vals):
     ##apply season mask and grazing exists mask
     stock_n2o_cropgraze_kp6z = stock_n2o_cropgraze_kp6z * mask_fp_z8var_p6z * grazing_exists_kp6z
     stock_ch4_cropgraze_kp6z = stock_ch4_cropgraze_kp6z * mask_fp_z8var_p6z * grazing_exists_kp6z
+    methane_me_saved_cropgraze_kp6z = methane_me_saved_cropgraze_kp6z * mask_fp_z8var_p6z * grazing_exists_kp6z
     co2e_cropgraze_kp6z = co2e_cropgraze_kp6z * mask_fp_z8var_p6z * grazing_exists_kp6z
 
     ##store report vals
     fun.f1_make_r_val(r_vals,stock_n2o_cropgraze_kp6z,'stock_n2o_cropgraze_kp6z',mask_fp_z8var_p6z,z_pos=-1)
     fun.f1_make_r_val(r_vals,stock_ch4_cropgraze_kp6z,'stock_ch4_cropgraze_kp6z',mask_fp_z8var_p6z,z_pos=-1)
+    fun.f1_make_r_val(r_vals,methane_me_saved_cropgraze_kp6z,'methane_me_saved_cropgraze_kp6z',mask_fp_z8var_p6z,z_pos=-1)
 
-    return co2e_cropgraze_kp6z
+    return co2e_cropgraze_kp6z, methane_me_saved_cropgraze_kp6z
 
 
 def f_cropgraze_biomass_penalty(r_vals):
@@ -415,7 +420,7 @@ def f1_cropgraze_params(params, r_vals, nv):
     crop_DM_provided_kp6p5z8lz9, crop_DM_required_kp6p5z, transfer_exists_p6p5z, propn_area_grazed_kl = f_cropgraze_DM(r_vals=r_vals)
     biomass_reduction_propn_kp6z = f_cropgraze_biomass_penalty(r_vals)
     crop_md_fkp6p5zl, crop_vol_fkp6p5zl = crop_md_vol(nv, r_vals)
-    co2e_cropgraze_kp6z = f_cropgraze_emissions(r_vals)
+    co2e_cropgraze_kp6z, methane_me_saved_cropgraze_kp6z = f_cropgraze_emissions(r_vals)
     # DM_reduction_kp6p5zl = f_DM_reduction_seeding_time()
 
     ##keys
@@ -441,6 +446,7 @@ def f1_cropgraze_params(params, r_vals, nv):
     params['crop_md_fkp6p5zl'] = fun.f1_make_pyomo_dict(crop_md_fkp6p5zl, arrays_fkp6p5zl)
     params['crop_vol_kp6p5zl'] = fun.f1_make_pyomo_dict(crop_vol_fkp6p5zl, arrays_fkp6p5zl)
     params['co2e_cropgraze_kp6z'] = fun.f1_make_pyomo_dict(co2e_cropgraze_kp6z, arrays_kp6z)
+    params['methane_me_saved_cropgraze_kp6z'] = fun.f1_make_pyomo_dict(methane_me_saved_cropgraze_kp6z, arrays_kp6z)
 
     ##--- build active (k,p6,p5,z,l) index for crop grazing ---
     common = f1_cropgraze_common_dates_and_masks()

@@ -100,7 +100,7 @@ def f_season_precalcs(params, r_vals):
     p_season_prob_qsz = season_seq_prob_qsz / len_q # Divide by len_q so that the objective value is $/yr rather than $/sequence
 
     ##alter the probability to represent a 10yr planning horizon and add discount it to count for time value of money
-    ## dont need to adjust season_seq_prob_qszp7 because it doesnt get divided by len_q (it only gets used in bnds)
+    ## don't need to adjust season_seq_prob_qszp7 because it doesnt get divided by len_q (it only gets used in bnds)
     if sinp.structuralsa['model_is_MP'] or sinp.structuralsa['i_inc_discount_factor']:
         ###if len_q is less than the length of the planning horizon then add the probabilities to the final year
         len_planning_horizon = sinp.structuralsa['i_len_planning_horizon']

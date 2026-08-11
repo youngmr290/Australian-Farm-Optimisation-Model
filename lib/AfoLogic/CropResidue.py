@@ -154,12 +154,14 @@ def crop_residue_all(params, r_vals, nv, cat_propn_s1_ks2):
     period_is_harvest_p6zk = np.logical_and(fp_end_p6z[...,na] >= harv_date_zk, fp_start_p6z[...,na] <= harv_date_zk)
     idx_fp_start_stub_zk = fun.searchsort_multiple_dim(feed_period_dates_p6z, harv_date_zk, 1, 0, side='right') - 1
 
-    ##stubble is destocked X days before early break - you dont know the type of season in advanced therefore must destock all z before the early break just in case
+    ##stubble is destocked X days before early break - you don't know the type of season in advanced therefore must destock all z before the early break just in case
     season_break_z = zfun.f_seasonal_inp(pinp.general['i_break'], numpy=True)
     destock_days_prior_brk = pinp.stubble['i_destock_stub']
     date_destocked = np.min(season_break_z) + 364 - destock_days_prior_brk #incremented to the next yr.
-    in_period_p6z = (fp_start_p6z <= date_destocked) & (date_destocked < fp_end_p6z)
-    idx_fp_end_stub_z = np.argmax(in_period_p6z, axis=0).astype(int)
+    # Feed periods are represented as a single 364-day cycle, so map next year's destock date
+    # back onto the period dates before locating the feed period and calculating partial access.
+    date_destocked_fp_z = feed_period_dates_p6z[0] + np.mod(date_destocked - feed_period_dates_p6z[0], 364)
+    idx_fp_end_stub_z = fun.searchsort_multiple_dim(feed_period_dates_p6z, date_destocked_fp_z, 1, 0, side='right') - 1
 
     mask_stubble_exists_p6zk = np.logical_or(np.logical_and(index_p6[:,na,na]>=idx_fp_start_stub_zk, index_p6[:,na,na]<=idx_fp_end_stub_z[:,na]),
                                              np.logical_and(idx_fp_end_stub_z[:,na] < idx_fp_start_stub_zk,
@@ -238,14 +240,14 @@ def crop_residue_all(params, r_vals, nv, cat_propn_s1_ks2):
     stub_preharvest_block_frac_p6zk[stub_preharvest_block_frac_p6zk>=1] = 0
 
     # --- (2) Post-destock block: once sheep are destocked, remainder of period is not grazeable ---
-    # date_destocked is a scalar (same for all z); numpy broadcasts across (p6,z)
-    stub_postdestock_block_frac_p6z  = np.clip(fun.f_divide(fp_len_p6z - (fp_end_p6z - date_destocked), fp_len_p6z),0, 1)
+    # date_destocked_fp_z is aligned to the feed-period date cycle and broadcasts across p6.
+    stub_postdestock_block_frac_p6z  = np.clip(fun.f_divide(fp_len_p6z - (fp_end_p6z - date_destocked_fp_z), fp_len_p6z),0, 1)
     # Convert from "fraction of period before destock" to "fraction of period after destock (not available for grazing)"
     stub_postdestock_block_frac_p6z = 1 - stub_postdestock_block_frac_p6z
     # if destock after the period ends -> no block
-    stub_postdestock_block_frac_p6z[date_destocked >= fp_end_p6z] = 0
+    stub_postdestock_block_frac_p6z[date_destocked_fp_z >= fp_end_p6z] = 0
     # if destock before the period starts -> no blocked (because stubble doesnt exist.
-    stub_postdestock_block_frac_p6z[date_destocked <= fp_start_p6z] = 0
+    stub_postdestock_block_frac_p6z[date_destocked_fp_z <= fp_start_p6z] = 0
 
     ##combine
     stub_unavailable_frac_p6zk  = stub_postdestock_block_frac_p6z[:,:,na] + stub_preharvest_block_frac_p6zk
@@ -329,6 +331,8 @@ def crop_residue_all(params, r_vals, nv, cat_propn_s1_ks2):
         stock_ch4_stub_p6zks1 = efun.f_stock_ch4_feed_nir(1000, dmd_cat_p6zks1)
     elif uinp.sheep['i_eqn_used_g1_q1p7'][12, 0] == 1:  #Baxter and Claperton
         stock_ch4_stub_p6zks1 = efun.f_stock_ch4_feed_bc(1000, md_p6zks1)
+    stock_ch4_stub_p6zks1, methane_me_saved_stub_p6zks1 = efun.f_methane_reduction(
+        stock_ch4_stub_p6zks1, SA.sam['methane_yield'], SA.sav['methane_capture'])
 
     ##livestock nitrous oxide emissions linked to the consumption of 1t of saltbush - note that the equation system used is the one selected for dams in p1
     if uinp.sheep['i_eqn_used_g1_q1p7'][13, 0] == 0:  # National Greenhouse Gas Inventory Report
@@ -361,6 +365,7 @@ def crop_residue_all(params, r_vals, nv, cat_propn_s1_ks2):
 
     ## Apply existence mask for interpretability
     stock_ch4_stub_p6zks1 *= mask_stubble_exists_p6zk[..., na]
+    methane_me_saved_stub_p6zks1 *= mask_stubble_exists_p6zk[..., na]
     stock_n2o_stub_p6zks1 *= mask_stubble_exists_p6zk[..., na]
     co2e_stub_cons_p6zks1  *= mask_stubble_exists_p6zk[..., na]
     residue_cons_n2o_p6zk  *= mask_stubble_exists_p6zk
@@ -377,6 +382,7 @@ def crop_residue_all(params, r_vals, nv, cat_propn_s1_ks2):
     md_fp6zks1 = md_fp6zks1 * mask_fp_z8var_p6z[...,na,na]
     vol_fp6zks1 = vol_fp6zks1 * mask_fp_z8var_p6z[...,na,na]
     stock_ch4_stub_p6zks1 = stock_ch4_stub_p6zks1 * mask_fp_z8var_p6z[...,na,na]
+    methane_me_saved_stub_p6zks1 = methane_me_saved_stub_p6zks1 * mask_fp_z8var_p6z[...,na,na]
     stock_n2o_stub_p6zks1 = stock_n2o_stub_p6zks1 * mask_fp_z8var_p6z[...,na,na]
     residue_cons_n2o_p6zk = residue_cons_n2o_p6zk * mask_fp_z8var_p6z[...,na]
     residue_cons_ch4_p6zk = residue_cons_ch4_p6zk * mask_fp_z8var_p6z[...,na]
@@ -444,6 +450,7 @@ def crop_residue_all(params, r_vals, nv, cat_propn_s1_ks2):
 
     ##emissions
     params['co2e_stub_cons_p6zks1'] = fun.f1_make_pyomo_dict(co2e_stub_cons_p6zks1, arrays_p6zks1)
+    params['methane_me_saved_stub_p6zks1'] = fun.f1_make_pyomo_dict(methane_me_saved_stub_p6zks1, arrays_p6zks1)
     params['co2e_stub_production_zk'] = fun.f1_make_pyomo_dict(co2e_stub_production_zk, arrays_zk)
 
     ##--- build active index masks for sparse Pyomo sets - more notes in corresponding pyomo module ---
@@ -482,6 +489,7 @@ def crop_residue_all(params, r_vals, nv, cat_propn_s1_ks2):
     ##store report vals
     fun.f1_make_r_val(r_vals,np.moveaxis(np.moveaxis(md_fp6zks1, 0, 2), 0, 1),'md_zp6fks1',mask_fp_z8var_zp6[:,:,na,na,na],z_pos=-5)
     fun.f1_make_r_val(r_vals,np.moveaxis(stock_ch4_stub_p6zks1, 0, 1),'stock_ch4_stub_zp6ks1',mask_fp_z8var_zp6[:,:,na,na],z_pos=-4)
+    fun.f1_make_r_val(r_vals,np.moveaxis(methane_me_saved_stub_p6zks1, 0, 1),'methane_me_saved_stub_zp6ks1',mask_fp_z8var_zp6[:,:,na,na],z_pos=-4)
     fun.f1_make_r_val(r_vals,np.moveaxis(stock_n2o_stub_p6zks1, 0, 1),'stock_n2o_stub_zp6ks1',mask_fp_z8var_zp6[:,:,na,na],z_pos=-4)
     fun.f1_make_r_val(r_vals,biomass2residue_ks2,'biomass2residue_ks2')
     fun.f1_make_r_val(r_vals,residue_harv_n2o_zk,'residue_harv_n2o_zk')

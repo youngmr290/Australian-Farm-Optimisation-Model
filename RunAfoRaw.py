@@ -1,4 +1,5 @@
 import time
+import pandas as pd
 
 #report the clock time that the experiment was started
 print(f'Experiment commenced at: {time.ctime()}')
@@ -68,7 +69,8 @@ for row in dataset:
     run += 1
 
     ##save AFO outputs
-    out.f_save_trial_outputs(exp_data, row, trial_name, model, profit, trial_infeasible, lp_vars, r_vals, pkl_fs_info, d_rot_info)
+    out.f_save_trial_outputs(exp_data, row, trial_name, model, profit, trial_infeasible, lp_vars, r_vals
+                             , pkl_fs_info, d_rot_info)
 
     ##determine expected time to completion - trials left multiplied by average time per trial &time for current loop
     trials_to_go = total_trials - run
@@ -79,8 +81,6 @@ for row in dataset:
         f'{trial_description}, time taken this trial: {time.time() - start_trial_time:.2f}')  # time since start of this trial
     print(
         f'{trial_description}, Expected finish time: \033[1m{time.ctime(finish_time_expected)}\033[0m (at {time.ctime()})')
-
-
 
 
 end = time.time()

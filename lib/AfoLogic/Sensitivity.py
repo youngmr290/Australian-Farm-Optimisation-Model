@@ -132,12 +132,13 @@ def create_sa():
     ##########
     ##SAV
     sav['working_cap_constraint_included'] = '-' #SA to control inclusion of work cap constraint in corepyomo
-    sav['minroe']      = '-'                  #SA to alter the minroe (applied to both steady-state and dsp minroe inputs)
-    sav['capital_limit']      = '-'          #SA to alter the capital limit (amount of money that can be loaned from bank)
-    sav['interest_rate']      = '-'           #SA to alter the credit and debit interest from bank
-    sav['opp_cost_capital']      = '-'        #SA to alter the opportunity cost of capital
-    sav['fixed_dep_rate'] = '-'               #SA to alter the fixed rate of machinery depreciation per year
-    sav['equip_insurance_rate'] = '-'         #SA to alter the insurance cost (% of machine value)
+    sav['minroe']      = '-'                     #SA to alter the minroe (applied to both steady-state and dsp minroe inputs)
+    sav['capital_limit']      = '-'              #SA to alter the capital limit (amount of money that can be loaned from bank)
+    sav['land_asset_value']      = '-'           #SA to alter the value of the land asset when calculating EV of traits.
+    sav['interest_rate']      = '-'              #SA to alter the credit and debit interest from bank
+    sav['opp_cost_capital']      = '-'           #SA to alter the opportunity cost of capital
+    sav['fixed_dep_rate'] = '-'                  #SA to alter the fixed rate of machinery depreciation per year
+    sav['equip_insurance_rate'] = '-'            #SA to alter the insurance cost (% of machine value)
     sav['overheads'] = np.full(len(pinp.general['i_overheads']), '-', dtype=object)  #SA to alter the overhead costs
     ##SAM
     ##SAP
@@ -164,8 +165,6 @@ def create_sa():
     sav['manager_cost'] = '-' #SA value for manager cost per year
     sav['permanent_cost'] = '-' #SA value for permanent cost per year
     sav['casual_cost'] = '-' #SA value for casual cost per hour
-    sav['sale_ffcfw_min'] = np.full(len_s7, '-', dtype=object)        #min weight for sale in grid
-    sav['sale_ffcfw_max'] = np.full(len_s7, '-', dtype=object)        #max weight for sale in grid
     ##SAM
     sam['grainp_k'] = np.ones(len_crop_and_sup_k4, dtype='float64')   # SA multiplier for grain prices for each crop
     sam['q_grain_price_scalar_Qk'] = np.ones((len_Q, len_crop_and_sup_k4), dtype='float64')   # SAM for grain price with q axis
@@ -443,7 +442,7 @@ def create_sa():
     sav['adjp_cfw_initial_w3'] = np.full(sinp.structuralsa['i_adjp_cfw_initial_w3'].shape, '-', dtype=object)    #initial cfw adjustment offs
     sav['adjp_fd_initial_w3'] = np.full(sinp.structuralsa['i_adjp_fd_initial_w3'].shape, '-', dtype=object)      #initial fd adjustment offs
     sav['adjp_fl_initial_w3'] = np.full(sinp.structuralsa['i_adjp_fl_initial_w3'].shape, '-', dtype=object)      #initial fl adjustment offs
-    sav['firstprejoin_averaged'] = True #do the a, e & b axes get averaged at the first prejoining (ewe lambs). If the value is changed to false the mate/not mate decision is made at the previous weaning (then at prejoining nm passes to nm and mated passes to mated).
+    sav['firstprejoin_averaged'] = False #do the a, e & b axes get averaged at the first prejoining (ewe lambs). If the value is False the mate/not mate decision is made at the previous weaning (then at prejoining nm passes to nm and mated passes to mated). This means DSP loses some flexibility (cant feed up animal then not mate). But this is not a huge limitation because mating decision is made over summer when little info about upcoming season is known.
     sav['condense_at_seasonstart'] = '-'  # SA to alter if condensing occurs at season start. Default is False except in the MP model when this can be set to True so that core fvps can be masked out and just the season nodes for fvps.
     sav['user_fvp_date_dams_iu'] = np.full(sinp.structuralsa['i_dams_user_fvp_date_iu'].shape, '-', dtype=object)      #SA to control user fvp dates.
     sav['user_fvp_date_dams_yiu'] = np.full((len_y,)+sinp.structuralsa['i_dams_user_fvp_date_iu'].shape, '-', dtype=object)      #SA to control user fvp dates.
@@ -481,8 +480,15 @@ def create_sa():
     sam['chill_index'] = 1.0                        #intermediate sam on chill index. Impacts lamb survival only, no effect on ME requirements.
     sam['heat_loss'] = 1.0                          #intermediate sam on heat loss - impact on energy requirements (set to 0 in REV analyses)
     sam['emove'] = 1.0                          #intermediate sam on energy expenditure for moving
+    sam['methane_yield'] = 1.0                       #scalar on livestock methane yield. 0.8 means 20% less methane for the same intake
+    sam['rr'] = 1.0                        #scanning percentage (adjust the standard scanning % for f_conception_ltw and within function for f_conception_cs
     sam['rr_og1'] = np.ones(pinp.sheep['i_scan_og1'].shape, dtype='float64')    # reproductive rate by age. Use shape that has og1
     sam['wean_redn_ol0g2'] = np.ones((len_o, len_l0, len_g2), dtype='float64')  #Adjust the number of yatf transferred at weaning - this is a high level sa, it impacts within a calculation not on an input
+    sam['stocki_fixed_h1'] = np.ones(uinp.sheep['i_infrastructure_costfixed_h1'].shape, dtype='float64')  #SA value for fixed costs of stock infrastructure.
+    sam['stocki_variable_h1'] = np.ones(uinp.sheep['i_infrastructure_costvariable_h1'].shape, dtype='float64')  #SA value for variable costs of stock infrastructure.
+    sam['husb_cost_h2'] = np.ones(uinp.sheep['i_husb_operations_contract_cost_h2'].shape, dtype='float64')  #SA value for contract cost of husbandry operations.
+    sam['husb_mustering_h2'] = np.ones(uinp.sheep['i_husb_operations_muster_propn_h2'].shape, dtype='float64')  #SA value for mustering required for husbandry operations.
+    sam['husb_labour_l2h2'] = np.ones(uinp.sheep['i_husb_operations_labourreq_l2h2'].shape, dtype='float64')  #units of the job carried out per husbandry labour hour
     ##SAP
     sap['evg'] = 0.0               #energy content of liveweight gain - this is a high level sa, it impacts within a calculation not on an input. It was only implemented on adults now all animals
     sap['mortalityb'] = 0.0        #Scale the calculated base mortality (for all animals) - this is a high level sa, it impacts within a calculation not on an input
@@ -514,6 +520,9 @@ def create_sa():
     saa['mortalityb'] = 0.0      #Adjust the base mortality - this is a high level sa, it impacts within a calculation not on an input
     saa['feedsupply_adj_dams_ro'] = np.zeros((6, len_o), dtype='float64') #user fs adjuster - used in web app (simplified version of feedsupply_adj_r2p)
     saa['feedsupply_adj_offs_p10'] = np.zeros((3), dtype='float64') #user offs fs adjuster - used in web app (simplified version of feedsupply_adj_r2p)
+    saa['rr'] = 0.0                    #reproductive rate/scanning percentage (adjust the standard scanning % for f_conception_ltw and within function for f_conception_cs
+    saa['ss'] = 0.0                    #staple strength (adjust SS in sgen end of period)
+    saa['gr_depth'] = 0.0         #Change in gr site fat_depth of all sale animals. Note: no energy cost linked to fat depth. Assumption is relocate body fat to the gr site to alter sale value.
     ##SAT
     ##SAR
     sar['feedsupply_r1jp'] = np.zeros(pinp.feedsupply['i_feedsupply_options_r1j2p'].shape, dtype='float64')  #SA value for feedsupply.
@@ -536,31 +545,45 @@ def create_sa():
     sav['cl0_c1c2'] = np.full(uinp.parameters['i_cl0_c2'].shape, '-', dtype=object)  #litter size genotype params for genotypes.
     sav['cu2_c1c2'] = np.full(uinp.parameters['i_cu2_c2'].shape, '-', dtype=object)  #lamb survival params for genotypes.
     sav['cu6_c1c2'] = np.full(uinp.parameters['i_cu6_c2'].shape, '-', dtype=object)  #ewe lamb params for genotypes.
+    sav['methane_capture'] = 0.0       #proportion of avoided methane energy captured by the animal
+    sav['methane_additive_cost'] = 0.0 #cost of methane reducing feed additive ($/kg DMI)
     ##SAM
     sam['ci_c1c2'] = np.ones(uinp.parameters['i_ci_c2'].shape, dtype='float64')  #intake params for genotypes
     sam['cl_c1c2'] = np.ones(uinp.parameters['i_cl_c2'].shape, dtype='float64')  # lactation params for genotypes
     sam['cm_c1c2'] = np.ones(uinp.parameters['i_cm_c2'].shape, dtype='float64')  #intake params for genotypes
     sam['sfw_c2'] = np.ones(uinp.parameters['i_sfw_c2'].shape, dtype='float64')   #std fleece weight genotype params
     sam['muscle_target_c2'] = np.ones(uinp.parameters['i_muscle_target_c2'].shape, dtype='float64')   #std muscle mass target genotype params
-    sam['rr'] = 1.0                        #scanning percentage (adjust the standard scanning % for f_conception_ltw and within function for f_conception_cs
-    sam['husb_cost_h2'] = np.ones(uinp.sheep['i_husb_operations_contract_cost_h2'].shape, dtype='float64')  #SA value for contract cost of husbandry operations.
-    sam['husb_mustering_h2'] = np.ones(uinp.sheep['i_husb_operations_muster_propn_h2'].shape, dtype='float64')  #SA value for mustering required for husbandry operations.
-    sam['husb_labour_l2h2'] = np.ones(uinp.sheep['i_husb_operations_labourreq_l2h2'].shape, dtype='float64')  #units of the job carried out per husbandry labour hour
     ##SAP
     ##SAA
-    saa['sfd_c2'] = 0.0                     #std fibre diameter genotype params
-    saa['srw_c2'] = 0.0                     #std reference weight genotype params
+    saa['sfd_c2'] = 0.0              #std fibre diameter genotype params
+    saa['srw_c2'] = 0.0              #std reference weight genotype params
     saa['cg_c1c2'] = np.zeros(uinp.parameters['i_cg_c2'].shape, dtype='float64')  #SA value for weight gain params.
     saa['ck_c1c2'] = np.zeros(uinp.parameters['i_ck_c2'].shape, dtype='float64')  #SA value for energy efficiency params.
     saa['cl0_c1c2'] = np.zeros(uinp.parameters['i_cl0_c2'].shape, dtype='float64')  #SA value for litter size genotype params.
-    saa['scan_std_c2'] = 0.0                #std scanning percentage of a genotype. Controls the MU repro, initial propn of sing/twin/trip prog required to replace the dams, the lifetime productivity of the dams as affected by their BTRT.
-    saa['nlb_c2'] = 0.0                #std scanning percentage of a genotype. Controls the MU repro, initial propn of sing/twin/trip prog required to replace the dams, the lifetime productivity of the dams as affected by their BTRT.
-    saa['rr'] = 0.0                    #reproductive rate/scanning percentage (adjust the standard scanning % for f_conception_ltw and within function for f_conception_cs
-    saa['ss'] = 0.0                    #staple strength (adjust SS in sgen end of period)
-    saa['lss'] = 0.0                    #lamb survival of singles. This SA alters the BTRT of the initial animals, it does not alter the calculation of lamb mortality. Therefore, both need to be used.
-    saa['lstw'] = 0.0                    #lamb survival of twins. This SA alters the BTRT of the initial animals, it does not alter the calculation of lamb mortality. Therefore, both need to be used.
-    saa['lstr'] = 0.0                    #lamb survival of triplets. This SA alters the BTRT of the initial animals, it does not alter the calculation of lamb mortality. Therefore, both need to be used.
+    saa['scan_std_c2'] = 0.0         #std scanning percentage of a genotype. Controls the MU repro, initial propn of sing/twin/trip prog required to replace the dams, the lifetime productivity of the dams as affected by their BTRT.
+    saa['nlb_c2'] = 0.0              #std scanning percentage of a genotype. Controls the MU repro, initial propn of sing/twin/trip prog required to replace the dams, the lifetime productivity of the dams as affected by their BTRT.
+    saa['lss'] = 0.0                 #lamb survival of singles. This SA alters the BTRT of the initial animals, it does not alter the calculation of lamb mortality. Therefore, both need to be used.
+    saa['lstw'] = 0.0                #lamb survival of twins. This SA alters the BTRT of the initial animals, it does not alter the calculation of lamb mortality. Therefore, both need to be used.
+    saa['lstr'] = 0.0                #lamb survival of triplets. This SA alters the BTRT of the initial animals, it does not alter the calculation of lamb mortality. Therefore, both need to be used.
+    saa['ycfw_scalar'] = 0.0         #Genotype calibration: Adjust scalar for ycfw genotype params
+    saa['yfd_scalar'] = 0.0          #Genotype calibration: Adjust scalar for yfd genotype params
+    saa['milk_yield'] = 0.0          #Genotype calibration: Adjust cl_yatf[0] parameter which alters milk production, lamb milk intake and ewe PI during lactation
+    saa['growth_constant'] = 0.0     #Genotype calibration: Adjust growth constant (k) param
+    saa['srw'] = 0.0                 #Genotype calibration: Adjust SRW
 
+    ##SAA on slices of the livestock parameters using the age stage axis
+    saa['sfw_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')  #SA value with age stages for clean fleece weight (sfw)
+    saa['sfd_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')  #SA value with age stages for fibre diameter (sfd)
+    saa['iss_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')  #SA value with age stages for staple strength (cw[16])
+    saa['follicles_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')  #SA value with age stages for staple length (cw[11])
+    saa['srw_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')  #SA value with age stages for weight (srw)
+    saa['pi_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')  #SA value with age stages for potential intake (ci[1])
+    saa['evg_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')  #SA value with age stages for fatness (cg[8] & cg[9])
+    saa['bsurv_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')  #SA value with age stages for basal survival (cd[1])
+    saa['pnsurv_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')  #SA value with age stages for peri-natal survival (cu2[23,-1])
+    saa['con_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')  #SA value with age stages for conception (cb1[24, 25 & 26, 1]).
+    saa['ls_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')  #SA value with age stages for litter size (cb1[24, 25 & 26, 2 & 3])
+    saa['era_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')  #SA value with age stages for ewe rearing ability / lamb survival (cu6[8,-1] & cu2[8,-1])
     ##SAT
     sat['cb0_c2'] = np.zeros(uinp.parameters['i_cb0_c2'].shape, dtype='float64')  #BTRT params for genotypes
     ##SAR
@@ -626,6 +649,7 @@ def create_sa():
     sav['min_propn_twins_sold_og1'] = np.full((len_d,) + pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #SA to control the proportion of twins sold (used to approximate sale of dry ewes)
     sav['bnd_total_dams'] = '-'   #control the total number of dams at prejoining
     sav['bnd_fs_opt_inc'] = False   #control if dam and offs lower bound, propn mated and propn sold is included. Only used for FS optimisation trials.
+    sav['partial_n11'] = False      #control if the fs_opt is adjusted to be N11 for some classes and periods.
     sav['bnd_lo_dam_inc'] = '-'   #control if dam lower bound is on.
     sav['bnd_lo_dams_tog1'] = np.full((len_t1,) + (len_d,) + (len_g1,), '-', dtype=object)   #min number of dams
     sav['bnd_lo_dams_tVg1'] = np.full((len_t1,) + (len_V,) + (len_g1,), '-', dtype=object)   #min number of dams
@@ -645,6 +669,8 @@ def create_sa():
     sav['bnd_min_sale_age_female_g1'] = np.full(pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #SA to set min age a dam can be sold - BBT offspring can be sold but BBT dams can't (because they are BB)
     sav['bnd_min_sale_age_female_dg3'] = np.full((len_d,) + (len_g3,), '-', dtype=object)   #SA to set min age a female can be sold - used to bound prog & offs
     sav['bnd_max_sale_age_female_g3'] = np.full(pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #SA to set max age wether can be sold
+    sav['bnd_min_sale_ffcfw_g3'] = np.full(pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #SA to set min weight offspring (wethers and females in the g3 activity) can be sold - this doesnt alter the actual grids therefore asset value is still calculated as if there is no bnd (this is good because it removes randomness if examining flk structure)
+    sav['bnd_max_sale_ffcfw_g3'] = np.full(pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #SA to set max weight offspring (wethers and females in the g3 activity) can be sold - this doesnt alter the actual grids therefore asset value is still calculated as if there is no bnd (this is good because it removes randomness if examining flk structure)
     sav['rot_lobound_rl'] = np.full((len_R,) + (len_l,), '-', dtype=object)
     ##SAM
     ##SAP

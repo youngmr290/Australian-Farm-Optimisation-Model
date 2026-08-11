@@ -61,10 +61,10 @@ def f_buy_grain_price(r_vals):
 
     '''
     ##purchase price from neighbour is farm gate price plus transaction and transport
-    farmgate_price_k3s2gc1_qz = phs.f_farmgate_grain_price(k_type="k3")
+    farmgate_price_k3s2c1_qz = phs.f_farmgate_grain_price(k_type="k3")
     cartage=uinp.price['sup_cartage']
     transaction_fee=uinp.price['sup_transaction']
-    buy_price_k3s2gc1_qz = farmgate_price_k3s2gc1_qz + cartage + transaction_fee
+    buy_price_k3s2c1_qz = farmgate_price_k3s2c1_qz + cartage + transaction_fee
 
     ##allocate farm gate grain price for each cashflow period and calc interest
     start = np.array([pinp.crop['i_grain_income_date']])
@@ -85,16 +85,16 @@ def f_buy_grain_price(r_vals):
     # grain_wc_allocation_c0p7zg = grain_wc_allocation_c0p7z.reindex(cols_c0p7zg, axis=1)#adds level to header so i can mul in the next step
     # buy_grain_price =  price_k_g.mul(grain_income_allocation_p7zg,axis=1, level=-1)
     # buy_grain_price_wc =  price_k_g.mul(grain_wc_allocation_c0p7zg,axis=1, level=-1)
-    buy_price_k3s2gc1q_z = buy_price_k3s2gc1_qz.stack(0)
-    buy_grain_price_k3s2gc1q_p7z =  buy_price_k3s2gc1q_z.mul(grain_income_allocation_p7z,axis=1, level=-1)
-    buy_grain_price_k3s2gc1_qp7z = buy_grain_price_k3s2gc1q_p7z.unstack(-1).reorder_levels([2, 0, 1], axis=1)
-    buy_grain_price_wc_k3s2gc1q_c0p7z =  buy_price_k3s2gc1q_z.mul(grain_wc_allocation_c0p7z,axis=1, level=-1)
-    buy_grain_price_wc_k3s2gc1_qc0p7z = buy_grain_price_wc_k3s2gc1q_c0p7z.unstack(-1).reorder_levels([3, 0, 1, 2], axis=1)
+    buy_price_k3s2c1q_z = buy_price_k3s2c1_qz.stack(0)
+    buy_grain_price_k3s2c1q_p7z =  buy_price_k3s2c1q_z.mul(grain_income_allocation_p7z,axis=1, level=-1)
+    buy_grain_price_k3s2c1_qp7z = buy_grain_price_k3s2c1q_p7z.unstack(-1).reorder_levels([2, 0, 1], axis=1)
+    buy_grain_price_wc_k3s2c1q_c0p7z =  buy_price_k3s2c1q_z.mul(grain_wc_allocation_c0p7z,axis=1, level=-1)
+    buy_grain_price_wc_k3s2c1_qc0p7z = buy_grain_price_wc_k3s2c1q_c0p7z.unstack(-1).reorder_levels([3, 0, 1, 2], axis=1)
 
     ##average c1 axis for wc and report
     c1_prob = uinp.price_variation['prob_c1']
-    buy_grain_price_wc_k3s2g_qc0p7z = buy_grain_price_wc_k3s2gc1_qc0p7z.mul(c1_prob, axis=0, level=-1).groupby(axis=0, level=[0,1,2]).sum()
-    r_buy_grain_price_k3s2g_qp7z = buy_grain_price_k3s2gc1_qp7z.mul(c1_prob, axis=0, level=-1).groupby(axis=0, level=[0,1,2]).sum()
+    buy_grain_price_wc_k3s2_qc0p7z = buy_grain_price_wc_k3s2c1_qc0p7z.mul(c1_prob, axis=0, level=-1).groupby(axis=0, level=[0,1]).sum()
+    r_buy_grain_price_k3s2_qp7z = buy_grain_price_k3s2c1_qp7z.mul(c1_prob, axis=0, level=-1).groupby(axis=0, level=[0,1]).sum()
 
     ##buy grain period - purchased grain can only provide into the grain transfer constraint in the phase period when it is purchased (otherwise it will get free grain)
     alloc_p7z = zfun.f1_z_period_alloc(start[na], z_pos=-1)
@@ -106,8 +106,8 @@ def f_buy_grain_price(r_vals):
     date_season_node_p7z = per.f_season_periods()[:-1,...] #slice off end date p7
     mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
     ###store
-    fun.f1_make_r_val(r_vals, r_buy_grain_price_k3s2g_qp7z, 'buy_grain_price', mask_season_p7z, z_pos=-1)
-    return buy_grain_price_k3s2gc1_qp7z.unstack([2,0,1,3]).sort_index(), buy_grain_price_wc_k3s2g_qc0p7z.unstack([2,0,1]).sort_index(), buy_grain_prov_p7z
+    fun.f1_make_r_val(r_vals, r_buy_grain_price_k3s2_qp7z, 'buy_grain_price', mask_season_p7z, z_pos=-1)
+    return buy_grain_price_k3s2c1_qp7z.unstack([0,1,2]).sort_index(), buy_grain_price_wc_k3s2_qc0p7z.unstack([0,1]).sort_index(), buy_grain_prov_p7z
 
 #todo supp feeding in confinement should incur some capital cost.
 def f_sup_feeding_cost(r_vals, nv):
@@ -357,6 +357,8 @@ def f_sup_emissions(r_vals, nv):
         stock_ch4_sup_fk3 = efun.f_stock_ch4_feed_nir(1000 * dry_matter_content_k3 * prop_consumed_fk3, dmd_k3)
     elif uinp.sheep['i_eqn_used_g1_q1p7'][12, 0] == 1:  #Baxter and Claperton
         stock_ch4_sup_fk3 = efun.f_stock_ch4_feed_bc(1000 * dry_matter_content_k3 * prop_consumed_fk3, md_k3 / 1000) #div 1000 to convert to kg
+    stock_ch4_sup_fk3, methane_me_saved_sup_fk3 = efun.f_methane_reduction(
+        stock_ch4_sup_fk3, sen.sam['methane_yield'], sen.sav['methane_capture'])
 
     ##livestock nitrous oxide emissions linked to the consumption of 1t of saltbush - note that the equation system used is the one selected for dams in p1
     if uinp.sheep['i_eqn_used_g1_q1p7'][13, 0] == 0:  # National Greenhouse Gas Inventory Report
@@ -368,14 +370,16 @@ def f_sup_emissions(r_vals, nv):
     keys_f = np.array(['nv{0}'.format(i) for i in range(nv['len_nv'])])
     index_fk3 = pd.MultiIndex.from_product([keys_f, sup_md_vol.columns])
     co2e_sup_fk3 = pd.Series(co2e_sup_fk3.ravel(), index=index_fk3)
+    methane_me_saved_sup_fk3 = pd.Series(methane_me_saved_sup_fk3.ravel(), index=index_fk3)
     stock_n2o_sup_fk3 = pd.Series(stock_n2o_sup_fk3.ravel(), index=index_fk3)
     stock_ch4_sup_fk3 = pd.Series(stock_ch4_sup_fk3.ravel(), index=index_fk3)
 
     ##store report vals
     fun.f1_make_r_val(r_vals,stock_n2o_sup_fk3,'stock_n2o_sup_fk3')
     fun.f1_make_r_val(r_vals,stock_ch4_sup_fk3,'stock_ch4_sup_fk3')
+    fun.f1_make_r_val(r_vals,methane_me_saved_sup_fk3,'methane_me_saved_sup_fk3')
 
-    return co2e_sup_fk3
+    return co2e_sup_fk3, methane_me_saved_sup_fk3
 
 def f_sup_labour(nv):
     '''
@@ -530,7 +534,7 @@ def f1_sup_selectivity():
     Using volume is good because it accounts for the impact of foo and quality on the selectivity e.g. if the
     FOO is low stock won't have to consume as much because the volume is higher.
 
-    This constraint only acts for the green feed periods because we dont want the model to be able to defer pastures
+    This constraint only acts for the green feed periods because we don't want the model to be able to defer pastures
     by feeding supplement to stock that are not in confinement. This is because if there is green feed the sheep will
     eat some green feed even if they are being fed supplement.
 
@@ -564,7 +568,7 @@ def f1_sup_selectivity():
 def f_sup_params(params,r_vals, nv):
     total_sup_cost, total_sup_wc, storage_dep, storage_asset, confinement_dep, co2e_fuel_fk = f_sup_feeding_cost(r_vals, nv)
     vol_tonne, md_tonne = f_sup_md_vol(r_vals, nv)
-    co2e_sup_consumption_fk = f_sup_emissions(r_vals, nv)
+    co2e_sup_consumption_fk, methane_me_saved_sup_fk = f_sup_emissions(r_vals, nv)
     sup_labour = f_sup_labour(nv)
     buy_grain_price, buy_grain_wc, buy_grain_prov_p7z = f_buy_grain_price(r_vals)
     a_p6_p7 = f1_a_p6_p7()
@@ -584,6 +588,7 @@ def f_sup_params(params,r_vals, nv):
 
     ##create season params
     params['co2e_sup_fk'] = co2e_sup_consumption_fk.add(co2e_fuel_fk).to_dict()
+    params['methane_me_saved_sup_fk'] = methane_me_saved_sup_fk.to_dict()
     params['total_sup_cost'] = total_sup_cost.to_dict()
     params['total_sup_wc'] = total_sup_wc.to_dict()
     params['sup_labour'] = sup_labour.to_dict()

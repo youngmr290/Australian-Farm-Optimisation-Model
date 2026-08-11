@@ -144,7 +144,7 @@ def f_germination(i_germination_std_zt, i_germ_scalar_lzt, i_germ_scalar_p6zt, p
     ## add germination on the non-arable area to the first pasture type
     germination_p6lrzt[..., 0] += na_germination_flrz * (1 - arable_l[:,na,na])
 
-    ##check if destocking occurs before the break of season. If so the resown pastures dont get any germination.
+    ##check if destocking occurs before the break of season. If so the resown pastures don't get any germination.
     ###convert destock date from t axis to r axis so that nonarable pasture on resown paddocks doesnt provide foo during the destocked period. r axis is require because nap is allocated to the annual pasture pool but destocking date is related to r.
     i_destock_date_rz = np.sum(i_destock_date_zt*pasture_rt[:,na,:], axis=-1)
     germination_p6lrzt = germination_p6lrzt * (1 - pinp.seeding_freq_r[:,na,na] * (i_destock_date_rz[:,:,na] <= i_break_z[:,na]))
@@ -664,7 +664,7 @@ def f_dry_pasture(cu3, cu4, i_dry_dmd_ave_p6zt, i_dry_dmd_range_p6zt, i_dry_foo_
 
 
 def f_poc(cu3, cu4, i_poc_intake_daily_p6lzt, i_poc_dmd_p6zt, i_poc_foo_p6zt, i_legume_zt, i_hr_scalar_zt
-          , i_pasture_stage_p6zt, nv_is_not_confinement_f, me_threshold_fp6zt, i_me_eff_gainlose_p6zt):
+          , i_pasture_stage_p6zt, nv_is_not_confinement_f, me_threshold_fp6zt, i_me_eff_gainlose_p6zt, mask_poc_exists_p6zt):
     '''
     Calculate energy, volume and consumption parameters for pasture consumed on crop paddocks before seeding.
 
@@ -701,7 +701,9 @@ def f_poc(cu3, cu4, i_poc_intake_daily_p6lzt, i_poc_dmd_p6zt, i_poc_foo_p6zt, i_
     '''
     ### poc is assumed to be annual hence the 0 slice in the last axis
     ## con
+    mask_poc_exists_p6z = mask_poc_exists_p6zt[..., 0] #poc is assumed to be annual hence the 0 slice in the pasture type axis
     poc_con_p6lz = i_poc_intake_daily_p6lzt[..., 0] / 1000 #divide 1000 to convert to tonnes of foo per ha
+    poc_con_p6lz = poc_con_p6lz * mask_poc_exists_p6z[:, na, :]
 
     ## vol
     ### calc relative quality - note that the equation system used is the one selected for dams in p1 - currently only cs function exists
@@ -718,7 +720,7 @@ def f_poc(cu3, cu4, i_poc_intake_daily_p6lzt, i_poc_dmd_p6zt, i_poc_foo_p6zt, i_
 
     poc_ri_p6z = fsfun.f_rel_intake(poc_ri_quan_p6z, poc_ri_qual_p6z, i_legume_zt[..., 0])
     poc_vol_p6z = fun.f_divide(1000, poc_ri_p6z)  # 1000 to convert to vol per tonne
-    poc_vol_fp6z = poc_vol_p6z * nv_is_not_confinement_f[:,na,na]  # me from pasture is 0 in the confinement pool
+    poc_vol_fp6z = poc_vol_p6z * nv_is_not_confinement_f[:,na,na] * mask_poc_exists_p6z  # me from pasture is 0 in the confinement pool
 
     ## md per tonne
     poc_md_p6z = fsfun.f1_dmd_to_md(i_poc_dmd_p6zt[..., 0])
@@ -727,7 +729,7 @@ def f_poc(cu3, cu4, i_poc_intake_daily_p6lzt, i_poc_dmd_p6zt, i_poc_foo_p6zt, i_
     poc_md_fp6z = fsfun.f_effective_mei(1000, poc_md_p6z, me_threshold_fp6zt[...,0]
                                            , confinement_inc, poc_ri_p6z, i_me_eff_gainlose_p6zt[...,0])
     ###Can't graze poc pasture while in confinement so ME is 0
-    poc_md_fp6z = poc_md_fp6z * nv_is_not_confinement_f[:,na,na] #me from pasture is 0 in the confinement pool
+    poc_md_fp6z = poc_md_fp6z * nv_is_not_confinement_f[:,na,na] * mask_poc_exists_p6z #me from pasture is 0 in the confinement pool
 
     return poc_con_p6lz * pinp.crop['i_poc_inc'], poc_md_fp6z * pinp.crop['i_poc_inc'], poc_vol_fp6z * pinp.crop['i_poc_inc']
 

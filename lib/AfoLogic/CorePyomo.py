@@ -43,6 +43,8 @@ def coremodel_all(trial_name, model, method, nv, print_debug_output, MP_lp_vars)
     ##################
     #call constraints#
     ##################
+    model.p_methane_additive_cost = pe.Param(initialize=sen.sav['methane_additive_cost'], default=0.0,
+                                             doc='Cost of methane reducing feed additive ($/kg DMI)')
     # Labour fixed
     f_con_labour_fixed_anyone(model)
     f_con_labour_fixed_manager(model)
@@ -121,7 +123,7 @@ def coremodel_all(trial_name, model, method, nv, print_debug_output, MP_lp_vars)
     model.rc = pe.Suffix(direction=pe.Suffix.IMPORT)
     # model.slack = pe.Suffix(direction=pe.Suffix.IMPORT)
     ##solve - solver choice is passed in as an argument so the user can change it. -
-    if method=="CPLEX" and not shutil.which("cplex") == None:
+    if method=="CPLEX" and not shutil.which("cplex") is None:
         ##solve with cplex if it exists
         solver = pe.SolverFactory('cplex')
         solver_result = solver.solve(model, warmstart=True, tee=False)  # tee=True for solver output - may be useful for troubleshooting, currently warmstart doesnt do anything (could only get it to work for MIP)
@@ -505,48 +507,48 @@ def f_con_product_transfer(model):
     ## be in different p7 to harvest
 
     ##combines rotation yield, on-farm sup feed and yield penalties from untimely sowing and crop grazing. Then passes to cashflow constraint.
-    def product_transfer(model,q,s,p7,g,k4,s2,z9):
+    def product_transfer(model,q,s,p7,k4,s2,z9):
         l_p7 = list(model.s_season_periods)
         p7_prev = l_p7[l_p7.index(p7) - 1] #need the activity level from last feed period
         p7_start = l_p7[0]
         p7_end = l_p7[-1]
         if pe.value(model.p_wyear_inc_qs[q, s]) and pe.value(model.p_mask_season_p7z[p7,z9]):
-            return ((-phspy.f_rotation_product(model,q,s,p7,g,k4,s2,z9) if k4 in model.s_crops else 0) \
-                   + (sum(model.v_sup_con[q,s,z9,k4,g,f,p6] * model.p_sup_s2[k4,s2] * model.p_a_p6_p7[p7,p6,z9] * 1000
+            return ((-phspy.f_rotation_product(model,q,s,p7,k4,s2,z9) if k4 in model.s_crops else 0) \
+                   + (sum(model.v_sup_con[q,s,z9,k4,f,p6] * model.p_sup_s2[k4,s2] * model.p_a_p6_p7[p7,p6,z9] * 1000
                          for f in model.s_feed_pools for p6 in model.s_feed_periods) if k4 in model.s_supp_feeds else 0) \
-                   - model.v_product_debit[q,s,p7,z9,k4,s2,g] * 1000 * ((p7 != p7_end)*1) \
-                   + model.v_product_credit[q,s,p7,z9,k4,s2,g] * 1000 \
-                   + sum((model.v_product_debit[q,s,p7_prev,z8,k4,s2,g] * 1000 - model.v_product_credit[q,s,p7_prev,z8,k4,s2,g]
+                   - model.v_product_debit[q,s,p7,z9,k4,s2] * 1000 * ((p7 != p7_end)*1) \
+                   + model.v_product_credit[q,s,p7,z9,k4,s2] * 1000 \
+                   + sum((model.v_product_debit[q,s,p7_prev,z8,k4,s2] * 1000 - model.v_product_credit[q,s,p7_prev,z8,k4,s2]
                           * 1000 * ((p7 != p7_start)*1)) * model.p_parentz_provwithin_phase[p7_prev,z8,z9
                          ]   # p7!=p7[0] to stop grain transfer from last yr to current yr else unbounded solution.
                          for z8 in model.s_season_types) \
-                   - (model.v_buy_product[q,s,p7,z9,k4,s2,g] * model.p_buy_product_prov[p7,z9] * 1000 if k4 in model.s_supp_feeds else 0)
-                   + (model.v_sell_product[q,s,p7,z9,k4,s2,g] * 1000 if k4 in model.s_crops else 0) <= 0)
+                   - (model.v_buy_product[q,s,p7,z9,k4,s2] * model.p_buy_product_prov[p7,z9] * 1000 if k4 in model.s_supp_feeds else 0)
+                   + (model.v_sell_product[q,s,p7,z9,k4,s2] * 1000 if k4 in model.s_crops else 0) <= 0)
         else:
             return pe.Constraint.Skip
-    model.con_product_transfer = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_grain_pools,
+    model.con_product_transfer = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods,
                                                model.s_crops_and_supp, model.s_biomass_uses, model.s_season_types, rule=product_transfer,
                                              doc='constrain grain transfer between rotation and sup feeding')
 
 
 def f1_grain_income(model,q,s,p7,z,c1):
     ##combined grain sold and purchased to get a $ amount which is added to the cashflow constrain
-    return sum(sum(model.v_sell_product[q,s,p7,z,k1,s2,g] * model.p_grain_price[q,p7,z,g,k1,s2,c1] for k1 in model.s_crops)
-               - sum(model.v_buy_product[q,s,p7,z,k3,s2,g] * model.p_buy_grain_price[q,p7,z,g,k3,s2,c1] for k3 in model.s_supp_feeds)
-               for s2 in model.s_biomass_uses for g in model.s_grain_pools)
+    return sum(sum(model.v_sell_product[q,s,p7,z,k1,s2] * model.p_grain_price[q,p7,z,k1,s2,c1] for k1 in model.s_crops)
+               - sum(model.v_buy_product[q,s,p7,z,k3,s2] * model.p_buy_grain_price[q,p7,z,k3,s2,c1] for k3 in model.s_supp_feeds)
+               for s2 in model.s_biomass_uses)
 
 def f1_grain_wc(model,q,s,c0,p7,z):
     ##combined grain sold and purchased to get a $ amount which is added to the cashflow constrain
-    return sum(sum(model.v_sell_product[q,s,p7,z,k1,s2,g] * model.p_grain_wc[q,c0,p7,z,g,k1,s2] for k1 in model.s_crops)
-               - sum(model.v_buy_product[q,s,p7,z,k3,s2,g] * model.p_buy_grain_wc[q,c0,p7,z,g,k3,s2] for k3 in model.s_supp_feeds)
-               for s2 in model.s_biomass_uses for g in model.s_grain_pools)
+    return sum(sum(model.v_sell_product[q,s,p7,z,k1,s2] * model.p_grain_wc[q,c0,p7,z,k1,s2] for k1 in model.s_crops)
+               - sum(model.v_buy_product[q,s,p7,z,k3,s2] * model.p_buy_grain_wc[q,c0,p7,z,k3,s2] for k3 in model.s_supp_feeds)
+               for s2 in model.s_biomass_uses)
 
 def f1_sup_minroe(model,q,s,p7,z):
     ##cost of grain for livestock enterprise. Note grain purchased cost more because of transport fees than grain transferred from crop enterprise.
-    return sum(((sum(model.v_sup_con[q,s,z,k3,g,f,p6] for f in model.s_feed_pools for p6 in model.s_feed_periods)
-                 - model.v_buy_product[q,s,p7,z,k3,s2,g]) * sum(model.p_grain_price[q,p7,z,g,k3,s2,c1] * model.p_prob_c1[c1] for c1 in model.s_c1) if k3 in model.s_crops else 0)
-               + model.v_buy_product[q,s,p7,z,k3,s2,g] * sum(model.p_buy_grain_price[q,p7,z,g,k3,s2,c1]  * model.p_prob_c1[c1] for c1 in model.s_c1)
-               for k3 in model.s_supp_feeds for s2 in model.s_biomass_uses for g in model.s_grain_pools)
+    return sum(((sum(model.v_sup_con[q,s,z,k3,f,p6] for f in model.s_feed_pools for p6 in model.s_feed_periods)
+                 - model.v_buy_product[q,s,p7,z,k3,s2]) * sum(model.p_grain_price[q,p7,z,k3,s2,c1] * model.p_prob_c1[c1] for c1 in model.s_c1) if k3 in model.s_crops else 0)
+               + model.v_buy_product[q,s,p7,z,k3,s2] * sum(model.p_buy_grain_price[q,p7,z,k3,s2,c1]  * model.p_prob_c1[c1] for c1 in model.s_c1)
+               for k3 in model.s_supp_feeds for s2 in model.s_biomass_uses)
 
 def f_con_poc_available(model):
     '''
@@ -628,6 +630,10 @@ def f_con_me(model):
         if pe.value(model.p_wyear_inc_qs[q, s]) and pe.value(model.p_mask_season_p6z[p6,z]):
             return -paspy.f_pas_me(model,q,s,p6,f,z) - paspy.f_nappas_me(model,q,s,p6,f,z) - suppy.f_sup_me(model,q,s,p6,f,z) \
                    - stubpy.f_cropresidue_me(model,q,s,p6,f,z) - cgzpy.f_grazecrop_me(model,q,s,p6,f,z) - slppy.f_saltbush_me(model,q,s,z,p6,f) \
+                   - paspy.f_pas_methane_me_saved(model,q,s,p6,f,z) - paspy.f_nappas_methane_me_saved(model,q,s,p6,f,z) \
+                   - suppy.f_sup_methane_me_saved(model,q,s,p6,f,z) - stubpy.f_cropresidue_methane_me_saved(model,q,s,p6,f,z) \
+                   - cgzpy.f_grazecrop_methane_me_saved(model,q,s,p6,f,z) - slppy.f_saltbush_methane_me_saved(model,q,s,z,p6,f) \
+                   - stkpy.f_stock_methane_me_saved(model,q,s,p6,f,z) \
                    + stkpy.f_stock_me(model,q,s,p6,f,z) - mvf.f_mvf_me(model,q,s,p6,f) <= 0
         else:
             return pe.Constraint.Skip
@@ -658,6 +664,20 @@ def f_con_vol(model):
                                   doc='constraint between me available and consumed')
 
 
+def f_methane_additive_cost(model,q,s,p7,z):
+    '''
+    Tallies the methane reducing feed additive cost attached to feed consumption DVs.
+    '''
+    if pe.value(model.p_methane_additive_cost) != 0:
+        return paspy.f_pas_methane_additive_cost(model,q,s,p7,z) \
+               + suppy.f_sup_methane_additive_cost(model,q,s,p7,z) \
+               + stubpy.f_cropresidue_methane_additive_cost(model,q,s,p7,z) \
+               + cgzpy.f_grazecrop_methane_additive_cost(model,q,s,p7,z) \
+               + slppy.f_saltbush_methane_additive_cost(model,q,s,z,p7)
+    else:
+        return 0
+
+
 def f_con_cashflow(model):
     '''
     Tallies all cashflow in each period and transfers to the next period. Season periods exist so that a transfer can
@@ -669,6 +689,7 @@ def f_con_cashflow(model):
         if pe.value(model.p_wyear_inc_qs[q, s]) and pe.value(model.p_mask_season_p7z[p7,z9]):
             return ((-f1_grain_income(model,q,s,p7,z9,c1) + phspy.f_rotation_cost(model,q,s,p7,z9) + labpy.f_labour_cost(model,q,s,p7,z9)
                     + macpy.f_mach_cost(model,q,s,p7,z9) + suppy.f_sup_feeding_cost(model,q,s,p7,z9) + model.p_overhead_cost[p7,z9] + slppy.f_saltbush_cost(model,q,s,z9,p7)
+                    + f_methane_additive_cost(model,q,s,p7,z9)
                     - stkpy.f_stock_cashflow(model,q,s,p7,z9,c1) - treepy.f_tree_cashflow(model,p7,z9)
                     - model.v_debit[q,s,c1,p7,z9] + model.v_credit[q,s,c1,p7,z9])
                     + sum((model.v_debit[q,s,c1,p7_prev,z8] - model.v_credit[q,s,c1,p7_prev,z8]) * model.p_parentz_provwithin_season[p7_prev,z8,z9] * ((p7!=p7_start)*1)  #end cashflow doesnot provide start cashflow else unbounded.
@@ -741,7 +762,7 @@ def f_con_totalcap_between(model):
         l_q = list(model.s_sequence_year_between_con)
         ###adjust q_prev for multi-period model
         if sinp.structuralsa['model_is_MP']:
-            ####yr0 is SE so q_prev is q. Note dont need to use lp_var in this between constraint because it is not a production constraint.
+            ####yr0 is SE so q_prev is q. Note don't need to use lp_var in this between constraint because it is not a production constraint.
             if q == l_q[0]:
                 q_prev = q
             ####the final year is provided by both the previous year and itself (the final year is in equilibrium). Therefore the final year needs two constraints. This is achieved by making the q set 1 year longer than the modeled period (len_MP + 1). Then adjusting q and q_prev for the final q so that the final year is also in equilibrium.
@@ -797,10 +818,12 @@ def f_con_asset(model):
         p7_prev = l_p7[l_p7.index(p7) - 1] #need the activity level from last period
         p7_start = l_p7[0]
         if pe.value(model.p_wyear_inc_qs[q, s]) and pe.value(model.p_mask_season_p7z[p7,z9]):
-            return (suppy.f_sup_asset(model,q,s,p7,z9) + macpy.f_mach_asset(model,p7) + stkpy.f_stock_asset(model,q,s,p7,z9)) * uinp.finance['opportunity_cost_capital'] \
-                   - model.v_asset_cost[q,s,p7,z9] \
-                   + sum(model.v_asset_cost[q,s,p7_prev,z8] * model.p_parentz_provwithin_season[p7_prev,z8,z9]
-                         for z8 in model.s_season_types) * ((p7!=p7_start)*1) <= 0 #end doesn't carry over
+            return ((suppy.f_sup_asset(model,q,s,p7,z9) + macpy.f_mach_asset(model,p7)
+                     + stkpy.f_stock_asset(model,q,s,p7,z9) + pinp.finance['land_asset_value'])
+                    * uinp.finance['opportunity_cost_capital']
+                    - model.v_asset_cost[q,s,p7,z9]
+                    + sum(model.v_asset_cost[q,s,p7_prev,z8] * model.p_parentz_provwithin_season[p7_prev,z8,z9]
+                          for z8 in model.s_season_types) * ((p7!=p7_start)*1) <= 0) #end doesn't carry over
         else:
             return pe.Constraint.Skip
     model.con_asset = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types,rule=asset_cost,
@@ -817,6 +840,7 @@ def f_con_minroe(model):
         if pe.value(model.p_wyear_inc_qs[q, s]) and pe.value(model.p_mask_season_p7z[p7,z9]):
             return ((phspy.f_rotation_cost(model,q,s,p7,z9) + labpy.f_labour_cost(model,q,s,p7,z9) + macpy.f_mach_cost(model,q,s,p7,z9)
                      + suppy.f_sup_feeding_cost(model,q,s,p7,z9) + stkpy.f_stock_cost(model,q,s,p7,z9) + slppy.f_saltbush_cost(model,q,s,z9,p7)
+                     + f_methane_additive_cost(model,q,s,p7,z9)
                      + f1_sup_minroe(model,q,s,p7,z9))
                     * fin.f1_min_roe()
                     - model.v_minroe[q,s,p7,z9]

@@ -639,20 +639,22 @@ def f1_pkl_feedsupply(lp_vars,r_vals,pkl_fs_info):
         ## This method was chosen because it reduced randomness since if no animals are chosen the next trial gets the same fs as the current trial.
         ## This method wont work so well if the starting fs is not so good. To fix this ensure xl has decent starting fs and/or when generating fs force a small number of animals in all axes.
         ###dams
-        optimal_fs_stpa1e1b1nwzida0e0b0xyg1 = fun.f_update(optimal_fs_stpa1e1b1nwzida0e0b0xyg1,fun.f_dynamic_slice(feedsupply_stpa1e1b1nwzida0e0b0xyg1,w_pos,0,1),
-                                                           np.sum(dams_numbers_stpa1e1b1nwzida0e0b0xyg1,w_pos,keepdims=True)==0)
+        optimal_fs_stpa1e1b1nwzida0e0b0xyg1 = fun.f_update(optimal_fs_stpa1e1b1nwzida0e0b0xyg1
+                                    ,fun.f_slice(feedsupply_stpa1e1b1nwzida0e0b0xyg1,{w_pos:[0,1]})
+                                    , np.sum(dams_numbers_stpa1e1b1nwzida0e0b0xyg1,w_pos,keepdims=True)==0)
         ###offs
-        optimal_fs_stpa1e1b1nwzida0e0b0xyg3 = fun.f_update(optimal_fs_stpa1e1b1nwzida0e0b0xyg3, fun.f_dynamic_slice(feedsupply_stpa1e1b1nwzida0e0b0xyg3,w_pos,0,1),
-                                                           np.sum(offs_numbers_stpa1e1b1nwzida0e0b0xyg3,w_pos,keepdims=True)==0)
+        optimal_fs_stpa1e1b1nwzida0e0b0xyg3 = fun.f_update(optimal_fs_stpa1e1b1nwzida0e0b0xyg3
+                                    , fun.f_slice(feedsupply_stpa1e1b1nwzida0e0b0xyg3,{w_pos: [0,1]})
+                                    , np.sum(offs_numbers_stpa1e1b1nwzida0e0b0xyg3,w_pos,keepdims=True)==0)
 
         ##populate the min and max slice of j2 axis - min and max slices of j2 are populated based on the same scale as the feedsupply inputs from excel
         ###dams
-        j2_scale_pa1e1b1j2wzida0e0b0xyg1 = fun.f_divide(xl_feedsupply_pa1e1b1j2wzida0e0b0xyg1,
-                                                        fun.f_dynamic_slice(xl_feedsupply_pa1e1b1j2wzida0e0b0xyg1, n_pos, 0, 1))
+        j2_scale_pa1e1b1j2wzida0e0b0xyg1 = fun.f_divide(xl_feedsupply_pa1e1b1j2wzida0e0b0xyg1
+                                    , fun.f_slice(xl_feedsupply_pa1e1b1j2wzida0e0b0xyg1, {n_pos: [0, 1]}))
         optimal_fs_stpa1e1b1j2wzida0e0b0xyg1 = optimal_fs_stpa1e1b1nwzida0e0b0xyg1 * j2_scale_pa1e1b1j2wzida0e0b0xyg1
         ###offs
-        j2_scale_pa1e1b1j2wzida0e0b0xyg3 = fun.f_divide(xl_feedsupply_pa1e1b1j2wzida0e0b0xyg3,
-                                                        fun.f_dynamic_slice(xl_feedsupply_pa1e1b1j2wzida0e0b0xyg3, n_pos, 0, 1))
+        j2_scale_pa1e1b1j2wzida0e0b0xyg3 = fun.f_divide(xl_feedsupply_pa1e1b1j2wzida0e0b0xyg3
+                                    , fun.f_slice(xl_feedsupply_pa1e1b1j2wzida0e0b0xyg3, {n_pos: [0, 1]}))
         optimal_fs_stpa1e1b1j2wzida0e0b0xyg3 = optimal_fs_stpa1e1b1nwzida0e0b0xyg3 * j2_scale_pa1e1b1j2wzida0e0b0xyg3
         
         ##calculate optimum confinement period - the proportion of animals in confinement must be greater than a cut off propn.
@@ -673,12 +675,6 @@ def f1_pkl_feedsupply(lp_vars,r_vals,pkl_fs_info):
         optimal_confinement_stpa1e1b1nwzida0e0b0xyg3 = fun.f_update(optimal_confinement_stpa1e1b1nwzida0e0b0xyg3, xl_confinement_pa1e1b1nwzida0e0b0xyg3,
                                                           np.sum(offs_numbers_tpa1e1b1nwzida0e0b0xyg3,w_pos,keepdims=True)==0)
 
-        ##LTW adjustment
-        sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1 = pkl_fs_info['sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1'].astype('float32')
-        sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1 = pkl_fs_info['sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1'].astype('float32')
-        sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3 = pkl_fs_info['sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3'].astype('float32')
-        sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3 = pkl_fs_info['sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3'].astype('float32')
-
         ##pkl
         ##stick fs info into dict
         pkl_fs = dict()
@@ -691,10 +687,6 @@ def f1_pkl_feedsupply(lp_vars,r_vals,pkl_fs_info):
         pkl_fs['confinement']['sire'] = optimal_confinement_tpa1e1b1nwzida0e0b0xyg0
         pkl_fs['confinement']['dams'] = optimal_confinement_stpa1e1b1nwzida0e0b0xyg1
         pkl_fs['confinement']['offs'] = optimal_confinement_stpa1e1b1nwzida0e0b0xyg3
-        pkl_fs['ltw_adj']['sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1'] = sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1
-        pkl_fs['ltw_adj']['sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1'] = sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1
-        pkl_fs['ltw_adj']['sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3'] = sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3
-        pkl_fs['ltw_adj']['sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3'] = sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3
         pkl_fs['pkl_condensed_values'] = pkl_fs_info['pkl_condensed_values']
 
         return pkl_fs

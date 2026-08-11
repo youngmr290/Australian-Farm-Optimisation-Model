@@ -26,7 +26,7 @@ def f_stock_ch4_animal_bc(ch, intake_f, intake_s, md_solid, level):
     generated the animal profile.
 
     Note, in Blaxter and Clapperton 1965 there is an error in table 5 (it should be b=2.37-0.05D (required to make figure 3 work))
-    and there is an error CH4 equation derived from table 4 and 5. It should be CH4 (kcal/100kcal feed) = 1.30 + 0.112D + L (2.37 -0.05D).
+    and there is an error CH4 equation derived from table 4 and 5. It should be CH4 (kcal/100kcal of feed [gross energy]) = 1.30 + 0.112D + L (2.37 -0.05D).
     In the 2012 tech paper these error were fixed. This is the equation used below.
 
     Note 2: When they are lactating the ewes intake doubles (or more) and there is a corresponding increase in the
@@ -65,7 +65,7 @@ def f_stock_ch4_feed_bc(intake, md):
     emissions are calculated for the animal component of the emissions.
 
     Note, in Blaxter and Clapperton 1965 there is an error in table 5 (it should be b=2.37-0.05D (required to make figure 3 work))
-    and there is an error CH4 equation derived from table 4 and 5. It should be CH4 (kcal/100kcal feed) = 1.30 + 0.112D + L (2.37 -0.05D).
+    and there is an error CH4 equation derived from table 4 and 5. It should be CH4 (kcal/100kcal of feed [gross energy]) = 1.30 + 0.112D + L (2.37 -0.05D).
     In the 2012 tech paper these error were fixed. This is the equation used below.
 
     :param intake: dry matter intake of the feed-stuff decision variable (kg).
@@ -106,11 +106,11 @@ def f_stock_ch4_feed_nir(intake, dmd):
     ##methan production
     ###Enteric methane production per kg of feed eaten (M): M = I x 0.0188 + 0.00158
     ### note the fixed (0.00158) component is accounted for in the stock part of the equation.
-    ch4_entric = intake * 0.0188
+    ch4_enteric = intake * 0.0188
     ###Methane production from manure per kg of feed eaten (M): M = I x (1 - DMD) x EFT
     ch4_manure = intake * (1 - dmd) * temperate_emission_factor
     ###total methane
-    ch4 = ch4_manure + ch4_entric
+    ch4 = ch4_manure + ch4_enteric
 
    ##return methane emissions. These are converted to co2 equivalents at a later stage.
     return ch4
@@ -142,6 +142,23 @@ def f_stock_ch4_animal_nir():
     ch4_fixed = 0.00158
 
     return ch4_fixed
+
+
+def f_methane_reduction(ch4, methane_yield, methane_capture):
+    '''
+    Apply a methane-yield scalar and calculate the metabolisable energy captured
+    from avoided methane losses.
+
+    :param ch4: base methane production in kg.
+    :param methane_yield: scalar on methane production. 0.8 means 20% less methane.
+    :param methane_capture: proportion of avoided methane energy captured by the animal.
+    :return: adjusted methane kg, captured energy MJ.
+    '''
+    ch4_adjusted = ch4 * methane_yield
+    ch4_saved = ch4 - ch4_adjusted
+    ch4_energy_density = 52.5
+    me_saved = ch4_saved * ch4_energy_density * methane_capture
+    return ch4_adjusted, me_saved
 
 
 def f_stock_n2o_feed_nir(intake, dmd, cp):
@@ -211,7 +228,7 @@ def f_stock_n2o_feed_nir(intake, dmd, cp):
     return n2o_manure + n2o_atmospheric_deposition + n2o_leach
 
 
-def f_stock_n2o_animal_nir(cl, d_cfw, relsize, srw, ebg, mp=0, mc=0):
+def f_stock_n2o_animal_nir(cl, cg, d_cfw, d_muscle, d_viscera, mp=0, mc=0):
     '''
     Calculates the component of livestock nitrous oxide emissions linked to animal activities, using the methods documented
     in the National Greenhouse Gas Inventory Report.
@@ -224,13 +241,13 @@ def f_stock_n2o_animal_nir(cl, d_cfw, relsize, srw, ebg, mp=0, mc=0):
            nitrogen in the nitrogen cycle and therefore increase nitrogen deposition which produces some n2o when interacts with the earth.
         3. runoff and leaching of nitrogen in dung and urine.
 
-    The amount of emissions are effected by both livestock factors (e.g. age, relative size, EBG) and
+    The amount of emissions are affected by both livestock factors (e.g. body protein gain) and
     feed factors (e.g. quality, protein content, intake). Thus, in AFO the NIR equations are split
     between livestock and feed activities for improve accuracy.
 
     The NIR equations for livestock nitrous oxide emissions are as follows:
 
-    - Nitrogen retained in the body(NR): NR = {(0.045 x MP) + (WP x 0.84) + {[(212 - 4 x {[(EBG x 1000) / (4 x SRW ^ 0.75)] - 1}) - (140 - 4 x {[(EBG x 1000) / (4 x SRW ^ 0.75)] - 1}) / {1 + exp(-6 x(Z - 0.4))}] x EBG} / 1000 / 6.25
+    - Nitrogen retained in the body(NR): NR = (milk protein + wool protein + muscle protein change + viscera protein change) / 6.25
     - Nitrogen excreted in faeces (F): F = {0.3 x (CPI x (1 - [(DMD + 10) / 100])) + 0.105 x (ME x I x 0.008) + 0.08 x (0.045 x MC) + 0.0152 x I} / 6.25
     - Nitrogen excreted in urine (U): U = (CPI / 6.25) - NR - F
     - Nitrous oxide production from animal waste (N): N = ((F x EFf x Cg) + (U x EFu x Cg))
@@ -239,12 +256,12 @@ def f_stock_n2o_animal_nir(cl, d_cfw, relsize, srw, ebg, mp=0, mc=0):
 
     Note: Freer 2007: Crude protein, being total N × 6.25
 
+    :param cg: growth parameters, including the dry-matter fractions of muscle and viscera
     :param d_cfw: daily growth of clean fleece
+    :param d_muscle: daily change in fresh muscle weight
+    :param d_viscera: daily change in fresh viscera weight
     :param mp: milk production i.e mp2_dams
     :param mc: milk consumption i.e mp2_yatf
-    :param relsize: relative size of animal
-    :param srw: standard reference weight of animal
-    :param ebg: daily empty body gain
     :return: kilograms of n2o emissions per day linked to the animal activity
     '''
     ##inputs
@@ -262,9 +279,7 @@ def f_stock_n2o_animal_nir(cl, d_cfw, relsize, srw, ebg, mp=0, mc=0):
     MP = mp/me_milk #milk production kg/d - need to convert mp2 from Mj/d to kg by dividing by ME
     MC = mc/me_milk#milk intake - not the same as MP because of multiples - need to convert mp2 from Mj/d to kg by dividing by ME
     WP = d_cfw #clean wool production per day
-    Z = relsize
-    SRW = srw
-    EBG = ebg
+    body_protein_gain = d_muscle * cg[27, ...] + d_viscera * cg[28, ...]
 
     ##nitrogen from animal waste
     ###crude protein of milk intake
@@ -272,18 +287,18 @@ def f_stock_n2o_animal_nir(cl, d_cfw, relsize, srw, ebg, mp=0, mc=0):
     ###Nitrogen excreted in faeces (F): F = {0.3 x (CPI x (1 - [(DMD + 10) / 100])) + 0.105 x (ME x I x 0.008) + 0.08 x (0.045 x MC) + 0.0152 x I} / 6.25
     ###milk component - solids component is accounted for in the animal emission function because milk consumed is calculated in sgen.
     NF = (0.3 * (cpi_milk * (1 - ((milk_dmd + 10) / 100))) + 0.08 * cpi_milk) / 6.25
-    ###Nitrogen retained in the body(NR): NR = {(0.045 x MP) + (WP x 0.84) + {[(212 - 4 x {[(EBG x 1000) / (4 x SRW ^ 0.75)] - 1}) - (140 - 4 x {[(EBG x 1000) / (4 x SRW ^ 0.75)] - 1}) / {1 + exp(-6 x(Z - 0.4))}] x EBG} / 1000 / 6.25
-    NR = ((0.045 * MP) + (WP * 0.84) + (((212 - 4 * (((EBG * 1000) / (4 * SRW ** 0.75)) - 1)) - (140 - 4 * (((EBG * 1000) / (4 * SRW ** 0.75)) - 1)) / (1 + np.exp(-6 * (Z - 0.4)))) * EBG) / 1000) / 6.25
+    ###Nitrogen retained in milk, wool and the dry matter of muscle and viscera
+    NR = ((0.045 * MP) + (WP * 0.84) + body_protein_gain) / 6.25
     ###N excreted in urine (U): U = (CPI / 6.25) - NR - F
     NU = (cpi_milk / 6.25) - NR - NF #animal component
 
     ##Nitrous oxide production from nitrification-denitrification of N in dung and urine - animal component of equation based on milk consumed and nitrogen retained in the body
     n2o_manure = (NF * EFf * Cg) + (NU * EFu * Cg)
 
-    ##Nitrous oxide production from atmospheric deposition due to dung and urine - feed component of equation
+    ##Nitrous oxide production from atmospheric deposition due to dung and urine - animal component of equation
     n2o_atmospheric_deposition = f_n2o_atmospheric_deposition(NF + NU, EF_atmos_deposition, FracGASM)
 
-    ##Nitrous oxide production from atmospheric deposition due to dung and urine - feed component of equation
+    ##Nitrous oxide production from atmospheric deposition due to dung and urine - animal component of equation
     n2o_leach = f_n2o_leach_runoff(NF + NU, FracWET, FracLEACH)
 
     ##return nitrous oxide emissions per day. These are converted to co2 equivalents at a later stage.
@@ -450,7 +465,7 @@ def f_n2o_leach_runoff(N, FracWET, FracLEACH):
     '''
     Cg = uinp.emissions['i_cf_n2o']  # 44/28 - weight conversion factor of Nitrogen (molecular weight 28) to Nitrous oxide (molecular weight 44)
     ef = uinp.emissions['i_ef_leach_runoff']  # emission factor for leaching and runoff of N.
-    property_leach_factor = pinp.emissions['i_leach_factor']  # factor based on rainfall to scale leaching. Typically zones under 600mm annual rainfall dont leach.
+    property_leach_factor = pinp.emissions['i_leach_factor']  # factor based on rainfall to scale leaching. Typically zones under 600mm annual rainfall don't leach.
 
     n2o = N * FracWET * FracLEACH * property_leach_factor * ef * Cg
 

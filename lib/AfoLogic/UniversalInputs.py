@@ -254,10 +254,10 @@ def f_universal_inp_sa(uinp_defaults):
     sheep['i_salep_months_priceadj_s7s9p4'] = fun.f_sa(sheep['i_salep_months_priceadj_s7s9p4'], sen.sav['salep_month_adjust_s7s9p4'], 5)  #Value for the premiums and discounts by month
     sheep['i_salep_price_type_s7'] = fun.f_sa(sheep['i_salep_price_type_s7'], sen.sav['salep_price_type_s7'], 5)
     sheep['ia_s8_s7'] = fun.f_sa(sheep['ia_s8_s7'], sen.sav['salep_score_type_s7'], 5)
-    sheep['i_sale_ffcfw_min'] = fun.f_sa(sheep['i_sale_ffcfw_min'], sen.sav['sale_ffcfw_min'], 5) #Value for min ffcfw for each grid
-    sheep['i_sale_ffcfw_max'] = fun.f_sa(sheep['i_sale_ffcfw_max'], sen.sav['sale_ffcfw_max'], 5) #Value for max ffcfw for each grid
     sheep['i_mobsize_scalar_l0'] = fun.f_sa(sheep['i_mobsize_scalar_l0'], sen.sav['mobsize_scalar_l0'], 5) #Relative mobsize at lambing across the b1 axis
     ###SAM
+    sheep['i_infrastructure_costfixed_h1'] = fun.f_sa(sheep['i_infrastructure_costfixed_h1'],sen.sam['stocki_fixed_h1'])
+    sheep['i_infrastructure_costvariable_h1'] = fun.f_sa(sheep['i_infrastructure_costvariable_h1'],sen.sam['stocki_variable_h1'])
     sheep['i_husb_operations_contract_cost_h2'] = fun.f_sa(sheep['i_husb_operations_contract_cost_h2'],sen.sam['husb_cost_h2'])
     sheep['i_husb_operations_muster_propn_h2'] = fun.f_sa(sheep['i_husb_operations_muster_propn_h2'], sen.sam['husb_mustering_h2'])
     sheep['i_husb_operations_labourreq_l2h2'] = fun.f_sa(sheep['i_husb_operations_labourreq_l2h2'],sen.sam['husb_labour_l2h2'])
@@ -304,6 +304,17 @@ def f_universal_inp_sa(uinp_defaults):
     parameters['i_ck_c2'] = fun.f_sa(parameters['i_ck_c2'].astype(float), sen.saa['ck_c1c2'], 2) #genotype efficiency params
     parameters['i_cl0_c2'] = fun.f_sa(parameters['i_cl0_c2'].astype(float), sen.saa['cl0_c1c2'], 2) #genotype litter size params
     parameters['i_scan_std_c2'] = fun.f_sa(parameters['i_scan_std_c2'].astype(float), sen.saa['scan_std_c2'], 2) #genotype scanning percent params
+    ###SAA for genotype calibration that exclude the p11 axis
+    parameters['i_srw_c2'] = fun.f_sa(parameters['i_srw_c2'].astype(float),sen.saa['srw'], 2)
+    idx = fun.f_slice_idx(parameters['i_cw_c2'], {0: [25]})
+    parameters['i_cw_c2'][idx] = fun.f_sa(parameters['i_cw_c2'][idx], sen.saa['ycfw_scalar'], 2)
+    idx = fun.f_slice_idx(parameters['i_cw_c2'], {0: [26]})
+    parameters['i_cw_c2'][idx] = fun.f_sa(parameters['i_cw_c2'][idx], sen.saa['yfd_scalar'], 2)
+    idx = fun.f_slice_idx(parameters['i_cl_c2'], {0: [0]})
+    parameters['i_cl_c2'][idx] = fun.f_sa(parameters['i_cl_c2'][idx], sen.saa['milk_yield'], 2)
+    idx = fun.f_slice_idx(parameters['i_cn_c2'], {0: [1]})
+    parameters['i_cn_c2'][idx] = fun.f_sa(parameters['i_cn_c2'][idx], sen.saa['growth_constant'], 2)
+
     ###SAT
     parameters['i_cb0_c2'] = fun.f_sa(parameters['i_cb0_c2'].astype(float), sen.sat['cb0_c2'], 3, 1) #genotype BTRT params (sat -ve values allowed)
 
