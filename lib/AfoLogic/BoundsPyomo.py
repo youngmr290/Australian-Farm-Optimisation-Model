@@ -229,7 +229,7 @@ def f1_boundarypyomo_local(params, model):
             tonnes_crop_consume_ha = sen.sav['bnd_crop_grazing_intensity']/1000 #div 1000 because input is in kgs
             l_p7 = list(model.s_season_periods)
             def f_crop_grazing_intensity(model, q, s, p7, z):
-                if p7 == l_p7[-1] and pe.value(model.p_wyear_inc_qs[q, s]):
+                if p7 == l_p7[-1] and pe.value(model.p_wyear_inc_qs[q, s]) and pinp.cropgraze['i_cropgrazing_inc']:
                     return (sum(sum(model.v_phase_area[q, s, p7, z, r, l] * model.p_landuse_area[r, k1] for r in model.s_phases)
                             * model.p_propn_area_grazed_kl[k1,l] * tonnes_crop_consume_ha
                             for k1, l in model.s_cropgraze_base_kl)
