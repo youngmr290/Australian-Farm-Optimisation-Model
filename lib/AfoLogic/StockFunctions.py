@@ -4002,9 +4002,8 @@ def f1_cfat_depth(cn, rc_tpg, z_tpg=1):
     Steps 1. calculate CS
           2. estimate depth at the c-site using relationship from van Burgel cFat = 0.295 exp(0.705 CS)
     '''
-    #todo parameters could be added to Universal.xlsx in the Normal weight section
     condition_score = f1_condition_score(cn, rc_tpg, z_tpg)
-    c_fat = 0.295 * np.exp(0.705 * condition_score)
+    c_fat = cn[23, ...] * np.exp(cn[24, ...] * condition_score)
     return c_fat
 
 
@@ -4016,9 +4015,9 @@ def f1_fat_score(cn, rc_tpg, z_tpg=1, age=0, rev_trait_value=0):
     '''
     #todo parameters could be added to Universal.xlsx in the Normal weight section
     c_fat = f1_cfat_depth(cn, rc_tpg, z_tpg)
-    gr_depth = np.maximum(0, (c_fat - 1.2) / 0.22)
+    gr_depth = np.maximum(0, (c_fat - cn[25, ...]) / cn[26, ...])
     gr_depth = fun.f_sa(gr_depth, sen.saa['gr_depth'], sa_type=2, value_min=0)
-    #todo make the coefficients inputs in Universal (use cn) - See Universal Master 23Nov23
+    #Alternate formula using CS rather than cFat
     # gr_depth = np.maximum(0, (condition_score - cn[8, ...]) / cn[9, ...])
     ## REV SA on GR depth if age has been passed to the function
     if isinstance(age, np.ndarray):
