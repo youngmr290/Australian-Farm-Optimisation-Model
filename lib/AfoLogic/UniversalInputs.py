@@ -305,7 +305,6 @@ def f_universal_inp_sa(uinp_defaults):
     parameters['i_cl0_c2'] = fun.f_sa(parameters['i_cl0_c2'].astype(float), sen.saa['cl0_c1c2'], 2) #genotype litter size params
     parameters['i_scan_std_c2'] = fun.f_sa(parameters['i_scan_std_c2'].astype(float), sen.saa['scan_std_c2'], 2) #genotype scanning percent params
     ###SAA for genotype calibration that exclude the p11 axis
-    parameters['i_srw_c2'] = fun.f_sa(parameters['i_srw_c2'].astype(float),sen.saa['srw'], 2)
     idx = fun.f_slice_idx(parameters['i_cw_c2'], {0: [25]})
     parameters['i_cw_c2'][idx] = fun.f_sa(parameters['i_cw_c2'][idx], sen.saa['ycfw_scalar'], 2)
     idx = fun.f_slice_idx(parameters['i_cw_c2'], {0: [26]})

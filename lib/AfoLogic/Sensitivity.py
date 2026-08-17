@@ -570,7 +570,6 @@ def create_sa():
     saa['milk_yield'] = 0.0          #Genotype calibration: Adjust cl_yatf[0] parameter which alters milk production, lamb milk intake and ewe PI during lactation
     saa['growth_constant'] = 0.0     #Genotype calibration: Adjust growth constant (k) param
     saa['pi_z_constant'] = 0.0       #Genotype calibration: Adjust c1[2] & c1[22] parameters, PI z scalar constant
-    saa['srw'] = 0.0                 #Genotype calibration: Adjust SRW
 
     ##SAA on slices of the livestock parameters using the age stage axis
     saa['sfw_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')         #SA value with age stages for clean fleece weight (sfw)

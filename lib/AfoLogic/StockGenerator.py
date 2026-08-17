@@ -87,22 +87,26 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     ##Model inversion coefficients #
     ################################
     ##set the genotype to report. This is the genotype of the c2 axis in Universal.xlsx
-    genotype = pinp.sheep['a_c2_c0'][0]  #2 is CFS for MLP & GEPEP traditional, 3 is GFS for GEPEP
-    saa_srw = 0  #set default value for reporting later. Requires a separate variable because has 2 source coefficients
-    srw_parameter = uinp.parameters['i_srw_c2'][genotype]  #set a value in case whole section is commented out
+    genotype = pinp.sheep['a_c2_c0'][0].copy()  #2 is CFS for MLP & GEPEP traditional, 3 is GFS for GEPEP
+    srw_parameter = uinp.parameters['i_srw_c2'][genotype].copy()  #set a value in case whole section is commented out
     if calibrate_trait_values or o_trait_values is not None:
         # print(coefficients_c)   #only useful for debugging when not multiprocessing (workers=1, and not multiprocessing teams)
         n_coeff = coefficients_c.size
         n_traits = calibration_weights_p.size
 
         ##set default values for variables that are used in the calibration
-        ### These can be saa passed from exp.xlsx. Reset to 0 here so not applied twice
+        ### These can be sa passed from exp.xlsx, therefore reset here so not applied twice
         sen.saa['ycfw_scalar'] = 0.0
         sen.saa['yfd_scalar'] = 0.0
         sen.saa['milk_yield'] = 0.0
         sen.saa['growth_constant'] = 0.0
         sen.saa['pi_z_constant'] = 0.0
-        sen.saa['srw'] = 0.0
+        sen.sav['srw_c2'][...] = '-'
+
+        ##Set default value for adult_evg which is used as a flag for endogenous calculation of SRW
+        adult_evg = None
+        srwfat = uinp.parameters['i_srwfat_c2'][genotype]
+        cg8 = uinp.parameters['i_cg_c2'][8, genotype]
 
         ##Comment any coefficients that aren't being calibrated
         j = 0
@@ -188,10 +192,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         # y = coefficients_c[j]; j += 1   #ywt can be changed using the growth constant
         sen.saa['growth_constant'] = coefficients_c[j]; j += 1    #Yearling weight, cn_dams[1] parameter which alters the growth path
         # h = np.nan
-        # a = saa_srw = coefficients_c[j]; j += 1               #only this line or next line not both
-        sen.saa['srw'] = saa_srw = coefficients_c[j]; j += 1  #included when WBE is included or the value is being set
+        # a = coefficients_c[j]; j += 1
+        # srw_parameter += a  #actual parameter value for srw (for reporting & calculating Fat% at SRW)
         sen.saa['srw_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
-        srw_parameter = uinp.parameters['i_srw_c2'][genotype] + saa_srw  #actual parameter value for srw (for reporting)
 
         #Potential intake to calibrate Carcase fatness & WBE, ci[1] parameter
         ##LiveEx: Fit YWT and YFAT volunteers
@@ -211,7 +214,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         # p =
         y = np.nan  #WBE is currently only an adult trait, but hogget is also changed.
         # h =
-        a = coefficients_c[j]; j += 1
+        a = coefficients_c[j]; adult_evg = cg8 + a; j += 1  #  assign a value to adult EVG for endogenous calculation of SRW.
         sen.saa['evg_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         #Basal survival, cd[1] parameter
@@ -377,8 +380,17 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         wlw12_target = calibration_targets_p[i]; i += 1
         wlw13_target = calibration_targets_p[i]; i += 1
 
+        ###Calculate SRW if it is being endogenously fitted from target ALW, target Fat% and EVG
+        ###Test on endogenous calculation is that saa[adult EVG] coefficient has a value
+        ###Estimating SRW as LW at 25% fat based on ALW and Fat% of adult ewes prior to prejoining
+        ###The calculation is based on the fat & lean changing based on the proportion determined by cg8 (EVG) (see W18:99)
+        if adult_evg is not None:
+            sen.sav['srw_c2'][genotype] = awt_target * (1 + 34.8 / (adult_evg - 13.5) * (srwfat - awbe_target))
+            # srw_from_fat = awt * (1 - awbe) / (1 - srwfat_yg1)   #alternative formula that assumes lean mass is constant eg Hutton's model.
+            # srw_from_fat = awt / (1 + 1.54 * (awbe - srwfat_yg1))   # alternative formula that can be fitted to simulation data (see W18:p64)
+
         ###Apply the SAA for genotype calibration that exclude the p11 axis
-        uinp.parameters['i_srw_c2'] = fun.f_sa(uinp.parameters['i_srw_c2'].astype(float),sen.saa['srw'], 2)
+        uinp.parameters['i_srw_c2'] = fun.f_sa(uinp.parameters['i_srw_c2'].astype(float), sen.sav['srw_c2'], 5)
         idx = fun.f_slice_idx(uinp.parameters['i_cw_c2'], {0: [25]})
         uinp.parameters['i_cw_c2'][idx] = fun.f_sa(uinp.parameters['i_cw_c2'][idx], sen.saa['ycfw_scalar'], 2)
         idx = fun.f_slice_idx(uinp.parameters['i_cw_c2'], {0: [26]})
@@ -7869,6 +7881,11 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         a3_wt_slc = {p_pos: 214, b1_pos: 2}    #single bearing ewes prior to prejoining after 3yo lambing
         a4_wt_slc = {p_pos: 266, b1_pos: 2}    #single bearing ewes prior to prejoining after 4yo lambing
         a5_wt_slc = {p_pos: 318, b1_pos: 2}    #single bearing ewes prior to prejoining after 5yo lambing
+        ###SRW slices
+        a2_srw_slc = {p_pos: 162}    #single bearing ewes prior to prejoining after 2yo lambing
+        a3_srw_slc = {p_pos: 214}    #single bearing ewes prior to prejoining after 3yo lambing
+        a4_srw_slc = {p_pos: 266}    #single bearing ewes prior to prejoining after 4yo lambing
+        a5_srw_slc = {p_pos: 318}    #single bearing ewes prior to prejoining after 5yo lambing
         ###Fleece slices
         p_flc_slc = {p_pos: [52,73], b1_pos: 0}      #NM ewes duration of the p age stage
         y_flc_slc = {p_pos: [73,95], b1_pos: 0}      #NM ewes duration of the y age stage
@@ -8040,12 +8057,24 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                  , fun.f_slice(r_ebw_tpdams, a5_wt_slc, default=0))
         awbe = (a2wbe + a3wbe + a4wbe + a5wbe) / 4
 
-        ##SRW based on ALW and Fat% of adult ewes prior to prejoining
-        ###Estimating SRW as LW at 25% fat.
-        ###The calculation assumes that muscle mass is constant and only fat mass changes as per Hutton's model
-        srw_from_fat = awt * (1 - awbe) / (1 - srwfat_yg1)
-        # srw = awt / (1 + 1.54 * (awbe - srwfat_yg1))   # alternative formula that can be fitted to simulation data (see W18:p64)
-        fat_at_srw = 1 - (awt / srw_parameter * (1 - awbe))     #estimated proportion of fat in the body at the srw
+        ##Adult SRW parameter averaged across adult age stages. Used in calculation of fat_at_srw
+        a2srw = fun.f_slice(srw_p_pa1e1b1nwzida0e0b0xyg1, a2_srw_slc, default=0)
+        a3srw = fun.f_slice(srw_p_pa1e1b1nwzida0e0b0xyg1, a3_srw_slc, default=0)
+        a4srw = fun.f_slice(srw_p_pa1e1b1nwzida0e0b0xyg1, a4_srw_slc, default=0)
+        a5srw = fun.f_slice(srw_p_pa1e1b1nwzida0e0b0xyg1, a5_srw_slc, default=0)
+        srw_parameter = (a2srw + a3srw + a4srw + a5srw) / 4
+        if srw_parameter.size == 1:
+            srw_parameter = srw_parameter.item()
+
+        ##Estimating SRW as LW at 25% fat based on simulated LW and Fat% of adult ewes prior to prejoining
+        ###The calculation is based on the fat & lean changing based on the proportion determined by cg8 (EVG) (see W18:99)
+        cg8 = cg_cpdams[8, ...].item()
+        srw_from_fat = awt * (1 + 34.8 / (cg8 - 13.5) * (srwfat_yg1[0,0] - awbe))
+        # srw_from_fat = awt * (1 - awbe) / (1 - srwfat_yg1)   #alternate formula that assumes lean mass is constant eg Hutton's model.
+        # srw_from_fat = awt / (1 + 1.54 * (awbe - srwfat_yg1))   # alternative formula that can be fitted to simulation data (see W18:p64)
+        ###Estimated proportion of fat in the body at the srw. Using same formula as above
+        fat_at_srw = awbe + (cg8 - 13.5) / 34.8 * (srw_parameter - awt) / awt
+        # fat_at_srw = 1 - (awt / srw_parameter * (1 - awbe))     #alternate formula if lean is constant
 
         ##Condition score
         wcs = np.average(fun.f_slice(o_cs_start_tpyatf, w_wt_slc))
@@ -8125,12 +8154,6 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         ###All traits are assigned but some may not be weighted in the Objective
         trait_values_p = np.zeros_like(calibration_targets_p)
         i = 0
-        # trait_values_p[i] = srw; srw_target = calibration_targets_p[i]; i += 1         #used when SRW has a target (which is not common)
-
-        ##Different treatment for SRW if it is being endogenously estimated.
-        ###With SRW endogenous the target is the parameter and the calibration value is the estimate
-        # trait_values_p[i] = srw; srw_target = uinp.parameters['i_srw_c2'][genotype]    #used when SRW is being endogenously calculated
-
         trait_values_p[i] = pcfw; i += 1
         trait_values_p[i] = ycfw; i += 1
         trait_values_p[i] = hcfw; i += 1
@@ -8236,7 +8259,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         #                     / np.maximum(0.0001, np.abs(coefficients_c)))
 
         calibration_objective = 1e8 if np.isnan(t_objective) else t_objective
-        print(f"obj: {calibration_objective} trait  Team SRW: {uinp.parameters['i_srw_c2'][genotype]} + {saa_srw}")
+        print(f"obj: {calibration_objective} trait  Team SRW: {srw_parameter}")
 
         #Report the values, coefficients and target for the current attempt
         b=1; w=2; p=3; y=4; h=5; a2=6; a=7 # set the slice numbers in the saa_p11 arrays (a is using the a3 slice)
@@ -8278,8 +8301,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         print(f"YWT target {ywt_target} this {ywt} with (srw_p11={sen.saa['srw_p11'][y]}, k={sen.saa['growth_constant']} & PI={sen.saa['pi_p11'][y]})")
         # print(f"HWT target {hwt_target} this {hwt} with (srw_p11={sen.saa['srw_p11'][h]})")
         print(f"AWT target {awt_target} this {awt} with (srw_p11={sen.saa['srw_p11'][a]}) & PI={sen.saa['pi_p11'][a]}")
-        print(f"SRW target {srw_target} this {srw_from_fat} calculated from AWT & FAT% with (srw={srw_parameter} & PI={sen.saa['pi_p11'][y]})")    #{sen.saa['srw']})")
         # print(f"PFAT target {pfat_target} this {pfat} with (PI={sen.saa['pi_p11'][p]})")
+        print(f"2yo={a2wt} 3yo={a3wt} 4yo={a4wt} 5yo={a5wt}")
         print(f"YFAT target {yfat_target} this {yfat} with (PI={sen.saa['pi_p11'][y]})")
         # print(f"YFAT target {yfat_target} this {yfat} with (pi_z={sen.saa['pi_z_constant']} & PI={sen.saa['pi_p11'][y]})")
         # print(f"HFAT target {hfat_target} this {hfat} with (PI={sen.saa['pi_p11'][h]})")
@@ -8295,8 +8318,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         # print(f"YWBE target {ywbe_target} this {ywbe} with (EVG={sen.saa['evg_p11'][y]} & PI={sen.saa['pi_p11'][y]})")
         # print(f"HWBE target {hwbe_target} this {hwbe} with (EVG={sen.saa['evg_p11'][h]} & PI={sen.saa['pi_p11'][h]})")
         print(f"AWBE target {awbe_target} this {awbe} with (EVG={sen.saa['evg_p11'][a]} & PI={sen.saa['pi_p11'][a]})")
-        print(f"Estimated Fat% when ALW = SRW parameter {fat_at_srw} with (SRW={srw_parameter}, ALW={awt} & Fat%={awbe})")
         print(f"2yo={a2wbe} 3yo={a3wbe} 4yo={a4wbe} 5yo={a5wbe}")
+        print(f"Estimated Fat% when ALW = SRW, {fat_at_srw} with (SRW={srw_parameter}, ALW={awt}, Fat%={awbe} & EVG={cg8})")
+        print(f"Estimated SRW when Fat% = {srwfat_yg1[0,0]*100}, {srw_from_fat} with (ALW={awt}, Fat%={awbe} & EVG={cg8})")
         # print(f"PSURV target {psurv_target} this {psurv} with ({sen.saa['bsurv_p11'][p]})")
         # print(f"YSURV target {ysurv_target} this {ysurv} with ({sen.saa['bsurv_p11'][y]})")
         # print(f"HSURV target {hsurv_target} this {hsurv} with ({sen.saa['bsurv_p11'][h]})")
