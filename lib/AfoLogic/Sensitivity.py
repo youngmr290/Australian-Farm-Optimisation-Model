@@ -573,18 +573,18 @@ def create_sa():
     saa['srw'] = 0.0                 #Genotype calibration: Adjust SRW
 
     ##SAA on slices of the livestock parameters using the age stage axis
-    saa['sfw_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')  #SA value with age stages for clean fleece weight (sfw)
-    saa['sfd_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')  #SA value with age stages for fibre diameter (sfd)
-    saa['iss_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')  #SA value with age stages for staple strength (cw[16])
-    saa['follicles_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')  #SA value with age stages for staple length (cw[11])
-    saa['srw_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')  #SA value with age stages for weight (srw)
-    saa['pi_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')  #SA value with age stages for potential intake (ci[1])
-    saa['evg_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')  #SA value with age stages for fatness (cg[8] & cg[9])
-    saa['bsurv_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')  #SA value with age stages for basal survival (cd[1])
-    saa['pnsurv_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')  #SA value with age stages for peri-natal survival (cu2[23,-1])
-    saa['con_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')  #SA value with age stages for conception (cb1[24, 25 & 26, 1]).
-    saa['ls_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')  #SA value with age stages for litter size (cb1[24, 25 & 26, 2 & 3])
-    saa['era_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')  #SA value with age stages for ewe rearing ability / lamb survival (cu6[8,-1] & cu2[8,-1])
+    saa['sfw_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')         #SA value with age stages for clean fleece weight (sfw)
+    saa['sfd_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')         #SA value with age stages for fibre diameter (sfd)
+    saa['iss_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')         #SA value with age stages for staple strength (cw[16])
+    saa['follicles_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')   #SA value with age stages for staple length (cw[11])
+    saa['srw_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')         #SA value with age stages for weight (srw)
+    saa['pi_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')          #SA value with age stages for potential intake (ci[1])
+    saa['evg_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')         #SA value with age stages for fatness (cg[8] & cg[9])
+    saa['bsurv_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')       #SA value with age stages for basal survival (cd[1])
+    saa['pnsurv_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')      #SA value with age stages for peri-natal survival (cu2[23,-1])
+    saa['con_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')         #SA value with age stages for conception (cb1[24, 25 & 26, 1]).
+    saa['ls_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')          #SA value with age stages for litter size (cb1[24, 25 & 26, 2 & 3])
+    saa['era_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')         #SA value with age stages for ewe rearing ability / lamb survival (cu6[8,-1] & cu2[8,-1])
     ##SAT
     sat['cb0_c2'] = np.zeros(uinp.parameters['i_cb0_c2'].shape, dtype='float64')  #BTRT params for genotypes
     ##SAR
