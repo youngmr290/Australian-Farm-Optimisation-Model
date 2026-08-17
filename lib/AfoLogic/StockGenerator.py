@@ -174,8 +174,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         # w =
         # p = np.nan  #post-wean is not a reproducing age group
         # y = coefficients_c[j]; j += 1
-        y = np.nan
-        # h =   #include hoggets so that joining at 19mo is included
+        h = np.nan
         a = coefficients_c[j]; j += 1
         sen.saa['era_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
@@ -386,7 +385,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         uinp.parameters['i_cw_c2'][idx] = fun.f_sa(uinp.parameters['i_cw_c2'][idx], sen.saa['yfd_scalar'], 2)
         idx = fun.f_slice_idx(uinp.parameters['i_cl_c2'], {0: [0]})
         uinp.parameters['i_cl_c2'][idx] = fun.f_sa(uinp.parameters['i_cl_c2'][idx], sen.saa['milk_yield'], 2)
-        sen.sam['pi_yatf'] = fun.f_sa(sen.sam['pi_yatf'], sen.saa['milk_yield'], 2)  #increase yatf PI of pasture as well as milk intake
+        sen.sam['pi_yatf'] = fun.f_sa(sen.sam['pi_yatf'], sen.saa['milk_yield'], 2)  #increase yatf PI (pasture as well as milk)
         idx = fun.f_slice_idx(uinp.parameters['i_cn_c2'], {0: [1]})
         uinp.parameters['i_cn_c2'][idx] = fun.f_sa(uinp.parameters['i_cn_c2'][idx], sen.saa['growth_constant'], 2)
         idx = fun.f_slice_idx(uinp.parameters['i_ci_c2'], {0: [2]})   #slice 2 CFS coefficient
@@ -2053,7 +2052,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     ### activate p axis for sim parameter arrays to include changes for age stages #
     ################################################################################
 
-    #Test if the saa on age stages is required (any value <> 0)
+    #Test if the saa on age stages is required (any value != 0)
     p11_active = (np.any(sen.saa['sfw_p11'])
                 + np.any(sen.saa['sfd_p11'])
                 + np.any(sen.saa['iss_p11'])
@@ -2066,7 +2065,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 + np.any(sen.saa['con_p11'])
                 + np.any(sen.saa['ls_p11'])
                 + np.any(sen.saa['era_p11'])
-                  )>0
+                  )!=0
 
     if p11_active:
         age_stage_p11 = sinp.structuralsa['i_rev_age_stage_asbv'].astype(float)
