@@ -8060,15 +8060,23 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         a5cs = fun.f_slice(o_cs_start_tpdams, a5_wt_slc)
         acs = (a2cs + a3cs + a4cs + a5cs) / 4
 
-        #todo connect up periods for mortality of younger animals.
-        psurv = 0    # fun.f_divide(np.sum(o_numbers_start_tpdams[0,312,0,:,:,0,0,0,0,0,0,0,0,0,0,0])           #Mortality of ewes from yearling shearing to 5.5yo BTRT 11
-                     #       , np.sum(o_numbers_start_tpdams[0,104,0,:,:,0,0,0,0,0,0,0,0,0,0,0]))
-        ysurv = 0    # fun.f_divide(np.sum(o_numbers_start_tpdams[0,312,0,:,:,0,0,0,0,0,0,0,0,0,0,0])           #Mortality of ewes from yearling shearing to 5.5yo BTRT 11
-                     #       , np.sum(o_numbers_start_tpdams[0,104,0,:,:,0,0,0,0,0,0,0,0,0,0,0]))
-        hsurv = 0    # fun.f_divide(np.sum(o_numbers_start_tpdams[0,312,0,:,:,0,0,0,0,0,0,0,0,0,0,0])           #Mortality of ewes from yearling shearing to 5.5yo BTRT 11
-                     #       , np.sum(o_numbers_start_tpdams[0,104,0,:,:,0,0,0,0,0,0,0,0,0,0,0]))
-        #todo  Maybe need a different definition of asurv for use with EV of breeding traits.
-        asurv = fun.f_divide(np.sum(o_numbers_start_tpdams[0,312,0,:,:,0,0,0,0,0,0,0,0,0,0,0])           #Cumulative mortality of ewes from yearling shearing to 5.5yo BTRT 11
+        ## Survival. mortality_dams is the sum of base + weaner + perinatal + preg tox.
+        ### Using the fleece growth slices for the martality periods.
+        psurv = 1- np.sum(fun.f_slice(o_mortality_dams, p_flc_slc, default=0))
+        ysurv = 1- np.sum(fun.f_slice(o_mortality_dams, y_flc_slc, default=0))
+        hsurv = 1- np.sum(fun.f_slice(o_mortality_dams, h_flc_slc, default=0))
+        a2surv = 1- np.sum(fun.f_slice(o_mortality_dams, a2_flc_slc, default=0))
+        a3surv = 1- np.sum(fun.f_slice(o_mortality_dams, a3_flc_slc, default=0))
+        a4surv = 1- np.sum(fun.f_slice(o_mortality_dams, a4_flc_slc, default=0))
+        a5surv = 1- np.sum(fun.f_slice(o_mortality_dams, a5_flc_slc, default=0))
+        asurv = (a2surv + a3surv + a4surv + a5surv) / 4
+        # psurv = 0    # fun.f_divide(np.sum(o_numbers_start_tpdams[0,312,0,:,:,0,0,0,0,0,0,0,0,0,0,0])           #Mortality of ewes from yearling shearing to 5.5yo BTRT 11
+        #              #       , np.sum(o_numbers_start_tpdams[0,104,0,:,:,0,0,0,0,0,0,0,0,0,0,0]))
+        # ysurv = 0    # fun.f_divide(np.sum(o_numbers_start_tpdams[0,312,0,:,:,0,0,0,0,0,0,0,0,0,0,0])           #Mortality of ewes from yearling shearing to 5.5yo BTRT 11
+        #              #       , np.sum(o_numbers_start_tpdams[0,104,0,:,:,0,0,0,0,0,0,0,0,0,0,0]))
+        # hsurv = 0    # fun.f_divide(np.sum(o_numbers_start_tpdams[0,312,0,:,:,0,0,0,0,0,0,0,0,0,0,0])           #Mortality of ewes from yearling shearing to 5.5yo BTRT 11
+        #              #       , np.sum(o_numbers_start_tpdams[0,104,0,:,:,0,0,0,0,0,0,0,0,0,0,0]))
+        ya5surv = fun.f_divide(np.sum(o_numbers_start_tpdams[0,312,0,:,:,0,0,0,0,0,0,0,0,0,0,0])           #Cumulative survival of ewes from yearling shearing to 5.5yo BTRT 11
                            , np.sum(o_numbers_start_tpdams[0,104,0,:,:,0,0,0,0,0,0,0,0,0,0,0]))
 
         ##LW profile to calibrate feed supply
@@ -8172,6 +8180,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         trait_values_p[i] = ysurv; i += 1
         trait_values_p[i] = hsurv; i += 1
         trait_values_p[i] = asurv; i += 1
+        trait_values_p[i] = ya5surv; i += 1
         trait_values_p[i] = elw0; i += 1
         trait_values_p[i] = elw1; i += 1
         trait_values_p[i] = elw2; i += 1
@@ -8289,8 +8298,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         # print(f"PSURV target {psurv_target} this {psurv} with ({sen.saa['bsurv_p11'][p]})")
         # print(f"YSURV target {ysurv_target} this {ysurv} with ({sen.saa['bsurv_p11'][y]})")
         # print(f"HSURV target {hsurv_target} this {hsurv} with ({sen.saa['bsurv_p11'][h]})")
-        print(f"ASURV target {asurv_target} this {asurv} with ({sen.saa['bsurv_p11'][a]})")
-        # print(f"ASURV target {asurv_target} this {asurv} with ({sen.saa['pnsurv_p11'][a]})")
+        print(f"ASURV target {asurv_target} this {asurv} with (Base={sen.saa['bsurv_p11'][a]}) & PN={sen.saa['pnsurv_p11'][a]}")
+        # print(f"Y-A5SURV target {ya5surv_target} this {ya5surv} with (Base={sen.saa['bsurv_p11'][a]}) & PN={sen.saa['pnsurv_p11'][a]})")
 
         # print("LW targets Ewes (value, sar, target)")
         # for k in range(28):
