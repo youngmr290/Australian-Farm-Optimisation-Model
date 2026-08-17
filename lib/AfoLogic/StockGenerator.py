@@ -8051,13 +8051,13 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
         ##Condition score
         wcs = np.average(fun.f_slice(o_cs_start_tpyatf, w_wt_slc))
-        pcs = fun.f_slice(o_cs_start_tpdams, p_wt_slc)
-        ycs = fun.f_slice(o_cs_start_tpdams, y_wt_slc)
-        hcs = fun.f_slice(o_cs_start_tpdams, h_wt_slc)
-        a2cs = fun.f_slice(o_cs_start_tpdams, a2_wt_slc)
-        a3cs = fun.f_slice(o_cs_start_tpdams, a3_wt_slc)
-        a4cs = fun.f_slice(o_cs_start_tpdams, a4_wt_slc)
-        a5cs = fun.f_slice(o_cs_start_tpdams, a5_wt_slc)
+        pcs = fun.f_slice(o_cs_start_tpdams, p_wt_slc, default=0)
+        ycs = fun.f_slice(o_cs_start_tpdams, y_wt_slc, default=0)
+        hcs = fun.f_slice(o_cs_start_tpdams, h_wt_slc, default=0)
+        a2cs = fun.f_slice(o_cs_start_tpdams, a2_wt_slc, default=0)
+        a3cs = fun.f_slice(o_cs_start_tpdams, a3_wt_slc, default=0)
+        a4cs = fun.f_slice(o_cs_start_tpdams, a4_wt_slc, default=0)
+        a5cs = fun.f_slice(o_cs_start_tpdams, a5_wt_slc, default=0)
         acs = (a2cs + a3cs + a4cs + a5cs) / 4
 
         ## Survival. mortality_dams is the sum of base + weaner + perinatal + preg tox.
