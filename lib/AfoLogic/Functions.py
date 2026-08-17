@@ -1019,8 +1019,9 @@ def f_slice_idx(arr, slice_specs, default=slice(None)):
     :param slice_specs: dict of {axis: args} - see f_slice for full description
     :return: tuple of slices, one per axis
     '''
-    ##check if arr is int - this is the case for the first loop because arr may be initialised as 0
-    if type(arr) == int:
+    ##check if arr is int or has no active axes
+    ### int can occur in the first loop because arr may be initialised as 0
+    if type(arr) == int or arr.size == 1:
         return arr
 
     # Build a list of slice(None) — i.e. [:] — for every axis, as the default
@@ -1032,7 +1033,7 @@ def f_slice_idx(arr, slice_specs, default=slice(None)):
         if arr.shape[axis] == 1:  #don't slice if singleton axis. Warning if slice isn't 0 or 1
             if isinstance(args, int) and (args == 0 or args == -1):  #don't display warning if taking slice 0 or -1 of the singleton
                 pass
-            elif args[0] == 0 or args[0] == -1:  #don't display warning if taking slice 0 or -1 of the singleton
+            elif not isinstance(args, int) and (args[0] == 0 or args[0] == -1):  #don't display warning if taking slice 0 or -1 of the singleton
                 pass
             else:
                 callers = f1_get_caller_info(skip=1, levels=3)
@@ -1077,8 +1078,9 @@ def f_slice(arr, slice_specs, default=slice(None)):
     :return: sliced only - returns view of arr, masked - returns a copy of arr
 
     '''
-    ##check if arr is int - this is the case for the first loop because arr may be initialised as 0
-    if type(arr) == int:
+    ##check if arr is int or has no active axes
+    ### int can occur in the first loop because arr may be initialised as 0
+    if type(arr) == int or arr.size == 1:
         return arr
 
     # Build and apply slices first via f_slice_idx (returns a view, ignoring masks)
