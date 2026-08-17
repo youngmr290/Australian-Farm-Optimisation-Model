@@ -114,10 +114,10 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         ##CFW is calibrated for A for whole of life. Y is by the scalar
         w = p = y = h = a = None
         w = np.nan  #fleece growth prior to weaning is not carried forward to shearing
-        # p = coefficients_c[j]; j += 1
-        # y = coefficients_c[j]; j += 1
-        sen.saa['ycfw_scalar'] = coefficients_c[j]; j += 1    #YCFW scalar, cw_dams[25] parameter which scales SFW
-        # h = coefficients_c[j]; j += 1
+        p = coefficients_c[j]; j += 1
+        y = coefficients_c[j]; j += 1
+        # sen.saa['ycfw_scalar'] = coefficients_c[j]; j += 1    #YCFW scalar, cw_dams[25] parameter which scales SFW
+        h = coefficients_c[j]; j += 1
         a = coefficients_c[j]; j += 1
         sen.saa['sfw_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
@@ -125,10 +125,10 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         ##FD is calibrated for A for whole of life. Y is by the scalar
         w = p = y = h = a = None
         w = np.nan  #fleece growth prior to weaning is not carried forward to shearing
-        # p = coefficients_c[j]; j += 1
-        # y = coefficients_c[j]; j += 1
-        sen.saa['yfd_scalar'] = coefficients_c[j]; j += 1    #YFD scalar, cw_dams[26] parameter which scales SFD
-        # h = coefficients_c[j]; j += 1
+        p = coefficients_c[j]; j += 1
+        y = coefficients_c[j]; j += 1
+        # sen.saa['yfd_scalar'] = coefficients_c[j]; j += 1    #YFD scalar, cw_dams[26] parameter which scales SFD
+        h = coefficients_c[j]; j += 1
         a = coefficients_c[j]; j += 1
         sen.saa['sfd_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
@@ -149,7 +149,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         # p = coefficients_c[j]; j += 1
         # y = coefficients_c[j]; j += 1
         # h = coefficients_c[j]; j += 1
-        a = coefficients_c[j]; j += 1
+        # a = coefficients_c[j]; j += 1
         sen.saa['follicles_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         #Conception, cb1[24,25&26, 0:] parameter
@@ -188,53 +188,49 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         # sen.saa['birth_weight'] = coefficients_c[j]; j += 1    #Birth weight, #todo still to decide how to control BWT
         w = np.nan  #wwt is changed with a separate coefficient
         sen.saa['milk_yield'] = coefficients_c[j]; j += 1    #Weaning weight, cl_yatf[0] parameter which alters milk production, lamb milk intake and ewe PI during lactation
-        # p = coefficients_c[j]; j += 1
-        # y = coefficients_c[j]; j += 1   #ywt can be changed using the growth constant
-        sen.saa['growth_constant'] = coefficients_c[j]; j += 1    #Yearling weight, cn_dams[1] parameter which alters the growth path
-        # h = np.nan
+        p = coefficients_c[j]; j += 1
+        y = coefficients_c[j]; j += 1   #ywt can be changed using the growth constant
+        # sen.saa['growth_constant'] = coefficients_c[j]; j += 1    #Yearling weight, cn_dams[1] parameter which alters the growth path
+        h = coefficients_c[j]; j += 1
         # a = coefficients_c[j]; j += 1
         # srw_parameter += a  #actual parameter value for srw (for reporting & calculating Fat% at SRW)
         sen.saa['srw_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         #Potential intake to calibrate Carcase fatness & WBE, ci[1] parameter
-        ##LiveEx: Fit YWT and YFAT volunteers
         w = p = y = h = a = None
         w = np.nan  #intake pre-weaning is handled with the cl[0] parameter, which is intake of milk
-        # p = coefficients_c[j]; j += 1
-        # y = coefficients_c[j]; j += 1
-        sen.saa['pi_z_constant'] = coefficients_c[j]; j += 1    #ci[22] parameter which alters the scaling of PI by z
-        # h = np.nan  #no hfat
+        p = coefficients_c[j]; j += 1
+        y = coefficients_c[j]; j += 1
+        # sen.saa['pi_z_constant'] = coefficients_c[j]; j += 1    #ci[22] parameter which alters the scaling of PI by z
+        h = np.nan  #no hfat
         a = coefficients_c[j]; j += 1  #np.nan when SRW is an active calibration coefficient
         sen.saa['pi_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         #EVG to calibrate Whole body energy, cg[8&9] parameters
-        ##LiveEx: Only using the calibrated coefficients for H & A because it is an adult trait.
         w = p = y = h = a = None
         # w =
         # p =
-        y = np.nan  #WBE is currently only an adult trait, but hogget is also changed.
-        # h =
+        # y = np.nan  #WBE is currently only an adult trait, but hogget is also changed.
+        h = np.nan  #hogget is changed if HWT is not in the BO objective.
         a = coefficients_c[j]; adult_evg = cg8 + a; j += 1  #  assign a value to adult EVG for endogenous calculation of SRW.
         sen.saa['evg_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         #Basal survival, cd[1] parameter
-        ##LiveEx: Not altering basal survival coefficient.
         w = p = y = h = a = None
         w = np.nan  #survival of yatf is represented through ewe rearing ability (era)
         # p = coefficients_c[j]; j += 1
         # y = coefficients_c[j]; j += 1
         # h = coefficients_c[j]; j += 1
-        a = coefficients_c[j]; j += 1  #adult survival can also be represented in peri-natal survival
+        # a = coefficients_c[j]; j += 1  #adult survival can also be represented in peri-natal survival
         sen.saa['bsurv_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         #Peri-natal survival, cu2[23, -1] parameter
-        ##LiveEx: Only doing Adult age stage
         # w = p = y = h = a = None
         # w =
         # p =
         # y = coefficients_c[j]; j += 1
-        # h = np.nan  #ERA is a Y & A trait
-        # a = coefficients_c[j]; j += 1
+        h = np.nan  #ERA is a Y & A trait
+        a = coefficients_c[j]; j += 1
         # sen.saa['pnsurv_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         # ##Build and apply sar variable based on the next 44 coefficients
@@ -8261,27 +8257,27 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         calibration_objective = 1e8 if np.isnan(t_objective) else t_objective
         print(f"obj: {calibration_objective} trait  Team SRW: {srw_parameter}")
 
-        #Report the values, coefficients and target for the current attempt
+        #Report the values, coefficients and target for the current iteration
         b=1; w=2; p=3; y=4; h=5; a2=6; a=7 # set the slice numbers in the saa_p11 arrays (a is using the a3 slice)
 
-        # print(f"PCFW target {pcfw_target} this {pcfw} with (sfw={sen.saa['sfw_p11'][p]})")
-        print(f"yCFW target {ycfw_target} this {ycfw} with (sfw={sen.saa['sfw_p11'][y]} & {sen.saa['ycfw_scalar']})")
-        # print(f"HCFW target {hcfw_target} this {hcfw} with (sfw={sen.saa['sfw_p11'][h]})")
+        print(f"PCFW target {pcfw_target} this {pcfw} with (sfw={sen.saa['sfw_p11'][p]})")
+        print(f"YCFW target {ycfw_target} this {ycfw} with (sfw={sen.saa['sfw_p11'][y]} & {sen.saa['ycfw_scalar']})")
+        print(f"HCFW target {hcfw_target} this {hcfw} with (sfw={sen.saa['sfw_p11'][h]})")
         print(f"ACFW target {acfw_target} this {acfw} with (sfw={sen.saa['sfw_p11'][a]})")
         print(f"2yo={a2cfw} 3yo={a3cfw} 4yo={a4cfw} 5yo={a5cfw}")
-        # print(f"PFD target {pfd_target} this {pfd} with (sfd={sen.saa['sfd_p11'][p]})")
+        print(f"PFD target {pfd_target} this {pfd} with (sfd={sen.saa['sfd_p11'][p]})")
         print(f"YFD target {yfd_target} this {yfd} with (sfd={sen.saa['sfd_p11'][y]} & {sen.saa['yfd_scalar']})")
-        # print(f"HFD target {hfd_target} this {hfd} with (sfd={sen.saa['sfd_p11'][h]})")
+        print(f"HFD target {hfd_target} this {hfd} with (sfd={sen.saa['sfd_p11'][h]})")
         print(f"AFD target {afd_target} this {afd} with (sfd={sen.saa['sfd_p11'][a]})")
         print(f"2yo={a2fd} 3yo={a3fd} 4yo={a4fd} 5yo={a5fd}")
-        # print(f"PSS target {pss_target} this {pss} with (iss={sen.saa['iss_p11'][p]})")
-        # print(f"YSS target {yss_target} this {yss} with (iss={sen.saa['iss_p11'][y]})")
-        # print(f"HSS target {hss_target} this {hss} with (iss={sen.saa['iss_p11'][h]})")
+        print(f"PSS target {pss_target} this {pss} with (iss={sen.saa['iss_p11'][p]})")
+        print(f"YSS target {yss_target} this {yss} with (iss={sen.saa['iss_p11'][y]})")
+        print(f"HSS target {hss_target} this {hss} with (iss={sen.saa['iss_p11'][h]})")
         print(f"ASS target {ass_target} this {ass} with (iss={sen.saa['iss_p11'][a]})")
         print(f"2yo={a2ss} 3yo={a3ss} 4yo={a4ss} 5yo={a5ss}")
-        # print(f"PSL target {psl_target} this {psl} with (follicles={sen.saa['follicles_p11'][p]})")
-        # print(f"YSL target {ysl_target} this {ysl} with (follicles={sen.saa['follicles_p11'][y]})")
-        # print(f"HSL target {hsl_target} this {hsl} with (follicles={sen.saa['follicles_p11'][h]})")
+        print(f"PSL target {psl_target} this {psl} with (follicles={sen.saa['follicles_p11'][p]})")
+        print(f"YSL target {ysl_target} this {ysl} with (follicles={sen.saa['follicles_p11'][y]})")
+        print(f"HSL target {hsl_target} this {hsl} with (follicles={sen.saa['follicles_p11'][h]})")
         print(f"ASL target {asl_target} this {asl} with (follicles={sen.saa['follicles_p11'][a]})")
         print(f"2yo={a2sl} 3yo={a3sl} 4yo={a4sl} 5yo={a5sl}")
         # print(f"YCON target {ycon_target} this {ycon} with ({sen.saa['con_p11'][y]})")
@@ -8297,12 +8293,12 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         print(f"2yo={a2era} 3yo={a3era} 4yo={a4era} 5yo={a5era}")
         # print(f"BWT target {bwt_target} this {bwt} with (srw_p11={sen.saa['srw_p11'][b]})")
         print(f"WWT target {wwt_target} this {wwt} with (srw_p11={sen.saa['srw_p11'][w]} & milk_scalar={sen.saa['milk_yield']})")
-        # print(f"PWT target {pwt_target} this {pwt} with (srw_p11={sen.saa['srw_p11'][p]})")
+        print(f"PWT target {pwt_target} this {pwt} with (srw_p11={sen.saa['srw_p11'][p]})")
         print(f"YWT target {ywt_target} this {ywt} with (srw_p11={sen.saa['srw_p11'][y]}, k={sen.saa['growth_constant']} & PI={sen.saa['pi_p11'][y]})")
-        # print(f"HWT target {hwt_target} this {hwt} with (srw_p11={sen.saa['srw_p11'][h]})")
+        print(f"HWT target {hwt_target} this {hwt} with (srw_p11={sen.saa['srw_p11'][h]})")
         print(f"AWT target {awt_target} this {awt} with (srw_p11={sen.saa['srw_p11'][a]}) & PI={sen.saa['pi_p11'][a]}")
-        # print(f"PFAT target {pfat_target} this {pfat} with (PI={sen.saa['pi_p11'][p]})")
         print(f"2yo={a2wt} 3yo={a3wt} 4yo={a4wt} 5yo={a5wt}")
+        print(f"PFAT target {pfat_target} this {pfat} with (PI={sen.saa['pi_p11'][p]})")
         print(f"YFAT target {yfat_target} this {yfat} with (PI={sen.saa['pi_p11'][y]})")
         # print(f"YFAT target {yfat_target} this {yfat} with (pi_z={sen.saa['pi_z_constant']} & PI={sen.saa['pi_p11'][y]})")
         # print(f"HFAT target {hfat_target} this {hfat} with (PI={sen.saa['pi_p11'][h]})")
