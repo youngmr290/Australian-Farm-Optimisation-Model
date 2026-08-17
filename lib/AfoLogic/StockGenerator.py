@@ -7932,21 +7932,22 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         afd = (a2fd + a3fd + a4fd + a5fd) / 4
 
         ##SS values. Note: minimum cross-sectional area / average cross-sectional area
+        iss = cw_cpdams[16, ...].item()
+
         pfd_min = np.min(fun.f_slice(o_d_fd_tpdams, p_flc_slc, default=0))
-        cw16_sliced = fun.f_slice(cw_cpdams[16, ...], {}, default=0)
-        pss = pfd_min ** 2 / pfd ** 2 * cw16_sliced
+        pss = pfd_min ** 2 / pfd ** 2 * iss
         yfd_min = np.min(fun.f_slice(o_d_fd_tpdams, y_flc_slc, default=0))
-        yss = yfd_min ** 2 / yfd ** 2 * cw16_sliced
+        yss = yfd_min ** 2 / yfd ** 2 * iss
         hfd_min = np.min(fun.f_slice(o_d_fd_tpdams, h_flc_slc, default=0))
-        hss = hfd_min ** 2 / hfd ** 2 * cw16_sliced
+        hss = hfd_min ** 2 / hfd ** 2 * iss
         a2fd_min = np.min(fun.f_slice(o_d_fd_tpdams, a2_flc_slc, default=0))
-        a2ss = a2fd_min ** 2 / a2fd ** 2 * cw16_sliced
+        a2ss = a2fd_min ** 2 / a2fd ** 2 * iss
         a3fd_min = np.min(fun.f_slice(o_d_fd_tpdams, a3_flc_slc, default=0))
-        a3ss = a3fd_min ** 2 / a3fd ** 2 * cw16_sliced
+        a3ss = a3fd_min ** 2 / a3fd ** 2 * iss
         a4fd_min = np.min(fun.f_slice(o_d_fd_tpdams, a4_flc_slc, default=0))
-        a4ss = a4fd_min ** 2 / a4fd ** 2 * cw16_sliced
+        a4ss = a4fd_min ** 2 / a4fd ** 2 * iss
         a5fd_min = np.min(fun.f_slice(o_d_fd_tpdams, a5_flc_slc, default=0))
-        a5ss = a5fd_min ** 2 / a5fd ** 2 * cw16_sliced
+        a5ss = a5fd_min ** 2 / a5fd ** 2 * iss
         ass = (a2ss + a3ss + a4ss + a5ss) / 4
 
         ##SL values. Note: sum of fibre length * staple length factor
