@@ -148,7 +148,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         a = coefficients_c[j]; j += 1
         sen.saa['follicles_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
-        #Conception, cb1[24,25&26, 1] parameter
+        #Conception, cb1[24,25&26, 0:] parameter
         ##Conception only for adult stage
         w = p = y = h = a = None
         # w =
@@ -158,7 +158,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         a = coefficients_c[j]; j += 1
         sen.saa['con_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
-        #Litter size, cb1[24,25&26, 2&3] parameter
+        #Litter size, cb1[24,25&26, 2:] parameter
         ##Litter size only for adult stage
         w = p = y = h = a = None
         # w =
@@ -2246,17 +2246,15 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     saa = sfun.f1_saa_p11_to_p(sen.saa['con_p11'], scalar_pdamsp11)
     target_shape = np.broadcast_shapes(cb1_cpdams.shape, saa.shape)
     cb1_p_cpdams = np.broadcast_to(cb1_cpdams, target_shape).copy()
-    slc_b1 = fun.f_slice_idx(cb1_p_cpdams, {b1_pos: [0, 2]})  #slice 0:1 = NM & Dry
+    ### apply to all slices of b1 which moves all the cut-offs (0/1, 1/2, 2/3 and 3/4), similar to altering the intercept.
+    slc_b1 = fun.f_slice_idx(cb1_p_cpdams, {b1_pos: [0,None]})   # = LSLN 11 & all higher BT
     cb1_p_cpdams[24:27][slc_b1] += saa
 
     ##cb1[24, 25 & 26, 2 & 3] - litter size (Note: parameter is already broadcast)
     ###dams
     saa = sfun.f1_saa_p11_to_p(sen.saa['ls_p11'], scalar_pdamsp11)
-    slc_b1 = fun.f_slice_idx(cb1_p_cpdams, {b1_pos: [2,4]})   # = LSLN 11 & 22
-    cb1_p_cpdams[24:27][slc_b1] += saa
-    slc_b1 = fun.f_slice_idx(cb1_p_cpdams, {b1_pos: [5]})   # = LSLN 21
-    cb1_p_cpdams[24:27][slc_b1] += saa
-    slc_b1 = fun.f_slice_idx(cb1_p_cpdams, {b1_pos: [8,10]})   # = LSLN 10 & 20
+    ### apply to 1/2, 2/3 & 3/4 cutoffs
+    slc_b1 = fun.f_slice_idx(cb1_p_cpdams, {b1_pos: [2,None]})   # = LSLN 11 & all higher BT
     cb1_p_cpdams[24:27][slc_b1] += saa
 
     ##cu6[8, -1] & cu2[8, -1] - ewe rearing ability / lamb survival
