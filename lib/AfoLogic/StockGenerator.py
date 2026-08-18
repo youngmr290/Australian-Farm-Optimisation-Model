@@ -2182,21 +2182,25 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     target_shape = np.broadcast_shapes(ci_cpsire.shape, saa.shape)
     ci_p_cpsire = np.broadcast_to(ci_cpsire, target_shape).copy()
     ci_p_cpsire[1] += saa
+    ci_p_cpsire[21] += saa
     ###dams
     saa = sfun.f1_saa_p11_to_p(sen.saa['pi_p11'], scalar_pdamsp11)
     target_shape = np.broadcast_shapes(ci_cpdams.shape, saa.shape)
     ci_p_cpdams = np.broadcast_to(ci_cpdams, target_shape).copy()
     ci_p_cpdams[1] += saa
+    ci_p_cpdams[21] += saa
     ###yatf
     saa = sfun.f1_saa_p11_to_p(sen.saa['pi_p11'], scalar_pyatfp11)
     target_shape = np.broadcast_shapes(ci_cpyatf.shape, saa.shape)
     ci_p_cpyatf = np.broadcast_to(ci_cpyatf, target_shape).copy()
     ci_p_cpyatf[1] += saa
+    ci_p_cpyatf[21] += saa
     ###offs
     saa = sfun.f1_saa_p11_to_p(sen.saa['pi_p11'], scalar_poffsp11)
     target_shape = np.broadcast_shapes(ci_cpoffs.shape, saa.shape)
     ci_p_cpoffs = np.broadcast_to(ci_cpoffs, target_shape).copy()
     ci_p_cpoffs[1] += saa
+    ci_p_cpoffs[21] += saa
 
     ##cg[8 & 9] - energy value of gain
     #todo some pre-loop calcs use cg_cp and haven't been updated to cg_p_cp (non-essential). See W18 p46 for vars to update
