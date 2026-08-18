@@ -310,6 +310,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         als_target = calibration_targets_p[i]; i += 1
         yera_target = calibration_targets_p[i]; i += 1
         aera_target = calibration_targets_p[i]; i += 1
+        yera2_target = calibration_targets_p[i]; i += 1
+        aera2_target = calibration_targets_p[i]; i += 1
         bwt_target = calibration_targets_p[i]; i += 1
         wwt_target = calibration_targets_p[i]; i += 1
         pwt_target = calibration_targets_p[i]; i += 1
@@ -8002,23 +8004,44 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                 , np.sum(fun.f_slice(o_numbers_start_tpdams, a5_preg_slc, default=0)))
         als = (a3ls + a4ls + a5ls) / 3  #a2ls is calibrated separately because separate 2 tooth coefficients
 
-        ##ERA = twin survival is defined as survival of twin lambs from the ewes that survive
-        ### number of twin lambs at foot during lactation / 2 * number of twin bearing ewes
-        n_twin_lact = np.sum(o_numbers_start_tpdams * (nfoet_b1nwzida0e0b0xyg == 2) * nyatf_b1nwzida0e0b0xyg
-                             , axis=b1_pos, keepdims=True)
-        n_twin_preg = np.sum(o_numbers_start_tpdams * (nfoet_b1nwzida0e0b0xyg == 2) * 2
-                             , axis=b1_pos, keepdims=True)
-        yera = fun.f_divide_float(np.sum(fun.f_slice(n_twin_lact, y_lact_slc, default=0))
-                                , np.sum(fun.f_slice(n_twin_preg, y_lact_slc, default=0)))
-        a2era = fun.f_divide_float(np.sum(fun.f_slice(n_twin_lact, a2_lact_slc, default=0))
-                                 , np.sum(fun.f_slice(n_twin_preg, a2_lact_slc, default=0)))
-        a3era = fun.f_divide_float(np.sum(fun.f_slice(n_twin_lact, a3_lact_slc, default=0))
-                                 , np.sum(fun.f_slice(n_twin_preg, a3_lact_slc, default=0)))
-        a4era = fun.f_divide_float(np.sum(fun.f_slice(n_twin_lact, a4_lact_slc, default=0))
-                                 , np.sum(fun.f_slice(n_twin_preg, a4_lact_slc, default=0)))
-        a5era = fun.f_divide_float(np.sum(fun.f_slice(n_twin_lact, a5_lact_slc, default=0))
-                                 , np.sum(fun.f_slice(n_twin_preg, a5_lact_slc, default=0)))
+        ##ERA = number of lambs during lactation divided by lambs during pregnancy from LSLN which is based on lamb mortality_birth_yatf.
+        ### Two options can be used Survival of all lambs, survival of twin lambs. Comment out one or the other
+        #todo Could be controlled with a sav as to which system is used so they can be compared in an experiment
+        ### Option 1: Average survival of all lambs from the ewes that survive
+        ### number of lambs at foot / number of foetuses
+        n_lact = np.sum(o_numbers_start_tpdams * nyatf_b1nwzida0e0b0xyg, axis=b1_pos, keepdims=True)
+        n_preg = np.sum(o_numbers_start_tpdams * nfoet_b1nwzida0e0b0xyg, axis=b1_pos, keepdims=True)
+
+        yera = fun.f_divide_float(np.sum(fun.f_slice(n_lact, y_lact_slc, default=0))
+                                , np.sum(fun.f_slice(n_preg, y_lact_slc, default=0)))
+        a2era = fun.f_divide_float(np.sum(fun.f_slice(n_lact, a2_lact_slc, default=0))
+                                 , np.sum(fun.f_slice(n_preg, a2_lact_slc, default=0)))
+        a3era = fun.f_divide_float(np.sum(fun.f_slice(n_lact, a3_lact_slc, default=0))
+                                 , np.sum(fun.f_slice(n_preg, a3_lact_slc, default=0)))
+        a4era = fun.f_divide_float(np.sum(fun.f_slice(n_lact, a4_lact_slc, default=0))
+                                 , np.sum(fun.f_slice(n_preg, a4_lact_slc, default=0)))
+        a5era = fun.f_divide_float(np.sum(fun.f_slice(n_lact, a5_lact_slc, default=0))
+                                 , np.sum(fun.f_slice(n_preg, a5_lact_slc, default=0)))
         aera = (a2era + a3era + a4era + a5era) / 4  #a2era is included with the older adults because there aren't separate 2 tooth lamb survival coefficients
+
+        ### Option 2: twin survival is defined as survival of twin lambs from the ewes that survive
+        ### number of twin lambs at foot during lactation / 2 * number of twin bearing ewes
+        n_lact = np.sum(o_numbers_start_tpdams * (nfoet_b1nwzida0e0b0xyg == 2) * nyatf_b1nwzida0e0b0xyg
+                             , axis=b1_pos, keepdims=True)
+        n_preg = np.sum(o_numbers_start_tpdams * (nfoet_b1nwzida0e0b0xyg == 2) * 2
+                             , axis=b1_pos, keepdims=True)
+
+        yera2 = fun.f_divide_float(np.sum(fun.f_slice(n_lact, y_lact_slc, default=0))
+                                , np.sum(fun.f_slice(n_preg, y_lact_slc, default=0)))
+        a2era2 = fun.f_divide_float(np.sum(fun.f_slice(n_lact, a2_lact_slc, default=0))
+                                 , np.sum(fun.f_slice(n_preg, a2_lact_slc, default=0)))
+        a3era2 = fun.f_divide_float(np.sum(fun.f_slice(n_lact, a3_lact_slc, default=0))
+                                 , np.sum(fun.f_slice(n_preg, a3_lact_slc, default=0)))
+        a4era2 = fun.f_divide_float(np.sum(fun.f_slice(n_lact, a4_lact_slc, default=0))
+                                 , np.sum(fun.f_slice(n_preg, a4_lact_slc, default=0)))
+        a5era2 = fun.f_divide_float(np.sum(fun.f_slice(n_lact, a5_lact_slc, default=0))
+                                 , np.sum(fun.f_slice(n_preg, a5_lact_slc, default=0)))
+        aera2 = (a2era2 + a3era2 + a4era2 + a5era2) / 4  #a2era is included with the older adults because there aren't separate 2 tooth lamb survival coefficients
 
         ##WT Fleece free conceptus free weight
         bwt = np.average(fun.f_slice(o_ffcfw_start_tpyatf, b_wt_slc, default=0))
@@ -8178,6 +8201,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         trait_values_p[i] = als; i += 1
         trait_values_p[i] = yera; i += 1
         trait_values_p[i] = aera; i += 1
+        trait_values_p[i] = yera2; i += 1
+        trait_values_p[i] = aera2; i += 1
         trait_values_p[i] = bwt; i += 1
         trait_values_p[i] = wwt; i += 1
         trait_values_p[i] = pwt; i += 1
@@ -8295,6 +8320,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         # print(f"YERA target {yera_target} this {yera} with ({sen.saa['era_p11'][y]})")
         print(f"AERA target {aera_target} this {aera} with ({sen.saa['era_p11'][a]})")
         print(f"2yo={a2era} 3yo={a3era} 4yo={a4era} 5yo={a5era}")
+        # print(f"YERA twins target {yera2_target} this {yera2} with ({sen.saa['era_p11'][y]})")
+        # print(f"AERA twins target {aera2_target} this {aera2} with ({sen.saa['era_p11'][a]})")
+        # print(f"2yo={a2era2} 3yo={a3era2} 4yo={a4era2} 5yo={a5era2}")
         # print(f"BWT target {bwt_target} this {bwt} with (srw_p11={sen.saa['srw_p11'][b]})")
         print(f"WWT target {wwt_target} this {wwt} with (srw_p11={sen.saa['srw_p11'][w]} & milk_scalar={sen.saa['milk_yield']})")
         print(f"PWT target {pwt_target} this {pwt} with (srw_p11={sen.saa['srw_p11'][p]})")
