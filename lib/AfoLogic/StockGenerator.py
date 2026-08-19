@@ -53,16 +53,6 @@ from . import Trees as tre
 
 # np.seterr(all='raise')   #Uncomment this for debugging to exit when a warning is generated
 
-
-
-
-
-
-
-
-
-
-
 # from memory_profiler import profile
 # @profile
 def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pkl_fs={}, stubble=None
@@ -2826,39 +2816,40 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     ###Exponential was penalising PW CFW so have selected a simpler function, a step function with a ramp.
     ###This variable (coefficient cw[25]) can be used to alter production of YCFW relative to ACFW
     t_slope = (1 - cw_cpsire[25, ..., na])/(cw_cpsire[24, ..., na] - cw_cpsire[23, ..., na])
-    af3_wool_pa1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(np.clip(cw_cpsire[25, ..., na] + t_slope
-                                                * (age_p0_pa1e1b1nwzida0e0b0xyg0p0 - cw_cpsire[23, ..., na]), cw_cpsire[25, ..., na], 1)
-                                                , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg0p0, axis = -1)
+    af3_wool_pa1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(cw_cpsire[25, ..., na] + t_slope
+                            * (np.clip(age_p0_pa1e1b1nwzida0e0b0xyg0p0, cw_cpsire[23, ..., na], cw_cpsire[24, ..., na])
+                            - cw_cpsire[23, ..., na]), weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg0p0, axis = -1)
     t_slope = (1 - cw_cpdams[25, ..., na])/(cw_cpdams[24, ..., na] - cw_cpdams[23, ..., na])
-    af3_wool_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(np.clip(cw_cpdams[25, ..., na] + t_slope
-                                                * (age_p0_pa1e1b1nwzida0e0b0xyg1p0 - cw_cpdams[23, ..., na]), cw_cpdams[25, ..., na], 1)
-                                                , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg1p0, axis = -1)
+    af3_wool_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(cw_cpdams[25, ..., na] + t_slope
+                            * (np.clip(age_p0_pa1e1b1nwzida0e0b0xyg1p0, cw_cpdams[23, ..., na], cw_cpdams[24, ..., na])
+                            - cw_cpdams[23, ..., na]), weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg1p0, axis = -1)
     t_slope = (1 - cw_cpyatf[25, ..., na])/(cw_cpyatf[24, ..., na] - cw_cpyatf[23, ..., na])
-    af3_wool_pa1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(np.clip(cw_cpyatf[25, ..., na] + t_slope
-                                                * (age_p0_pa1e1b1nwzida0e0b0xyg2p0 - cw_cpyatf[23, ..., na]), cw_cpyatf[25, ..., na], 1)
-                                                , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg2p0, axis = -1)
+    af3_wool_pa1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(cw_cpyatf[25, ..., na] + t_slope
+                            * (np.clip(age_p0_pa1e1b1nwzida0e0b0xyg2p0, cw_cpyatf[23, ..., na], cw_cpyatf[24, ..., na])
+                            - cw_cpyatf[23, ..., na]), weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg2p0, axis = -1)
     t_slope = (1 - cw_cpoffs[25, ..., na])/(cw_cpoffs[24, ..., na] - cw_cpoffs[23, ..., na])
-    af3_wool_pa1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(np.clip(cw_cpoffs[25, ..., na] + t_slope
-                                                * (age_p0_pa1e1b1nwzida0e0b0xyg3p0 - cw_cpoffs[23, ..., na]), cw_cpoffs[25, ..., na], 1)
-                                                , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg3p0, axis = -1)
+    af3_wool_pa1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(cw_cpoffs[25, ..., na] + t_slope
+                            * (np.clip(age_p0_pa1e1b1nwzida0e0b0xyg3p0, cw_cpoffs[23, ..., na], cw_cpoffs[24, ..., na])
+                            - cw_cpoffs[23, ..., na]), weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg3p0, axis = -1)
     ##age factor wool part 4 - reduces average CFW for animals below a threshold age. Alters the FD of hoggets
     ###Coefficient cw[26] used to calibrate YFD separate from YCFW.
     t_slope = (1 - cw_cpsire[26, ..., na])/(cw_cpsire[24, ..., na] - cw_cpsire[23, ..., na])
-    af4_wool_pa1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(np.clip(cw_cpsire[26, ..., na] + t_slope
-                                                * (age_p0_pa1e1b1nwzida0e0b0xyg0p0 - cw_cpsire[23, ..., na]), cw_cpsire[26, ..., na], 1)
-                                                , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg0p0, axis = -1)
+    af4_wool_pa1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(cw_cpsire[26, ..., na] + t_slope
+                            * (np.clip(age_p0_pa1e1b1nwzida0e0b0xyg0p0, cw_cpsire[23, ..., na], cw_cpsire[24, ..., na])
+                            - cw_cpsire[23, ..., na]), weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg0p0, axis = -1)
     t_slope = (1 - cw_cpdams[26, ..., na])/(cw_cpdams[24, ..., na] - cw_cpdams[23, ..., na])
-    af4_wool_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(np.clip(cw_cpdams[26, ..., na] + t_slope
-                                                * (age_p0_pa1e1b1nwzida0e0b0xyg1p0 - cw_cpdams[23, ..., na]), cw_cpdams[26, ..., na], 1)
-                                                , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg1p0, axis = -1)
+    af4_wool_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(cw_cpdams[26, ..., na] + t_slope
+                            * (np.clip(age_p0_pa1e1b1nwzida0e0b0xyg1p0, cw_cpdams[23, ..., na], cw_cpdams[24, ..., na])
+                            - cw_cpdams[23, ..., na]), weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg1p0, axis = -1)
     t_slope = (1 - cw_cpyatf[26, ..., na])/(cw_cpyatf[24, ..., na] - cw_cpyatf[23, ..., na])
-    af4_wool_pa1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(np.clip(cw_cpyatf[26, ..., na] + t_slope
-                                                * (age_p0_pa1e1b1nwzida0e0b0xyg2p0 - cw_cpyatf[23, ..., na]), cw_cpyatf[26, ..., na], 1)
-                                                , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg2p0, axis = -1)
+    af4_wool_pa1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(cw_cpyatf[26, ..., na] + t_slope
+                            * (np.clip(age_p0_pa1e1b1nwzida0e0b0xyg2p0, cw_cpyatf[23, ..., na], cw_cpyatf[24, ..., na])
+                            - cw_cpyatf[23, ..., na]), weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg2p0, axis = -1)
     t_slope = (1 - cw_cpoffs[26, ..., na])/(cw_cpoffs[24, ..., na] - cw_cpoffs[23, ..., na])
-    af4_wool_pa1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(np.clip(cw_cpoffs[26, ..., na] + t_slope
-                                                * (age_p0_pa1e1b1nwzida0e0b0xyg3p0 - cw_cpoffs[23, ..., na]), cw_cpoffs[26, ..., na], 1)
-                                                , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg3p0, axis = -1)
+    af4_wool_pa1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(cw_cpoffs[26, ..., na] + t_slope
+                            * (np.clip(age_p0_pa1e1b1nwzida0e0b0xyg3p0, cw_cpoffs[23, ..., na], cw_cpoffs[24, ..., na])
+                            - cw_cpoffs[23, ..., na]), weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg3p0, axis = -1)
+
     ##overall age factor for CFW - reduction for young animals and older animals
     ###change in CFW is affected by all the age factors
     af_cfw_pa1e1b1nwzida0e0b0xyg0 = af1_wool_pa1e1b1nwzida0e0b0xyg0 * af2_wool_pa1e1b1nwzida0e0b0xyg0 * af3_wool_pa1e1b1nwzida0e0b0xyg0
