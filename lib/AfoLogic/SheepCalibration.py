@@ -4,9 +4,10 @@ Created on Thu Feb 13 09:35:26 2020
 
 @author: John
 
-SheepCalibration.py is run using python -u SheepCalibration.py {<exp no>} {<number of processes>}
+SheepCalibration.py is run using python -u SheepCalibration.py {<exp no>} {<number of processes>} {<calibrate/report>}
 <exp no> is an optional argument, if it is excluded the default trial is QT
-<number of processes> is an optional argument. The default is 1 (don't multiprocess teams use workers on a single team)
+<number of processes> is an optional argument. The default is 1 (don't multiprocess teams use MAX_WORKERS_WITHIN_TEAM on each team)
+<calibrate/report> is optional, default True. True is calibrate, False is report the trait values.
 
 Multiprocessing the teams (with workers =1) will be quicker if
  (1) the number of cpus is greater than population size - Population size is pop_size parameter (5 to 15) x number of coefficients
@@ -16,6 +17,7 @@ Multiprocessing teams can be more efficient because it can use 'immediate' updat
 
 sys.argv: Experiment number (will use the first trial in the experiment). If blank uses QT (trial 12)
           Number of multi processes. If blank will not multiprocess but will use workers
+          Calibrate/report. If blank will calibrate
 """
 
 
