@@ -88,7 +88,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     ################################
     ##set the genotype to report. This is the genotype of the c2 axis in Universal.xlsx
     genotype = pinp.sheep['a_c2_c0'][0].copy()  #2 is CFS for MLP & GEPEP traditional, 3 is GFS for GEPEP
-    srw_parameter = uinp.parameters['i_srw_c2'][genotype].copy()  #set a value in case whole section is commented out
+    srw_fitted = uinp.parameters['i_srw_c2'][genotype].copy()  #set a value in case whole section is commented out
     if calibrate_trait_values or o_trait_values is not None:
         # print(coefficients_c)   #only useful for debugging when not multiprocessing (workers=1, and not multiprocessing teams)
         n_coeff = coefficients_c.size
@@ -335,6 +335,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         ysurv_target = calibration_targets_p[i]; i += 1
         hsurv_target = calibration_targets_p[i]; i += 1
         asurv_target = calibration_targets_p[i]; i += 1
+        ya5surv_target = calibration_targets_p[i]; i += 1
         elw0_target = calibration_targets_p[i]; i += 1
         elw1_target = calibration_targets_p[i]; i += 1
         elw2_target = calibration_targets_p[i]; i += 1
@@ -383,7 +384,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         ###Estimating SRW as LW at 25% fat based on ALW and Fat% of adult ewes prior to prejoining
         ###The calculation is based on the fat & lean changing based on the proportion determined by cg8 (EVG) (see W18:99)
         if adult_evg is not None:
-            sen.sav['srw_c2'][genotype] = awt_target * (1 + 34.8 / (adult_evg - 13.5) * (srwfat - awbe_target))
+            sen.sav['srw_c2'][genotype] = srw_fitted = awt_target * (1 + 34.8 / (adult_evg - 13.5) * (srwfat - awbe_target))
             # srw_from_fat = awt * (1 - awbe) / (1 - srwfat_yg1)   #alternative formula that assumes lean mass is constant eg Hutton's model.
             # srw_from_fat = awt / (1 + 1.54 * (awbe - srwfat_yg1))   # alternative formula that can be fitted to simulation data (see W18:p64)
 
@@ -8091,6 +8092,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
         ##Estimating SRW as LW at 25% fat based on simulated LW and Fat% of adult ewes prior to prejoining
         ###The calculation is based on the fat & lean changing based on the proportion determined by cg8 (EVG) (see W18:99)
+        ###This calculation is only used in the reporting
         cg8 = cg_cpdams[8, ...].item()
         srw_from_fat = awt * (1 + 34.8 / (cg8 - 13.5) * (srwfat_yg1[0,0] - awbe))
         # srw_from_fat = awt * (1 - awbe) / (1 - srwfat_yg1)   #alternate formula that assumes lean mass is constant eg Hutton's model.
@@ -8209,6 +8211,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         trait_values_p[i] = ywt; i += 1
         trait_values_p[i] = hwt; i += 1
         trait_values_p[i] = awt; i += 1
+        trait_values_p[i] = srw_fitted; i += 1   # srw_fitted is correct to report because srw_p11 can be added to it
         trait_values_p[i] = pfat; i += 1
         trait_values_p[i] = yfat; i += 1
         trait_values_p[i] = hfat; i += 1
@@ -8328,7 +8331,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         print(f"PWT target {pwt_target} this {pwt} with (srw_p11={sen.saa['srw_p11'][p]})")
         print(f"YWT target {ywt_target} this {ywt} with (srw_p11={sen.saa['srw_p11'][y]}, k={sen.saa['growth_constant']} & PI={sen.saa['pi_p11'][y]})")
         print(f"HWT target {hwt_target} this {hwt} with (srw_p11={sen.saa['srw_p11'][h]})")
-        print(f"AWT target {awt_target} this {awt} with (srw_p11={sen.saa['srw_p11'][a]}) & PI={sen.saa['pi_p11'][a]}")
+        print(f"AWT target {awt_target} this {awt} with (srw={srw_parameter}, srw_p11={sen.saa['srw_p11'][a]}) & PI={sen.saa['pi_p11'][a]}")
         print(f"2yo={a2wt} 3yo={a3wt} 4yo={a4wt} 5yo={a5wt}")
         print(f"PFAT target {pfat_target} this {pfat} with (PI={sen.saa['pi_p11'][p]})")
         print(f"YFAT target {yfat_target} this {yfat} with (PI={sen.saa['pi_p11'][y]})")
@@ -8354,7 +8357,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         # print(f"HSURV target {hsurv_target} this {hsurv} with ({sen.saa['bsurv_p11'][h]})")
         print(f"ASURV target {asurv_target} this {asurv} with (Base={sen.saa['bsurv_p11'][a]}) & PN={sen.saa['pnsurv_p11'][a]}")
         print(f"2yo={a2surv} 3yo={a3surv} 4yo={a4surv} 5yo={a5surv}")
-        # print(f"Y-A5SURV target {ya5surv_target} this {ya5surv} with (Base={sen.saa['bsurv_p11'][a]}) & PN={sen.saa['pnsurv_p11'][a]})")
+        print(f"Y-A5SURV target {ya5surv_target} this {ya5surv} with (Base={sen.saa['bsurv_p11'][a]}) & PN={sen.saa['pnsurv_p11'][a]})")
 
         # print("LW targets Ewes (value, sar, target)")
         # for k in range(28):
