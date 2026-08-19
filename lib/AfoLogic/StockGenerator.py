@@ -140,7 +140,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         # y = coefficients_c[j]; j += 1
         # h = coefficients_c[j]; j += 1
         # a = coefficients_c[j]; j += 1
-        # sen.saa['iss_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
+        sen.saa['iss_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         #Follicle number to calibrate staple length, cw[11] parameter
         ##SL is calibrated for A and carried back.
@@ -231,7 +231,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         # y = coefficients_c[j]; j += 1
         h = np.nan  #ERA is a Y & A trait
         a = coefficients_c[j]; j += 1
-        # sen.saa['pnsurv_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
+        sen.saa['pnsurv_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         # ##Build and apply sar variable based on the next 44 coefficients
         # indicelist = [(slice(3, 4, None), slice(None, None, None), slice(40, 57, None))      #00   Ewes
@@ -8355,9 +8355,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         # print(f"PSURV target {psurv_target} this {psurv} with ({sen.saa['bsurv_p11'][p]})")
         # print(f"YSURV target {ysurv_target} this {ysurv} with ({sen.saa['bsurv_p11'][y]})")
         # print(f"HSURV target {hsurv_target} this {hsurv} with ({sen.saa['bsurv_p11'][h]})")
-        print(f"ASURV target {asurv_target} this {asurv} with (Base={sen.saa['bsurv_p11'][a]}) & PN={sen.saa['pnsurv_p11'][a]}")
+        print(f"ASURV target {asurv_target} this {asurv} with (Base={sen.saa['bsurv_p11'][a]} & PN={sen.saa['pnsurv_p11'][a]})")
         print(f"2yo={a2surv} 3yo={a3surv} 4yo={a4surv} 5yo={a5surv}")
-        print(f"Y-A5SURV target {ya5surv_target} this {ya5surv} with (Base={sen.saa['bsurv_p11'][a]}) & PN={sen.saa['pnsurv_p11'][a]})")
+        print(f"Y-A5SURV target {ya5surv_target} this {ya5surv} with (Base={sen.saa['bsurv_p11'][a]} & PN={sen.saa['pnsurv_p11'][a]})")
 
         # print("LW targets Ewes (value, sar, target)")
         # for k in range(28):
