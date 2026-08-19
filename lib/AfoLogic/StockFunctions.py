@@ -3994,7 +3994,7 @@ def f1_condition_score(cn, rc_tpg, rs_tpg=1):
        Returns: condition score : float
     '''
     cs_tpg = 3 + (rc_tpg - 1) * rs_tpg / (cn[5, ...] * (2 - rs_tpg))
-    return np.maximum(1, cs_tpg) #a minimum value of CS=1 is used to remove errors caused by low CS. A CS below 1 is unlikely because the animal would be dead
+    return np.clip(cs_tpg, 1, 5) # clip the range from 1 to 5 which is the defined range and it removes potential errors
 
 
 def f1_cfat_depth(cn, rc_tpg, z_tpg=1):
