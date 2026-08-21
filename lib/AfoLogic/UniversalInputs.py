@@ -283,7 +283,7 @@ def f_universal_inp_sa(uinp_defaults):
     parameters['i_cp_c2'] = fun.f_sa(parameters['i_cp_c2'].astype(float), sen.sav['cp_c1c2'], 5) #pregnancy parameters
     parameters['i_cw_c2'] = fun.f_sa(parameters['i_cw_c2'].astype(float), sen.sav['cw_c1c2'], 5) #wool growth parameters
     parameters['i_cg_c2'] = fun.f_sa(parameters['i_cg_c2'].astype(float), sen.sav['cg_c1c2'], 5) #growth parameters
-    parameters['i_cd_c2'] = fun.f_sa(parameters['i_cd_c2'].astype(float), sen.sav['cd_c1c2'], 5) #mortaltiuy parameters
+    parameters['i_cd_c2'] = fun.f_sa(parameters['i_cd_c2'].astype(float), sen.sav['cd_c1c2'], 5) #mortality parameters
     parameters['i_ck_c2'] = fun.f_sa(parameters['i_ck_c2'].astype(float), sen.sav['ck_c1c2'], 5) #energy efficiency parameters
     parameters['i_cl0_c2'] = fun.f_sa(parameters['i_cl0_c2'].astype(float), sen.sav['cl0_c1c2'], 5) #genotype litter size params
     parameters['i_cu2_c2'] = fun.f_sa(parameters['i_cu2_c2'].astype(float), sen.sav['cu2_c1c2'], 5) #Murdoch Uni parameters
@@ -311,8 +311,8 @@ def f_universal_inp_sa(uinp_defaults):
     parameters['i_cw_c2'][idx] = fun.f_sa(parameters['i_cw_c2'][idx], sen.saa['yfd_scalar'], 2)
     idx = fun.f_slice_idx(parameters['i_cl_c2'], {0: [0]})
     parameters['i_cl_c2'][idx] = fun.f_sa(parameters['i_cl_c2'][idx], sen.saa['milk_yield'], 2)
-    idx = fun.f_slice_idx(parameters['i_cn_c2'], {0: [1]})
-    parameters['i_cn_c2'][idx] = fun.f_sa(parameters['i_cn_c2'][idx], sen.saa['growth_constant'], 2)
+    idx = fun.f_slice_idx(parameters['i_cx_c2'], {0: [1]})
+    parameters['i_cx_c2'][idx] = fun.f_sa(parameters['i_cx_c2'][idx].astype(float), sen.saa['growth_constant'], 2)
     idx = fun.f_slice_idx(parameters['i_ci_c2'], {0: [2]})  #slice 2 CFS coefficient
     parameters['i_ci_c2'][idx] = fun.f_sa(parameters['i_ci_c2'][idx], sen.saa['pi_z_constant'], 2)
     idx = fun.f_slice_idx(parameters['i_ci_c2'], {0: [22]})  #slice 22 GFS coefficient

@@ -388,8 +388,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         idx = fun.f_slice_idx(uinp.parameters['i_cl_c2'], {0: [0]})
         uinp.parameters['i_cl_c2'][idx] = fun.f_sa(uinp.parameters['i_cl_c2'][idx], sen.saa['milk_yield'], 2)
         sen.sam['pi_yatf'] = fun.f_sa(sen.sam['pi_yatf'], sen.saa['milk_yield'], 2)  #increase yatf PI (pasture as well as milk)
-        idx = fun.f_slice_idx(uinp.parameters['i_cn_c2'], {0: [1]})
-        uinp.parameters['i_cn_c2'][idx] = fun.f_sa(uinp.parameters['i_cn_c2'][idx], sen.saa['growth_constant'], 2)
+        idx = fun.f_slice_idx(uinp.parameters['i_cx_c2'], {0: [1]})
+        uinp.parameters['i_cx_c2'][idx] = fun.f_sa(uinp.parameters['i_cx_c2'][idx].astype(float), sen.saa['growth_constant'], 2)
         idx = fun.f_slice_idx(uinp.parameters['i_ci_c2'], {0: [2]})   #slice 2 CFS coefficient
         uinp.parameters['i_ci_c2'][idx] = fun.f_sa(uinp.parameters['i_ci_c2'][idx], sen.saa['pi_z_constant'], 2)
         idx = fun.f_slice_idx(uinp.parameters['i_ci_c2'], {0: [22]})   #slice 22 GFS coefficient
