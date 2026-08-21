@@ -2735,11 +2735,15 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
     ##add p0 axis
     date_start_pa1e1b1nwzida0e0b0xygp0 = date_start_pa1e1b1nwzida0e0b0xyg[...,na] + index_p0
-    ##age open ie not capped at weaning
-    age_p0_pa1e1b1nwzida0e0b0xyg0p0 = (age_start_open_pa1e1b1nwzida0e0b0xyg0[..., na] + index_p0)
-    age_p0_pa1e1b1nwzida0e0b0xyg1p0 = (age_start_open_pa1e1b1nwzida0e0b0xyg1[..., na] + index_p0)
-    age_p0_pa1e1b1nwzida0e0b0xyg2p0 = (age_start_open_pa1e1b1nwzida0e0b0xyg2[..., na] + index_p0)
-    age_p0_pa1e1b1nwzida0e0b0xyg3p0 = (age_start_open_pa1e1b1nwzida0e0b0xyg3[..., na] + index_p0)
+    ##age open ie not capped at weaning. With test that animal exists in the following week
+    age_p0_pa1e1b1nwzida0e0b0xyg0p0 = (age_start_open_pa1e1b1nwzida0e0b0xyg0[..., na]
+                 + index_p0 * (np.roll(age_start_open_pa1e1b1nwzida0e0b0xyg0[..., na], -1, axis=0)>0))
+    age_p0_pa1e1b1nwzida0e0b0xyg1p0 = (age_start_open_pa1e1b1nwzida0e0b0xyg1[..., na]
+                 + index_p0 * (np.roll(age_start_open_pa1e1b1nwzida0e0b0xyg1[..., na], -1, axis=0)>0))
+    age_p0_pa1e1b1nwzida0e0b0xyg2p0 = (age_start_open_pa1e1b1nwzida0e0b0xyg2[..., na]
+                 + index_p0 * (np.roll(age_start_open_pa1e1b1nwzida0e0b0xyg2[..., na], -1, axis=0)>0))
+    age_p0_pa1e1b1nwzida0e0b0xyg3p0 = (age_start_open_pa1e1b1nwzida0e0b0xyg3[..., na]
+                 + index_p0 * (np.roll(age_start_open_pa1e1b1nwzida0e0b0xyg3[..., na], -1, axis=0)>0))
     ##calc p1 weights - if age<=weaning it has 0 weighting (ie false) else weighting = 1 (ie true) - need so that the values are not included in the mean calculations below which determine the average production for a given p1 period.
     age_p0_weights_pa1e1b1nwzida0e0b0xyg0p0 = age_p0_pa1e1b1nwzida0e0b0xyg0p0>=(date_weaned_i_pa1e1b1nwzida0e0b0xyg0 - date_born_i_pa1e1b1nwzida0e0b0xyg0)[..., na].astype(int) #use date_wean - date born because that results in the average weaning age of all animal (age_weaned variable is just the age of the first animal)
     age_p0_weights_pa1e1b1nwzida0e0b0xyg1p0 = age_p0_pa1e1b1nwzida0e0b0xyg1p0>=(date_weaned_i_pa1e1b1nwzida0e0b0xyg1 - date_born_i_pa1e1b1nwzida0e0b0xyg1)[..., na].astype(int) #use date_wean - date born because that results in the average weaning age of all animal (age_weaned variable is just the age of the first animal)
