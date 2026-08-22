@@ -542,7 +542,8 @@ def create_sa():
     sav['cg_c1c2'] = np.full(uinp.parameters['i_cg_c2'].shape, '-', dtype=object)  #weight gain params for genotypes.
     sav['cd_c1c2'] = np.full(uinp.parameters['i_cd_c2'].shape, '-', dtype=object)  #mortality params for genotypes.
     sav['ck_c1c2'] = np.full(uinp.parameters['i_ck_c2'].shape, '-', dtype=object)  #energy efficiency params.
-    sav['cl0_c1c2'] = np.full(uinp.parameters['i_cl0_c2'].shape, '-', dtype=object)  #litter size genotype params for genotypes.
+    sav['cb0_c1c2'] = np.full(uinp.parameters['i_cb0_c2'].shape, '-', dtype=object)  #birth type params for genotypes.
+    sav['cl0_c1c2'] = np.full(uinp.parameters['i_cl0_c2'].shape, '-', dtype=object)  #litter size params for genotypes.
     sav['cu2_c1c2'] = np.full(uinp.parameters['i_cu2_c2'].shape, '-', dtype=object)  #lamb survival params for genotypes.
     sav['cu6_c1c2'] = np.full(uinp.parameters['i_cu6_c2'].shape, '-', dtype=object)  #ewe lamb params for genotypes.
     sav['methane_capture'] = 0.0       #proportion of avoided methane energy captured by the animal
