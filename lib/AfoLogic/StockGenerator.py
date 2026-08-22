@@ -2384,6 +2384,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     btrt_propn_b0xyg1, npw_std_xyg1 = sfun.f1_btrt0(dstwtr_l0yg1,pss_std_yg1,pstw_std_yg1,pstr_std_yg1)
     btrt_propn_b0xyg3, npw_std_xyg3 = sfun.f1_btrt0(dstwtr_l0yg3,pss_std_yg3,pstw_std_yg3,pstr_std_yg3)
 
+    if calibrate_trait_values or o_trait_values is not None:
+        btrt_propn_b0xyg1 = (index_b0xyg == 0) * 1   #For the calibration, set the initial btrt to 100% BTRT 11
+
     ##Std scanning & survival: proportion of progeny reared in each BTRT b1 category - NM, 00, 11, 22, 33, 21, 32, 31, 10, 20, 30
     # btrt_propn_b1nwzida0e0b0xyg0 = sfun.f1_btrt1(dstwtr_l0yg0,pss_std_yg0,pstw_std_yg0,pstr_std_yg0)
     btrt_propn_b1nwzida0e0b0xyg1 = sfun.f1_btrt1(dstwtr_l0yg1,pss_std_yg1,pstw_std_yg1,pstr_std_yg1)
