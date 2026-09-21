@@ -859,9 +859,9 @@ def f_potential_intake_mu(ci, srw, relsize_start, rc_start, temp_lc, temp_ave, t
     '''
     ##Condition factor on PI
     rc_start_adj = np.maximum(1, rc_start)
-    picf= rc_start_adj * (ci[20, ...] - rc_start_adj) / (ci[20, ...] - 1)
+    picf = rc_start_adj * (ci[20, ...] - rc_start_adj) / (ci[20, ...] - 1)
     ##Age factor on PI
-    piz= relsize_start * (ci[22, ...] - relsize_start) / (ci[22, ...] - 1)
+    piz = relsize_start * (ci[22, ...] - relsize_start) / (ci[22, ...] - 1)
     ##Lactation adjustment (RC at parturition) - only active for dams
     la = 1 + ci[15, ...] * (rc_birth_start - 1)
     ##Lactation factor on PI - dam only
@@ -934,7 +934,9 @@ def f1_efficiency_cs(ck, md_solid, i_md_supp, md_herb, lgf_eff, dlf_eff, sam_kg=
     kg_supp = ck[16, ...] * i_md_supp * sam_kg
     ###Efficiency for growth (fodder) including the sensitivity scalar
     kg_fodd = ck[13, ...] * lgf_eff * (1+ ck[15, ...] * dlf_eff) * md_herb * sam_kg
-    return kg_fodd, kg_supp, kl
+    ##Efficiency for wool
+    kw = ck[17,...] + ck[39, ...] * md_solid
+    return kg_fodd, kg_supp, kl, kw
 
 
 def f1_efficiency_mu(ck, md_solid, km):

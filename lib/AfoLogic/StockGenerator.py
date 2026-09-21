@@ -2482,14 +2482,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     dlf_wool_pa1e1b1nwzida0e0b0xyg2 = 1 + cw_cpyatf[6,...] * (dl_pa1e1b1nwzida0e0b0xyg - 12)
     dlf_wool_pa1e1b1nwzida0e0b0xyg3 = 1 + cw_cpoffs[6,...] * (dl_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p] - 12)
 
-    ##Efficiency for wool
-    ##Note: MU feeding standards are calculated later because they are a partial efficiency (PE). PEw = kw / km
-    kw_cs_pa1e1b1nwzida0e0b0xyg0 = ck_cpsire[17,...]
-    kw_cs_pa1e1b1nwzida0e0b0xyg1 = ck_cpdams[17,...]
-    kw_cs_pa1e1b1nwzida0e0b0xyg2 = ck_cpyatf[17,...]
-    kw_cs_pa1e1b1nwzida0e0b0xyg3 = ck_cpoffs[17,...]
-
     ##Efficiency for conceptus (for CSIRO feeding standards). MU calculated later
+    ###Can be calculated once here, rather than each loop in f1_efficiency() because it doesn't vary with M/D
+    ##Note: MU feeding standards are calculated later because they are a partial efficiency (PE). PEw = kw / km
     kc_cs_pa1e1b1nwzida0e0b0xyg1 = ck_cpdams[8,...]
 
     ####################
@@ -4318,7 +4313,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 ###Calculate efficiency factors for all equation groups because they are used for SA.
                 if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1, ...] > 0):
                     km_sire = sfun.f1_km(ck_cpsire, md_solid_sire)
-                    kg_fodd_cs_sire, kg_supp_cs_sire, temp3 = sfun.f1_efficiency_cs(ck_cpsire, md_solid_sire
+                    kg_fodd_cs_sire, kg_supp_cs_sire, temp3, kw_cs_sire = sfun.f1_efficiency_cs(ck_cpsire, md_solid_sire
                                         , pinp.sheep['i_md_supp'], md_herb_sire, lgf_eff_pa1e1b1nwzida0e0b0xyg0[p:p+1]
                                         , dlf_eff_pa1e1b1nwzida0e0b0xyg[p:p+1], sam_kg=sam_kg_sire)
                     ##Calculate partial efficiency (PE) for wool & conceptus for MU functions
@@ -4327,7 +4322,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     #kl (temp3) is not used for sires
                 if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1, ...] > 0):
                     km_dams = sfun.f1_km(ck_cpdams, md_solid_dams)
-                    kg_fodd_cs_dams, kg_supp_cs_dams, kl_cs_dams = sfun.f1_efficiency_cs(ck_cpdams, md_solid_dams
+                    kg_fodd_cs_dams, kg_supp_cs_dams, kl_cs_dams, kw_cs_dams = sfun.f1_efficiency_cs(ck_cpdams, md_solid_dams
                                         , pinp.sheep['i_md_supp'], md_herb_dams, lgf_eff_pa1e1b1nwzida0e0b0xyg1[p:p+1]
                                         , dlf_eff_pa1e1b1nwzida0e0b0xyg[p:p+1], sam_kg=sam_kg_dams)
                     ##Calculate partial efficiency (PE) for wool & conceptus for MU functions
@@ -4336,7 +4331,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     kc_mu_pa1e1b1nwzida0e0b0xyg1 = kc_cs_pa1e1b1nwzida0e0b0xyg1 / km_dams
                 if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1, ...] > 0):
                     km_offs = sfun.f1_km(ck_cpoffs, md_solid_offs)
-                    kg_fodd_cs_offs, kg_supp_cs_offs, temp3 = sfun.f1_efficiency_cs(ck_cpoffs, md_solid_offs
+                    kg_fodd_cs_offs, kg_supp_cs_offs, temp3, kw_cs_offs = sfun.f1_efficiency_cs(ck_cpoffs, md_solid_offs
                                         , pinp.sheep['i_md_supp'], md_herb_offs, lgf_eff_pa1e1b1nwzida0e0b0xyg3[p:p+1, ...]
                                         , dlf_eff_pa1e1b1nwzida0e0b0xyg[p:p+1, ...], sam_kg=sam_kg_offs)
                     ##Calculate partial efficiency (PE) for wool & conceptus for MU functions
@@ -4648,7 +4643,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             , relsize_start_sire, d_cfw_history_start_p2g0, mei_sire, new_min_pa1e1b1nwzida0e0b0xyg0[p:p+1]
                             , d_cfw_ave_pa1e1b1nwzida0e0b0xyg0,  sfd_pa1e1b1nwzida0e0b0xyg0, wge_pa1e1b1nwzida0e0b0xyg0
                             , af_cfw_pa1e1b1nwzida0e0b0xyg0[p:p+1], af_fd_pa1e1b1nwzida0e0b0xyg0[p:p+1], dlf_wool_pa1e1b1nwzida0e0b0xyg0[p:p+1]
-                            , kw_cs_pa1e1b1nwzida0e0b0xyg0, days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1], age_pa1e1b1nwzida0e0b0xyg0[p:p+1]
+                            , kw_cs_sire, days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1], age_pa1e1b1nwzida0e0b0xyg0[p:p+1]
                             , sfw_ltwadj_g0, sfd_ltwadj_g0 , rev_trait_values['sire'][p])
                         if eqn_used:
                             d_cfw_sire = temp0
@@ -4669,7 +4664,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             , relsize_start_dams, d_cfw_history_start_p2g1, mei_dams, new_min_pa1e1b1nwzida0e0b0xyg1[p:p+1]
                             , d_cfw_ave_pa1e1b1nwzida0e0b0xyg1, sfd_pa1e1b1nwzida0e0b0xyg1, wge_pa1e1b1nwzida0e0b0xyg1
                             , af_cfw_pa1e1b1nwzida0e0b0xyg1[p:p+1], af_fd_pa1e1b1nwzida0e0b0xyg1[p:p+1], dlf_wool_pa1e1b1nwzida0e0b0xyg1[p:p+1]
-                            , kw_cs_pa1e1b1nwzida0e0b0xyg1, days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1], age_pa1e1b1nwzida0e0b0xyg1[p:p+1]
+                            , kw_cs_dams, days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1], age_pa1e1b1nwzida0e0b0xyg1[p:p+1]
                             , sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1[p:p+1], sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1[p:p+1]
                             , rev_trait_values['dams'][p], nec_dams, kc_cs_pa1e1b1nwzida0e0b0xyg1, nel_dams, kl_cs_dams
                             , gest_propn_pa1e1b1nwzida0e0b0xyg1[p:p+1], lact_propn_pa1e1b1nwzida0e0b0xyg1[p:p+1])
@@ -4692,7 +4687,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             , relsize_start_offs, d_cfw_history_start_p2g3, mei_offs, new_min_pa1e1b1nwzida0e0b0xyg3[p:p+1]
                             , d_cfw_ave_pa1e1b1nwzida0e0b0xyg3, sfd_pa1e1b1nwzida0e0b0xyg3, wge_pa1e1b1nwzida0e0b0xyg3
                             , af_cfw_pa1e1b1nwzida0e0b0xyg3[p:p+1], af_fd_pa1e1b1nwzida0e0b0xyg3[p:p+1], dlf_wool_pa1e1b1nwzida0e0b0xyg3[p:p+1]
-                            , kw_cs_pa1e1b1nwzida0e0b0xyg3, days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1], age_cut_pa1e1b1nwzida0e0b0xyg3[p:p+1]
+                            , kw_cs_offs, days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1], age_cut_pa1e1b1nwzida0e0b0xyg3[p:p+1]
                             , sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3, sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3
                             , rev_trait_values['offs'][p])
                         if eqn_used:
@@ -4857,7 +4852,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     eqn_used = (eqn_used_g0_q1p[eqn_group, p:p+1] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1,...] >0):
                         temp0, temp1 = sfun.f_heat_cs(cc_cpsire, ck_cpsire, mei_sire, meme_cs_sire, new_sire, km_sire
-                                , kg_supp_cs_sire, kg_fodd_cs_sire, kw_cs_pa1e1b1nwzida0e0b0xyg0, mei_propn_supp_sire, mei_propn_herb_sire)
+                                , kg_supp_cs_sire, kg_fodd_cs_sire, kw_cs_sire, mei_propn_supp_sire, mei_propn_herb_sire)
                         hp_total_cs_sire = temp0  #outside the if statement because it is used in the next function call
                         if eqn_used:
                             level_sire = temp1
@@ -4866,7 +4861,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
                         temp0, temp1, temp2 = sfun.f_chill_cs(cc_cpsire, ck_cpsire, ffcfw_start_sire, rc_start_sire
                                 , sl_start_sire, mei_sire, hp_total_cs_sire, meme_cs_sire, new_sire, km_sire
-                                , kg_supp_cs_sire, kg_fodd_cs_sire, kw_cs_pa1e1b1nwzida0e0b0xyg0, mei_propn_supp_sire, mei_propn_herb_sire
+                                , kg_supp_cs_sire, kg_fodd_cs_sire, kw_cs_sire, mei_propn_supp_sire, mei_propn_herb_sire
                                 , temp_ave_pa1e1b1nwzida0e0b0xyg[p:p+1], temp_max_pa1e1b1nwzida0e0b0xyg[p:p+1]
                                 , temp_min_pa1e1b1nwzida0e0b0xyg[p:p+1], ws_pa1e1b1nwzida0e0b0xyg[p:p+1]
                                 , rain_pa1e1b1nwzida0e0b0xygp0[p:p+1], index_m0)
@@ -4881,7 +4876,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     eqn_used = (eqn_used_g1_q1p[eqn_group, p:p+1] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
                         temp0, temp1 = sfun.f_heat_cs(cc_cpdams, ck_cpdams, mei_dams, meme_cs_dams, new_dams, km_dams
-                                , kg_supp_cs_dams, kg_fodd_cs_dams, kw_cs_pa1e1b1nwzida0e0b0xyg1, mei_propn_supp_dams, mei_propn_herb_dams
+                                , kg_supp_cs_dams, kg_fodd_cs_dams, kw_cs_dams, mei_propn_supp_dams, mei_propn_herb_dams
                                 , guw=guw_dams, mei_propn_milk=mei_propn_milk_dams, nec=nec_dams, kc=kc_cs_pa1e1b1nwzida0e0b0xyg1
                                 , nel=nel_dams, kl=kl_cs_dams, gest_propn=gest_propn_pa1e1b1nwzida0e0b0xyg1[p:p+1]
                                 , lact_propn=lact_propn_pa1e1b1nwzida0e0b0xyg1[p:p+1])
@@ -4893,7 +4888,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
                         temp0, temp1, temp2 = sfun.f_chill_cs(cc_cpdams, ck_cpdams, ffcfw_start_dams, rc_start_dams
                                 , sl_start_dams, mei_dams, hp_total_cs_dams, meme_cs_dams, new_dams, km_dams
-                                , kg_supp_cs_dams, kg_fodd_cs_dams, kw_cs_pa1e1b1nwzida0e0b0xyg1, mei_propn_supp_dams, mei_propn_herb_dams
+                                , kg_supp_cs_dams, kg_fodd_cs_dams, kw_cs_dams, mei_propn_supp_dams, mei_propn_herb_dams
                                 , temp_ave_pa1e1b1nwzida0e0b0xyg[p:p+1], temp_max_pa1e1b1nwzida0e0b0xyg[p:p+1]
                                 , temp_min_pa1e1b1nwzida0e0b0xyg[p:p+1], ws_a1e1b1nwzida0e0b0xyg1
                                 , rain_pa1e1b1nwzida0e0b0xygp0[p:p+1], index_m0, mei_propn_milk=mei_propn_milk_dams
@@ -4912,7 +4907,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     eqn_used = (eqn_used_g3_q1p[eqn_group, p:p+1] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1,...] >0):
                         temp0, temp1 = sfun.f_heat_cs(cc_cpoffs, ck_cpoffs, mei_offs, meme_cs_offs, new_offs, km_offs
-                                , kg_supp_cs_offs, kg_fodd_cs_offs, kw_cs_pa1e1b1nwzida0e0b0xyg3, mei_propn_supp_offs, mei_propn_herb_offs)
+                                , kg_supp_cs_offs, kg_fodd_cs_offs, kw_cs_offs, mei_propn_supp_offs, mei_propn_herb_offs)
                         hp_total_cs_offs = temp0  #outside the if statement because it is used in the next function call
                         if eqn_used:
                             level_offs = temp1
@@ -4920,7 +4915,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             r_compare7_q0q2tpoffs[eqn_system, 1, :, p:p+1, ...] = temp0  # heat production excluding the increment for chill
                         temp0, temp1, temp2 = sfun.f_chill_cs(cc_cpoffs, ck_cpoffs, ffcfw_start_offs, rc_start_offs
                                 , sl_start_offs, mei_offs, hp_total_cs_offs, meme_cs_offs, new_offs, km_offs
-                                , kg_supp_cs_offs, kg_fodd_cs_offs, kw_cs_pa1e1b1nwzida0e0b0xyg3, mei_propn_supp_offs, mei_propn_herb_offs
+                                , kg_supp_cs_offs, kg_fodd_cs_offs, kw_cs_offs, mei_propn_supp_offs, mei_propn_herb_offs
                                 , temp_ave_pa1e1b1nwzida0e0b0xyg[p:p+1], temp_max_pa1e1b1nwzida0e0b0xyg[p:p+1]
                                 , temp_min_pa1e1b1nwzida0e0b0xyg[p:p+1], ws_pa1e1b1nwzida0e0b0xyg[p:p+1]
                                 , rain_pa1e1b1nwzida0e0b0xygp0[p:p+1], index_m0)
@@ -5025,7 +5020,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     eqn_used = (eqn_used_g0_q1p[eqn_group, p:p+1] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1,...] >0):
                         temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_lwc_cs(cg_cpsire, rc_start_sire, mei_sire
-                                , mem_sire, new_sire, zf1_sire, zf2_sire, kg_sire, kw_cs_pa1e1b1nwzida0e0b0xyg0
+                                , mem_sire, new_sire, zf1_sire, zf2_sire, kg_sire, kw_cs_sire
                                 , age_pa1e1b1nwzida0e0b0xyg0[p:p+1], rev_trait_values['sire'][p])
                         if eqn_used:
                             ebg_sire = temp0
@@ -5044,7 +5039,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     eqn_used = (eqn_used_g1_q1p[eqn_group, p:p+1] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
                         temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_lwc_cs(cg_cpdams, rc_start_dams, mei_dams
-                                , mem_dams, new_dams, zf1_dams, zf2_dams, kg_dams, kw_cs_pa1e1b1nwzida0e0b0xyg1
+                                , mem_dams, new_dams, zf1_dams, zf2_dams, kg_dams, kw_cs_dams
                                 , age_pa1e1b1nwzida0e0b0xyg1[p:p+1], rev_trait_values['dams'][p]
                                 , nec_dams, kc_cs_pa1e1b1nwzida0e0b0xyg1, nel_dams, kl_cs_dams
                                 , gest_propn_pa1e1b1nwzida0e0b0xyg1[p:p+1], lact_propn_pa1e1b1nwzida0e0b0xyg1[p:p+1])
@@ -5065,7 +5060,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     eqn_used = (eqn_used_g3_q1p[eqn_group, p:p+1] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1,...] >0):
                         temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_lwc_cs(cg_cpoffs, rc_start_offs, mei_offs
-                                , mem_offs, new_offs, zf1_offs, zf2_offs, kg_offs, kw_cs_pa1e1b1nwzida0e0b0xyg3
+                                , mem_offs, new_offs, zf1_offs, zf2_offs, kg_offs, kw_cs_offs
                                 , age_cut_pa1e1b1nwzida0e0b0xyg3[p:p+1], rev_trait_values['offs'][p])
                         if eqn_used:
                             ebg_offs = temp0
@@ -5670,7 +5665,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             ##energy - yatf
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1, ...] > 0):
                 km_yatf = sfun.f1_km(ck_cpyatf, md_solid_yatf, mei_propn_milk_yatf)
-                kg_fodd_cs_yatf, kg_supp_cs_yatf, temp3 = sfun.f1_efficiency_cs(ck_cpyatf, md_solid_yatf
+                kg_fodd_cs_yatf, kg_supp_cs_yatf, temp3, kw_cs_yatf = sfun.f1_efficiency_cs(ck_cpyatf, md_solid_yatf
                                         , pinp.sheep['i_md_supp'], md_herb_yatf, lgf_eff_pa1e1b1nwzida0e0b0xyg2[p:p+1]
                                         , dlf_eff_pa1e1b1nwzida0e0b0xyg[p:p+1], sam_kg=sam_kg_yatf)  #same feedsupply as dams
                 ##Calculate partial efficiency (PE) for wool & conceptus for MU functions
@@ -5739,7 +5734,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             , relsize_start_yatf, d_cfw_history_start_p2g2, mei_yatf, new_min_pa1e1b1nwzida0e0b0xyg2[p:p+1]
                             , d_cfw_ave_pa1e1b1nwzida0e0b0xyg2, sfd_pa1e1b1nwzida0e0b0xyg2
                             , wge_pa1e1b1nwzida0e0b0xyg2, af_cfw_pa1e1b1nwzida0e0b0xyg2[p:p+1], af_fd_pa1e1b1nwzida0e0b0xyg2[p:p+1]
-                            , dlf_wool_pa1e1b1nwzida0e0b0xyg2[p:p+1], kw_cs_pa1e1b1nwzida0e0b0xyg2, days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1]
+                            , dlf_wool_pa1e1b1nwzida0e0b0xyg2[p:p+1], kw_cs_yatf, days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1]
                             , age_pa1e1b1nwzida0e0b0xyg2[p:p+1], sfw_ltwadj_g2, sfd_ltwadj_g2, rev_trait_values['yatf'][p])
 
                     if eqn_used:
@@ -5812,7 +5807,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p:p+1] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1, ...] > 0):
                     temp0, temp1 = sfun.f_heat_cs(cc_cpyatf, ck_cpyatf, mei_yatf, meme_cs_yatf, new_yatf, km_yatf
-                            , kg_supp_cs_yatf, kg_fodd_cs_yatf, kw_cs_pa1e1b1nwzida0e0b0xyg2, mei_propn_supp_yatf, mei_propn_herb_yatf
+                            , kg_supp_cs_yatf, kg_fodd_cs_yatf, kw_cs_yatf, mei_propn_supp_yatf, mei_propn_herb_yatf
                             ,  mei_propn_milk=mei_propn_milk_yatf)
                     hp_total_cs_yatf = temp0  #outside the if statement because it is used in the next function call
                     if eqn_used:
@@ -5822,7 +5817,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
                     temp0, temp1, temp2 = sfun.f_chill_cs(cc_cpyatf, ck_cpyatf, ffcfw_start_yatf, rc_start_yatf
                             , sl_start_yatf, mei_yatf, hp_total_cs_yatf, meme_cs_yatf, new_yatf, km_yatf
-                            , kg_supp_cs_yatf, kg_fodd_cs_yatf, kw_cs_pa1e1b1nwzida0e0b0xyg2, mei_propn_supp_yatf, mei_propn_herb_yatf
+                            , kg_supp_cs_yatf, kg_fodd_cs_yatf, kw_cs_yatf, mei_propn_supp_yatf, mei_propn_herb_yatf
                             , temp_ave_pa1e1b1nwzida0e0b0xyg[p:p+1], temp_max_pa1e1b1nwzida0e0b0xyg[p:p+1]
                             , temp_min_pa1e1b1nwzida0e0b0xyg[p:p+1], ws_a1e1b1nwzida0e0b0xyg1
                             , rain_pa1e1b1nwzida0e0b0xygp0[p:p+1], index_m0, mei_propn_milk=mei_propn_milk_yatf)
@@ -5871,7 +5866,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p:p+1] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...] >0):
                     temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_lwc_cs(cg_cpyatf, rc_start_yatf, mei_yatf, mem_yatf
-                            , new_yatf, zf1_yatf, zf2_yatf, kg_yatf, kw_cs_pa1e1b1nwzida0e0b0xyg2
+                            , new_yatf, zf1_yatf, zf2_yatf, kg_yatf, kw_cs_yatf
                             , age_pa1e1b1nwzida0e0b0xyg2[p:p+1], rev_trait_values['yatf'][p]
                             , days_per_period=days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...], b_mask=(nyatf_b1nwzida0e0b0xyg>0))
                     if eqn_used:
