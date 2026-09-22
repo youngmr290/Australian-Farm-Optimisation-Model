@@ -70,10 +70,11 @@ logging.basicConfig(
 
 # Optimisation controls. Team multiprocessing always uses one worker per team;
 # single-team mode can use workers within scipy's differential_evolution.
-MAXITER = 200
-POPSIZE = 6   # between 5 and 15. population = popsize * n_coeff
-MAX_WORKERS_WITHIN_TEAM = 1   #48  #setting workers to a factor of 'population' ensures even utilisation of CPUs
-TOL = 0.01
+MAXITER = 400
+POPSIZE = 5   # between 5 and 15. population = popsize * n_coeff
+MAX_WORKERS_WITHIN_TEAM = 2  #20   #48  #setting workers to a factor of 'population' ensures even utilisation of CPUs
+TOL = 0.001
+ATOL = 0.01   #If the trait weights are 100 * estimated EV then SQRT(Obj) is the error in the EV of the target trait
 DISP = True
 POLISH = False
 
@@ -183,14 +184,17 @@ def run_calibration_for_team(t, context):
         maxiter=context["maxiter"],
         popsize=context["popsize"],
         tol=context["tol"],
+        atol=context["atol"],
         disp=context["disp"],
         polish=context["polish"],
         updating=context["updating"],
         workers=context["workers"],
+        #Extra stability & speed options (from Grok for problem without multimodes)
         x0=bestbet,
-        #Extra stability options (from Grok)
-        recombination=0.7,
-        mutation=(0.5, 1.0)
+        init='latinhypercube',
+        strategy='rand1bin',
+        recombination=0.75,
+        mutation=(0.4, 0.9)
     )
 
     print(f"Team {t} coefficients are {result.x} obj: {result.fun} evaluations {result.nfev} - {result.success}")
@@ -259,6 +263,7 @@ def build_context(targets_tp, weights_p, bestbet_tc, bnd_lo_tc, bnd_up_tc, n_coe
         "maxiter": MAXITER,
         "popsize": popsize,
         "tol": TOL,
+        "atol": ATOL,
         "disp": DISP,
         "polish": POLISH,
         "workers": workers,
