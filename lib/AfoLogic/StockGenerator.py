@@ -8284,10 +8284,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         #                     / np.maximum(0.0001, np.abs(coefficients_c)))
 
         calibration_objective = 1e8 if np.isnan(t_objective) else t_objective
+        print(f"obj: {calibration_objective} trait  Team SRW: {srw_parameter}")
 
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug(f"obj: {calibration_objective} trait  Team SRW: {srw_parameter}")
-
             #Report the values, coefficients and target for the current iteration
             b=1; w=2; p=3; y=4; h=5; a2=6; a=7 # set the slice numbers in the saa_p11 arrays (a is using the a3 slice)
 

@@ -19,6 +19,7 @@ import numpy as np
 import pandas as pd
 import copy
 import sys
+import logging
 
 ##AFO modules
 from . import Functions as fun
@@ -30,6 +31,8 @@ except ImportError:
     from module.afo.Inputs import TreePropertyInputs as tinp  # Web app case
 
 na = np.newaxis
+
+logger = logging.getLogger(__name__)
 
 def f_reshape_pinp_defaults(pinp_defaults, sinp_defaults):
     ##occurs once when inputs are read
@@ -160,7 +163,7 @@ def f_select_n_reset_pinp(property, pinp_defaults):
     ##create a copy of each input dict - so that the base inputs remain unchanged
     ##the copy created is the one used in the actual modules
 
-    print('Using property: {0}'.format(property))
+    logger.debug('Using property: {0}'.format(property))
 
     ##needs to be global so inputs can be accessed outside this function
     global general
