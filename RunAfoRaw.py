@@ -1,5 +1,10 @@
 import time
 import pandas as pd
+import logging
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(name)s %(levelname)s: %(message)s'
+)
 
 #report the clock time that the experiment was started
 print(f'Experiment commenced at: {time.ctime()}')

@@ -50,6 +50,9 @@ from . import Periods as per
 from . import Exceptions as exc
 from . import Trees as tre
 
+import logging
+logger = logging.getLogger(__name__)
+
 
 # np.seterr(all='raise')   #Uncomment this for debugging to exit when a warning is generated
 
@@ -70,7 +73,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     None.
     """
 
-    print("starting generator")
+    logger.debug("starting generator")
     generator_start = time.time()
 
     ################################
@@ -7836,7 +7839,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         ##This is the end of the LTW loop
 
     postp_start=time.time()
-    print(f'completed generator loops: {postp_start - generator_start}')
+    logger.debug(f'completed generator loops: {postp_start - generator_start}')
 
 
     ## Call Steve graphing routine here if Generator is throwing an error in the post-processing.
@@ -8281,84 +8284,86 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         #                     / np.maximum(0.0001, np.abs(coefficients_c)))
 
         calibration_objective = 1e8 if np.isnan(t_objective) else t_objective
-        print(f"obj: {calibration_objective} trait  Team SRW: {srw_parameter}")
 
-        #Report the values, coefficients and target for the current iteration
-        b=1; w=2; p=3; y=4; h=5; a2=6; a=7 # set the slice numbers in the saa_p11 arrays (a is using the a3 slice)
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(f"obj: {calibration_objective} trait  Team SRW: {srw_parameter}")
 
-        print(f"PCFW target {pcfw_target} this {pcfw} with (sfw={sen.saa['sfw_p11'][p]})")
-        print(f"YCFW target {ycfw_target} this {ycfw} with (sfw={sen.saa['sfw_p11'][y]} & {sen.saa['ycfw_scalar']})")
-        print(f"HCFW target {hcfw_target} this {hcfw} with (sfw={sen.saa['sfw_p11'][h]})")
-        print(f"ACFW target {acfw_target} this {acfw} with (sfw={sen.saa['sfw_p11'][a]})")
-        print(f"2yo={a2cfw} 3yo={a3cfw} 4yo={a4cfw} 5yo={a5cfw}")
-        print(f"PFD target {pfd_target} this {pfd} with (sfd={sen.saa['sfd_p11'][p]})")
-        print(f"YFD target {yfd_target} this {yfd} with (sfd={sen.saa['sfd_p11'][y]} & {sen.saa['yfd_scalar']})")
-        print(f"HFD target {hfd_target} this {hfd} with (sfd={sen.saa['sfd_p11'][h]})")
-        print(f"AFD target {afd_target} this {afd} with (sfd={sen.saa['sfd_p11'][a]})")
-        print(f"2yo={a2fd} 3yo={a3fd} 4yo={a4fd} 5yo={a5fd}")
-        print(f"PSS target {pss_target} this {pss} with (iss={sen.saa['iss_p11'][p]})")
-        print(f"YSS target {yss_target} this {yss} with (iss={sen.saa['iss_p11'][y]})")
-        print(f"HSS target {hss_target} this {hss} with (iss={sen.saa['iss_p11'][h]})")
-        print(f"ASS target {ass_target} this {ass} with (iss={sen.saa['iss_p11'][a]})")
-        print(f"2yo={a2ss} 3yo={a3ss} 4yo={a4ss} 5yo={a5ss}")
-        print(f"PSL target {psl_target} this {psl} with (follicles={sen.saa['follicles_p11'][p]})")
-        print(f"YSL target {ysl_target} this {ysl} with (follicles={sen.saa['follicles_p11'][y]})")
-        print(f"HSL target {hsl_target} this {hsl} with (follicles={sen.saa['follicles_p11'][h]})")
-        print(f"ASL target {asl_target} this {asl} with (follicles={sen.saa['follicles_p11'][a]})")
-        print(f"2yo={a2sl} 3yo={a3sl} 4yo={a4sl} 5yo={a5sl}")
-        # print(f"YCON target {ycon_target} this {ycon} with ({sen.saa['con_p11'][y]})")
-        print(f"A2CON target {a2con_target} this {a2con} with ({sen.saa['con_p11'][h]})")   #A2CON is active at the hogget age stage
-        print(f"ACON target {acon_target} this {acon} with ({sen.saa['con_p11'][a]})")
-        print(f"3yo={a3con} 4yo={a5con} 5yo={a5con}")
-        # print(f"YLS target {yls_target} this {yls} with ({sen.saa['ls_p11'][y]})")
-        print(f"A2LS target {a2ls_target} this {a2ls} with ({sen.saa['ls_p11'][h]})")   #A2LS is active at the hogget age stage
-        print(f"ALS target {als_target} this {als} with ({sen.saa['ls_p11'][a]})")
-        print(f"3yo={a3ls} 4yo={a4ls} 5yo={a5ls}")
-        # print(f"YERA target {yera_target} this {yera} with ({sen.saa['era_p11'][y]})")
-        print(f"AERA target {aera_target} this {aera} with ({sen.saa['era_p11'][a]})")
-        print(f"2yo={a2era} 3yo={a3era} 4yo={a4era} 5yo={a5era}")
-        # print(f"YERA twins target {yera2_target} this {yera2} with ({sen.saa['era_p11'][y]})")
-        # print(f"AERA twins target {aera2_target} this {aera2} with ({sen.saa['era_p11'][a]})")
-        # print(f"2yo={a2era2} 3yo={a3era2} 4yo={a4era2} 5yo={a5era2}")
-        # print(f"BWT target {bwt_target} this {bwt} with (srw_p11={sen.saa['srw_p11'][b]})")
-        print(f"WWT target {wwt_target} this {wwt} with (srw_p11={sen.saa['srw_p11'][w]} & milk_scalar={sen.saa['milk_yield']})")
-        print(f"PWT target {pwt_target} this {pwt} with (srw_p11={sen.saa['srw_p11'][p]})")
-        print(f"YWT target {ywt_target} this {ywt} with (srw_p11={sen.saa['srw_p11'][y]}, k={sen.saa['growth_constant']} & PI={sen.saa['pi_p11'][y]})")
-        print(f"HWT target {hwt_target} this {hwt} with (srw_p11={sen.saa['srw_p11'][h]})")
-        print(f"AWT target {awt_target} this {awt} with (srw={srw_parameter}, srw_p11={sen.saa['srw_p11'][a]} & PI={sen.saa['pi_p11'][a]})")
-        print(f"2yo={a2wt} 3yo={a3wt} 4yo={a4wt} 5yo={a5wt}")
-        # print(f"PFAT target {pfat_target} this {pfat} with (PI={sen.saa['pi_p11'][p]})")
-        print(f"YFAT target {yfat_target} this {yfat} with (PI={sen.saa['pi_p11'][y]} & pi_z={sen.saa['pi_z_constant']})")
-        # print(f"HFAT target {hfat_target} this {hfat} with (PI={sen.saa['pi_p11'][h]})")
-        # print(f"AFAT target {afat_target} this {afat} with (PI={sen.saa['pi_p11'][a]})")
-        # print(f"2yo={a2fat} 3yo={a3fat} 4yo={a4fat} 5yo={a5fat}")
-        # print(f"WCS target {wcs_target} this {wcs} with (PI={sen.saa['pi_p11'][w]})")
-        # print(f"PCS target {pcs_target} this {pcs} with (PI={sen.saa['pi_p11'][p]})")
-        # print(f"YCS target {ycs_target} this {ycs} with (PI={sen.saa['pi_p11'][y]})")
-        # print(f"HCS target {hcs_target} this {hcs} with (PI={sen.saa['pi_p11'][h]})")
-        # print(f"ACS target {acs_target} this {acs} with (PI={sen.saa['pi_p11'][a]})")
-        # print(f"2yo={a2cs} 3yo={a3cs} 4yo={a4cs} 5yo={a5cs}")
-        # print(f"PWBE target {pwbe_target} this {pwbe} with (EVG={sen.saa['evg_p11'][p]} & PI={sen.saa['pi_p11'][p]})")
-        # print(f"YWBE target {ywbe_target} this {ywbe} with (EVG={sen.saa['evg_p11'][y]} & PI={sen.saa['pi_p11'][y]})")
-        # print(f"HWBE target {hwbe_target} this {hwbe} with (EVG={sen.saa['evg_p11'][h]} & PI={sen.saa['pi_p11'][h]})")
-        print(f"AWBE target {awbe_target} this {awbe} with (EVG={sen.saa['evg_p11'][a]} & PI={sen.saa['pi_p11'][a]})")
-        print(f"2yo={a2wbe} 3yo={a3wbe} 4yo={a4wbe} 5yo={a5wbe}")
-        print(f"Estimated Fat% when ALW = SRW, {fat_at_srw} with (SRW_actual={srw_actual}, ALW={awt}, Fat%={awbe} & EVG={cg8})")
-        print(f"Estimated SRW when Fat% = {srwfat_yg1[0,0]*100}, {srw_from_fat} with (ALW={awt}, Fat%={awbe} & EVG={cg8})")
-        # print(f"PSURV target {psurv_target} this {psurv} with ({sen.saa['bsurv_p11'][p]})")
-        # print(f"YSURV target {ysurv_target} this {ysurv} with ({sen.saa['bsurv_p11'][y]})")
-        # print(f"HSURV target {hsurv_target} this {hsurv} with ({sen.saa['bsurv_p11'][h]})")
-        print(f"ASURV target {asurv_target} this {asurv} with (Base={sen.saa['bsurv_p11'][a]} & PN={sen.saa['pnsurv_p11'][a]})")
-        print(f"2yo={a2surv} 3yo={a3surv} 4yo={a4surv} 5yo={a5surv}")
-        print(f"Y-A5SURV target {ya5surv_target} this {ya5surv} with (Base={sen.saa['bsurv_p11'][a]} & PN={sen.saa['pnsurv_p11'][a]})")
+            #Report the values, coefficients and target for the current iteration
+            b=1; w=2; p=3; y=4; h=5; a2=6; a=7 # set the slice numbers in the saa_p11 arrays (a is using the a3 slice)
 
-        # print("LW targets Ewes (value, sar, target)")
+            logger.debug(f"PCFW target {pcfw_target} this {pcfw} with (sfw={sen.saa['sfw_p11'][p]})")
+            logger.debug(f"YCFW target {ycfw_target} this {ycfw} with (sfw={sen.saa['sfw_p11'][y]} & {sen.saa['ycfw_scalar']})")
+            logger.debug(f"HCFW target {hcfw_target} this {hcfw} with (sfw={sen.saa['sfw_p11'][h]})")
+            logger.debug(f"ACFW target {acfw_target} this {acfw} with (sfw={sen.saa['sfw_p11'][a]})")
+            logger.debug(f"2yo={a2cfw} 3yo={a3cfw} 4yo={a4cfw} 5yo={a5cfw}")
+            logger.debug(f"PFD target {pfd_target} this {pfd} with (sfd={sen.saa['sfd_p11'][p]})")
+            logger.debug(f"YFD target {yfd_target} this {yfd} with (sfd={sen.saa['sfd_p11'][y]} & {sen.saa['yfd_scalar']})")
+            logger.debug(f"HFD target {hfd_target} this {hfd} with (sfd={sen.saa['sfd_p11'][h]})")
+            logger.debug(f"AFD target {afd_target} this {afd} with (sfd={sen.saa['sfd_p11'][a]})")
+            logger.debug(f"2yo={a2fd} 3yo={a3fd} 4yo={a4fd} 5yo={a5fd}")
+            logger.debug(f"PSS target {pss_target} this {pss} with (iss={sen.saa['iss_p11'][p]})")
+            logger.debug(f"YSS target {yss_target} this {yss} with (iss={sen.saa['iss_p11'][y]})")
+            logger.debug(f"HSS target {hss_target} this {hss} with (iss={sen.saa['iss_p11'][h]})")
+            logger.debug(f"ASS target {ass_target} this {ass} with (iss={sen.saa['iss_p11'][a]})")
+            logger.debug(f"2yo={a2ss} 3yo={a3ss} 4yo={a4ss} 5yo={a5ss}")
+            logger.debug(f"PSL target {psl_target} this {psl} with (follicles={sen.saa['follicles_p11'][p]})")
+            logger.debug(f"YSL target {ysl_target} this {ysl} with (follicles={sen.saa['follicles_p11'][y]})")
+            logger.debug(f"HSL target {hsl_target} this {hsl} with (follicles={sen.saa['follicles_p11'][h]})")
+            logger.debug(f"ASL target {asl_target} this {asl} with (follicles={sen.saa['follicles_p11'][a]})")
+            logger.debug(f"2yo={a2sl} 3yo={a3sl} 4yo={a4sl} 5yo={a5sl}")
+            # logger.debug(f"YCON target {ycon_target} this {ycon} with ({sen.saa['con_p11'][y]})")
+            logger.debug(f"A2CON target {a2con_target} this {a2con} with ({sen.saa['con_p11'][h]})")   #A2CON is active at the hogget age stage
+            logger.debug(f"ACON target {acon_target} this {acon} with ({sen.saa['con_p11'][a]})")
+            logger.debug(f"3yo={a3con} 4yo={a5con} 5yo={a5con}")
+            # logger.debug(f"YLS target {yls_target} this {yls} with ({sen.saa['ls_p11'][y]})")
+            logger.debug(f"A2LS target {a2ls_target} this {a2ls} with ({sen.saa['ls_p11'][h]})")   #A2LS is active at the hogget age stage
+            logger.debug(f"ALS target {als_target} this {als} with ({sen.saa['ls_p11'][a]})")
+            logger.debug(f"3yo={a3ls} 4yo={a4ls} 5yo={a5ls}")
+            # logger.debug(f"YERA target {yera_target} this {yera} with ({sen.saa['era_p11'][y]})")
+            logger.debug(f"AERA target {aera_target} this {aera} with ({sen.saa['era_p11'][a]})")
+            logger.debug(f"2yo={a2era} 3yo={a3era} 4yo={a4era} 5yo={a5era}")
+            # logger.debug(f"YERA twins target {yera2_target} this {yera2} with ({sen.saa['era_p11'][y]})")
+            logger.debug(f"AERA twins target {aera2_target} this {aera2} with ({sen.saa['era_p11'][a]})")
+            logger.debug(f"2yo={a2era2} 3yo={a3era2} 4yo={a4era2} 5yo={a5era2}")
+            # logger.debug(f"BWT target {bwt_target} this {bwt} with (srw_p11={sen.saa['srw_p11'][b]})")
+            logger.debug(f"WWT target {wwt_target} this {wwt} with (srw_p11={sen.saa['srw_p11'][w]} & milk_scalar={sen.saa['milk_yield']})")
+            logger.debug(f"PWT target {pwt_target} this {pwt} with (srw_p11={sen.saa['srw_p11'][p]})")
+            logger.debug(f"YWT target {ywt_target} this {ywt} with (srw_p11={sen.saa['srw_p11'][y]}, k={sen.saa['growth_constant']} & PI={sen.saa['pi_p11'][y]})")
+            logger.debug(f"HWT target {hwt_target} this {hwt} with (srw_p11={sen.saa['srw_p11'][h]})")
+            logger.debug(f"AWT target {awt_target} this {awt} with (srw={srw_parameter}, srw_p11={sen.saa['srw_p11'][a]} & PI={sen.saa['pi_p11'][a]})")
+            logger.debug(f"2yo={a2wt} 3yo={a3wt} 4yo={a4wt} 5yo={a5wt}")
+            logger.debug(f"PFAT target {pfat_target} this {pfat} with (PI={sen.saa['pi_p11'][p]})")
+            logger.debug(f"YFAT target {yfat_target} this {yfat} with (PI={sen.saa['pi_p11'][y]} & pi_z={sen.saa['pi_z_constant']})")
+            # logger.debug(f"HFAT target {hfat_target} this {hfat} with (PI={sen.saa['pi_p11'][h]})")
+            # logger.debug(f"AFAT target {afat_target} this {afat} with (PI={sen.saa['pi_p11'][a]})")
+            # logger.debug(f"2yo={a2fat} 3yo={a3fat} 4yo={a4fat} 5yo={a5fat}")
+            # logger.debug(f"WCS target {wcs_target} this {wcs} with (PI={sen.saa['pi_p11'][w]})")
+            # logger.debug(f"PCS target {pcs_target} this {pcs} with (PI={sen.saa['pi_p11'][p]})")
+            # logger.debug(f"YCS target {ycs_target} this {ycs} with (PI={sen.saa['pi_p11'][y]})")
+            # logger.debug(f"HCS target {hcs_target} this {hcs} with (PI={sen.saa['pi_p11'][h]})")
+            # logger.debug(f"ACS target {acs_target} this {acs} with (PI={sen.saa['pi_p11'][a]})")
+            # logger.debug(f"2yo={a2cs} 3yo={a3cs} 4yo={a4cs} 5yo={a5cs}")
+            # logger.debug(f"PWBE target {pwbe_target} this {pwbe} with (EVG={sen.saa['evg_p11'][p]} & PI={sen.saa['pi_p11'][p]})")
+            # logger.debug(f"YWBE target {ywbe_target} this {ywbe} with (EVG={sen.saa['evg_p11'][y]} & PI={sen.saa['pi_p11'][y]})")
+            # logger.debug(f"HWBE target {hwbe_target} this {hwbe} with (EVG={sen.saa['evg_p11'][h]} & PI={sen.saa['pi_p11'][h]})")
+            logger.debug(f"AWBE target {awbe_target} this {awbe} with (EVG={sen.saa['evg_p11'][a]} & PI={sen.saa['pi_p11'][a]})")
+            logger.debug(f"2yo={a2wbe} 3yo={a3wbe} 4yo={a4wbe} 5yo={a5wbe}")
+            logger.debug(f"Estimated Fat% when ALW = SRW, {fat_at_srw} with (SRW_actual={srw_actual}, ALW={awt}, Fat%={awbe} & EVG={cg8})")
+            logger.debug(f"Estimated SRW when Fat% = {srwfat_yg1[0,0]*100}, {srw_from_fat} with (ALW={awt}, Fat%={awbe} & EVG={cg8})")
+            # logger.debug(f"PSURV target {psurv_target} this {psurv} with ({sen.saa['bsurv_p11'][p]})")
+            # logger.debug(f"YSURV target {ysurv_target} this {ysurv} with ({sen.saa['bsurv_p11'][y]})")
+            # logger.debug(f"HSURV target {hsurv_target} this {hsurv} with ({sen.saa['bsurv_p11'][h]})")
+            logger.debug(f"ASURV target {asurv_target} this {asurv} with (Base={sen.saa['bsurv_p11'][a]} & PN={sen.saa['pnsurv_p11'][a]})")
+            logger.debug(f"2yo={a2surv} 3yo={a3surv} 4yo={a4surv} 5yo={a5surv}")
+            logger.debug(f"Y-A5SURV target {ya5surv_target} this {ya5surv} with (Base={sen.saa['bsurv_p11'][a]} & PN={sen.saa['pnsurv_p11'][a]})")
+
+        # logger.debug("LW targets Ewes (value, sar, target)")
         # for k in range(28):
-        #     print(f"({trait_values_p[i]}, {coefficients_c[j]}, {calibration_targets_p[i]})",end='')
+        #     logger.debug(f"({trait_values_p[i]}, {coefficients_c[j]}, {calibration_targets_p[i]})",end='')
         #     i += 1; j += 1
-        # print("\n LW targets Wethers (value, sar, target)")
+        # logger.debug("\n LW targets Wethers (value, sar, target)")
         # for k in range(14):
-        #     print(f"({trait_values_p[i]}, {coefficients_c[j]}, {calibration_targets_p[i]})", end='')
+        #     logger.debug(f"({trait_values_p[i]}, {coefficients_c[j]}, {calibration_targets_p[i]})", end='')
         #     i += 1; j += 1
 
         if calibrate_trait_values:

@@ -4,6 +4,11 @@ import os.path
 from datetime import datetime
 import multiprocessing
 import sys
+import logging
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(name)s %(levelname)s: %(message)s'
+)
 
 #report the clock time that the experiment was started
 print(f'Experiment commenced at: {time.ctime()}')

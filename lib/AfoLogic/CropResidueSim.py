@@ -69,6 +69,12 @@ if __name__=="__main__":
     from lib.AfoLogic import CropResidue as stub
     from lib.AfoLogic import relativeFile
 
+    import logging
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format='%(name)s %(levelname)s: %(message)s'
+    )
+
     na = np.newaxis
 
     #todo currently to handle multiple trials we need to run the simulator multiple time. A good long term solution will be

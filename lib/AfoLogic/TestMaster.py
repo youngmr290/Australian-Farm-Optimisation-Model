@@ -2,6 +2,11 @@ import numpy as np
 from timeit import default_timer as timer
 import sys
 import os
+import logging
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(name)s %(levelname)s: %(message)s'
+)
 
 time_list = [] ; time_was = []
 time_list.append(timer()) ; time_was.append("start")

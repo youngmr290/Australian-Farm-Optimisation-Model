@@ -20,7 +20,12 @@ sys.argv: Experiment number (will use the first trial in the experiment). If bla
           Calibrate/report. If blank will calibrate
 """
 
+import os
+os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["OPENBLAS_NUM_THREADS"] = "1"
+os.environ["MKL_NUM_THREADS"] = "1"
 
+import logging
 import numpy as np
 from timeit import default_timer as timer
 import sys
@@ -55,6 +60,13 @@ try:
     RUN_CALIBRATION = sys.argv[3].lower() in ['true', '1', 'yes']
 except (IndexError, AttributeError):
     RUN_CALIBRATION = True  # default
+
+##configure logging as early as possible (before StockGenerator's logger.debug() calls can fire) so
+## calibration runs suppress StockGenerator debug output while report runs show it.
+logging.basicConfig(
+    level=logging.WARNING if RUN_CALIBRATION else logging.DEBUG,
+    format='%(processName)s %(name)s %(levelname)s: %(message)s'
+)
 
 # Optimisation controls. Team multiprocessing always uses one worker per team;
 # single-team mode can use workers within scipy's differential_evolution.
