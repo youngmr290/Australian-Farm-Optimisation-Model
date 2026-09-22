@@ -271,14 +271,15 @@ def build_context(targets_tp, weights_p, bestbet_tc, bnd_lo_tc, bnd_up_tc, n_coe
     }
 
 
-def write_calibration_results(df_targets_tp, df_bnd_lo_tc, df_bnd_up_tc, keys_t, keys_c, results):
-    n_teams = len(keys_t)
+def write_calibration_results(df_targets_tp, df_bnd_lo_tc, df_bnd_up_tc, keys_t, keys_c, results, n_teams_total=None):
+    n_teams = len(keys_t) if n_teams_total is None else n_teams_total
     n_coef = len(keys_c)
     coefficients_tc = np.zeros((n_teams, n_coef))
     success_t = np.zeros(n_teams, dtype=bool)
-    wsmse_t = np.zeros(n_teams)
+    wsmse_t = np.full(n_teams, np.nan)
     nit_t = np.zeros(n_teams)
     message_t = np.empty(n_teams, dtype=object)
+    message_t[:] = "Pending"
 
     for t, coefficients, success, wsmse, nit, message in sorted(results, key=lambda item: item[0]):
         coefficients_tc[t, :] = coefficients
@@ -383,7 +384,12 @@ def main():
                 with mp.Pool(processes=n_processes,
                              initializer=init_worker,
                              initargs=(worker_init_context,)) as pool:
-                    results = pool.map(run_calibration_for_team_worker, teams, chunksize=1)
+                    results = []
+                    for result in pool.imap_unordered(run_calibration_for_team_worker, teams, chunksize=1):
+                        results.append(result)
+                        write_calibration_results(
+                            df_targets_tp, df_bnd_lo_tc, df_bnd_up_tc, keys_t, keys_c, results, n_teams_total=n_teams
+                        )
             else:
                 print(f"multiprocess the population of {context['popsize'] * n_coef} with {context['workers']} workers")
                 mp.freeze_support()
@@ -393,6 +399,9 @@ def main():
                     results.append(result)
                     time_list.append(timer())
                     print(f"Team {t} time {time_list[-1] - time_list[-2]:0.4f}secs")
+                    write_calibration_results(
+                        df_targets_tp, df_bnd_lo_tc, df_bnd_up_tc, keys_t, keys_c, results, n_teams_total=n_teams
+                    )
 
             write_calibration_results(df_targets_tp, df_bnd_lo_tc, df_bnd_up_tc, keys_t, keys_c, results)
 
