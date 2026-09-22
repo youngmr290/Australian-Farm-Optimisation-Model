@@ -174,6 +174,11 @@ def run_calibration_for_team(t, context):
     team_context["team"] = t
     team_context["calibration_weights"] = context["weights_p"]
     team_context["calibration_targets"] = context["targets_tp"][t]
+    # pkl_fs only depends on user_sa (fixed for the whole team), not on the coefficients
+    # being tested, so it's safe to load it once here rather than on every DE evaluation.
+    user_sa = get_trial_sa(context["exp_data"], context["trial"])
+    team_context["user_sa"] = user_sa
+    team_context["pkl_fs"] = load_trial_fs(user_sa)
 
     print(f"Starting calibration for Team {t}...")
 
@@ -206,15 +211,18 @@ def calibration_objective(coefficients_c, context):
 
     Differential Evolution calls this function many times for each team. The
     stock generator mutates shared module state while evaluating a coefficient
-    set, so the trial inputs must be rebuilt before every call.
+    set, so the trial inputs must be rebuilt before every call. pkl_fs doesn't
+    depend on coefficients_c, so it's loaded once per team (see
+    run_calibration_for_team) and reused here rather than re-read from disk.
     """
-    pkl_fs = setup_trial(
+    reset_trial_inputs(
         context["trial"],
         context["exp_data"],
         context["trial_pinp"],
         context["sinp_defaults"],
         context["uinp_defaults"],
         context["pinp_defaults"],
+        user_sa=context["user_sa"],
     )
 
     return sgen.generator(
@@ -223,7 +231,7 @@ def calibration_objective(coefficients_c, context):
         r_vals={},
         nv={},
         pkl_fs_info={},
-        pkl_fs=pkl_fs,
+        pkl_fs=context["pkl_fs"],
         stubble=context["stubble"],
         calibrate_trait_values=RUN_CALIBRATION,
         calibration_weights_p=context["calibration_weights"],
