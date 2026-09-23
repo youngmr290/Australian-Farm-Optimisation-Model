@@ -408,15 +408,24 @@ def main():
                 print(f"multiprocess across {n_processes} teams")
                 worker_init_context = context.copy()
                 # The worker context contains the trial reset inputs used by calibration_objective().
+                # build_context forces workers=1 per team whenever team_processes is True, so DE never tries to
+                # spin up its own nested Pool from inside one of these (daemonic) worker processes - daemonic
+                # processes aren't allowed to have children, so that invariant must hold for this to stay safe.
                 with mp.Pool(processes=n_processes,
                              initializer=init_worker,
                              initargs=(worker_init_context,)) as pool:
                     results = []
-                    for result in pool.imap_unordered(run_calibration_for_team_worker, teams, chunksize=1):
-                        results.append(result)
-                        write_calibration_results(
-                            df_targets_tp, df_bnd_lo_tc, df_bnd_up_tc, keys_t, keys_c, results, n_teams_total=n_teams
-                        )
+                    try:
+                        for result in pool.imap_unordered(run_calibration_for_team_worker, teams, chunksize=1):
+                            results.append(result)
+                            write_calibration_results(
+                                df_targets_tp, df_bnd_lo_tc, df_bnd_up_tc, keys_t, keys_c, results, n_teams_total=n_teams
+                            )
+                    except KeyboardInterrupt:
+                        print("\nKeyboardInterrupt received — terminating worker processes...")
+                        pool.terminate()
+                        pool.join()
+                        raise
             else:
                 print(f"multiprocess the population of {context['popsize'] * n_coef} with {context['workers']} workers")
                 mp.freeze_support()
