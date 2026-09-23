@@ -84,8 +84,8 @@ POLISH = True   #only applied when workers == 1 (see build_context) - scipy's po
 # POLISH). When polish will finish the job, DE itself can stop looser (TOL/ATOL_WITH_POLISH); when it won't
 # (workers>1, or POLISH False), DE has to do all the work itself so it needs the tighter values to reach an
 # equivalent final precision.
-TOL_WITH_POLISH = 0.01
-ATOL_WITH_POLISH = 0.01
+TOL_WITH_POLISH = 0.05
+ATOL_WITH_POLISH = 0.05
 TOL_NO_POLISH = 0.001
 ATOL_NO_POLISH = 0.01   #If the trait weights are 100 * estimated EV then SQRT(Obj) is the error in the EV of the target trait
 
@@ -206,12 +206,14 @@ def run_calibration_for_team(t, context):
         updating=context["updating"],
         workers=context["workers"],
         #Extra stability options - best1bin is the greedy/exploitative default strategy, appropriate
-        #since this problem is not multimodal (mutates around the current best rather than random members)
+        #since this problem is not multimodal (mutates around the current best rather than random members).
+        #recombination high and mutation fixed (not dithered) since there's no ruggedness to hedge against -
+        #dithering exists to add step-size variation to escape local optima, which isn't needed here.
         x0=bestbet,
         init='latinhypercube',
         strategy='best1bin',
-        recombination=0.7,
-        mutation=(0.5, 1.0)
+        recombination=0.9,
+        mutation=0.6
     )
 
     print(f"Team {t} coefficients are {result.x} obj: {result.fun} evaluations {result.nfev} - {result.success}")
