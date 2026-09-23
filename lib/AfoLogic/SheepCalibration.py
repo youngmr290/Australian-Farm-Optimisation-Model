@@ -405,7 +405,7 @@ def main():
         teams = list(range(n_teams))
         if RUN_CALIBRATION:
             if team_processes:
-                print(f"multiprocess across {n_processes} teams")
+                print(f"multiprocess across {n_processes} teams with population of {context['popsize'] * n_coef}")
                 worker_init_context = context.copy()
                 # The worker context contains the trial reset inputs used by calibration_objective().
                 # build_context forces workers=1 per team whenever team_processes is True, so DE never tries to
