@@ -72,11 +72,22 @@ logging.basicConfig(
 # single-team mode can use workers within scipy's differential_evolution.
 MAXITER = 400
 POPSIZE = 5   # between 5 and 15. population = popsize * n_coeff
-MAX_WORKERS_WITHIN_TEAM = 2  #20   #48  #setting workers to a factor of 'population' ensures even utilisation of CPUs
-TOL = 0.001
-ATOL = 0.01   #If the trait weights are 100 * estimated EV then SQRT(Obj) is the error in the EV of the target trait
+MAX_WORKERS_WITHIN_TEAM = 10   #48  #setting workers to a factor of 'population' ensures even utilisation of CPUs
+                                 #only takes effect when team_processes is False (n_processes==1) - team
+                                 #multiprocessing always forces workers=1 per team regardless of this value
 DISP = True
-POLISH = False
+POLISH = True   #only applied when workers == 1 (see build_context) - scipy's polish step is single-threaded
+                 #so it can't use the DE worker pool, and is a local (finite-difference) refinement that assumes
+                 #a smooth objective - fine for workers==1 serial runs on this non-multimodal problem
+
+# tol/atol are chosen per-run in build_context based on whether polish will actually run (workers==1 and
+# POLISH). When polish will finish the job, DE itself can stop looser (TOL/ATOL_WITH_POLISH); when it won't
+# (workers>1, or POLISH False), DE has to do all the work itself so it needs the tighter values to reach an
+# equivalent final precision.
+TOL_WITH_POLISH = 0.01
+ATOL_WITH_POLISH = 0.01
+TOL_NO_POLISH = 0.001
+ATOL_NO_POLISH = 0.01   #If the trait weights are 100 * estimated EV then SQRT(Obj) is the error in the EV of the target trait
 
 worker_context = {}
 
@@ -194,12 +205,13 @@ def run_calibration_for_team(t, context):
         polish=context["polish"],
         updating=context["updating"],
         workers=context["workers"],
-        #Extra stability & speed options (from Grok for problem without multimodes)
+        #Extra stability options - best1bin is the greedy/exploitative default strategy, appropriate
+        #since this problem is not multimodal (mutates around the current best rather than random members)
         x0=bestbet,
         init='latinhypercube',
-        strategy='rand1bin',
-        recombination=0.75,
-        mutation=(0.4, 0.9)
+        strategy='best1bin',
+        recombination=0.7,
+        mutation=(0.5, 1.0)
     )
 
     print(f"Team {t} coefficients are {result.x} obj: {result.fun} evaluations {result.nfev} - {result.success}")
@@ -255,6 +267,13 @@ def build_context(targets_tp, weights_p, bestbet_tc, bnd_lo_tc, bnd_up_tc, n_coe
     population = popsize * n_coef
     workers = 1 if team_processes else min(mp.cpu_count(), population, MAX_WORKERS_WITHIN_TEAM)
     updating = 'deferred' if workers != 1 else 'immediate'
+    # scipy's polish step (L-BFGS-B) is single-threaded and can't use the DE worker pool, so only
+    # enable it when DE itself is running serially (workers == 1) - otherwise it would leave the
+    # extra workers idle for no benefit while also not being tested with workers > 1.
+    polish = POLISH and workers == 1
+    # DE only needs to converge as tightly as polish will fail to finish for it.
+    tol = TOL_WITH_POLISH if polish else TOL_NO_POLISH
+    atol = ATOL_WITH_POLISH if polish else ATOL_NO_POLISH
     return {
         "targets_tp": targets_tp,
         "weights_p": weights_p,
@@ -270,10 +289,10 @@ def build_context(targets_tp, weights_p, bestbet_tc, bnd_lo_tc, bnd_up_tc, n_coe
         "stubble": False,
         "maxiter": MAXITER,
         "popsize": popsize,
-        "tol": TOL,
-        "atol": ATOL,
+        "tol": tol,
+        "atol": atol,
         "disp": DISP,
-        "polish": POLISH,
+        "polish": polish,
         "workers": workers,
         "updating": updating,
     }
