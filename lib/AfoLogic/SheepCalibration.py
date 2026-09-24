@@ -205,15 +205,15 @@ def run_calibration_for_team(t, context):
         polish=context["polish"],
         updating=context["updating"],
         workers=context["workers"],
-        #Extra stability options - best1bin is the greedy/exploitative default strategy, appropriate
-        #since this problem is not multimodal (mutates around the current best rather than random members).
-        #recombination high and mutation fixed (not dithered) since there's no ruggedness to hedge against -
-        #dithering exists to add step-size variation to escape local optima, which isn't needed here.
         x0=bestbet,
         init='latinhypercube',
+        #best1bin mutates every individual relative to the current best (best + F*(r1-r2)), the greedy
+        #default strategy suited to this non-multimodal problem.
+        #Also tested currenttobest1bin but it was slower to converge.
         strategy='best1bin',
+        #recombination high and mutation fixed (not dithered) since there's no ruggedness to hedge against.
         recombination=0.9,
-        mutation=0.6
+        mutation=0.6    # dithering (0.5, 1.0) adds step-size variation to escape local optima
     )
 
     print(f"Team {t} coefficients are {result.x} obj: {result.fun} evaluations {result.nfev} - {result.success}")
