@@ -76,18 +76,16 @@ MAX_WORKERS_WITHIN_TEAM = 10   #48  #setting workers to a factor of 'population'
                                  #only takes effect when team_processes is False (n_processes==1) - team
                                  #multiprocessing always forces workers=1 per team regardless of this value
 DISP = True
-POLISH = True   #only applied when workers == 1 (see build_context) - scipy's polish step is single-threaded
-                 #so it can't use the DE worker pool, and is a local (finite-difference) refinement that assumes
-                 #a smooth objective - fine for workers==1 serial runs on this non-multimodal problem
-
-# tol/atol are chosen per-run in build_context based on whether polish will actually run (workers==1 and
-# POLISH). When polish will finish the job, DE itself can stop looser (TOL/ATOL_WITH_POLISH); when it won't
-# (workers>1, or POLISH False), DE has to do all the work itself so it needs the tighter values to reach an
-# equivalent final precision.
-TOL_WITH_POLISH = 0.05
-ATOL_WITH_POLISH = 0.05
-TOL_NO_POLISH = 0.001
-ATOL_NO_POLISH = 0.01   #If the trait weights are 100 * estimated EV then SQRT(Obj) is the error in the EV of the target trait
+# POLISH, TOL & ATOL are defaults that can be overridden per trial in exp.xlsx using sav['calib_polish'],
+# sav['calib_tol'] & sav['calib_atol'] (see build_context).
+# scipy's polish step (L-BFGS-B) is single-threaded so it can't use the DE worker pool, and is a local
+# (finite-difference) refinement that assumes a smooth objective.
+# If polish is used DE can stop looser (e.g. tol=0.05, atol=0.05) because polish finishes the job. If polish
+# is not used DE has to do all the work itself so it needs tighter values (e.g. tol=0.001, atol=0.01) to
+# reach an equivalent final precision.
+POLISH = True
+TOL = 0.05
+ATOL = 0.05   #If the trait weights are 100 * estimated EV then SQRT(Obj) is the error in the EV of the target trait
 
 worker_context = {}
 
@@ -264,18 +262,18 @@ def run_calibration_for_team_worker(t):
 
 def build_context(targets_tp, weights_p, bestbet_tc, bnd_lo_tc, bnd_up_tc, n_coef, *, team_processes
                   , trial, exp_data, trial_pinp, sinp_defaults, uinp_defaults, pinp_defaults):
-    """Collect the values needed by team calibration and objective evaluation."""
+    """Collect the values needed by team calibration and objective evaluation.
+
+    Requires sen to be populated for the current trial (see reset_trial_inputs) because the DE polish, tol
+    and atol can be overridden by the sav in exp.xlsx.
+    """
     popsize = POPSIZE
     population = popsize * n_coef
     workers = 1 if team_processes else min(mp.cpu_count(), population, MAX_WORKERS_WITHIN_TEAM)
     updating = 'deferred' if workers != 1 else 'immediate'
-    # scipy's polish step (L-BFGS-B) is single-threaded and can't use the DE worker pool, so only
-    # enable it when DE itself is running serially (workers == 1) - otherwise it would leave the
-    # extra workers idle for no benefit while also not being tested with workers > 1.
-    polish = POLISH and workers == 1
-    # DE only needs to converge as tightly as polish will fail to finish for it.
-    tol = TOL_WITH_POLISH if polish else TOL_NO_POLISH
-    atol = ATOL_WITH_POLISH if polish else ATOL_NO_POLISH
+    polish = bool(fun.f_sa(POLISH, sen.sav['calib_polish'], 5))
+    tol = float(fun.f_sa(TOL, sen.sav['calib_tol'], 5))
+    atol = float(fun.f_sa(ATOL, sen.sav['calib_atol'], 5))
     return {
         "targets_tp": targets_tp,
         "weights_p": weights_p,
@@ -388,6 +386,8 @@ def main():
         bnd_up_tc = df_bnd_up_tc.values
 
         team_processes = n_processes != 1
+        ##populate sen for the current trial so build_context can apply the DE control sav
+        reset_trial_inputs(trial, exp_data, trial_pinp, sinp_defaults, uinp_defaults, pinp_defaults)
         context = build_context(
             targets_tp,
             weights_p,
@@ -406,6 +406,7 @@ def main():
 
         teams = list(range(n_teams))
         if RUN_CALIBRATION:
+            print(f"DE controls: polish={context['polish']} tol={context['tol']} atol={context['atol']}")
             if team_processes:
                 print(f"multiprocess across {n_processes} teams with population of {context['popsize'] * n_coef}")
                 worker_init_context = context.copy()

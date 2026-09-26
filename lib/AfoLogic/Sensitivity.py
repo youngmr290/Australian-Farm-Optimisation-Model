@@ -571,6 +571,10 @@ def create_sa():
     saa['milk_yield'] = 0.0          #Genotype calibration: Adjust cl_yatf[0] parameter which alters milk production, lamb milk intake and ewe PI during lactation
     saa['growth_constant'] = 0.0     #Genotype calibration: Adjust growth constant (k) param
     saa['pi_z_constant'] = 0.0       #Genotype calibration: Adjust c1[2] & c1[22] parameters, PI z scalar constant
+    ##SAV controlling the differential evolution in SheepCalibration.py (default values are set in SheepCalibration.py)
+    sav['calib_polish'] = '-'        #SA to control if the DE solution is polished (L-BFGS-B) in SheepCalibration.py
+    sav['calib_tol'] = '-'           #SA to alter the DE relative convergence tolerance in SheepCalibration.py
+    sav['calib_atol'] = '-'          #SA to alter the DE absolute convergence tolerance in SheepCalibration.py
 
     ##SAA on slices of the livestock parameters using the age stage axis
     saa['sfw_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')         #SA value with age stages for clean fleece weight (sfw)
