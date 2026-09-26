@@ -272,10 +272,13 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         #             ]
         # sen.sar['feedsupply_r1jp'] = np.zeros(pinp.feedsupply['i_feedsupply_options_r1j2p'].shape, dtype='float64')
         # for indices in indicelist:
-        #     sen.sar['feedsupply_r1jp'][indices] = sen.sar['feedsupply_r1jp'][indices] + coefficients_c[i]
-        #     i += 1
+        #     sen.sar['feedsupply_r1jp'][indices] = sen.sar['feedsupply_r1jp'][indices] + coefficients_c[j]
+        #     j += 1
         # pinp.feedsupply['i_feedsupply_options_r1j2p'] = fun.f_sa(pinp.feedsupply['i_feedsupply_options_r1j2p']
         #                                             , sen.sar['feedsupply_r1jp'], 4, value_min=0.0, target=13.0)
+
+        ##check the number of coefficients used matches the number supplied (columns in [Calibration_control.xlsx]BestBet/Low/High)
+        assert j == n_coeff, f"{j} calibration coefficients are used in the generator but {n_coeff} are supplied in Calibration_control.xlsx"
 
         ##Assign the target for printing and done early for calculation of SRW for AWT & Fat% targets
         i = 0
@@ -372,6 +375,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         wlw11_target = calibration_targets_p[i]; i += 1
         wlw12_target = calibration_targets_p[i]; i += 1
         wlw13_target = calibration_targets_p[i]; i += 1
+        ##check the number of targets read matches the number of traits in [Calibration_control.xlsx]Targets & Weights
+        assert i == calibration_targets_p.size == n_traits, f"{i} calibration targets are read in the generator but Calibration_control.xlsx has {calibration_targets_p.size} targets and {n_traits} weights"
 
         ###Calculate SRW if it is being endogenously fitted from target ALW, target Fat% and EVG
         ###Test on endogenous calculation is that saa[adult EVG] coefficient has a value
@@ -8322,6 +8327,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         trait_values_p[i] = wlw11; i += 1
         trait_values_p[i] = wlw12; i += 1
         trait_values_p[i] = wlw13; i += 1
+        ##check every trait has been assigned (unassigned traits would be left as 0 in the objective)
+        assert i == n_traits, f"{i} trait values are calculated in the generator but Calibration_control.xlsx has {n_traits} traits"
 
         #if calibrate_trait_values:
         ### Handle the multi-trait calibration using an a-priority method
@@ -8337,7 +8344,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         #                     / np.maximum(0.0001, np.abs(coefficients_c)))
 
         calibration_objective = 1e8 if np.isnan(t_objective) else t_objective
-        print(f"obj: {calibration_objective} trait  Team SRW: {srw_parameter}")
+        print(f"obj: {calibration_objective:10.3f} trait  Team SRW: {srw_parameter}")
 
         if logger.isEnabledFor(logging.DEBUG):
             #Report the values, coefficients and target for the current iteration

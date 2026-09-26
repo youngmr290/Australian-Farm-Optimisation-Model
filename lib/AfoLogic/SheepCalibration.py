@@ -157,6 +157,40 @@ def read_calibration_control():
     return df_targets_tp, df_weights_p, df_bestbet_tc, df_bnd_lo_tc, df_bnd_up_tc
 
 
+def check_calibration_control(df_targets_tp, df_weights_p, df_bestbet_tc, df_bnd_lo_tc, df_bnd_up_tc):
+    """Check the Calibration_control.xlsx sheets line up before starting the calibration.
+
+    The coefficients and traits are passed to the generator by position (not by name), so a column that is
+    missing or out of order in one sheet shifts every following value. Rows are compared by count because
+    the row labels are not the same in every sheet.
+    """
+    problems = []
+    ##coefficient sheets must have identical columns (BestBet is the x0 for DE, Low/High are the bounds)
+    for name, df in [("Low", df_bnd_lo_tc), ("High", df_bnd_up_tc)]:
+        if list(df.columns) != list(df_bestbet_tc.columns):
+            only_bestbet = [c for c in df_bestbet_tc.columns if c not in df.columns]
+            only_other = [c for c in df.columns if c not in df_bestbet_tc.columns]
+            problems.append(f"{name} columns differ from BestBet ({df.shape[1]} vs {df_bestbet_tc.shape[1]})."
+                            f" Only in BestBet: {only_bestbet}. Only in {name}: {only_other}."
+                            + (" Same names but a different order." if not only_bestbet and not only_other else ""))
+    ##one row per team in Targets and each coefficient sheet
+    n_teams = df_targets_tp.shape[0]
+    for name, df in [("BestBet", df_bestbet_tc), ("Low", df_bnd_lo_tc), ("High", df_bnd_up_tc)]:
+        if df.shape[0] != n_teams:
+            problems.append(f"{name} has {df.shape[0]} team rows but Targets has {n_teams}.")
+    ##one weight for each target trait
+    if df_weights_p.shape[1] != df_targets_tp.shape[1]:
+        problems.append(f"Weights has {df_weights_p.shape[1]} trait columns but Targets has {df_targets_tp.shape[1]}.")
+    ##bounds must be valid and contain the best bet (only checked if the shapes line up)
+    if not problems:
+        lo, up, bestbet = df_bnd_lo_tc.values, df_bnd_up_tc.values, df_bestbet_tc.values
+        for desc, mask in [("Low > High", lo > up), ("BestBet outside Low/High", (bestbet < lo) | (bestbet > up))]:
+            for t, c in zip(*np.nonzero(mask)):
+                problems.append(f"{desc}: team row {t} ({df_targets_tp.index[t]}), coefficient {df_bestbet_tc.columns[c]}.")
+    if problems:
+        raise ValueError("Calibration_control.xlsx sheets do not line up:\n  " + "\n  ".join(problems))
+
+
 def init_worker(context):
     """Store per-trial data in each team worker.
 
@@ -363,6 +397,7 @@ def main():
         o_trait_values[trial] = {}  # create row key inside calibration dictionary
 
         df_targets_tp, df_weights_p, df_bestbet_tc, df_bnd_lo_tc, df_bnd_up_tc = read_calibration_control()
+        check_calibration_control(df_targets_tp, df_weights_p, df_bestbet_tc, df_bnd_lo_tc, df_bnd_up_tc)
 
         keys_t = df_targets_tp.index
         keys_c = df_bestbet_tc.columns
