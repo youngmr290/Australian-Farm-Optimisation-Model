@@ -1767,6 +1767,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     #TODO could be hooked up for SLP and existing paddocks that are more sheltered due to bush or other reasons
     relative_ws_adj, relative_temp_adj, protected_area = tre.f_microclimate_adj()
     relative_ws_c = np.array([1, relative_ws_adj])
+    ws_adjust_active = np.any(relative_ws_c != 1)  #if all sections have the same windspeed then f_ws_adjust returns 1 for all dams, so it can be skipped
     ### Relative proportion of pasture that is protected by trees
     ### under the assumption that tree cover applies equally across land uses
     tree_bias_factor = 1  # >1 means trees favour pasture more than crop
@@ -3357,6 +3358,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         days_period_pa1e1b1nwzida0e0b0xyg0[...] = 0
         days_period_pa1e1b1nwzida0e0b0xyg3[...] = 0
 
+    fs_target_initialised = False   #the lw target info is set up in the first generator period (see p loop)
     for loop_ltw in range(loop_ltw_len):
         #todo The double loop could be replaced by separating the offspring into their own loop
         # it doesn't remove the requirement to loop for the dams because they need to have the first loop to generate the inputs for the second loop
@@ -3772,6 +3774,23 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         else:
             p_start = 0
             p_end = n_sim_periods-1   #-1 because assigns to [p+1] for start values
+
+        ##periods in which each group is active (days in the period > 0). Calculated once before the p loop because
+        ## repeating np.any() on a slice of days_period ~150 times per period is a significant part of the loop overhead.
+        ## Padded with False to n_sim_periods because the offs p axis can be shorter than the dams p axis.
+        def f1_active_p(days_period):
+            active_p = np.any(days_period > 0, axis=tuple(range(1, days_period.ndim)))
+            return np.pad(active_p, (0, max(0, n_sim_periods - len(active_p))), constant_values=False)
+        active_p_psire = f1_active_p(days_period_pa1e1b1nwzida0e0b0xyg0)
+        active_p_pdams = f1_active_p(days_period_pa1e1b1nwzida0e0b0xyg1)
+        active_p_pyatf = f1_active_p(days_period_pa1e1b1nwzida0e0b0xyg2)
+        active_p_poffs = f1_active_p(days_period_pa1e1b1nwzida0e0b0xyg3)
+
+        ##if calibrating or reporting trait values only the dams (& yatf) are generated so the p loop can stop after
+        ## the last period that the dams or yatf are active.
+        if calibrate_trait_values or o_trait_values is not None:
+            p_end = min(p_end, np.max(np.flatnonzero(active_p_pdams | active_p_pyatf)) + 1)
+
         for p in range(p_start, p_end):   #-1 because assigns to [p+1] for start values
             # print(p)
             # if np.any(period_is_birth_pa1e1b1nwzida0e0b0xyg1[p]):
@@ -3897,7 +3916,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             #reset variables if period is beginning of a reproduction cycle or shearing cycle #
             ###################################################################################
             ##sire
-            if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1,...] >0):
+            if active_p_psire[p]:
                 ###cfw
                 cfw_start_sire = fun.f_update(cfw_start_sire, 0, period_is_mainshearing_pa1e1b1nwzida0e0b0xyg0[p-1:p]) #reset if previous period is shearing (shearing occurs at the end of a period)
                 ###fl
@@ -3906,7 +3925,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 fd_min_start_sire = fun.f_update(fd_min_start_sire, 1000, period_is_mainshearing_pa1e1b1nwzida0e0b0xyg0[p-1:p]) #reset if previous period is shearing (shearing occurs at the end of a period)
 
             ##dams
-            if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
+            if active_p_pdams[p]:
                 ##Reproduction - reset repro value at joining
                 ###Lagged DR (lactation deficit)
                 ldr_start_dams = fun.f_update(ldr_start_dams, 1, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p:p+1])
@@ -3946,7 +3965,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 fd_min_start_dams = fun.f_update(fd_min_start_dams, 1000, period_is_mainshearing_pa1e1b1nwzida0e0b0xyg1[p-1:p]) #reset if previous period is shearing (shearing occurs at the end of a period)
 
             ##offs
-            if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1,...] >0):
+            if active_p_poffs[p]:
                 ###cfw
                 cfw_start_offs = fun.f_update(cfw_start_offs, 0, period_is_mainshearing_pa1e1b1nwzida0e0b0xyg3[p-1:p]) #reset if previous period is shearing (shearing occurs at the end of a period)
                 ###fl
@@ -3959,7 +3978,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             ##dependent start #
             ###################
             ##sire
-            if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1, ...] > 0):
+            if active_p_psire[p]:
                 ###FFCFW (start)
                 ffcfw_start_sire = sfun.f1_ebw2ffcfw(cg_cpsire, cn_cpsire, ebw_start_sire, srw_pa1e1b1nwzida0e0b0xyg0, md_solid_sire, eqn_used_g0_q1p[7, p:p+1])
                 ffcfw_max_start_sire = sfun.f1_ebw2ffcfw(cg_cpsire, cn_cpsire, ebw_max_start_sire, srw_pa1e1b1nwzida0e0b0xyg0, md_solid_sire, eqn_used_g0_q1p[7, p:p+1])
@@ -3995,7 +4014,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 sam_pi_sire = sen.sam['pi_pw'] * fun.f_update(1, sen.sam['pi_adult'], zf2_sire == 1)
 
             ##dams
-            if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1, ...] > 0):
+            if active_p_pdams[p]:
                 ###FFCFW (start)
                 ffcfw_start_dams = sfun.f1_ebw2ffcfw(cg_cpdams, cn_cpdams, ebw_start_dams, srw_pa1e1b1nwzida0e0b0xyg1, md_solid_dams, eqn_used_g1_q1p[7, p:p+1])
                 ffcfw_max_start_dams = sfun.f1_ebw2ffcfw(cg_cpdams, cn_cpdams, ebw_max_start_dams, srw_pa1e1b1nwzida0e0b0xyg1, md_solid_dams, eqn_used_g1_q1p[7, p:p+1])
@@ -4044,8 +4063,12 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 c_start_dams = fun.f_update(c_start_dams, c_day1, period_is_join_pa1e1b1nwzida0e0b0xyg1[p:p+1])
 
                 ###windspeed   #todo these variable names are missing c & p in pos 0 & 1
-                ws_adj_a1e1b1nwzida0e0b0xyg1 = sfun.f_ws_adjust(relative_ws_c, numbers_start_dams, dse_per_dam, nfoet_b1nwzida0e0b0xyg,
-                                                                scan_management_pa1e1b1nwzida0e0b0xyg1[p:p+1], propn_carry_capacity_cpg[:, p:p+1,...])
+                ###only required if some sections have a different windspeed (e.g. sheltered by trees). Otherwise the adjustment is 1 for all dams.
+                if ws_adjust_active:
+                    ws_adj_a1e1b1nwzida0e0b0xyg1 = sfun.f_ws_adjust(relative_ws_c, numbers_start_dams, dse_per_dam, nfoet_b1nwzida0e0b0xyg,
+                                                                    scan_management_pa1e1b1nwzida0e0b0xyg1[p:p+1], propn_carry_capacity_cpg[:, p:p+1,...])
+                else:
+                    ws_adj_a1e1b1nwzida0e0b0xyg1 = 1
                 ws_a1e1b1nwzida0e0b0xyg1 = ws_pa1e1b1nwzida0e0b0xyg[p:p+1] * ws_adj_a1e1b1nwzida0e0b0xyg1
 
 
@@ -4065,7 +4088,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             ##note1: most yatf dependent variables are calculated later in the code
             ### ffcfw_yatf is done here because it is used in the dam calculations for milk production
             ### Includes [p-1] because we also want to update ffcfw_start if yatf existed last period (which is required because there are 0 days in the period they are weaned).
-            if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1, ...] > 0) or np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p-1:p, ...] > 0):
+            if active_p_pyatf[p] or np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p-1:p, ...] > 0):
                 ###FFCFW (start)
                 ffcfw_start_yatf = sfun.f1_ebw2ffcfw(cg_cpyatf, cn_cpyatf, ebw_start_yatf, srw_pa1e1b1nwzida0e0b0xyg2, md_solid_yatf
                                                      , eqn_used_g2_q1p[7, p:p+1])
@@ -4085,7 +4108,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                                     , period_is_birth_pa1e1b1nwzida0e0b0xyg1[p:p+1, ...])
 
             ##offs
-            if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1, ...] > 0):
+            if active_p_poffs[p]:
                 ###FFCFW (start)
                 ffcfw_start_offs = sfun.f1_ebw2ffcfw(cg_cpoffs, cn_cpoffs, ebw_start_offs, srw_pa1e1b1nwzida0e0b0xyg3, md_solid_offs, eqn_used_g3_q1p[7, p:p+1])
                 ffcfw_max_start_offs = sfun.f1_ebw2ffcfw(cg_cpoffs, cn_cpoffs, ebw_max_start_offs, srw_pa1e1b1nwzida0e0b0xyg3, md_solid_offs, eqn_used_g3_q1p[7, p:p+1])
@@ -4131,16 +4154,18 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
             ###initial info
             ####set lw target - None is default which means lw target is not used.
-            if not 'target_ebg_pb1dams' in locals(): #only required once.
+            if not fs_target_initialised: #only required once.
+                fs_target_initialised = True
                 target_ebg_dams_pb = fun.f_sa(np.full((len_p, len_b1), 9999.), sen.sav['target_ebg_dams_Pb'][0:len_p], 5)
                 target_ebg_offs_pb = fun.f_sa(np.full((len_p, len_b0), 9999.), sen.sav['target_ebg_offs_Pb'][0:len_p], 5)
                 target_ebg_pb1dams = fun.f_expand(target_ebg_dams_pb, b1_pos)
                 target_ebg_pb0offs = fun.f_expand(target_ebg_offs_pb, b0_pos)
                 epsilon = 0.050 #within 50g of target
                 n_max_itn = sinp.stock['i_feedsupply_itn_max']
+                ##only required once because the fs is then updated in place (with the active b axis)
+                feedsupplyw_tpa1e1b1nwzida0e0b0xyg3 = np.broadcast_to(feedsupplyw_tpa1e1b1nwzida0e0b0xyg3, (feedsupplyw_tpa1e1b1nwzida0e0b0xyg3+target_ebg_pb0offs[0]).shape).copy() #adds active b axis to fs which is required for the LWC target calcs.
             shape = feedsupplyw_tpa1e1b1nwzida0e0b0xyg1[:, 0].shape + (n_max_itn,) + (2,) #slice 0 to remove the p axis
             attempts_dams = np.full(shape, np.nan) #initialise
-            feedsupplyw_tpa1e1b1nwzida0e0b0xyg3 = np.broadcast_to(feedsupplyw_tpa1e1b1nwzida0e0b0xyg3, (feedsupplyw_tpa1e1b1nwzida0e0b0xyg3+target_ebg_pb0offs[0]).shape).copy() #adds active b axis to fs which is required for the LWC target calcs.
             shape = feedsupplyw_tpa1e1b1nwzida0e0b0xyg3[:, 0].shape + (n_max_itn,) + (2,) #slice 0 to remove the p axis
             attempts_offs = np.full(shape, np.nan) #initialise
 
@@ -4150,8 +4175,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 eqn_system = 0 # CSIRO = 0
                 if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                     ###sire
-                    eqn_used = (eqn_used_g0_q1p[eqn_group, p:p+1] == eqn_system)
-                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1,...] >0):
+                    eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
+                    if (eqn_used or eqn_compare) and active_p_psire[p]:
                         temp0 = sfun.f_potential_intake_cs(ci_cpsire, srw_pa1e1b1nwzida0e0b0xyg0, relsize_start_sire, rc_start_sire, temp_lc_start_sire
                                                            , temp_ave_pa1e1b1nwzida0e0b0xyg[p:p+1], temp_max_pa1e1b1nwzida0e0b0xyg[p:p+1]
                                                            , temp_min_pa1e1b1nwzida0e0b0xyg[p:p+1], rain_intake_pa1e1b1nwzida0e0b0xyg0[p:p+1]
@@ -4161,8 +4186,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                         if eqn_compare:
                             r_compare4_q0q2tpsire[eqn_system, 0, :, p:p+1, ...] = temp0
                     ###dams
-                    eqn_used = (eqn_used_g1_q1p[eqn_group, p:p+1] == eqn_system)
-                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
+                    eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
+                    if (eqn_used or eqn_compare) and active_p_pdams[p]:
                         temp0 = sfun.f_potential_intake_cs(ci_cpdams, srw_pa1e1b1nwzida0e0b0xyg1, relsize_start_dams, rc_start_dams, temp_lc_start_dams
                                                            , temp_ave_pa1e1b1nwzida0e0b0xyg[p:p+1], temp_max_pa1e1b1nwzida0e0b0xyg[p:p+1]
                                                            , temp_min_pa1e1b1nwzida0e0b0xyg[p:p+1], rain_intake_pa1e1b1nwzida0e0b0xyg1[p:p+1]
@@ -4174,8 +4199,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                         if eqn_compare:
                             r_compare4_q0q2tpdams[eqn_system, 0, :, p:p+1, ...] = temp0
                     ###offs
-                    eqn_used = (eqn_used_g3_q1p[eqn_group, p:p+1] == eqn_system)
-                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1,...] >0):
+                    eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
+                    if (eqn_used or eqn_compare) and active_p_poffs[p]:
                         temp0 = sfun.f_potential_intake_cs(ci_cpoffs, srw_pa1e1b1nwzida0e0b0xyg3, relsize_start_offs, rc_start_offs, temp_lc_start_offs
                                                            , temp_ave_pa1e1b1nwzida0e0b0xyg[p:p+1], temp_max_pa1e1b1nwzida0e0b0xyg[p:p+1]
                                                            , temp_min_pa1e1b1nwzida0e0b0xyg[p:p+1], rain_intake_pa1e1b1nwzida0e0b0xyg3[p:p+1]
@@ -4189,8 +4214,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 eqn_system = 1 # mu = 1
                 if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                     ###sire
-                    eqn_used = (eqn_used_g0_q1p[eqn_group, p:p+1] == eqn_system)
-                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1,...] >0):
+                    eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
+                    if (eqn_used or eqn_compare) and active_p_psire[p]:
                         temp0 = sfun.f_potential_intake_mu(ci_cpsire, srw_pa1e1b1nwzida0e0b0xyg0, relsize_start_sire
                                             , rc_start_sire, temp_lc_start_sire
                                             , temp_ave_pa1e1b1nwzida0e0b0xyg[p:p+1], temp_max_pa1e1b1nwzida0e0b0xyg[p:p+1]
@@ -4201,8 +4226,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                         if eqn_compare:
                             r_compare4_q0q2tpsire[eqn_system, 0, :, p:p+1, ...] = temp0
                     ###dams
-                    eqn_used = (eqn_used_g1_q1p[eqn_group, p:p+1] == eqn_system)
-                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
+                    eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
+                    if (eqn_used or eqn_compare) and active_p_pdams[p]:
                         temp0 = sfun.f_potential_intake_mu(ci_cpdams, srw_pa1e1b1nwzida0e0b0xyg1, relsize_start_dams
                                             , rc_start_dams, temp_lc_start_dams
                                             , temp_ave_pa1e1b1nwzida0e0b0xyg[p:p+1], temp_max_pa1e1b1nwzida0e0b0xyg[p:p+1]
@@ -4215,8 +4240,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                         if eqn_compare:
                             r_compare4_q0q2tpdams[eqn_system, 0, :, p:p+1, ...] = temp0
                     ###offs
-                    eqn_used = (eqn_used_g3_q1p[eqn_group, p:p+1] == eqn_system)
-                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1,...] >0):
+                    eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
+                    if (eqn_used or eqn_compare) and active_p_poffs[p]:
                         temp0 = sfun.f_potential_intake_mu(ci_cpoffs, srw_pa1e1b1nwzida0e0b0xyg3, relsize_start_offs
                                             , rc_start_offs, temp_lc_start_offs
                                             , temp_ave_pa1e1b1nwzida0e0b0xyg[p:p+1], temp_max_pa1e1b1nwzida0e0b0xyg[p:p+1]
@@ -4230,7 +4255,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 ##feedsupply - calculated after pi because pi required for intake_s
                 ## feedsupply is calculated a bit different when generating for stubble
                 a_p6_cut_pa1e1b1nwzida0e0b0xyg = a_p6_pa1e1b1nwzida0e0b0xyg[p:p+1]  # the slice of p6 for the current generator period. Has active z axis so need to use expanded version.
-                if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1,...] >0):
+                if active_p_psire[p]:
                     nv_a1e1b1j1wzida0e0b0xyg0 = np.take_along_axis(nv_p6a1e1b1j1wzida0e0b0xyg0, a_p6_cut_pa1e1b1nwzida0e0b0xyg, axis=p_pos)
                     foo_a1e1b1j1wzida0e0b0xyg0 = np.take_along_axis(foo_p6a1e1b1j1wzida0e0b0xyg0, a_p6_cut_pa1e1b1nwzida0e0b0xyg, axis=p_pos)
                     dmd_a1e1b1j1wzida0e0b0xyg0 = np.take_along_axis(dmd_p6a1e1b1j1wzida0e0b0xyg0, a_p6_cut_pa1e1b1nwzida0e0b0xyg, axis=p_pos)
@@ -4241,7 +4266,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                             , dmd_a1e1b1j1wzida0e0b0xyg0, supp_a1e1b1j1wzida0e0b0xyg0, pi_sire)
 
                 if not stubble:
-                    if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
+                    if active_p_pdams[p]:
                         nv_a1e1b1j1wzida0e0b0xyg1 = np.take_along_axis(nv_p6a1e1b1j1wzida0e0b0xyg1, a_p6_cut_pa1e1b1nwzida0e0b0xyg, axis=p_pos)
                         foo_a1e1b1j1wzida0e0b0xyg1 = np.take_along_axis(foo_p6a1e1b1j1wzida0e0b0xyg1, a_p6_cut_pa1e1b1nwzida0e0b0xyg, axis=p_pos)
                         dmd_a1e1b1j1wzida0e0b0xyg1 = np.take_along_axis(dmd_p6a1e1b1j1wzida0e0b0xyg1, a_p6_cut_pa1e1b1nwzida0e0b0xyg, axis=p_pos)
@@ -4262,8 +4287,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     eqn_system = 0  # CSIRO = 0
                     if uinp.sheep['i_eqn_exists_q0q1'][
                         eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
-                        eqn_used = (eqn_used_g1_q1p[eqn_group, p:p+1] == eqn_system)
-                        if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1, ...] > 0):
+                        eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
+                        if (eqn_used or eqn_compare) and active_p_pdams[p]:
                             temp0 = fsfun.f_rq_cs(dmd_dams, legume_pa1e1b1nwzida0e0b0xyg[p:p+1], cr_cpdams, pinp.sheep['i_sf'])
                             if eqn_used:
                                 rq_dams = temp0
@@ -4271,13 +4296,13 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                 r_compare6_q0q2tpdams[eqn_system, 0, :, p:p+1, ...] = temp0
 
                     ###intake - dams
-                    if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1, ...] > 0):
+                    if active_p_pdams[p]:
                         ri_dams = fsfun.f_rel_intake(1, rq_dams, legume_pa1e1b1nwzida0e0b0xyg[p:p+1], cr_cpdams)  # use ra=1 for stubble
                         mei_dams, mei_solid_dams, intake_f_dams, md_solid_dams, mei_propn_milk_dams, mei_propn_herb_dams, mei_propn_supp_dams \
                             = sfun.f_intake(pi_dams, ri_dams, md_herb_dams, False, intake_s_dams, pinp.sheep['i_md_supp'])
 
                 if not stubble:
-                    if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1,...] >0):
+                    if active_p_poffs[p]:
                         nv_a1e1b1j1wzida0e0b0xyg3 = np.take_along_axis(nv_p6a1e1b1j1wzida0e0b0xyg3, a_p6_cut_pa1e1b1nwzida0e0b0xyg, axis=p_pos)
                         foo_a1e1b1j1wzida0e0b0xyg3 = np.take_along_axis(foo_p6a1e1b1j1wzida0e0b0xyg3, a_p6_cut_pa1e1b1nwzida0e0b0xyg, axis=p_pos)
                         dmd_a1e1b1j1wzida0e0b0xyg3 = np.take_along_axis(dmd_p6a1e1b1j1wzida0e0b0xyg3, a_p6_cut_pa1e1b1nwzida0e0b0xyg, axis=p_pos)
@@ -4298,8 +4323,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     eqn_system = 0  # CSIRO = 0
                     if uinp.sheep['i_eqn_exists_q0q1'][
                         eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
-                        eqn_used = (eqn_used_g3_q1p[eqn_group, p:p+1] == eqn_system)
-                        if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1, ...] > 0):
+                        eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
+                        if (eqn_used or eqn_compare) and active_p_poffs[p]:
                             temp0 = fsfun.f_rq_cs(dmd_offs, legume_pa1e1b1nwzida0e0b0xyg[p:p+1], cr_cpoffs, pinp.sheep['i_sf'])
                             if eqn_used:
                                 rq_offs = temp0
@@ -4307,14 +4332,14 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                 r_compare6_q0q2tpoffs[eqn_system, 0, :, p:p+1, ...] = temp0
 
                     ###intake - offs
-                    if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1, ...] > 0):
+                    if active_p_poffs[p]:
                         ri_offs = fsfun.f_rel_intake(1, rq_offs, legume_pa1e1b1nwzida0e0b0xyg[p:p+1], cr_cpoffs)  # use ra=1 for stubble
                         mei_offs, mei_solid_offs, intake_f_offs, md_solid_offs, mei_propn_milk_offs, mei_propn_herb_offs, mei_propn_supp_offs \
                             = sfun.f_intake(pi_offs, ri_offs, md_herb_offs, False, intake_s_offs, pinp.sheep['i_md_supp'])
 
                 ##energy
                 ###Calculate efficiency factors for all equation groups because they are used for SA.
-                if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1, ...] > 0):
+                if active_p_psire[p]:
                     km_sire = sfun.f1_km(ck_cpsire, md_solid_sire)
                     kg_fodd_cs_sire, kg_supp_cs_sire, temp3, kw_cs_sire = sfun.f1_efficiency_cs(ck_cpsire, md_solid_sire
                                         , pinp.sheep['i_md_supp'], md_herb_sire, lgf_eff_pa1e1b1nwzida0e0b0xyg0[p:p+1]
@@ -4323,7 +4348,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     ##The variables are called kc & kw but are PE and used where HAF above maintenance has been calculated
                     temp3, kw_mu_yg0 = sfun.f1_efficiency_mu(ck_cpsire, md_solid_sire, km_sire)
                     #kl (temp3) is not used for sires
-                if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1, ...] > 0):
+                if active_p_pdams[p]:
                     km_dams = sfun.f1_km(ck_cpdams, md_solid_dams)
                     kg_fodd_cs_dams, kg_supp_cs_dams, kl_cs_dams, kw_cs_dams = sfun.f1_efficiency_cs(ck_cpdams, md_solid_dams
                                         , pinp.sheep['i_md_supp'], md_herb_dams, lgf_eff_pa1e1b1nwzida0e0b0xyg1[p:p+1]
@@ -4332,7 +4357,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     ##The variables are called kc & kw but are PE and used where HAF above maintenance has been calculated
                     kl_mu_dams, kw_mu_yg1 = sfun.f1_efficiency_mu(ck_cpdams, md_solid_dams, km_dams)
                     kc_mu_pa1e1b1nwzida0e0b0xyg1 = kc_cs_pa1e1b1nwzida0e0b0xyg1 / km_dams
-                if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1, ...] > 0):
+                if active_p_poffs[p]:
                     km_offs = sfun.f1_km(ck_cpoffs, md_solid_offs)
                     kg_fodd_cs_offs, kg_supp_cs_offs, temp3, kw_cs_offs = sfun.f1_efficiency_cs(ck_cpoffs, md_solid_offs
                                         , pinp.sheep['i_md_supp'], md_herb_offs, lgf_eff_pa1e1b1nwzida0e0b0xyg3[p:p+1, ...]
@@ -4348,8 +4373,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 eqn_system = 0 # CSIRO = 0
                 if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                     ###sire
-                    eqn_used = (eqn_used_g0_q1p[eqn_group, p:p+1] == eqn_system)
-                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1,...] >0):
+                    eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
+                    if (eqn_used or eqn_compare) and active_p_psire[p]:
                         temp0 = sfun.f_energy_cs(cx_cpsire[...,0:1,:,:], cm_cpsire, lw_start_sire, ffcfw_start_sire
                                                  , mr_age_pa1e1b1nwzida0e0b0xyg0[p:p+1], mei_sire, km_sire
                                                  , pinp.sheep['i_steepness'], densityw_pa1e1b1nwzida0e0b0xyg0[p:p+1]
@@ -4361,8 +4386,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             r_compare7_q0q2tpsire[eqn_system, 0, :, p:p+1, ...] = temp0
 
                     ###dams
-                    eqn_used = (eqn_used_g1_q1p[eqn_group, p:p+1] == eqn_system)
-                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
+                    eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
+                    if (eqn_used or eqn_compare) and active_p_pdams[p]:
                         temp0 = sfun.f_energy_cs(cx_cpdams[...,1:2,:,:], cm_cpdams, lw_start_dams, ffcfw_start_dams
                                                  , mr_age_pa1e1b1nwzida0e0b0xyg1[p:p+1], mei_dams, km_dams
                                                  , pinp.sheep['i_steepness'], densityw_pa1e1b1nwzida0e0b0xyg1[p:p+1]
@@ -4374,8 +4399,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             r_compare7_q0q2tpdams[eqn_system, 0, :, p:p+1, ...] = temp0
 
                     ###offs
-                    eqn_used = (eqn_used_g3_q1p[eqn_group, p:p+1] == eqn_system)
-                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1,...] >0):
+                    eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
+                    if (eqn_used or eqn_compare) and active_p_poffs[p]:
                         temp0 = sfun.f_energy_cs(cx_cpoffs[...,mask_x,:,:], cm_cpoffs, lw_start_offs, ffcfw_start_offs
                                                  , mr_age_pa1e1b1nwzida0e0b0xyg3[p:p+1], mei_offs, km_offs
                                                  , pinp.sheep['i_steepness'], densityw_pa1e1b1nwzida0e0b0xyg3[p:p+1]
@@ -4389,8 +4414,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 eqn_system = 1 # Murdoch Uni = 1   Graham etal Lean mass
                 if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                     ###sire
-                    eqn_used = (eqn_used_g0_q1p[eqn_group, p:p+1] == eqn_system)
-                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1,...] >0):
+                    eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
+                    if (eqn_used or eqn_compare) and active_p_psire[p]:
                         lean_weight = muscle_start_sire + viscera_start_sire
                         temp0, temp1, temp2 = sfun.f_energy_mu(cx_cpsire[...,0:1,:,:], cm_cpsire, lw_start_sire, lean_weight
                                                         , mr_agegraham_pa1e1b1nwzida0e0b0xyg0[p:p+1], mei_sire, km_sire
@@ -4404,8 +4429,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             r_compare7_q0q2tpsire[eqn_system, 0, :, p:p+1, ...] = temp2
 
                     ###dams
-                    eqn_used = (eqn_used_g1_q1p[eqn_group, p:p+1] == eqn_system)
-                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
+                    eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
+                    if (eqn_used or eqn_compare) and active_p_pdams[p]:
                         lean_weight = muscle_start_dams + viscera_start_dams
                         temp0, temp1, temp2 = sfun.f_energy_mu(cx_cpdams[...,1:2,:,:], cm_cpdams, lw_start_dams, lean_weight
                                                         , mr_agegraham_pa1e1b1nwzida0e0b0xyg1[p:p+1], mei_dams, km_dams
@@ -4419,8 +4444,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             r_compare7_q0q2tpdams[eqn_system, 0, :, p:p+1, ...] = temp2
 
                     ###offs
-                    eqn_used = (eqn_used_g3_q1p[eqn_group, p:p+1] == eqn_system)
-                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1,...] >0):
+                    eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
+                    if (eqn_used or eqn_compare) and active_p_poffs[p]:
                         lean_weight = muscle_start_offs + viscera_start_offs
                         temp0, temp1, temp2 = sfun.f_energy_mu(cx_cpoffs[...,mask_x,:,:], cm_cpoffs, lw_start_offs, lean_weight
                                                         , mr_agegraham_pa1e1b1nwzida0e0b0xyg3[p:p+1], mei_offs, km_offs
@@ -4436,8 +4461,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 eqn_system = 2 # New feeding standards = 2
                 if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                     ###sire
-                    eqn_used = (eqn_used_g0_q1p[eqn_group, p:p+1] == eqn_system)
-                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1, ...] >0):
+                    eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
+                    if (eqn_used or eqn_compare) and active_p_psire[p]:
                         temp0, temp1, temp2 = sfun.f_energy_nfs(cm_cpsire, cg_cpsire, lw_start_sire, fat_start_sire
                                                          , muscle_start_sire, viscera_start_sire, mei_sire, km_sire
                                                          , pinp.sheep['i_steepness'], densityw_pa1e1b1nwzida0e0b0xyg0[p:p+1]
@@ -4449,8 +4474,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                         if eqn_compare:
                             r_compare7_q0q2tpsire[eqn_system, 0, :, p:p+1, ...] = temp2
                     ###dams
-                    eqn_used = (eqn_used_g1_q1p[eqn_group, p:p+1] == eqn_system)
-                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1, ...] >0):
+                    eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
+                    if (eqn_used or eqn_compare) and active_p_pdams[p]:
                         temp0, temp1, temp2 = sfun.f_energy_nfs(cm_cpdams, cg_cpdams, lw_start_dams, fat_start_dams
                                                                 , muscle_start_dams, viscera_start_dams, mei_dams, km_dams
                                                                 , pinp.sheep['i_steepness'], densityw_pa1e1b1nwzida0e0b0xyg1[p:p+1]
@@ -4462,8 +4487,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                         if eqn_compare:
                             r_compare7_q0q2tpdams[eqn_system, 0, :, p:p+1, ...] = temp2
                     ###offs
-                    eqn_used = (eqn_used_g3_q1p[eqn_group, p:p+1] == eqn_system)
-                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1, ...] >0):
+                    eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
+                    if (eqn_used or eqn_compare) and active_p_poffs[p]:
                         temp0, temp1, temp2 = sfun.f_energy_nfs(cm_cpoffs, cg_cpoffs, lw_start_offs, fat_start_offs
                                                          , muscle_start_offs, viscera_start_offs, mei_offs, km_offs
                                                          , pinp.sheep['i_steepness'], densityw_pa1e1b1nwzida0e0b0xyg3[p:p+1]
@@ -4482,8 +4507,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 eqn_group = 7
                 eqn_system = 0 # CSIRO = 0
                 if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
-                    eqn_used = (eqn_used_g2_q1p[eqn_group, p:p+1] == eqn_system)  # equation used is based on the yatf system
-                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
+                    eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)  # equation used is based on the yatf system
+                    if (eqn_used or eqn_compare) and active_p_pdams[p]:
                         ##first method is using the nec_cum method
                         temp0, temp1, temp2, temp3, temp4 = sfun.f_foetus_cs(cb1_cpdams, cp_cpdams
                                         , nfoet_b1nwzida0e0b0xyg, rc_start_dams, w_b_std_y_pa1e1b1nwzida0e0b0xyg1
@@ -4503,8 +4528,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
                 eqn_system = 1 # Murdoch Uni = 1 (Copy of CSIRO with MU args passed to CSIRO function)
                 if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
-                    eqn_used = (eqn_used_g2_q1p[eqn_group, p:p+1] == eqn_system)  # equation used is based on the yatf system
-                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
+                    eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)  # equation used is based on the yatf system
+                    if (eqn_used or eqn_compare) and active_p_pdams[p]:
                         ##first method is using the nec_cum method
                         temp0, temp1, temp2, temp3, temp4 = sfun.f_foetus_cs(cb1_cpdams, cp_cpdams
                                         , nfoet_b1nwzida0e0b0xyg, rc_start_dams, w_b_std_y_pa1e1b1nwzida0e0b0xyg1
@@ -4525,8 +4550,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 eqn_system = 2  # New Feeding Standards = 2
                 if uinp.sheep['i_eqn_exists_q0q1'][
                     eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
-                    eqn_used = (eqn_used_g2_q1p[eqn_group, p:p+1] == eqn_system)  # equation used is based on the yatf system
-                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1, ...] > 0):
+                    eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)  # equation used is based on the yatf system
+                    if (eqn_used or eqn_compare) and active_p_pdams[p]:
                         temp0, temp1, temp2, temp3, temp4 = sfun.f_foetus_nfs(cg_cpdams, cp_cpdams
                                         , days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1], c_start_dams, muscle_start_dams
                                         , d_muscle_dams, nfoet_b1nwzida0e0b0xyg, w_b_exp_y_dams, w_f_start_dams  #d_muscle is change in the previous period because dm this period is dependent on dc which is being calculated in this function call
@@ -4548,8 +4573,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 eqn_group = 7
                 eqn_system = 0  # CSIRO = 0
                 if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
-                    eqn_used = (eqn_used_g1_q1p[eqn_group, p:p+1] == eqn_system)  # equation used is based on the dams system
-                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
+                    eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)  # equation used is based on the dams system
+                    if (eqn_used or eqn_compare) and active_p_pdams[p]:
                         ###Expected ffcfw of yatf with p1 axis - each period
                         #### The test on index_p is to test for the end of lactation. Start of lactation (birth) is always the start of a period
                         ffcfw_exp_a1e1b1nwzida0e0b0xyg2p0 = (ffcfw_start_yatf[..., na] + (index_p0 * cn_cpyatf[7, ...][...,na])) * (
@@ -4578,8 +4603,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
                 eqn_system = 1  # Murdoch Uni = 1 (Copy of CSIRO with MU args passed to CSIRO function)
                 if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
-                    eqn_used = (eqn_used_g1_q1p[eqn_group, p:p+1] == eqn_system)  # equation used is based on the dams system
-                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
+                    eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)  # equation used is based on the dams system
+                    if (eqn_used or eqn_compare) and active_p_pdams[p]:
                         ###Expected ffcfw of yatf with p1 axis - each period
                         #### The test on index_p is to test for the end of lactation. Start of lactation (birth) is always the start of a period
                         ffcfw_exp_a1e1b1nwzida0e0b0xyg2p0 = (ffcfw_start_yatf[..., na] + (index_p0 * cn_cpyatf[7, ...][...,na])) * (
@@ -4608,8 +4633,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
                 eqn_system = 2  # New Feeding Standards = 2
                 if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
-                    eqn_used = (eqn_used_g1_q1p[eqn_group, p:p+1] == eqn_system)  # equation used is based on the dams system
-                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
+                    eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)  # equation used is based on the dams system
+                    if (eqn_used or eqn_compare) and active_p_pdams[p]:
                         ###Expected ffcfw of yatf with p1 axis - each period
                         #### The test on index_p is to test for the end of lactation. Start of lactation (birth) is always the start of a period
                         ffcfw_exp_a1e1b1nwzida0e0b0xyg2p0 = (ffcfw_start_yatf[..., na] + (index_p0 * cn_cpyatf[7, ...][...,na])) * (
@@ -4640,8 +4665,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 eqn_system = 0 # CSIRO = 0
                 if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                     ### sire
-                    eqn_used = (eqn_used_g0_q1p[eqn_group, p:p+1] == eqn_system)
-                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1,...] >0):
+                    eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
+                    if (eqn_used or eqn_compare) and active_p_psire[p]:
                         temp0, temp1, temp2, temp3, temp4 = sfun.f_fibre_cs(cw_cpsire, cc_cpsire, ffcfw_start_sire
                             , relsize_start_sire, d_cfw_history_start_p2g0, mei_sire, new_min_pa1e1b1nwzida0e0b0xyg0[p:p+1]
                             , d_cfw_ave_pa1e1b1nwzida0e0b0xyg0,  sfd_pa1e1b1nwzida0e0b0xyg0, wge_pa1e1b1nwzida0e0b0xyg0
@@ -4661,8 +4686,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             r_compare7_q0q2tpsire[eqn_system, 13, :, p:p+1, ...] = temp4
 
                     ### dams
-                    eqn_used = (eqn_used_g1_q1p[eqn_group, p:p+1] == eqn_system)
-                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1, ...] > 0):
+                    eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
+                    if (eqn_used or eqn_compare) and active_p_pdams[p]:
                         temp0, temp1, temp2, temp3, temp4 = sfun.f_fibre_cs(cw_cpdams, cc_cpdams, ffcfw_start_dams
                             , relsize_start_dams, d_cfw_history_start_p2g1, mei_dams, new_min_pa1e1b1nwzida0e0b0xyg1[p:p+1]
                             , d_cfw_ave_pa1e1b1nwzida0e0b0xyg1, sfd_pa1e1b1nwzida0e0b0xyg1, wge_pa1e1b1nwzida0e0b0xyg1
@@ -4684,8 +4709,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             r_compare7_q0q2tpdams[eqn_system, 13, :, p:p+1, ...] = temp4
 
                     ### offs
-                    eqn_used = (eqn_used_g3_q1p[eqn_group, p:p+1] == eqn_system)
-                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1, ...] > 0):
+                    eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
+                    if (eqn_used or eqn_compare) and active_p_poffs[p]:
                         temp0, temp1, temp2, temp3, temp4 = sfun.f_fibre_cs(cw_cpoffs, cc_cpoffs, ffcfw_start_offs
                             , relsize_start_offs, d_cfw_history_start_p2g3, mei_offs, new_min_pa1e1b1nwzida0e0b0xyg3[p:p+1]
                             , d_cfw_ave_pa1e1b1nwzida0e0b0xyg3, sfd_pa1e1b1nwzida0e0b0xyg3, wge_pa1e1b1nwzida0e0b0xyg3
@@ -4708,8 +4733,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 eqn_system = 1 # MU = 1
                 if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                     ### sire
-                    eqn_used = (eqn_used_g0_q1p[eqn_group, p:p+1] == eqn_system)
-                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1,...] >0):
+                    eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
+                    if (eqn_used or eqn_compare) and active_p_psire[p]:
                         temp0, temp1, temp2, temp3, temp4 = sfun.f_fibre_mu(cw_cpsire, cc_cpsire
                                            , ffcfw_start_sire, relsize_start_sire, d_cfw_history_start_p2g0
                                            , mei_sire, new_min_pa1e1b1nwzida0e0b0xyg0[p:p+1]
@@ -4730,8 +4755,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             r_compare7_q0q2tpsire[eqn_system, 13, :, p:p+1, ...] = temp4
 
                     ### dams
-                    eqn_used = (eqn_used_g1_q1p[eqn_group, p:p+1] == eqn_system)
-                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1, ...] > 0):
+                    eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
+                    if (eqn_used or eqn_compare) and active_p_pdams[p]:
                         temp0, temp1, temp2, temp3, temp4 = sfun.f_fibre_mu(cw_cpdams, cc_cpdams
                                            , ffcfw_start_dams, relsize_start_dams, d_cfw_history_start_p2g1
                                            , mei_dams, new_min_pa1e1b1nwzida0e0b0xyg1[p:p+1]
@@ -4755,8 +4780,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             r_compare7_q0q2tpdams[eqn_system, 13, :, p:p+1, ...] = temp4
 
                     ### offs
-                    eqn_used = (eqn_used_g3_q1p[eqn_group, p:p+1] == eqn_system)
-                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1, ...] > 0):
+                    eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
+                    if (eqn_used or eqn_compare) and active_p_poffs[p]:
                         temp0, temp1, temp2, temp3, temp4 = sfun.f_fibre_mu(cw_cpoffs, cc_cpoffs
                                            , ffcfw_start_offs, relsize_start_offs, d_cfw_history_start_p2g3
                                            , mei_offs, new_min_pa1e1b1nwzida0e0b0xyg3[p:p+1]
@@ -4780,8 +4805,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 eqn_system = 2 # New Feeding Standards = 2
                 if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                     ###sire
-                    eqn_used = (eqn_used_g0_q1p[eqn_group, p:p+1] == eqn_system)
-                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1,...] >0):
+                    eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
+                    if (eqn_used or eqn_compare) and active_p_psire[p]:
                         temp0, temp1, temp2, temp3, temp4 = sfun.f_fibre_nfs(cw_cpsire, cc_cpsire, cg_cpsire, ck_cpsire
                                             , ffcfw_start_sire, relsize_start_sire, d_cfw_history_start_p2g0, mei_sire
                                             , new_min_pa1e1b1nwzida0e0b0xyg0[p:p+1], d_cfw_ave_pa1e1b1nwzida0e0b0xyg0
@@ -4801,8 +4826,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             r_compare7_q0q2tpsire[eqn_system, 13, :, p:p+1, ...] = temp4      # temp4  using the fibre_cs values because fibre_nfs is not used
 
                     ### dams
-                    eqn_used = (eqn_used_g1_q1p[eqn_group, p:p+1] == eqn_system)
-                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1, ...] > 0):
+                    eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
+                    if (eqn_used or eqn_compare) and active_p_pdams[p]:
                         temp0, temp1, temp2, temp3, temp4 = sfun.f_fibre_nfs(cw_cpdams, cc_cpdams, cg_cpdams, ck_cpdams
                                             , ffcfw_start_dams, relsize_start_dams, d_cfw_history_start_p2g1, mei_dams
                                             , new_min_pa1e1b1nwzida0e0b0xyg1[p:p+1], d_cfw_ave_pa1e1b1nwzida0e0b0xyg1
@@ -4825,8 +4850,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             r_compare7_q0q2tpdams[eqn_system, 13, :, p:p+1, ...] = temp4      # temp4  using the fibre_cs values because fibre_nfs is not used
 
                     ###offs
-                    eqn_used = (eqn_used_g3_q1p[eqn_group, p:p+1] == eqn_system)
-                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1, ...] > 0):
+                    eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
+                    if (eqn_used or eqn_compare) and active_p_poffs[p]:
                         temp0, temp1, temp2, temp3, temp4 = sfun.f_fibre_nfs(cw_cpoffs, cc_cpoffs, cg_cpoffs, ck_cpoffs
                                             , ffcfw_start_offs, relsize_start_offs, d_cfw_history_start_p2g3, mei_offs
                                             , new_min_pa1e1b1nwzida0e0b0xyg3[p:p+1], d_cfw_ave_pa1e1b1nwzida0e0b0xyg3
@@ -4852,8 +4877,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 eqn_system = 0 # CSIRO = 0
                 if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                     ###sire
-                    eqn_used = (eqn_used_g0_q1p[eqn_group, p:p+1] == eqn_system)
-                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1,...] >0):
+                    eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
+                    if (eqn_used or eqn_compare) and active_p_psire[p]:
                         temp0, temp1 = sfun.f_heat_cs(cc_cpsire, ck_cpsire, mei_sire, meme_cs_sire, new_sire, km_sire
                                 , kg_supp_cs_sire, kg_fodd_cs_sire, kw_cs_sire, mei_propn_supp_sire, mei_propn_herb_sire)
                         hp_total_cs_sire = temp0  #outside the if statement because it is used in the next function call
@@ -4876,8 +4901,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                         if eqn_compare:
                             r_compare7_q0q2tpsire[eqn_system, 2, :, p:p+1, ...] = temp2
                     ###dams
-                    eqn_used = (eqn_used_g1_q1p[eqn_group, p:p+1] == eqn_system)
-                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
+                    eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
+                    if (eqn_used or eqn_compare) and active_p_pdams[p]:
                         temp0, temp1 = sfun.f_heat_cs(cc_cpdams, ck_cpdams, mei_dams, meme_cs_dams, new_dams, km_dams
                                 , kg_supp_cs_dams, kg_fodd_cs_dams, kw_cs_dams, mei_propn_supp_dams, mei_propn_herb_dams
                                 , guw=guw_dams, mei_propn_milk=mei_propn_milk_dams, nec=nec_dams, kc=kc_cs_pa1e1b1nwzida0e0b0xyg1
@@ -4907,8 +4932,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             r_compare7_q0q2tpdams[eqn_system, 2, :, p:p+1, ...] = temp2
 
                     ###offs
-                    eqn_used = (eqn_used_g3_q1p[eqn_group, p:p+1] == eqn_system)
-                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1,...] >0):
+                    eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
+                    if (eqn_used or eqn_compare) and active_p_poffs[p]:
                         temp0, temp1 = sfun.f_heat_cs(cc_cpoffs, ck_cpoffs, mei_offs, meme_cs_offs, new_offs, km_offs
                                 , kg_supp_cs_offs, kg_fodd_cs_offs, kw_cs_offs, mei_propn_supp_offs, mei_propn_herb_offs)
                         hp_total_cs_offs = temp0  #outside the if statement because it is used in the next function call
@@ -4934,8 +4959,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 if uinp.sheep['i_eqn_exists_q0q1'][
                     eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                     ###sire
-                    eqn_used = (eqn_used_g0_q1p[eqn_group, p:p+1] == eqn_system)
-                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1, ...] > 0):
+                    eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
+                    if (eqn_used or eqn_compare) and active_p_psire[p]:
                         temp0 = sfun.f_heatloss_nfs(cc_cpsire, ffcfw_start_sire, rc_start_sire, sl_start_sire
                                                 , temp_ave_pa1e1b1nwzida0e0b0xyg[p:p+1], temp_max_pa1e1b1nwzida0e0b0xyg[p:p+1]
                                                 , temp_min_pa1e1b1nwzida0e0b0xyg[p:p+1], ws_pa1e1b1nwzida0e0b0xyg[p:p+1]
@@ -4947,8 +4972,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                         #     r_compare7_q0q2tpsire[eqn_system, 1, :, p:p+1, ...] = temp0   #this is heat loss to the environment
 
                     ###dams
-                    eqn_used = (eqn_used_g1_q1p[eqn_group, p:p+1] == eqn_system)
-                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1, ...] > 0):
+                    eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
+                    if (eqn_used or eqn_compare) and active_p_pdams[p]:
                         temp0 = sfun.f_heatloss_nfs(cc_cpdams, ffcfw_start_dams, rc_start_dams, sl_start_dams
                                                 , temp_ave_pa1e1b1nwzida0e0b0xyg[p:p+1], temp_max_pa1e1b1nwzida0e0b0xyg[p:p+1]
                                                 , temp_min_pa1e1b1nwzida0e0b0xyg[p:p+1], ws_a1e1b1nwzida0e0b0xyg1
@@ -4960,8 +4985,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                         #     r_compare7_q0q2tpdams[eqn_system, 1, :, p:p+1, ...] = temp0   #this is heat loss to the environment
 
                     ###offs
-                    eqn_used = (eqn_used_g3_q1p[eqn_group, p:p+1] == eqn_system)
-                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1, ...] > 0):
+                    eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
+                    if (eqn_used or eqn_compare) and active_p_poffs[p]:
                         temp0 = sfun.f_heatloss_nfs(cc_cpoffs, ffcfw_start_offs, rc_start_offs, sl_start_offs
                                                 , temp_ave_pa1e1b1nwzida0e0b0xyg[p:p+1], temp_max_pa1e1b1nwzida0e0b0xyg[p:p+1]
                                                 , temp_min_pa1e1b1nwzida0e0b0xyg[p:p+1], ws_pa1e1b1nwzida0e0b0xyg[p:p+1]
@@ -4976,8 +5001,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 eqn_system = 2 # New Feeding Standards = 2
                 if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                     ###sire
-                    eqn_used = (eqn_used_g0_q1p[eqn_group, p:p+1] == eqn_system)
-                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1,...] >0):
+                    eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
+                    if (eqn_used or eqn_compare) and active_p_psire[p]:
                         temp0 = sfun.f_heatloss_nfs(cc_cpsire, ffcfw_start_sire, rc_start_sire, sl_start_sire
                                                  , temp_ave_pa1e1b1nwzida0e0b0xyg[p:p+1], temp_max_pa1e1b1nwzida0e0b0xyg[p:p+1]
                                                  , temp_min_pa1e1b1nwzida0e0b0xyg[p:p+1], ws_pa1e1b1nwzida0e0b0xyg[p:p+1]
@@ -4989,8 +5014,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                         #     r_compare7_q0q2tpsire[eqn_system, 1, :, p:p+1, ...] = temp0   #this is heat loss to the environment
 
                     ###dams
-                    eqn_used = (eqn_used_g1_q1p[eqn_group, p:p+1] == eqn_system)
-                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
+                    eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
+                    if (eqn_used or eqn_compare) and active_p_pdams[p]:
                         temp0 = sfun.f_heatloss_nfs(cc_cpdams, ffcfw_start_dams, rc_start_dams, sl_start_dams
                                                  , temp_ave_pa1e1b1nwzida0e0b0xyg[p:p+1], temp_max_pa1e1b1nwzida0e0b0xyg[p:p+1]
                                                  , temp_min_pa1e1b1nwzida0e0b0xyg[p:p+1], ws_a1e1b1nwzida0e0b0xyg1
@@ -5002,8 +5027,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                         #     r_compare7_q0q2tpdams[eqn_system, 1, :, p:p+1, ...] = temp0   #this is heat loss to the environment
 
                     ###offs
-                    eqn_used = (eqn_used_g3_q1p[eqn_group, p:p+1] == eqn_system)
-                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1,...] >0):
+                    eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
+                    if (eqn_used or eqn_compare) and active_p_poffs[p]:
                         temp0 = sfun.f_heatloss_nfs(cc_cpoffs, ffcfw_start_offs, rc_start_offs, sl_start_offs
                                                  , temp_ave_pa1e1b1nwzida0e0b0xyg[p:p+1], temp_max_pa1e1b1nwzida0e0b0xyg[p:p+1]
                                                  , temp_min_pa1e1b1nwzida0e0b0xyg[p:p+1], ws_pa1e1b1nwzida0e0b0xyg[p:p+1]
@@ -5020,8 +5045,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 eqn_system = 0 # CSIRO = 0
                 if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                     ###sire
-                    eqn_used = (eqn_used_g0_q1p[eqn_group, p:p+1] == eqn_system)
-                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1,...] >0):
+                    eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
+                    if (eqn_used or eqn_compare) and active_p_psire[p]:
                         temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_lwc_cs(cg_cpsire, rc_start_sire, mei_sire
                                 , mem_sire, new_sire, zf1_sire, zf2_sire, kg_sire, kw_cs_sire
                                 , age_pa1e1b1nwzida0e0b0xyg0[p:p+1], rev_trait_values['sire'][p])
@@ -5039,8 +5064,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             r_compare7_q0q2tpsire[eqn_system, 5, :, p:p+1, ...] = temp4
                             r_compare7_q0q2tpsire[eqn_system, 6, :, p:p+1, ...] = temp0
                     ###dams
-                    eqn_used = (eqn_used_g1_q1p[eqn_group, p:p+1] == eqn_system)
-                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
+                    eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
+                    if (eqn_used or eqn_compare) and active_p_pdams[p]:
                         temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_lwc_cs(cg_cpdams, rc_start_dams, mei_dams
                                 , mem_dams, new_dams, zf1_dams, zf2_dams, kg_dams, kw_cs_dams
                                 , age_pa1e1b1nwzida0e0b0xyg1[p:p+1], rev_trait_values['dams'][p]
@@ -5060,8 +5085,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             r_compare7_q0q2tpdams[eqn_system, 5, :, p:p+1, ...] = temp4
                             r_compare7_q0q2tpdams[eqn_system, 6, :, p:p+1, ...] = temp0
                     ###offs
-                    eqn_used = (eqn_used_g3_q1p[eqn_group, p:p+1] == eqn_system)
-                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1,...] >0):
+                    eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
+                    if (eqn_used or eqn_compare) and active_p_poffs[p]:
                         temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_lwc_cs(cg_cpoffs, rc_start_offs, mei_offs
                                 , mem_offs, new_offs, zf1_offs, zf2_offs, kg_offs, kw_cs_offs
                                 , age_cut_pa1e1b1nwzida0e0b0xyg3[p:p+1], rev_trait_values['offs'][p])
@@ -5082,8 +5107,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 eqn_system = 1 # Murdoch = 1
                 if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                     ###sire
-                    eqn_used = (eqn_used_g0_q1p[eqn_group, p:p+1] == eqn_system)
-                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1,...] >0):
+                    eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
+                    if (eqn_used or eqn_compare) and active_p_psire[p]:
                         temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9 = sfun.f_lwc_mu(cg_cpsire
                                 , ck_cpsire, rc_start_sire, mei_sire, neme_mu_sire, km_sire, hp_mei_mu_sire, new_sire
                                 , kw_mu_yg0, zf1_sire, zf2_sire, heat_loss_sirem0p1, age_pa1e1b1nwzida0e0b0xyg0[p:p+1]
@@ -5121,8 +5146,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             temp_lc_sire = temp0  #temp1 not required here
 
                     ###dams
-                    eqn_used = (eqn_used_g1_q1p[eqn_group, p:p+1] == eqn_system)
-                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
+                    eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
+                    if (eqn_used or eqn_compare) and active_p_pdams[p]:
                         temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9 = sfun.f_lwc_mu(cg_cpdams
                                 , ck_cpdams, rc_start_dams, mei_dams, neme_mu_dams, km_dams, hp_mei_mu_dams, new_dams
                                 , kw_mu_yg1, zf1_dams, zf2_dams, heat_loss_damsm0p1, age_pa1e1b1nwzida0e0b0xyg1[p:p+1]
@@ -5163,8 +5188,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             temp_lc_dams = temp0  #temp1 not required here
 
                     ###offs
-                    eqn_used = (eqn_used_g3_q1p[eqn_group, p:p+1] == eqn_system)
-                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1,...] >0):
+                    eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
+                    if (eqn_used or eqn_compare) and active_p_poffs[p]:
                         temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9 = sfun.f_lwc_mu(cg_cpoffs
                                 , ck_cpoffs, rc_start_offs, mei_offs, neme_mu_offs, km_offs, hp_mei_mu_offs, new_offs
                                 , kw_mu_yg3, zf1_offs, zf2_offs, heat_loss_offsm0p1, age_cut_pa1e1b1nwzida0e0b0xyg3[p:p+1]
@@ -5204,8 +5229,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 eqn_system = 2 # New Feeding Standards = 2
                 if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                     ###sire
-                    eqn_used = (eqn_used_g0_q1p[eqn_group, p:p+1] == eqn_system)
-                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1,...] >0):
+                    eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
+                    if (eqn_used or eqn_compare) and active_p_psire[p]:
                         temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9 = sfun.f_lwc_nfs(cg_cpsire
                                 , ck_cpsire, muscle_start_sire, viscera_start_sire, muscle_target_pa1e1b1nwzida0e0b0xyg0, mei_sire
                                 , km_sire, md_solid_sire, hp_maint_nfs_sire, hp_mei_nfs_sire, dw_sire, heat_loss_sirem0p1
@@ -5243,8 +5268,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                         if eqn_used:
                             temp_lc_sire = temp0  #temp1 not required here
                     ###dams
-                    eqn_used = (eqn_used_g1_q1p[eqn_group, p:p+1] == eqn_system)
-                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
+                    eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
+                    if (eqn_used or eqn_compare) and active_p_pdams[p]:
                         temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9 = sfun.f_lwc_nfs(cg_cpdams
                                 , ck_cpdams, muscle_start_dams, viscera_start_dams, muscle_target_pa1e1b1nwzida0e0b0xyg1, mei_dams
                                 , km_dams, md_solid_dams, hp_maint_nfs_dams, hp_mei_nfs_dams, dw_dams
@@ -5285,8 +5310,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                         if eqn_used:
                             temp_lc_dams = temp0  #temp1 not required here
                     ###offs
-                    eqn_used = (eqn_used_g3_q1p[eqn_group, p:p+1] == eqn_system)
-                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1,...] >0):
+                    eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
+                    if (eqn_used or eqn_compare) and active_p_poffs[p]:
                         temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9 = sfun.f_lwc_nfs(cg_cpoffs
                                 , ck_cpoffs, muscle_start_offs, viscera_start_offs, muscle_target_pa1e1b1nwzida0e0b0xyg3, mei_offs
                                 , km_offs, md_solid_offs, hp_maint_nfs_offs, hp_mei_nfs_offs, dw_offs, heat_loss_offsm0p1
@@ -5331,7 +5356,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     dams_fs_target_done = False
                     offs_fs_target_done = False
                 # print('fs target iteration: ', itn)
-                if np.any(target_ebg_pb1dams[p:p+1] != 9999) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1]>0):
+                if np.any(target_ebg_pb1dams[p:p+1] != 9999) and active_p_pdams[p]:
                     ###calc error - base on w[0] (active w axis can confuse the fs because high starting w needs much higher diet to get same lwc)
                     error_dams = (fun.f_slice(ebg_dams, {w_pos: [0, 1]}) * days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1]
                                   - target_ebg_pb1dams[p:p+1] * (days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1]>0)) #if 0 days in period then target is 0
@@ -5351,7 +5376,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                         dams_fs_target_done = False
                         feedsupplyw_tpa1e1b1nwzida0e0b0xyg1[:, p:p+1] = sfun.f1_feedsupply_adjust(attempts_dams,feedsupplyw_tpa1e1b1nwzida0e0b0xyg1[:, p:p+1],itn)
 
-                if np.any(target_ebg_pb0offs[p:p+1] != 9999) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1]>0):
+                if np.any(target_ebg_pb0offs[p:p+1] != 9999) and active_p_poffs[p]:
                     ###calc error - base on w[0] (active w axis can confuse the fs because high starting w needs much higher diet to get same lwc)
                     error_offs = (fun.f_slice(ebg_offs, {w_pos: [0, 1]}) * days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1]
                                         - target_ebg_pb0offs[p:p+1] * (days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1]>0)) #if 0 days in period then target is 0
@@ -5377,7 +5402,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     break
 
             ##dam weight at a given time during period - used for special events like mating, birth & weaning.
-            if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
+            if active_p_pdams[p]:
                 ##Dam weight at mating - to estimate the weight at mating we are wanting to use the growth rate of the dams that are not yet pregnant
                 ## because mating doesn't happen at the start of the period.
                 ##Also representing the LW change to the mid-cycle (cf[4]/2 = extra 8.5 or 10.5 days for sheep & cattle)
@@ -5422,8 +5447,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             eqn_group = 10
             eqn_system = 0 # CSIRO = 0
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
-                eqn_used = (eqn_used_g2_q1p[eqn_group, p:p+1] == eqn_system)  # equation used is based on the yatf system
-                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
+                eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)  # equation used is based on the yatf system
+                if (eqn_used or eqn_compare) and active_p_pdams[p]:
                     temp0 = sfun.f_birthweight_cs(cx_cpyatf[...,mask_x,:,:], w_b_start_yatf, w_f_start_dams, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p:p+1]) #pass in wf_start because animal is born on first day of period
                     if eqn_used:
                         w_b_yatf = temp0 * (nfoet_b1nwzida0e0b0xyg>0) #so that only b slices with nfoet have a weight (need to leave a weight in 30, 20, 10 because used in prog mort)
@@ -5433,8 +5458,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                         r_compare10_q0q2tpyatf[eqn_system, 0, :, p:p+1, ...] = temp0
             eqn_system = 1 # MU = 1
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
-                eqn_used = (eqn_used_g2_q1p[eqn_group, p:p+1] == eqn_system)  # equation used is based on the yatf system
-                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
+                eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)  # equation used is based on the yatf system
+                if (eqn_used or eqn_compare) and active_p_pdams[p]:
                     temp0, temp1 = sfun.f_birthweight_mu(cu1_cpyatf, cb1_cpyatf, cg_cpyatf, cx_cpyatf[..., mask_x, :, :], ce__cpyatf
                                         , w_b_start_yatf, cf_w_b_start_dams, ffcfw_start_dams, ebg_dams
                                         , days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1], gest_propn_pa1e1b1nwzida0e0b0xyg1[p:p+1]
@@ -5455,8 +5480,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             eqn_group = 14
             eqn_system = 0 # CSIRO = 0 - doesn't exist for LTW impacts on progeny
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
-                eqn_used = (eqn_used_g1_q1p[eqn_group, p:p+1] == eqn_system)
-                # if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
+                eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
+                # if (eqn_used or eqn_compare) and active_p_pdams[p]:
                 #     temp0 = sfun.f_progenycfw_cs(cx_cpyatf[...,mask_x,:,:], w_b_start_yatf, w_f_start_dams, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p]) #pass in wf_start because animal is born on first day of period
                 #     if eqn_used:
                 #         cfw_ltwadj_dams = temp0
@@ -5466,8 +5491,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 #         r_compare14_q0q2tpyatf[eqn_system, 1, :, p:p+1, ...] = temp1
             eqn_system = 1 # MU = 1
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
-                eqn_used = (eqn_used_g1_q1p[eqn_group, p:p+1] == eqn_system)
-                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
+                eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and active_p_pdams[p]:
                     temp0, temp1 = sfun.f_progenycfw_mu(cu1_cpyatf, cg_cpyatf, cfw_ltwadj_start_dams, cf_cfwltw_start_dams
                                             , ffcfw_start_dams, nw_start_dams, ebg_dams
                                             , days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1], gest_propn_pa1e1b1nwzida0e0b0xyg1[p:p+1]
@@ -5491,7 +5516,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                         r_compare14_q0q2tpyatf[eqn_system, 1, :, p:p+1, ...] = temp2
 
             ##yatf birth & dependent start updates
-            if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...] >0):
+            if active_p_pyatf[p]:
                 ##reset start variables if period is birth
                 ###ffcf weight of yatf. w_b is calculated for young that are born dead, they are set to 0 here
                 ffcfw_start_yatf = fun.f_update(ffcfw_start_yatf, w_b_yatf * (nyatf_b1nwzida0e0b0xyg > 0)
@@ -5580,8 +5605,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             eqn_group = 4
             eqn_system = 0 # CSIRO = 0
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
-                eqn_used = (eqn_used_g2_q1p[eqn_group, p:p+1] == eqn_system)
-                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...] >0):
+                eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and active_p_pyatf[p]:
                     temp0 = sfun.f_potential_intake_cs(ci_cpyatf, srw_pa1e1b1nwzida0e0b0xyg2, relsize_start_yatf, rc_start_yatf, temp_lc_start_yatf
                                         , temp_ave_pa1e1b1nwzida0e0b0xyg[p:p+1], temp_max_pa1e1b1nwzida0e0b0xyg[p:p+1]
                                         , temp_min_pa1e1b1nwzida0e0b0xyg[p:p+1], rain_intake_pa1e1b1nwzida0e0b0xyg2[p:p+1]
@@ -5595,8 +5620,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             eqn_system = 1 # mu = 1
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 ###yatf
-                eqn_used = (eqn_used_g2_q1p[eqn_group, p:p+1] == eqn_system)
-                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...] >0):
+                eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and active_p_pyatf[p]:
                     temp0 = sfun.f_potential_intake_mu(ci_cpyatf, srw_pa1e1b1nwzida0e0b0xyg2, relsize_start_yatf
                                         , rc_start_yatf, temp_lc_start_yatf
                                         , temp_ave_pa1e1b1nwzida0e0b0xyg[p:p+1], temp_max_pa1e1b1nwzida0e0b0xyg[p:p+1]
@@ -5611,7 +5636,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
             ##feedsupply
             if not stubble:
-                if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...] >0):
+                if active_p_pyatf[p]:
                     mei_yatf,foo_yatf,dmd_yatf,mei_solid_yatf, md_solid_yatf, md_herb_yatf, intake_f_yatf, intake_s_yatf\
                         , mei_propn_milk_yatf, mei_propn_supp_yatf, mei_propn_herb_yatf \
                         = sfun.f1_feedsupply(feedsupplyw_tpa1e1b1nwzida0e0b0xyg1[:, p:p+1], confinementw_tpa1e1b1nwzida0e0b0xyg1[:, p:p+1]
@@ -5624,8 +5649,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 # eqn_group = 5
                 # eqn_system = 0 # CSIRO = 0
                 # if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
-                #     eqn_used = (eqn_used_g2_q1p[eqn_group, p:p+1] == eqn_system)
-                #     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...] >0):
+                #     eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
+                #     if (eqn_used or eqn_compare) and active_p_pyatf[p]:
                 #         temp0 = fsfun.f_ra_cs(foo_yatf, hf_yatf, cr_cpyatf, zf_yatf)
                 #         if eqn_used:
                 #             ra_yatf = temp0
@@ -5633,8 +5658,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 #             r_compare5_q0q2tpyatf[eqn_system, 0, :, p:p+1, ...] = temp0
                 # eqn_system = 1 # Mu = 1
                 # if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
-                #     eqn_used = (eqn_used_g2_q1p[eqn_group, p:p+1] == eqn_system)
-                #     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...] >0):
+                #     eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
+                #     if (eqn_used or eqn_compare) and active_p_pyatf[p]:
                 #         temp0 = fsfun.f_ra_mu(foo_yatf, hf_yatf, zf_yatf, cu0_cpyatf)
                 #         if eqn_used:
                 #             ra_yatf = temp0
@@ -5650,8 +5675,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 eqn_group = 6
                 eqn_system = 0 # CSIRO = 0
                 if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
-                    eqn_used = (eqn_used_g2_q1p[eqn_group, p:p+1] == eqn_system)
-                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...] >0):
+                    eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
+                    if (eqn_used or eqn_compare) and active_p_pyatf[p]:
                         temp0 = fsfun.f_rq_cs(dmd_yatf, legume_pa1e1b1nwzida0e0b0xyg[p:p+1], cr_cpyatf, pinp.sheep['i_sf'])
                         if eqn_used:
                             rq_yatf = temp0
@@ -5659,14 +5684,14 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             r_compare6_q0q2tpyatf[eqn_system, 0, :, p:p+1, ...] = temp0
 
                 ##intake - yatf - use RA=1 for stubble
-                if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...] >0):
+                if active_p_pyatf[p]:
                     ri_yatf = fsfun.f_rel_intake(1, rq_yatf, legume_pa1e1b1nwzida0e0b0xyg[p:p+1], cr_cpyatf) #use ra=1 for stubble
                     mei_yatf, mei_solid_yatf, intake_f_yatf, md_solid_yatf, mei_propn_milk_yatf, mei_propn_herb_yatf, mei_propn_supp_yatf \
                                 = sfun.f_intake(pi_yatf, ri_yatf, md_herb_yatf, False
                                                 , intake_s_yatf, pinp.sheep['i_md_supp'], mp2_yatf)   #same feedsupply as dams
 
             ##energy - yatf
-            if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1, ...] > 0):
+            if active_p_pyatf[p]:
                 km_yatf = sfun.f1_km(ck_cpyatf, md_solid_yatf, mei_propn_milk_yatf)
                 kg_fodd_cs_yatf, kg_supp_cs_yatf, temp3, kw_cs_yatf = sfun.f1_efficiency_cs(ck_cpyatf, md_solid_yatf
                                         , pinp.sheep['i_md_supp'], md_herb_yatf, lgf_eff_pa1e1b1nwzida0e0b0xyg2[p:p+1]
@@ -5681,8 +5706,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             eqn_group = 7
             eqn_system = 0 # CSIRO = 0
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
-                eqn_used = (eqn_used_g2_q1p[eqn_group, p:p+1] == eqn_system)
-                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...] >0):
+                eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and active_p_pyatf[p]:
                     temp0 = sfun.f_energy_cs(cx_cpyatf[...,mask_x,:,:], cm_cpyatf, lw_start_yatf, ffcfw_start_yatf
                                              , mr_age_pa1e1b1nwzida0e0b0xyg2[p:p+1], mei_yatf, km_yatf
                                              , pinp.sheep['i_steepness'], densityw_pa1e1b1nwzida0e0b0xyg2[p:p+1], foo_yatf
@@ -5695,8 +5720,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
             eqn_system = 1 # MU = 1
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
-                eqn_used = (eqn_used_g2_q1p[eqn_group, p:p+1] == eqn_system)
-                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...] >0):
+                eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and active_p_pyatf[p]:
                     lean_weight = muscle_start_yatf + viscera_start_yatf
                     temp0, temp1, temp2 = sfun.f_energy_mu(cx_cpyatf[...,mask_x,:,:], cm_cpyatf, lw_start_yatf, lean_weight
                                                     , mr_agegraham_pa1e1b1nwzida0e0b0xyg2[p:p+1], mei_yatf, km_yatf
@@ -5712,8 +5737,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             eqn_system = 2  # New Feeding Standards = 2
             if uinp.sheep['i_eqn_exists_q0q1'][
                 eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
-                eqn_used = (eqn_used_g2_q1p[eqn_group, p:p+1] == eqn_system)
-                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1, ...] > 0):
+                eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and active_p_pyatf[p]:
                     temp0, temp1, temp2 = sfun.f_energy_nfs(cm_cpyatf, cg_cpyatf, lw_start_yatf, fat_start_yatf
                                                     , muscle_start_yatf, viscera_start_yatf, mei_yatf, km_yatf
                                                     , pinp.sheep['i_steepness'], densityw_pa1e1b1nwzida0e0b0xyg2[p:p+1]
@@ -5731,8 +5756,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             eqn_system = 0  # CSIRO = 0
             if uinp.sheep['i_eqn_exists_q0q1'][
                 eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
-                eqn_used = (eqn_used_g2_q1p[eqn_group, p:p+1] == eqn_system)  # equation used is based on the yatf system
-                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1, ...] > 0):
+                eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)  # equation used is based on the yatf system
+                if (eqn_used or eqn_compare) and active_p_pyatf[p]:
                     temp0, temp1, temp2, temp3, temp4 = sfun.f_fibre_cs(cw_cpyatf, cc_cpyatf, ffcfw_start_yatf
                             , relsize_start_yatf, d_cfw_history_start_p2g2, mei_yatf, new_min_pa1e1b1nwzida0e0b0xyg2[p:p+1]
                             , d_cfw_ave_pa1e1b1nwzida0e0b0xyg2, sfd_pa1e1b1nwzida0e0b0xyg2
@@ -5755,8 +5780,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             eqn_system = 1  # MU = 1
             if uinp.sheep['i_eqn_exists_q0q1'][
                 eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
-                eqn_used = (eqn_used_g2_q1p[eqn_group, p:p+1] == eqn_system)  # equation used is based on the yatf system
-                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1, ...] > 0):
+                eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)  # equation used is based on the yatf system
+                if (eqn_used or eqn_compare) and active_p_pyatf[p]:
                     temp0, temp1, temp2, temp3, temp4 = sfun.f_fibre_mu(cw_cpyatf, cc_cpyatf
                             , ffcfw_start_yatf, relsize_start_yatf, d_cfw_history_start_p2g2
                             , mei_yatf, new_min_pa1e1b1nwzida0e0b0xyg2[p:p+1], d_cfw_ave_pa1e1b1nwzida0e0b0xyg2
@@ -5780,8 +5805,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             eqn_system = 2  # New Feeding Standards = 2
             if uinp.sheep['i_eqn_exists_q0q1'][
                 eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
-                eqn_used = (eqn_used_g2_q1p[eqn_group, p:p+1] == eqn_system)  # equation used is based on the yatf system
-                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1, ...] > 0):
+                eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)  # equation used is based on the yatf system
+                if (eqn_used or eqn_compare) and active_p_pyatf[p]:
                     temp0, temp1, temp2, temp3, temp4 = sfun.f_fibre_nfs(cw_cpyatf, cc_cpyatf, cg_cpyatf, ck_cpyatf
                             , ffcfw_start_yatf, relsize_start_yatf, d_cfw_history_start_p2g2, mei_yatf
                             , new_min_pa1e1b1nwzida0e0b0xyg2[p:p+1], d_cfw_ave_pa1e1b1nwzida0e0b0xyg2
@@ -5807,8 +5832,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             eqn_group = 7
             eqn_system = 0  # CSIRO = 0
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
-                eqn_used = (eqn_used_g2_q1p[eqn_group, p:p+1] == eqn_system)
-                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1, ...] > 0):
+                eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and active_p_pyatf[p]:
                     temp0, temp1 = sfun.f_heat_cs(cc_cpyatf, ck_cpyatf, mei_yatf, meme_cs_yatf, new_yatf, km_yatf
                             , kg_supp_cs_yatf, kg_fodd_cs_yatf, kw_cs_yatf, mei_propn_supp_yatf, mei_propn_herb_yatf
                             ,  mei_propn_milk=mei_propn_milk_yatf)
@@ -5835,8 +5860,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             eqn_system = 1  # MU = 1  Using CSIRO functions because no change required
             if uinp.sheep['i_eqn_exists_q0q1'][
                 eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
-                eqn_used = (eqn_used_g2_q1p[eqn_group, p:p+1] == eqn_system)
-                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1, ...] > 0):
+                eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and active_p_pyatf[p]:
                     temp0 = sfun.f_heatloss_nfs(cc_cpyatf, ffcfw_start_yatf, rc_start_yatf, sl_start_yatf
                                                 , temp_ave_pa1e1b1nwzida0e0b0xyg[p:p+1], temp_max_pa1e1b1nwzida0e0b0xyg[p:p+1]
                                                 , temp_min_pa1e1b1nwzida0e0b0xyg[p:p+1], ws_a1e1b1nwzida0e0b0xyg1
@@ -5849,8 +5874,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
             eqn_system = 2  # New Feeding Standards = 2
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
-                eqn_used = (eqn_used_g2_q1p[eqn_group, p:p+1] == eqn_system)
-                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1, ...] > 0):
+                eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and active_p_pyatf[p]:
                     temp0 = sfun.f_heatloss_nfs(cc_cpyatf, ffcfw_start_yatf, rc_start_yatf, sl_start_yatf
                                              , temp_ave_pa1e1b1nwzida0e0b0xyg[p:p+1], temp_max_pa1e1b1nwzida0e0b0xyg[p:p+1]
                                              , temp_min_pa1e1b1nwzida0e0b0xyg[p:p+1], ws_a1e1b1nwzida0e0b0xyg1
@@ -5866,8 +5891,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             eqn_group = 7
             eqn_system = 0 # CSIRO = 0
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
-                eqn_used = (eqn_used_g2_q1p[eqn_group, p:p+1] == eqn_system)
-                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...] >0):
+                eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and active_p_pyatf[p]:
                     temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_lwc_cs(cg_cpyatf, rc_start_yatf, mei_yatf, mem_yatf
                             , new_yatf, zf1_yatf, zf2_yatf, kg_yatf, kw_cs_yatf
                             , age_pa1e1b1nwzida0e0b0xyg2[p:p+1], rev_trait_values['yatf'][p]
@@ -5888,8 +5913,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
             eqn_system = 1 # Mu = 1
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
-                eqn_used = (eqn_used_g2_q1p[eqn_group, p:p+1] == eqn_system)
-                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...] >0):
+                eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and active_p_pyatf[p]:
                     #override 'scenario' if doing a REV of LW age stage that requires ebg of yatf held constant
                     scenario = sen.sav['rev_ebg_yatf_scenario']
                     temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9 = sfun.f_lwc_mu(cg_cpyatf
@@ -5932,8 +5957,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
             eqn_system = 2 # New Feeding Standards = 2
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
-                eqn_used = (eqn_used_g2_q1p[eqn_group, p:p+1] == eqn_system)
-                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...] >0):
+                eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and active_p_pyatf[p]:
                     temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9 = sfun.f_lwc_nfs(cg_cpyatf
                             , ck_cpyatf, muscle_start_yatf, viscera_start_yatf, muscle_target_pa1e1b1nwzida0e0b0xyg2, mei_yatf
                             , km_yatf, md_solid_yatf, hp_maint_nfs_yatf, hp_mei_nfs_yatf, dw_yatf, heat_loss_yatfm0p1
@@ -5976,9 +6001,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             eqn_group = 11
             eqn_system = 0 # CSIRO = 0
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
-                eqn_used = (eqn_used_g2_q1p[eqn_group, p:p+1] == eqn_system)  # equation used is based on the yatf system
+                eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)  # equation used is based on the yatf system
                 ##based on days_period_dams because weaning occurs at start of period so days_period_yatf==0
-                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
+                if (eqn_used or eqn_compare) and active_p_pdams[p]:
                     temp0 = sfun.f_weanweight_cs(cg_cpyatf, cn_cpyatf, ebw_w_start_yatf, ffcfw_start_yatf, nyatf_b1nwzida0e0b0xyg
                                                  , srw_pa1e1b1nwzida0e0b0xyg2, md_solid_yatf, period_is_wean_pa1e1b1nwzida0e0b0xyg1[p:p+1]
                                                  , eqn_system = eqn_used_g2_q1p[7, p:p+1])
@@ -5989,9 +6014,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                         r_compare11_q0q2tpyatf[eqn_system, 0, :, p:p+1, ...] = temp0
             eqn_system = 1 # Mu = 1   #it is okay to use ebg of current period because it is mul by lact propn
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
-                eqn_used = (eqn_used_g2_q1p[eqn_group, p:p+1] == eqn_system)  # equation used is based on the yatf system
+                eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)  # equation used is based on the yatf system
                 ##based on days_period_dams because weaning occurs at start of period so days_period_yatf==0
-                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
+                if (eqn_used or eqn_compare) and active_p_pdams[p]:
                     temp0, temp1, temp2 = sfun.f_weanweight_mu(cb1_cpyatf, ce__cpyatf, cg_cpyatf, cn_cpyatf, cu1_cpyatf
                                 , cx_cpyatf[...,mask_x,:,:], nyatf_b1nwzida0e0b0xyg, ebw_w_start_yatf, cf_w_w_start_dams
                                 , ffcfw_start_dams, ebg_dams, srw_pa1e1b1nwzida0e0b0xyg2, md_solid_yatf, foo_dams, foo_lact_ave_start
@@ -6015,8 +6040,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             eqn_system = 0 # National Greenhouse Gas Inventory Report
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 ###sire
-                eqn_used = (eqn_used_g0_q1p[eqn_group, p:p+1] == eqn_system)
-                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1,...] >0):
+                eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and active_p_psire[p]:
                     temp0 = efun.f_stock_ch4_animal_nir()
                     temp0, temp1 = efun.f_methane_reduction(temp0, sen.sam['methane_yield'], sen.sav['methane_capture'])
                     if eqn_used:
@@ -6025,8 +6050,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     if eqn_compare:
                         r_compare12_q0q2tpsire[eqn_system, 0, :, p:p+1, ...] = temp0
                 ###dams
-                eqn_used = (eqn_used_g1_q1p[eqn_group, p:p+1] == eqn_system)
-                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
+                eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and active_p_pdams[p]:
                     temp0 = efun.f_stock_ch4_animal_nir()
                     temp0, temp1 = efun.f_methane_reduction(temp0, sen.sam['methane_yield'], sen.sav['methane_capture'])
                     if eqn_used:
@@ -6035,8 +6060,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     if eqn_compare:
                         r_compare12_q0q2tpdams[eqn_system, 0, :, p:p+1, ...] = temp0
                 ###yatf
-                eqn_used = (eqn_used_g2_q1p[eqn_group, p:p+1] == eqn_system)
-                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...] >0):
+                eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and active_p_pyatf[p]:
                     temp0 = efun.f_stock_ch4_animal_nir()
                     temp0, temp1 = efun.f_methane_reduction(temp0, sen.sam['methane_yield'], sen.sav['methane_capture'])
                     if eqn_used:
@@ -6045,8 +6070,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     if eqn_compare:
                         r_compare12_q0q2tpyatf[eqn_system, 0, :, p:p+1, ...] = temp0
                 ###offs
-                eqn_used = (eqn_used_g3_q1p[eqn_group, p:p+1] == eqn_system)
-                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1,...] >0):
+                eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and active_p_poffs[p]:
                     temp0 = efun.f_stock_ch4_animal_nir()
                     temp0, temp1 = efun.f_methane_reduction(temp0, sen.sam['methane_yield'], sen.sav['methane_capture'])
                     if eqn_used:
@@ -6058,8 +6083,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             eqn_system = 1 # Blaxter and Clapperton
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 ###sire
-                eqn_used = (eqn_used_g0_q1p[eqn_group, p:p+1] == eqn_system)
-                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1,...] >0):
+                eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and active_p_psire[p]:
                     temp0 = efun.f_stock_ch4_animal_bc(ch_cpsire, intake_f_sire, intake_s_sire, md_solid_sire, level_sire)
                     temp0, temp1 = efun.f_methane_reduction(temp0, sen.sam['methane_yield'], sen.sav['methane_capture'])
                     if eqn_used:
@@ -6068,8 +6093,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     if eqn_compare:
                         r_compare12_q0q2tpsire[eqn_system, 0, :, p:p+1, ...] = temp0
                 ###dams
-                eqn_used = (eqn_used_g1_q1p[eqn_group, p:p+1] == eqn_system)
-                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
+                eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and active_p_pdams[p]:
                     temp0 = efun.f_stock_ch4_animal_bc(ch_cpdams, intake_f_dams, intake_s_dams, md_solid_dams, level_dams)
                     temp0, temp1 = efun.f_methane_reduction(temp0, sen.sam['methane_yield'], sen.sav['methane_capture'])
                     if eqn_used:
@@ -6078,8 +6103,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     if eqn_compare:
                         r_compare12_q0q2tpdams[eqn_system, 0, :, p:p+1, ...] = temp0
                 ###yatf
-                eqn_used = (eqn_used_g2_q1p[eqn_group, p:p+1] == eqn_system)
-                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...] >0):
+                eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and active_p_pyatf[p]:
                     temp0 = efun.f_stock_ch4_animal_bc(ch_cpyatf, intake_f_yatf, intake_s_yatf, md_solid_yatf, level_yatf)
                     temp0, temp1 = efun.f_methane_reduction(temp0, sen.sam['methane_yield'], sen.sav['methane_capture'])
                     if eqn_used:
@@ -6088,8 +6113,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     if eqn_compare:
                         r_compare12_q0q2tpyatf[eqn_system, 0, :, p:p+1, ...] = temp0
                 ###offs
-                eqn_used = (eqn_used_g3_q1p[eqn_group, p:p+1] == eqn_system)
-                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1,...] >0):
+                eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and active_p_poffs[p]:
                     temp0 = efun.f_stock_ch4_animal_bc(ch_cpoffs, intake_f_offs, intake_s_offs, md_solid_offs, level_offs)
                     temp0, temp1 = efun.f_methane_reduction(temp0, sen.sam['methane_yield'], sen.sav['methane_capture'])
                     if eqn_used:
@@ -6104,32 +6129,32 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             eqn_system = 0 #National Greenhouse Gas Inventory Report
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 ###sire
-                eqn_used = (eqn_used_g0_q1p[eqn_group, p:p+1] == eqn_system)
-                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1,...] >0):
+                eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and active_p_psire[p]:
                     temp0 = efun.f_stock_n2o_animal_nir(cl_cpsire, cg_cpsire, d_cfw_sire, d_muscle_sire, d_viscera_sire)
                     if eqn_used:
                         n2o_animal_sire = temp0
                     if eqn_compare:
                         r_compare13_q0q2tpsire[eqn_system, 0, :, p:p+1, ...] = temp0
                 ###dams
-                eqn_used = (eqn_used_g1_q1p[eqn_group, p:p+1] == eqn_system)
-                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
+                eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and active_p_pdams[p]:
                     temp0 = efun.f_stock_n2o_animal_nir(cl_cpdams, cg_cpdams, d_cfw_dams, d_muscle_dams, d_viscera_dams, mp=mp2_dams)
                     if eqn_used:
                         n2o_animal_dams = temp0
                     if eqn_compare:
                         r_compare13_q0q2tpdams[eqn_system, 0, :, p:p+1, ...] = temp0
                 ###yatf
-                eqn_used = (eqn_used_g2_q1p[eqn_group, p:p+1] == eqn_system)
-                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...] >0):
+                eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and active_p_pyatf[p]:
                     temp0 = efun.f_stock_n2o_animal_nir(cl_cpyatf, cg_cpyatf, d_cfw_yatf, d_muscle_yatf, d_viscera_yatf, mc=mp2_yatf)
                     if eqn_used:
                         n2o_animal_yatf = temp0
                     if eqn_compare:
                         r_compare13_q0q2tpyatf[eqn_system, 0, :, p:p+1, ...] = temp0
                 ###offs
-                eqn_used = (eqn_used_g3_q1p[eqn_group, p:p+1] == eqn_system)
-                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1,...] >0):
+                eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and active_p_poffs[p]:
                     temp0 = efun.f_stock_n2o_animal_nir(cl_cpoffs, cg_cpoffs, d_cfw_offs, d_muscle_offs, d_viscera_offs)
                     if eqn_used:
                         n2o_animal_offs = temp0
@@ -6141,8 +6166,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             eqn_group = 0
             eqn_system = 0 # CSIRO = 0
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
-                eqn_used = (eqn_used_g1_q1p[eqn_group, p:p+1] == eqn_system)
-                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
+                eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and active_p_pdams[p]:
                     temp0 = sfun.f_conception_cs(cf_cpdams, cb1_cpdams, relsize_mating_dams, rc_mating_dams
                                                  , cpg_doy_cs_pa1e1b1nwzida0e0b0xyg1[p:p+1], nfoet_b1nwzida0e0b0xyg
                                                  , nyatf_b1nwzida0e0b0xyg, period_is_mating_pa1e1b1nwzida0e0b0xyg1[p:p+1]
@@ -6154,8 +6179,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                         r_compare0_q0q2tpdams[eqn_system, 0, :, p:p+1, ...] = temp0
             eqn_system = 1 # MU LTW = 1
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
-                eqn_used = (eqn_used_g1_q1p[eqn_group, p:p+1] == eqn_system)
-                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
+                eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and active_p_pdams[p]:
                     temp0 = sfun.f_conception_ltw(cf_cpdams, cu0_cpdams, relsize_mating_dams, cs_mating_dams
                                                 , scan_std_pa1e1b1nwzida0e0b0xyg1[p:p+1], doy_pa1e1b1nwzida0e0b0xyg[p:p+1]
                                                 , rr_doy_ltw_pa1e1b1nwzida0e0b0xyg1[p:p+1], prejoin_tup
@@ -6168,8 +6193,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                         r_compare0_q0q2tpdams[eqn_system, 0, :, p:p+1, ...] = temp0
             eqn_system = 2 # MU 2 = 2
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
-                eqn_used = (eqn_used_g1_q1p[eqn_group, p:p+1] == eqn_system)
-                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
+                eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and active_p_pdams[p]:
                     temp0 = sfun.f_conception_mu2(cf_cpdams, cb1_cpdams, cu2_cc1pdams, srw_female_pa1e1b1nwzida0e0b0xyg1, maternallw_mating_dams
                                                    , lwc_mating_dams * 1000, age_pa1e1b1nwzida0e0b0xyg1[p:p+1], nlb_yg3 * 100
                                                    , doj_pa1e1b1nwzida0e0b0xyg1[p:p+1], doj2_pa1e1b1nwzida0e0b0xyg1[p:p+1]
@@ -6186,7 +6211,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                         r_compare0_q0q2tpdams[eqn_system, 0, :, p:p+1, ...] = temp0
 
             ##Scanning percentage per ewe scanned (if scanning) -  report variable only
-            if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
+            if active_p_pdams[p]:
                 t_scanning = np.sum(numbers_start_dams * nfoet_b1nwzida0e0b0xyg, axis=prejoin_tup, keepdims=True) / np.sum(numbers_start_dams, axis=prejoin_tup, keepdims=True) * period_is_scan_pa1e1b1nwzida0e0b0xyg1[p:p+1]
                 ##Scanning percentage per ewe scanned (if scanning)
                 scanning = fun.f_update(scanning, t_scanning, period_is_scan_pa1e1b1nwzida0e0b0xyg1[p:p+1])
@@ -6197,8 +6222,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             eqn_system = 0 # CSIRO = 0
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 ####sire
-                eqn_used = (eqn_used_g0_q1p[eqn_group, p:p+1] == eqn_system)
-                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1,...] >0):
+                eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and active_p_psire[p]:
                     temp0 = sfun.f_mortality_base_cs(cd_cpsire, cg_cpsire, rc_start_sire, cv_weight_sire, ebg_sire
                                                      , sd_ebg_sire, d_nw_max_pa1e1b1nwzida0e0b0xyg0[p:p+1]
                                                      , days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1], age_pa1e1b1nwzida0e0b0xyg0[p:p+1], rev_trait_values['sire'][p]
@@ -6208,8 +6233,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     if eqn_compare:
                         r_compare15_q0q2tpsire[eqn_system, 0, :, p:p+1, ...] = temp0
                 ####dams
-                eqn_used = (eqn_used_g1_q1p[eqn_group, p:p+1] == eqn_system)
-                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
+                eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and active_p_pdams[p]:
                     temp0 = sfun.f_mortality_base_cs(cd_cpdams, cg_cpdams, rc_start_dams, cv_weight_dams, ebg_dams
                                                      , sd_ebg_dams, d_nw_max_pa1e1b1nwzida0e0b0xyg1[p:p+1]
                                                      , days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1], age_pa1e1b1nwzida0e0b0xyg0[p:p+1], rev_trait_values['dams'][p]
@@ -6219,8 +6244,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     if eqn_compare:
                         r_compare15_q0q2tpdams[eqn_system, 0, :, p:p+1, ...] = temp0
                 ####yatf
-                eqn_used = (eqn_used_g2_q1p[eqn_group, p:p+1] == eqn_system)
-                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...] >0):
+                eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and active_p_pyatf[p]:
                     temp0 = sfun.f_mortality_base_cs(cd_cpyatf, cg_cpyatf, rc_start_yatf, cv_weight_yatf, ebg_yatf
                                                      , sd_ebg_yatf, d_nw_max_yatf, days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1]
                                                      , age_pa1e1b1nwzida0e0b0xyg0[p:p+1], rev_trait_values['yatf'][p], sen.sap['mortalityb']
@@ -6230,8 +6255,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     if eqn_compare:
                         r_compare15_q0q2tpyatf[eqn_system, 0, :, p:p+1, ...] = temp0
                 ####offs
-                eqn_used = (eqn_used_g3_q1p[eqn_group, p:p+1] == eqn_system)
-                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1,...] >0):
+                eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and active_p_poffs[p]:
                     temp0 = sfun.f_mortality_base_cs(cd_cpoffs, cg_cpoffs, rc_start_offs, cv_weight_offs, ebg_offs
                                                      , sd_ebg_offs, d_nw_max_pa1e1b1nwzida0e0b0xyg3[p:p+1]
                                                      , days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1], age_pa1e1b1nwzida0e0b0xyg0[p:p+1], rev_trait_values['offs'][p]
@@ -6243,8 +6268,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             eqn_system = 1 # MU/LTW = 1
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 ####sire
-                eqn_used = (eqn_used_g0_q1p[eqn_group, p:p+1] == eqn_system)
-                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1,...] >0):
+                eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and active_p_psire[p]:
                     temp0 = sfun.f_mortality_base_mu(cd_cpsire, cg_cpsire, rc_start_sire, cv_weight_sire, ebg_sire
                                                      , sd_ebg_sire, d_nw_max_pa1e1b1nwzida0e0b0xyg0[p:p+1]
                                                      , days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1], age_pa1e1b1nwzida0e0b0xyg0[p:p+1], rev_trait_values['sire'][p]
@@ -6254,8 +6279,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     if eqn_compare:
                         r_compare15_q0q2tpsire[eqn_system, 0, :, p:p+1, ...] = temp0
                 ####dams
-                eqn_used = (eqn_used_g1_q1p[eqn_group, p:p+1] == eqn_system)
-                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
+                eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and active_p_pdams[p]:
                     temp0 = sfun.f_mortality_base_mu(cd_cpdams, cg_cpdams, rc_start_dams, cv_weight_dams, ebg_dams
                                                      , sd_ebg_dams, d_nw_max_pa1e1b1nwzida0e0b0xyg1[p:p+1]
                                                      , days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1], age_pa1e1b1nwzida0e0b0xyg0[p:p+1], rev_trait_values['dams'][p]
@@ -6265,8 +6290,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     if eqn_compare:
                         r_compare15_q0q2tpdams[eqn_system, 0, :, p:p+1, ...] = temp0
                 ####yatf
-                eqn_used = (eqn_used_g2_q1p[eqn_group, p:p+1] == eqn_system)
-                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...] >0):
+                eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and active_p_pyatf[p]:
                     temp0 = sfun.f_mortality_base_mu(cd_cpyatf, cg_cpyatf, rc_start_yatf, cv_weight_yatf, ebg_yatf
                                                      , sd_ebg_yatf, d_nw_max_yatf, days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1]
                                                      , age_pa1e1b1nwzida0e0b0xyg0[p:p+1], rev_trait_values['yatf'][p], sen.sap['mortalityb']
@@ -6276,8 +6301,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     if eqn_compare:
                         r_compare15_q0q2tpyatf[eqn_system, 0, :, p:p+1, ...] = temp0
                 ####offs
-                eqn_used = (eqn_used_g3_q1p[eqn_group, p:p+1] == eqn_system)
-                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1,...] >0):
+                eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and active_p_poffs[p]:
                     temp0 = sfun.f_mortality_base_mu(cd_cpoffs, cg_cpoffs, rc_start_offs, cv_weight_offs, ebg_offs
                                                      , sd_ebg_offs, d_nw_max_pa1e1b1nwzida0e0b0xyg3[p:p+1]
                                                      , days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1], age_pa1e1b1nwzida0e0b0xyg0[p:p+1], rev_trait_values['offs'][p]
@@ -6293,8 +6318,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             eqn_system = 0 # CSIRO = 0
             ####sire
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
-                eqn_used = (eqn_used_g0_q1p[eqn_group, p:p+1] == eqn_system)
-                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1,...] >0):
+                eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and active_p_psire[p]:
                     temp0 = sfun.f_mortality_weaner_cs(cd_cpsire, cg_cpsire, age_pa1e1b1nwzida0e0b0xyg0[p:p+1], ebg_sire, sd_ebg_sire
                                         , d_nw_max_pa1e1b1nwzida0e0b0xyg0[p:p+1], days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1])
                     if eqn_used:
@@ -6303,8 +6328,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                         r_compare2_q0q2tpsire[eqn_system, 0, :, p:p+1, ...] = temp0
             ####dams
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
-                eqn_used = (eqn_used_g1_q1p[eqn_group, p:p+1] == eqn_system)
-                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
+                eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and active_p_pdams[p]:
                     temp0 = sfun.f_mortality_weaner_cs(cd_cpdams, cg_cpdams, age_pa1e1b1nwzida0e0b0xyg1[p:p+1], ebg_dams, sd_ebg_dams
                                         , d_nw_max_pa1e1b1nwzida0e0b0xyg1[p:p+1], days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1])
                     if eqn_used:
@@ -6313,8 +6338,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                         r_compare2_q0q2tpdams[eqn_system, 0, :, p:p+1, ...] = temp0
             ####offs
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
-                eqn_used = (eqn_used_g3_q1p[eqn_group, p:p+1] == eqn_system)
-                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1,...] >0):
+                eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and active_p_poffs[p]:
                     temp0 = sfun.f_mortality_weaner_cs(cd_cpoffs, cg_cpoffs, age_cut_pa1e1b1nwzida0e0b0xyg3[p:p+1], ebg_offs, sd_ebg_offs
                                         , d_nw_max_pa1e1b1nwzida0e0b0xyg3[p:p+1], days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1])
                     if eqn_used:
@@ -6324,8 +6349,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             eqn_system = 1 # MU = 1
             ####sire
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
-                eqn_used = (eqn_used_g0_q1p[eqn_group, p:p+1] == eqn_system)
-                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1,...] >0):
+                eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and active_p_psire[p]:
                     temp0 = sfun.f_mortality_weaner_mu(cu2_cc1psire, ce_cpsire)  #ce_cpsire has averaged d axis
                     if eqn_used:
                         mortality_sire += temp0
@@ -6333,8 +6358,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                         r_compare2_q0q2tpsire[eqn_system, 0, :, p:p+1, ...] = temp0
             ####dams
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
-                eqn_used = (eqn_used_g1_q1p[eqn_group, p:p+1] == eqn_system)
-                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
+                eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and active_p_pdams[p]:
                     temp0 = sfun.f_mortality_weaner_mu(cu2_cc1pdams, ce_cpdams)  #ce_cpdams has averaged d axis
                     if eqn_used:
                         mortality_dams += temp0
@@ -6342,8 +6367,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                         r_compare2_q0q2tpdams[eqn_system, 0, :, p:p+1, ...] = temp0
             ####offs
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
-                eqn_used = (eqn_used_g3_q1p[eqn_group, p:p+1] == eqn_system)
-                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1,...] >0):
+                eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and active_p_poffs[p]:
                     temp0 = sfun.f_mortality_weaner_mu(cu2_cc1poffs, ce_d_cpoffs) #use ce_d_cpoffs because this is a maternal age effect on weaner mortality (with d axis).
                     if eqn_used:
                         mortality_offs += temp0
@@ -6355,8 +6380,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             eqn_group = 3
             eqn_system = 0 # CSIRO = 0
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
-                eqn_used = (eqn_used_g1_q1p[eqn_group, p:p+1] == eqn_system)
-                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
+                eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and active_p_pdams[p]:
                     temp0 = sfun.f_mortality_dam_cs()
                     if eqn_used:
                         mortality_dams += temp0
@@ -6364,8 +6389,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                         r_compare3_q0q2tpdams[eqn_system, 0, :, p:p+1, ...] = temp0
             # eqn_system = 1 # mu = 1
             # if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
-            #     eqn_used = (eqn_used_g1_q1p[eqn_group, p:p+1] == eqn_system)
-            #     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
+            #     eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
+            #     if (eqn_used or eqn_compare) and active_p_pdams[p]:
             #         temp0 = sfun.f_mortality_dam_mu(cu2_cc1pdams, ce__cpdams, cb1_cpdams, cs_start_dams, cv_cs_dams
             #                                         , period_is_birth_pa1e1b1nwzida0e0b0xyg1[p]
             #                                         , nfoet_b1nwzida0e0b0xyg, saa_mortalitye_pa1e1b1nwzida0e0b0xyg1[p])
@@ -6375,8 +6400,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             #             r_compare3_q0q2tpdams[eqn_system, 0, :, p:p+1, ...] = temp0
             eqn_system = 1 # mu2 = 1 (was 2 but have added EL and dropped MU1 Oct25)
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
-                eqn_used = (eqn_used_g1_q1p[eqn_group, p:p+1] == eqn_system)
-                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
+                eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and active_p_pdams[p]:
                     ## calculate CS change of dams (to reduce the arguments required)  #todo this needs to be different formula depending on eqn_group[7] or it should be based on EBW
                     csc_dams = ebg_dams * cg_cpdams[18, ...] / (cn_cpdams[5, ...] * nw_start_dams)
                     temp0, temp1 = sfun.f_mortality_dam_mu2(cu2_cc1pdams, ce__cpdams, cb1_cpdams, cf_csc_start_dams
@@ -6390,8 +6415,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                         r_compare3_q0q2tpdams[eqn_system, 0, :, p:p+1, ...] = temp0
             eqn_system = 2 # EL = 2
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
-                eqn_used = (eqn_used_g1_q1p[eqn_group, p:p+1] == eqn_system)
-                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
+                eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and active_p_pdams[p]:
                     ## calculate LW change of EL dams (to reduce the arguments required)  #todo this needs to be different formula depending on eqn_group[7] or it should be based on EBW
                     lwc_dams = ebg_dams * cg_cpdams[18, ...] + d_guw_dams / days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...]
                     temp0, temp1 = sfun.f_mortality_dam_EL(cu6_cc1pdams, cb1_cpdams, cf_mort_start_damsp1p2
@@ -6411,8 +6436,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             eqn_group = 16
             eqn_system = 0 # CSIRO = 0
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
-                eqn_used = (eqn_used_g1_q1p[eqn_group, p:p+1] == eqn_system)
-                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
+                eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and active_p_pdams[p]:
                     temp0 = sfun.f_mortality_pregtox_cs(cb1_cpdams, cg_cpdams, nw_start_dams, ebg_dams, sd_ebg_dams
                                                     , days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1]
                                                     , period_between_birth6wks_pa1e1b1nwzida0e0b0xyg1[p:p+1]
@@ -6423,8 +6448,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                         r_compare16_q0q2tpdams[eqn_system, 0, :, p:p+1, ...] = temp0
             eqn_system = 1 # mu = 1
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
-                eqn_used = (eqn_used_g1_q1p[eqn_group, p:p+1] == eqn_system)
-                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
+                eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and active_p_pdams[p]:
                     temp0 = sfun.f_mortality_pregtox_mu(cb1_cpdams, cg_cpdams, nw_start_dams, ebg_dams, sd_ebg_dams
                                                     , days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1]
                                                     , period_between_prebirthbirth_pa1e1b1nwzida0e0b0xyg1[p:p+1]
@@ -6439,8 +6464,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             eqn_group = 1
             eqn_system = 0 # CSIRO = 0
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
-                eqn_used = (eqn_used_g2_q1p[eqn_group, p:p+1] == eqn_system)   # equation used is based on the yatf system
-                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
+                eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)   # equation used is based on the yatf system
+                if (eqn_used or eqn_compare) and active_p_pdams[p]:
                     temp0, temp1, temp2 = sfun.f_mortality_progeny_cs(cd_cpyatf, cb1_cpyatf, w_b_yatf, rc_start_dams, cv_bw_yatf
                                     , w_b_exp_y_dams, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p:p+1]
                                     , chill_index_pa1e1b1nwzida0e0b0xyg1p0, nfoet_b1nwzida0e0b0xyg
@@ -6455,8 +6480,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                         r_compare1_q0q2tpyatf[eqn_system, 1, :, p:p+1, ...] = temp1
             eqn_system = 1 # MU = 1
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
-                eqn_used = (eqn_used_g2_q1p[eqn_group, p:p+1] == eqn_system)   # equation used is based on the yatf system
-                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
+                eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)   # equation used is based on the yatf system
+                if (eqn_used or eqn_compare) and active_p_pdams[p]:
                     ##calculate the standard BW which is used in the paddock level scaling
                     w_b_ltw_std_yatf, t_cf = sfun.f_birthweight_mu(cu1_cpyatf, cb1_cpyatf, cg_cpyatf, cx_cpyatf[..., mask_x, :, :]
                                                     , ce__cpyatf, w_b_ltw_std_yatf, 0, nw_start_dams, 0
@@ -6480,8 +6505,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                         r_compare1_q0q2tpyatf[eqn_system, 0, :, p:p+1, ...] = temp0
             eqn_system = 2 # EL = 2
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
-                eqn_used = (eqn_used_g2_q1p[eqn_group, p:p+1] == eqn_system)   # equation used is based on the yatf system
-                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):   #days mask is based on dam days because carryforward needs to be calculated during pregnancy
+                eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)   # equation used is based on the yatf system
+                if (eqn_used or eqn_compare) and active_p_pdams[p]:   #days mask is based on dam days because carryforward needs to be calculated during pregnancy
                     ## calculate LW change of EL dams (to reduce the arguments required)  #todo this needs to be different formula depending on eqn_group[7] or it should be based on EBW
                     lwc_dams = ebg_dams * cg_cpdams[18, ...] + d_guw_dams / days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...]
                     temp0, temp1 = sfun.f_mortality_progeny_EL(cu6_cc1pyatf, cb1_cpyatf, cx_cpyatf[...,mask_x,:,:]
@@ -6500,9 +6525,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
 
             ##end numbers - accounts for mortality and other activity during the period - this is the number in the different classes as at the end of the period
-            if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1,...] >0):
+            if active_p_psire[p]:
                 numbers_end_sire, temp1 = sfun.f1_period_end_nums(numbers_start_sire, mortality_sire, group=0)
-            if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
+            if active_p_pdams[p]:
                 numbers_end_dams, numbers_available_mating_dams = sfun.f1_period_end_nums(numbers_start_dams
                             , mortality_dams, numbers_available_mating_dams, mortality_yatf=mortality_birth_yatf
                             , nfoet_b1=nfoet_b1nwzida0e0b0xyg, nyatf_b1=nyatf_b1nwzida0e0b0xyg, group=1
@@ -6515,9 +6540,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             , period_isbetween_prejoinmatingend=period_isbetween_prejoinmatingend_pa1e1b1nwzida0e0b0xyg1[p:p+1]
                             , propn_dams_mated=est_prop_dams_mated_pa1e1b1nwzida0e0b0xyg1[p:p+1])
 
-            if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...] >0):
+            if active_p_pyatf[p]:
                 numbers_end_yatf, temp1 = sfun.f1_period_end_nums(numbers_start_yatf, mortality_yatf, group=2)
-            if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1,...] >0):
+            if active_p_poffs[p]:
                 numbers_end_offs, temp1 = sfun.f1_period_end_nums(numbers_start_offs, mortality_offs, group=3)
 
             ##################################################
@@ -6539,7 +6564,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             # Therefore retain the approach for the post-calc SA for both feeding systems.
 
             ###sire
-            if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1,...] >0):
+            if active_p_psire[p]:
                 ###sensitivity on kg (efficiency of gain), MR (maintenance req) and PI (Potential intake) based on zf2 - the sensitivity is only for adults
                 sam_pi = fun.f_update(1, sen.sam['pi_post_adult'], zf2_sire == 1)   #potential intake
                 sap_mr = fun.f_update(0, sen.sap['mr_post_adult'], zf2_sire == 1)   #maintenance energy (MEm - doesn't include gestation and lactation requirements)
@@ -6563,7 +6588,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 d_fl_sire = d_fl_sire * scalar
 
             ###dams
-            if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
+            if active_p_pdams[p]:
                 ###sensitivity on kg (efficiency of gain), MR (maintenance req) and PI (Potential intake) based on zf2 - the sensitivity is only for adults
                 sam_pi = fun.f_update(1, sen.sam['pi_post_adult'], zf2_dams == 1)   #potential intake
                 sap_mr = fun.f_update(0, sen.sap['mr_post_adult'], zf2_dams == 1)   #maintenance energy (MEm - doesn't include gestation and lactation requirements)
@@ -6587,7 +6612,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 d_fl_dams = d_fl_dams * scalar
 
             ###yatf
-            if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...] >0):
+            if active_p_pyatf[p]:
                 ###sensitivity on kg (efficiency of gain), MR (maintenance req) and PI (Potential intake) based on zf2 - the sensitivity is only for adults
                 sam_pi = sen.sam['pi_post_yatf']   #potential intake
                 sap_mr = sen.sap['mr_post_yatf']   #maintenance energy (MEm)
@@ -6613,7 +6638,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 d_fl_yatf = d_fl_yatf * scalar
 
             ###offs
-            if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1,...] >0):
+            if active_p_poffs[p]:
                 ###sensitivity on kg (efficiency of gain), MR (maintenance req) and PI (Potential intake) based on zf2 - the sensitivity is only for adults
                 sam_pi = fun.f_update(1, sen.sam['pi_post_adult'], zf2_offs == 1)   #potential intake
                 sap_mr = fun.f_update(0, sen.sap['mr_post_adult'], zf2_offs == 1)   #maintenance energy (MEm - doesn't include gestation and lactation requirements)
@@ -6640,7 +6665,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             ##end values #
             ##############
             ###sire
-            if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1,...] >0):
+            if active_p_psire[p]:
                 ##EBW (end - fleece free conceptus free)
                 ebw_sire = np.maximum(0,ebw_start_sire + ebg_sire * days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1])
                 ##EBW maximum to date
@@ -6687,7 +6712,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 ss_sire = sfun.f1_rev_update('ss', ss_sire, rev_trait_values['sire'][p])
 
             ###dams
-            if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
+            if active_p_pdams[p]:
                 ##EBW (end - fleece free conceptus free)
                 ebw_dams = np.maximum(0,ebw_start_dams + ebg_dams * days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1])
                 ##EBW maximum to date
@@ -6737,7 +6762,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
 
             ###yatf
-            if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...] >0):
+            if active_p_pyatf[p]:
                 ##EBW (end - empty body weight) - only increment the ebw in b1 slices that include yatf.
                 ebw_yatf = np.maximum(0, (ebw_start_yatf + ebg_yatf * days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1])
                                       * (nyatf_b1nwzida0e0b0xyg > 0) * (days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1] > 0))
@@ -6789,7 +6814,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
 
             ###offs
-            if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1,...] >0):
+            if active_p_poffs[p]:
                 ##EBW (end - fleece free conceptus free)
                 ebw_offs = np.maximum(0, ebw_start_offs + ebg_offs * days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1])
                 ##EBW maximum to date
@@ -6840,7 +6865,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             #store postprocessing and report vars#
             ######################################
             ###sire
-            if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1, ...] > 0):
+            if active_p_psire[p]:
                 ###create a mask used to exclude w slices in the condensing func. exclude w slices that have greater than 10% mort (no feedlot mask for sires (only for offs) because feedlotting sires doesn't indicate they are being sold).
                 ###mask for animals (slices of w) with mortality less than a threshold - True means mort is acceptable (below threshold)
                 numbers_at_condense_sire = np.broadcast_to(numbers_at_condense_sire, numbers_end_sire.shape) #required for the first condensing because condense numbers start doesn't have all the axis.
@@ -6898,7 +6923,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 o_nw_start_tpsire[:, p:p+1] = nw_start_sire
 
             ###dams
-            if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
+            if active_p_pdams[p]:
                 ###create a mask used to exclude w slices in the condensing func. exclude w slices that have greater than 10% mort  (no feedlot mask for dams (only for offs) because feedlotting dams doesn't indicate they are being sold).
                 ###mask for animals (slices of w) with mortality less than a threshold - True means mort is acceptable (below threshold)
                 numbers_at_condense_dams = np.broadcast_to(numbers_at_condense_dams, numbers_end_dams.shape) #required for the first condensing because condense numbers start doesn't have all the axis.
@@ -6994,7 +7019,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             o_relsize_start_tpyatf[:, p:p+1] = relsize_start_yatf  #used for sale value which is weaning which has 0 yatf days per period because weaning is first day (this means the relsize at weaning is actually the relsize at the start of the previous period because it doesn't recalculate once days per period goes to 0)
             r_wean_ebw_tpyatf[:, p:p+1] = ebw_w_yatf  #outside the if statement because the days_period_yatf are 0 in the weaning period because weaning is at the start of the period
             o_wean_w_tpyatf[:, p:p+1] = w_w_yatf #outside the if statement because the days_period_yatf are 0 in the weaning period because weaning is at the start of the period
-            if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...] >0):
+            if active_p_pyatf[p]:
                 ###create a mask used to exclude w slices in the condensing func. exclude w slices that have greater than 10% mort (no feedlot mask for dams (only for offs) because feedlotting dams doesn't indicate they are being sold).
                 ### The logic behind this is that the model will not want to select animals with greater than 10% mort so not point using them to determine condensed weights
 
@@ -7066,7 +7091,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
 
             ###offs
-            if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1,...] >0):
+            if active_p_poffs[p]:
                 ###create a mask used to exclude w slices in the condensing func. exclude w slices that have greater than 10% mort or have been in the feedlot.
                 ### The logic behind this is that the model will not want to select animals with greater than 10% mort so not point using them to determine condensed weights
                 ### and animals that have been in the feed lot will have been sold therefore it is not useful to include these animal in the condensing because
@@ -7160,7 +7185,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
             ##condensing - this requires end number (that have NOT been condensed)
             ###sire - currently not condensed because only one dvp but code exists in case we add the detail later.
-            if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1,...] >0):
+            if active_p_psire[p]:
                 if np.any(period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2]):
                     #add 1 if not first period of fvp because the start animals branch out.
                     exp = 0
@@ -7175,7 +7200,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
             ###dams & yatf
             #yaft don't need their own pointer they use dams since they never exist as a seperate variable. Thus also no lw distribution required.
-            if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
+            if active_p_pdams[p]:
 
 
                 if np.any(np.logical_or(np.logical_or(period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
@@ -7206,7 +7231,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     index_unique_w_dams = np.array([np.nan]) #empty array so f_start_prod still works in the early periods.
 
             ###offs
-            if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1,...] >0):
+            if active_p_poffs[p]:
 
                 if np.any(np.logical_or(period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1:p+2], period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2])):
                     #add 1 if not first period of fvp because the start animals branch out.
@@ -7229,183 +7254,195 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
             ##start production
             ###sire
-            if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1,...] >0):
+            if active_p_psire[p]:
+                ###flag if the start production needs updating (collapse/condense/season start/stubble/t reset) - if not, the
+                ### start value is the end value from this period. Calculated once for the group rather than inside every call
+                ### of f1_period_start_prod2 to reduce the overhead in the p loop.
+                update_start_sire = np.any(period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1])
                 ###EBW (start - empty body weight)
                 ebw_start_sire = sfun.f1_period_start_prod2(pointers_sire, index_unique_w_sire, ebw_sire, numbers_end_sire,
-                        p_pos, w_pos, z_pos, prejoin_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], False)
+                        p_pos, w_pos, z_pos, prejoin_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], False, update=update_start_sire)
                 ###nw (start - normal weight)	- yes this is meant to be updated from nw_start
                 nw_start_sire = sfun.f1_period_start_prod2(pointers_sire, index_unique_w_sire, nw_start_sire, numbers_end_sire,
-                                        p_pos, w_pos, z_pos, prejoin_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], False)
+                                        p_pos, w_pos, z_pos, prejoin_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], False, update=update_start_sire)
                 ###EBW maximum to date
                 ebw_max_start_sire = sfun.f1_period_start_prod2(pointers_sire, index_unique_w_sire, ebw_max_sire, numbers_end_sire,
-                                        p_pos, w_pos, z_pos, prejoin_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], False)
+                                        p_pos, w_pos, z_pos, prejoin_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], False, update=update_start_sire)
                 ###Weight of fat (start)
                 fat_start_sire = sfun.f1_period_start_prod2(pointers_sire, index_unique_w_sire, fat_sire, numbers_end_sire,
-                                        p_pos, w_pos, z_pos, prejoin_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], False)
+                                        p_pos, w_pos, z_pos, prejoin_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], False, update=update_start_sire)
                 ###Weight of muscle (start)
                 muscle_start_sire = sfun.f1_period_start_prod2(pointers_sire, index_unique_w_sire, muscle_sire, numbers_end_sire,
-                                        p_pos, w_pos, z_pos, prejoin_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], False)
+                                        p_pos, w_pos, z_pos, prejoin_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], False, update=update_start_sire)
                 ###Weight of viscera (start)
                 viscera_start_sire = sfun.f1_period_start_prod2(pointers_sire, index_unique_w_sire, viscera_sire, numbers_end_sire,
-                                        p_pos, w_pos, z_pos, prejoin_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], False)
+                                        p_pos, w_pos, z_pos, prejoin_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], False, update=update_start_sire)
                 ###Clean fleece weight (start)
                 cfw_start_sire = sfun.f1_period_start_prod2(pointers_sire, index_unique_w_sire, cfw_sire, numbers_end_sire,
-                                        p_pos, w_pos, z_pos, prejoin_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], False)
+                                        p_pos, w_pos, z_pos, prejoin_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], False, update=update_start_sire)
                 ###Clean fleece weight (start)
                 d_cfw_history_start_p2g0 = sfun.f1_period_start_prod2(pointers_sire[na,...], index_unique_w_sire[na,...], d_cfw_history_sire_p2, numbers_end_sire[na,...],
-                                        p_pos, w_pos, z_pos, prejoin_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], False)
+                                        p_pos, w_pos, z_pos, prejoin_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], False, update=update_start_sire)
                 ###Fibre length since shearing (start)
                 fl_start_sire = sfun.f1_period_start_prod2(pointers_sire, index_unique_w_sire, fl_sire, numbers_end_sire,
-                                        p_pos, w_pos, z_pos, prejoin_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], False)
+                                        p_pos, w_pos, z_pos, prejoin_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], False, update=update_start_sire)
                 ###Average FD since shearing (start)
                 fd_start_sire = sfun.f1_period_start_prod2(pointers_sire, index_unique_w_sire, fd_sire, numbers_end_sire,
-                                        p_pos, w_pos, z_pos, prejoin_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], False)
+                                        p_pos, w_pos, z_pos, prejoin_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], False, update=update_start_sire)
                 ###Minimum FD since shearing (start)
                 fd_min_start_sire = sfun.f1_period_start_prod2(pointers_sire, index_unique_w_sire, fd_min_sire, numbers_end_sire,
-                                        p_pos, w_pos, z_pos, prejoin_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], False)
+                                        p_pos, w_pos, z_pos, prejoin_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], False, update=update_start_sire)
                 ###lower critical temp (start)
                 temp_lc_start_sire = sfun.f1_period_start_prod2(pointers_sire, index_unique_w_sire, temp_lc_sire, numbers_end_sire,
-                                        p_pos, w_pos, z_pos, prejoin_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], False)
+                                        p_pos, w_pos, z_pos, prejoin_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], False, update=update_start_sire)
 
             ###dams
-            if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
+            if active_p_pdams[p]:
+                ###flag if the start production needs updating (collapse/condense/season start/stubble/t reset) - if not, the
+                ### start value is the end value from this period. Calculated once for the group rather than inside every call
+                ### of f1_period_start_prod2 to reduce the overhead in the p loop.
+                update_start_dams = (np.all(np.logical_not(np.isnan(stub_lw_idx_dams)))
+                                     or np.any(np.logical_or(np.logical_or(period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1]
+                                                                           , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1])
+                                                             , period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]))
+                                     or (np.any(period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1]) and len_gen_t1 > 1))
                 ###EBW (start - empty body weight)
                 ebw_start_dams = sfun.f1_period_start_prod2(pointers_dams, index_unique_w_dams, ebw_dams, numbers_end_dams, p_pos, w_pos, z_pos, prejoin_tup
                     , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                     , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1:p+2] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
-                    , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1, period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2])
+                    , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1, period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2], update=update_start_dams)
                 ###normal weight	- yes this is meant to be updated from nw_start
                 nw_start_dams = sfun.f1_period_start_prod2(pointers_dams, index_unique_w_dams, nw_start_dams, numbers_end_dams, p_pos, w_pos, z_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1:p+2] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
-                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2])
+                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2], update=update_start_dams)
                 ###EBW maximum to date
                 ebw_max_start_dams = sfun.f1_period_start_prod2(pointers_dams, index_unique_w_dams, ebw_max_dams,numbers_end_dams, p_pos, w_pos, z_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1:p+2] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
-                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2])
+                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2], update=update_start_dams)
                 ###Weight of fat (start)
                 fat_start_dams = sfun.f1_period_start_prod2(pointers_dams, index_unique_w_dams, fat_dams, numbers_end_dams, p_pos, w_pos, z_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1:p+2] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
-                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2])
+                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2], update=update_start_dams)
                 ###Weight of muscle (start)
                 muscle_start_dams = sfun.f1_period_start_prod2(pointers_dams, index_unique_w_dams, muscle_dams, numbers_end_dams, p_pos, w_pos, z_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1:p+2] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
-                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2])
+                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2], update=update_start_dams)
                 ###Weight of viscera (start)
                 viscera_start_dams = sfun.f1_period_start_prod2(pointers_dams, index_unique_w_dams, viscera_dams, numbers_end_dams, p_pos, w_pos, z_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1:p+2] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
-                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2])
+                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2], update=update_start_dams)
                 ###Energy in the foetus (start)
                 c_start_dams = sfun.f1_period_start_prod2(pointers_dams, index_unique_w_dams, c_dams, numbers_end_dams, p_pos, w_pos, z_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1:p+2] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
-                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2])
+                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2], update=update_start_dams)
                 ###Clean fleece weight (start)
                 cfw_start_dams = sfun.f1_period_start_prod2(pointers_dams, index_unique_w_dams, cfw_dams, numbers_end_dams, p_pos, w_pos, z_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1:p+2] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
-                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2])
+                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2], update=update_start_dams)
                 ###Clean fleece weight (start)
                 d_cfw_history_start_p2g1 = sfun.f1_period_start_prod2(pointers_dams[na,...], index_unique_w_dams[na,...], d_cfw_history_dams_p2, numbers_end_dams[na,...], p_pos, w_pos, z_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1:p+2] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , stub_lw_idx=stub_lw_idx_dams[na,...], len_gen_t=len_gen_t1, a_t_g=a_t_g1
-                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2])
+                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2], update=update_start_dams)
                 ###Fibre length since shearing (start)
                 fl_start_dams = sfun.f1_period_start_prod2(pointers_dams, index_unique_w_dams, fl_dams, numbers_end_dams, p_pos, w_pos, z_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1:p+2] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
-                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2])
+                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2], update=update_start_dams)
                 ###Average FD since shearing (start)
                 fd_start_dams = sfun.f1_period_start_prod2(pointers_dams, index_unique_w_dams, fd_dams, numbers_end_dams, p_pos, w_pos, z_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1:p+2] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
-                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2])
+                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2], update=update_start_dams)
                 ###Minimum FD since shearing (start)
                 fd_min_start_dams = sfun.f1_period_start_prod2(pointers_dams, index_unique_w_dams, fd_min_dams, numbers_end_dams, p_pos, w_pos, z_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1:p+2] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
-                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2])
+                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2], update=update_start_dams)
                 ###Lagged DR (lactation deficit)
                 ldr_start_dams = sfun.f1_period_start_prod2(pointers_dams, index_unique_w_dams, ldr_dams, numbers_end_dams, p_pos, w_pos, z_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1:p+2] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
-                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2])
+                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2], update=update_start_dams)
                 ###Loss of potential milk due to consistent under production
                 lb_start_dams = sfun.f1_period_start_prod2(pointers_dams, index_unique_w_dams, lb_dams, numbers_end_dams, p_pos, w_pos, z_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1:p+2] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
-                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2])
+                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2], update=update_start_dams)
                 ###Loss of potential milk due to consistent under production
                 rc_birth_start_dams = sfun.f1_period_start_prod2(pointers_dams, index_unique_w_dams, rc_birth_dams, numbers_end_dams, p_pos, w_pos, z_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1:p+2] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
-                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2])
+                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2], update=update_start_dams)
                 ###Weight of foetus (start)
                 w_f_start_dams = sfun.f1_period_start_prod2(pointers_dams, index_unique_w_dams, w_f_dams, numbers_end_dams, p_pos, w_pos, z_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1:p+2] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
-                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2])
+                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2], update=update_start_dams)
                 ###Weight of gravid uterus (start)
                 guw_start_dams = sfun.f1_period_start_prod2(pointers_dams, index_unique_w_dams, guw_dams, numbers_end_dams, p_pos, w_pos, z_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1:p+2] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
-                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2])
+                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2], update=update_start_dams)
                 ###Normal weight of foetus (start)
                 nw_f_start_dams = sfun.f1_period_start_prod2(pointers_dams, index_unique_w_dams, nw_f_dams, numbers_end_dams, p_pos, w_pos, z_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1:p+2] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
-                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2])
+                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2], update=update_start_dams)
                 ###Birth weight carryover (running tally of foetal weight diff)
                 cf_w_b_start_dams = sfun.f1_period_start_prod2(pointers_dams, index_unique_w_dams, cf_w_b_dams, numbers_end_dams, p_pos, w_pos, z_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1:p+2] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
-                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2])
+                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2], update=update_start_dams)
                 ###LTW CFW carryover (running tally of CFW diff)
                 cf_cfwltw_start_dams = sfun.f1_period_start_prod2(pointers_dams, index_unique_w_dams, cf_cfwltw_dams, numbers_end_dams, p_pos, w_pos, z_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1:p+2] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
-                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2])
+                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2], update=update_start_dams)
                 ###LTW FD carryover (running tally of FD diff)
                 cf_fdltw_start_dams = sfun.f1_period_start_prod2(pointers_dams, index_unique_w_dams, cf_fdltw_dams, numbers_end_dams, p_pos, w_pos, z_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1:p+2] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
-                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2])
+                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2], update=update_start_dams)
                 ##dams LTW CFW (total adjustment, calculated at birth)
                 cfw_ltwadj_start_dams = sfun.f1_period_start_prod2(pointers_dams, index_unique_w_dams, cfw_ltwadj_dams, numbers_end_dams, p_pos, w_pos, z_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1:p+2] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
-                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2])
+                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2], update=update_start_dams)
                 ##dams LTW FD (total adjustment, calculated at birth)
                 fd_ltwadj_start_dams = sfun.f1_period_start_prod2(pointers_dams, index_unique_w_dams, fd_ltwadj_dams, numbers_end_dams, p_pos, w_pos, z_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1:p+2] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
-                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2])
+                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2], update=update_start_dams)
                 # ###Carry forward conception
                 # cf_conception_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams
                 #                         , cf_conception_condensed_dams, b1_pos, p_pos, w_pos, prejoin_tup
@@ -7422,199 +7459,215 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1:p+2] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
-                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2])
+                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2], update=update_start_dams)
                 ###Dam mortality carryover (running tally of coeff * dam LW change during pregnancy)
                 cf_mort_start_damsp1p2 = sfun.f1_period_start_prod2(pointers_dams[...,na,na], index_unique_w_dams[...,na,na], cf_mort_damsp1p2
                                         , numbers_end_dams[...,na,na], p_pos-2, w_pos-2, z_pos-2, tuple(x-2 for x in prejoin_tup)
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2,...,na,na], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2,...,na,na]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1:p+2,...,na,na] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1:p+2,...,na,na]
                                         , stub_lw_idx=stub_lw_idx_dams[...,na,na], len_gen_t=len_gen_t1, a_t_g=a_t_g1[...,na,na]
-                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2,...,na,na])
+                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2,...,na,na], update=update_start_dams)
                 cf_lact_start_damsp1p2 = sfun.f1_period_start_prod2(pointers_dams[...,na,na], index_unique_w_dams[...,na,na], cf_lact_damsp1p2
                                         , numbers_end_dams[...,na,na], p_pos-2, w_pos-2, z_pos-2, tuple(x-2 for x in prejoin_tup)
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2,...,na,na], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2,...,na,na]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1:p+2,...,na,na] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1:p+2,...,na,na]
                                         , stub_lw_idx=stub_lw_idx_dams[...,na,na], len_gen_t=len_gen_t1, a_t_g=a_t_g1[...,na,na]
-                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2,...,na,na])
+                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2,...,na,na], update=update_start_dams)
                 ###CS change carryover (running tally of dam CS change in late pregnancy)
                 cf_csc_start_dams = sfun.f1_period_start_prod2(pointers_dams, index_unique_w_dams, cf_csc_dams, numbers_end_dams, p_pos, w_pos, z_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1:p+2] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
-                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2])
+                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2], update=update_start_dams)
                 ###Average FOO during lactation (for weaning weight calculation)
                 foo_lact_ave_start = sfun.f1_period_start_prod2(pointers_dams, index_unique_w_dams, foo_lact_ave, numbers_end_dams, p_pos, w_pos, z_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1:p+2] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
-                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2])
+                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2], update=update_start_dams)
                 ######lower critical temp (start)
                 temp_lc_start_dams = sfun.f1_period_start_prod2(pointers_dams, index_unique_w_dams, temp_lc_dams, numbers_end_dams, p_pos, w_pos, z_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1:p+2] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
-                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2])
+                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2], update=update_start_dams)
 
             ###yatf
-            if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...] >0):
+            if active_p_pyatf[p]:
+                ###flag if the start production needs updating. yatf use the dams pointers and period flags because they
+                ### never exist as a separate variable (see f1_period_start_prod2 calls below).
+                update_start_yatf = (np.all(np.logical_not(np.isnan(stub_lw_idx_dams)))
+                                     or np.any(np.logical_or(np.logical_or(period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1]
+                                                                           , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1])
+                                                             , period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]))
+                                     or (np.any(period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1]) and len_gen_t1 > 1))
                 ###EBW (start - fleece free conceptus free)
                 ebw_start_yatf = sfun.f1_period_start_prod2(pointers_dams, index_unique_w_dams, ebw_yatf, numbers_end_yatf, p_pos, w_pos, z_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1:p+2] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
-                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2])
+                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2], update=update_start_yatf)
                 ###normal weight	- yes this is meant to be updated from nw_start
                 nw_start_yatf = sfun.f1_period_start_prod2(pointers_dams, index_unique_w_dams, nw_start_yatf, numbers_end_yatf, p_pos, w_pos, z_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1:p+2] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
-                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2])
+                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2], update=update_start_yatf)
                 ###EBW maximum to date
                 ebw_max_start_yatf = sfun.f1_period_start_prod2(pointers_dams, index_unique_w_dams, ebw_max_yatf, numbers_end_yatf, p_pos, w_pos, z_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1:p+2] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
-                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2])
+                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2], update=update_start_yatf)
                 ###Weight of fat (start)
                 fat_start_yatf = sfun.f1_period_start_prod2(pointers_dams, index_unique_w_dams, fat_yatf, numbers_end_yatf, p_pos, w_pos, z_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1:p+2] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
-                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2])
+                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2], update=update_start_yatf)
                 ###Weight of muscle (start)
                 muscle_start_yatf = sfun.f1_period_start_prod2(pointers_dams, index_unique_w_dams, muscle_yatf, numbers_end_yatf, p_pos, w_pos, z_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1:p+2] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
-                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2])
+                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2], update=update_start_yatf)
                 ###Weight of viscera (start)
                 viscera_start_yatf = sfun.f1_period_start_prod2(pointers_dams, index_unique_w_dams, viscera_yatf, numbers_end_yatf, p_pos, w_pos, z_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1:p+2] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
-                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2])
+                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2], update=update_start_yatf)
                 ###Clean fleece weight (start)
                 cfw_start_yatf = sfun.f1_period_start_prod2(pointers_dams, index_unique_w_dams, cfw_yatf, numbers_end_yatf, p_pos, w_pos, z_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1:p+2] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
-                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2])
+                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2], update=update_start_yatf)
                 ###Clean fleece weight (start)
                 d_cfw_history_start_p2g2 = sfun.f1_period_start_prod2(pointers_dams[na,...], index_unique_w_dams[na,...], d_cfw_history_yatf_p2, numbers_end_yatf[na,...]
                                         , p_pos, w_pos, z_pos, prejoin_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2]
                                         , period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1:p+2] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , stub_lw_idx=stub_lw_idx_dams[na,...], len_gen_t=len_gen_t1, a_t_g=a_t_g1
-                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2])
+                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2], update=update_start_yatf)
                 ###Fibre length since shearing (start)
                 fl_start_yatf = sfun.f1_period_start_prod2(pointers_dams, index_unique_w_dams, fl_yatf, numbers_end_yatf, p_pos, w_pos, z_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1:p+2] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
-                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2])
+                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2], update=update_start_yatf)
                 ###Average FD since shearing (start)
                 fd_start_yatf = sfun.f1_period_start_prod2(pointers_dams, index_unique_w_dams, fd_yatf, numbers_end_yatf, p_pos, w_pos, z_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1:p+2] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
-                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2])
+                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2], update=update_start_yatf)
                 ###Minimum FD since shearing (start)
                 fd_min_start_yatf = sfun.f1_period_start_prod2(pointers_dams, index_unique_w_dams, fd_min_yatf, numbers_end_yatf, p_pos, w_pos, z_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1:p+2] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
-                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2])
+                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2], update=update_start_yatf)
                 ##yatf birth weight
                 w_b_start_yatf = sfun.f1_period_start_prod2(pointers_dams, index_unique_w_dams, w_b_yatf, numbers_end_yatf, p_pos, w_pos, z_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1:p+2] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
-                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2])
+                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2], update=update_start_yatf)
                 ##yatf wean weight
                 ebw_w_start_yatf = sfun.f1_period_start_prod2(pointers_dams, index_unique_w_dams, ebw_w_yatf, numbers_end_yatf, p_pos, w_pos, z_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1:p+2] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
-                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2])
+                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2], update=update_start_yatf)
                 ###lower critical temp (start)
                 temp_lc_start_yatf = sfun.f1_period_start_prod2(pointers_dams, index_unique_w_dams, temp_lc_yatf, numbers_end_yatf, p_pos, w_pos, z_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1:p+2] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
-                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2])
+                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2], update=update_start_yatf)
             ###offs
-            if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1,...] >0):
+            if active_p_poffs[p]:
+                ###flag if the start production needs updating (collapse/condense/season start/stubble/t reset) - if not, the
+                ### start value is the end value from this period. Calculated once for the group rather than inside every call
+                ### of f1_period_start_prod2 to reduce the overhead in the p loop.
+                ###offs uses slices (not indexing) because the offs p axis can be shorter than the dams p axis. In the final
+                ### offs period p+1 is beyond the end of the axis, and a slice returns an empty array (i.e. no update) rather than an IndexError.
+                update_start_offs = (np.all(np.logical_not(np.isnan(stub_lw_idx_offs)))
+                                     or np.any(np.logical_or(period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2]
+                                                             , period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1:p+2]))
+                                     or (np.any(period_is_startdvp_pa1e1b1nwzida0e0b0xyg3[p+1:p+2]) and len_gen_t3 > 1))
                 ###EBW (start - empty body weight)
                 ebw_start_offs = sfun.f1_period_start_prod2(pointers_offs, index_unique_w_offs, ebw_offs, numbers_end_offs, p_pos, w_pos, z_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1:p+2]
                                         , stub_lw_idx=stub_lw_idx_offs, len_gen_t=len_gen_t3, a_t_g=a_t_g3
-                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3[p+1:p+2])
+                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3[p+1:p+2], update=update_start_offs)
                 ###normal weight	- yes this is meant to be updated from nw_start
                 nw_start_offs = sfun.f1_period_start_prod2(pointers_offs, index_unique_w_offs, nw_start_offs, numbers_end_offs, p_pos, w_pos, z_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1:p+2]
                                         , stub_lw_idx=stub_lw_idx_offs, len_gen_t=len_gen_t3, a_t_g=a_t_g3
-                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3[p+1:p+2])
+                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3[p+1:p+2], update=update_start_offs)
                 ###EBW maximum to date
                 ebw_max_start_offs = sfun.f1_period_start_prod2(pointers_offs, index_unique_w_offs, ebw_max_offs, numbers_end_offs, p_pos, w_pos, z_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1:p+2]
                                         , stub_lw_idx=stub_lw_idx_offs, len_gen_t=len_gen_t3, a_t_g=a_t_g3
-                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3[p+1:p+2])
+                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3[p+1:p+2], update=update_start_offs)
                 ###Weight of fat (start)
                 fat_start_offs = sfun.f1_period_start_prod2(pointers_offs, index_unique_w_offs, fat_offs, numbers_end_offs, p_pos, w_pos, z_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1:p+2]
                                         , stub_lw_idx=stub_lw_idx_offs, len_gen_t=len_gen_t3, a_t_g=a_t_g3
-                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3[p+1:p+2])
+                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3[p+1:p+2], update=update_start_offs)
                 ###Weight of muscle (start)
                 muscle_start_offs = sfun.f1_period_start_prod2(pointers_offs, index_unique_w_offs, muscle_offs, numbers_end_offs, p_pos, w_pos, z_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1:p+2]
                                         , stub_lw_idx=stub_lw_idx_offs, len_gen_t=len_gen_t3, a_t_g=a_t_g3
-                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3[p+1:p+2])
+                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3[p+1:p+2], update=update_start_offs)
                 ###Weight of viscera (start)
                 viscera_start_offs = sfun.f1_period_start_prod2(pointers_offs, index_unique_w_offs, viscera_offs, numbers_end_offs, p_pos, w_pos, z_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1:p+2]
                                         , stub_lw_idx=stub_lw_idx_offs, len_gen_t=len_gen_t3, a_t_g=a_t_g3
-                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3[p+1:p+2])
+                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3[p+1:p+2], update=update_start_offs)
                 ###Clean fleece weight (start)
                 cfw_start_offs = sfun.f1_period_start_prod2(pointers_offs, index_unique_w_offs, cfw_offs, numbers_end_offs, p_pos, w_pos, z_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1:p+2]
                                         , stub_lw_idx=stub_lw_idx_offs, len_gen_t=len_gen_t3, a_t_g=a_t_g3
-                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3[p+1:p+2])
+                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3[p+1:p+2], update=update_start_offs)
                 ###Clean fleece weight (start)
                 d_cfw_history_start_p2g3 = sfun.f1_period_start_prod2(pointers_offs[na,...], index_unique_w_offs[na,...], d_cfw_history_offs_p2, numbers_end_offs[na,...]
                                         , p_pos, w_pos, z_pos, prejoin_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2]
                                         , period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1:p+2], stub_lw_idx=stub_lw_idx_offs[na,...]
-                                        , len_gen_t=len_gen_t3, a_t_g=a_t_g3, period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3[p+1:p+2])
+                                        , len_gen_t=len_gen_t3, a_t_g=a_t_g3, period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3[p+1:p+2], update=update_start_offs)
                 ###Fibre length since shearing (start)
                 fl_start_offs = sfun.f1_period_start_prod2(pointers_offs, index_unique_w_offs, fl_offs, numbers_end_offs, p_pos, w_pos, z_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1:p+2]
                                         , stub_lw_idx=stub_lw_idx_offs, len_gen_t=len_gen_t3, a_t_g=a_t_g3
-                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3[p+1:p+2])
+                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3[p+1:p+2], update=update_start_offs)
                 ###Average FD since shearing (start)
                 fd_start_offs = sfun.f1_period_start_prod2(pointers_offs, index_unique_w_offs, fd_offs, numbers_end_offs, p_pos, w_pos, z_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1:p+2]
                                         , stub_lw_idx=stub_lw_idx_offs, len_gen_t=len_gen_t3, a_t_g=a_t_g3
-                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3[p+1:p+2])
+                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3[p+1:p+2], update=update_start_offs)
                 ###Minimum FD since shearing (start)
                 fd_min_start_offs = sfun.f1_period_start_prod2(pointers_offs, index_unique_w_offs, fd_min_offs, numbers_end_offs, p_pos, w_pos, z_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1:p+2]
                                         , stub_lw_idx=stub_lw_idx_offs, len_gen_t=len_gen_t3, a_t_g=a_t_g3
-                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3[p+1:p+2])
+                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3[p+1:p+2], update=update_start_offs)
                 ###lower critical temp (start)
                 temp_lc_start_offs = sfun.f1_period_start_prod2(pointers_offs, index_unique_w_offs, temp_lc_offs, numbers_end_offs, p_pos, w_pos, z_pos, prejoin_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1:p+2]
                                         , stub_lw_idx=stub_lw_idx_offs, len_gen_t=len_gen_t3, a_t_g=a_t_g3
-                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3[p+1:p+2])
+                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3[p+1:p+2], update=update_start_offs)
 
 
             ##start numbers - has to be after production because the numbers are being calced for the current period and are used in the start production function
             ## doesn't have to use condensed numbers because we are only interested in the start vs end numbers of a dvp (using condensed numbers would still work).
-            if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1,...] >0):
+            if active_p_psire[p]:
                 numbers_start_sire, temp1 = sfun.f1_period_start_nums(numbers_end_sire, prejoin_tup, z_pos
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], season_propn_zida0e0b0xyg, group=0)
                 ###numbers at the beginning of fvp 0 (used to calc mort for the lw patterns to determine the lowest feasible level - used in the start prod func)
                 numbers_at_condense_sire = fun.f_update(numbers_at_condense_sire, numbers_start_sire, False) #currently sire don't have any fvp
 
-            if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1,...] >0):
+            if active_p_pdams[p]:
                 numbers_start_dams, numbers_available_mating_dams = sfun.f1_period_start_nums(numbers_end_dams
                         , prejoin_tup, z_pos, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2]
                         , season_propn_zida0e0b0xyg, group=1, numbers_available=numbers_available_mating_dams
@@ -7636,11 +7689,11 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                         , prevperiod_is_wean=previousperiod_is_wean_pa1e1b1nwzida0e0b0xyg2[p+1:p+2], group=2
                                         , len_gen_t=len_gen_t1, a_t_g=a_t_g1, period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2])
                 ###numbers at the beginning of fvp 0 (used to calc mort for the lw patterns to determine the lowest feasible level - used in the start prod func)
-                if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1, ...] > 0):
+                if active_p_pyatf[p]:
                     numbers_at_condense_yatf = fun.f_update(numbers_at_condense_yatf, numbers_start_yatf
                                                            , period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2])
 
-            if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1,...] >0):
+            if active_p_poffs[p]:
                 numbers_start_offs, temp1 = sfun.f1_period_start_nums(numbers_end_offs, prejoin_tup, z_pos
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2], season_propn_zida0e0b0xyg, group=3
                                         , len_gen_t=len_gen_t3, a_t_g=a_t_g3, period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3[p+1:p+2])
@@ -7652,7 +7705,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             ##the optimal feedsupply is generated for a given start weight. However, in the trial where the pkl'd optimal FS is used the start animal may be different because of any SA applied.
             ##The code below compares the start animal when the FS was created with the current start animal and selects a weighted average of the pkl FS based on starting weight.
             ##e.g. if the current start animal is 50kgs but the pkl start weights are 45kg and 55kg, the optimal fs for the current start animal will be 50% of the pkl fs for each start weight.
-            if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1, ...] > 0):
+            if active_p_pdams[p]:
                 if sinp.structuralsa['i_fs_use_pkl']:
                     ###update the fs startw allocation - at period_is_condense
                     if np.any(period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]): #using p+1 because this is being calculated at the end of the loop for next period.
@@ -7680,7 +7733,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 if np.any(period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]) and sinp.structuralsa['i_fs_create_pkl']:
                     pkl_condensed_values['dams'][p]['ebw_dams'] = ebw_start_dams #start of next period ie this is condensed ebw
 
-            if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1, ...] > 0):
+            if active_p_poffs[p]:
                 if sinp.structuralsa['i_fs_use_pkl']:
                     ###update the fs startw allocation - at period_is_condense
                     if np.any(period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1:p+2]):

@@ -3148,7 +3148,7 @@ def f_mortality_progeny_EL(cu6, cb1, cx, cf_value, lw, lwc, cv_lw, foo, chill_in
 
 def f1_period_start_prod2(pointers, index_unique_w, var, numbers, p_pos, w_pos, z_pos, prejoin_tup, period_is_startseason,
                           period_is_condense, period_is_prejoin=0, stub_lw_idx=np.array(np.nan),
-                          len_gen_t=1, a_t_g=0, period_is_startdvp=False):
+                          len_gen_t=1, a_t_g=0, period_is_startdvp=False, update=True):
     '''
     Adjust production for next period.
 
@@ -3159,9 +3159,15 @@ def f1_period_start_prod2(pointers, index_unique_w, var, numbers, p_pos, w_pos, 
     An extra step occurs if generating for stubble. For stubble the function selects the starting animal for the
     next period based on animal liveweight compare to the stubble trial. The animals that have the closest lw
     to the paddock trial become the starting animals next period.
+
+    :param update: False if the caller has already determined that none of the adjustments below are required this
+                   period (no stubble, collapse, condense, season start or t reset). Used to save the overhead of
+                   repeating those checks for every production variable in the generator p loop.
     '''
     ##Set variable level = value at end of previous
     var_start = var
+    if not update:
+        return var_start
 
     ##for stubble index the w axis to make the starting animal for the next period
     #if generating for stubble then no collapse
