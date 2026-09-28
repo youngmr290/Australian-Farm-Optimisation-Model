@@ -472,7 +472,6 @@ def create_sa():
     sam['pi_pw'] = 1.0                                #Potential intake post weaning
     sam['kg_yatf'] = 1.0                              #energy efficiency of yatf
     sam['mr_yatf'] = 1.0                              #Maintenance requirement of yatf
-    sam['pi_yatf'] = 1.0                              #Potential intake of yatf
     sam['LTW_dams'] = 1.0                       #adjust impact of lifetime wool fleece effects
     sam['LTW_offs'] = 1.0                       #adjust impact of lifetime wool fleece effects
     sam['pi_post_adult'] = 1.0                        #Post loop potential intake of adults (zf2==1)
@@ -492,6 +491,7 @@ def create_sa():
     ##SAP
     sap['evg'] = 0.0               #energy content of liveweight gain - this is a high level sa, it impacts within a calculation not on an input. It was only implemented on adults now all animals
     sap['mortalityb'] = 0.0        #Scale the calculated base mortality (for all animals) - this is a high level sa, it impacts within a calculation not on an input
+    sap['pi_yatf'] = 0.0           #Potential intake of yatf
     sap['kg_post_adult'] = 0.0           #Post loop energy efficiency of adults (zf2==1)
     sap['kg_post_yatf'] = 0.0           #Post loop energy efficiency of yatf
     sap['mr_post_adult'] = 0.0           #Post loop maintenance requirement of adults (zf2==1)

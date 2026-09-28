@@ -781,7 +781,7 @@ def f1_history(history, new_value, days_in_period):
 
 
 def f_potential_intake_cs(ci, srw, relsize_start, rc_start, temp_lc, temp_ave, temp_max, temp_min, rain_intake, rev_trait_value
-                          , rc_birth_start=1, pi_age_y=0, lb_start=0, piyf=1, period_between_birthwean=1, sam_pi=1):
+                          , rc_birth_start=1, pi_age_y=0, lb_start=0, piyf=1, period_between_birthwean=1, sam_pi=1, sap_pi=0):
     '''Parameters:
         ci:
         srw:
@@ -799,6 +799,7 @@ def f_potential_intake_cs(ci, srw, relsize_start, rc_start, temp_lc, temp_ave, t
         piyf:
         period_between_birthwean:
         sam_pi: sensitivity multiplier on PI. Applied as an intermediate SAM so that it can be differentially applied by age
+        sap_pi: sensitivity proportion on PI (0 is no change). Applied as an intermediate SAP (used for yatf)
 
     Return:
         pi: daily potential intake
@@ -823,7 +824,7 @@ def f_potential_intake_cs(ci, srw, relsize_start, rc_start, temp_lc, temp_ave, t
     ##Temperature factor on PI
     pitf = np.minimum(1, pitf_high) * np.maximum(1, pitf_low)
     ##Potential intake
-    pi = ci[1, ...] * srw * piz * picf * pitf * pilf * sam_pi
+    pi = ci[1, ...] * srw * piz * picf * pitf * pilf * sam_pi * (1 + sap_pi)
     ##Potential intake of pasture - young at foot only. Note milk intake is not removed because PI of yatf is for solids
     pi = pi * piyf     # milk DM intake = mp2 / cl[6, ...] * cl[25, ...]
     ##Potential intake of pasture - young at foot only
@@ -834,7 +835,7 @@ def f_potential_intake_cs(ci, srw, relsize_start, rc_start, temp_lc, temp_ave, t
 
 
 def f_potential_intake_mu(ci, srw, relsize_start, rc_start, temp_lc, temp_ave, temp_max, temp_min, rain_intake, rev_trait_value
-                          , rc_birth_start=1, pi_age_y=0, lb_start=0, piyf=1, period_between_birthwean=1, sam_pi=1):
+                          , rc_birth_start=1, pi_age_y=0, lb_start=0, piyf=1, period_between_birthwean=1, sam_pi=1, sap_pi=0):
     '''Copy of f_potential_intake_cs() but with different coefficients for PI and the effect of varying z.
     Parameters:
         ci:
@@ -853,6 +854,7 @@ def f_potential_intake_mu(ci, srw, relsize_start, rc_start, temp_lc, temp_ave, t
         piyf:
         period_between_birthwean:
         sam_pi: sensitivity multiplier on PI. Applied as an intermediate SAM so that it can be differentially applied by age
+        sap_pi: sensitivity proportion on PI (0 is no change). Applied as an intermediate SAP (used for yatf)
 
     Return:
         pi: daily potential intake
@@ -877,7 +879,7 @@ def f_potential_intake_mu(ci, srw, relsize_start, rc_start, temp_lc, temp_ave, t
     ##Temperature factor on PI
     pitf = np.minimum(1, pitf_high) * np.maximum(1, pitf_low)
     ##Potential intake
-    pi = ci[21, ...] * srw * piz * picf * pitf * pilf * sam_pi
+    pi = ci[21, ...] * srw * piz * picf * pitf * pilf * sam_pi * (1 + sap_pi)
     ##Potential intake of pasture - young at foot only. Note milk intake is not removed because PI of yatf is for solids
     pi = pi * piyf     # milk DM intake = mp2 / cl[6, ...] * cl[25, ...]
     ##Potential intake of pasture - young at foot only

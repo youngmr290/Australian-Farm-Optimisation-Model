@@ -395,7 +395,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         uinp.parameters['i_cw_c2'][idx] = fun.f_sa(uinp.parameters['i_cw_c2'][idx], sen.saa['yfd_scalar'], 2)
         idx = fun.f_slice_idx(uinp.parameters['i_cl_c2'], {0: [0]})
         uinp.parameters['i_cl_c2'][idx] = fun.f_sa(uinp.parameters['i_cl_c2'][idx], sen.saa['milk_yield'], 2)
-        sen.sam['pi_yatf'] = fun.f_sa(sen.sam['pi_yatf'], sen.saa['milk_yield'], 2)  #increase yatf PI (pasture as well as milk)
+        sen.sap['pi_yatf'] = fun.f_sa(sen.sap['pi_yatf'], sen.saa['milk_yield'], 2)  #increase yatf PI (pasture as well as milk)
         idx = fun.f_slice_idx(uinp.parameters['i_cx_c2'], {0: [1]})
         uinp.parameters['i_cx_c2'][idx] = fun.f_sa(uinp.parameters['i_cx_c2'][idx].astype(float), sen.saa['growth_constant'], 2)
         idx = fun.f_slice_idx(uinp.parameters['i_ci_c2'], {0: [2]})   #slice 2 CFS coefficient
@@ -2915,12 +2915,12 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                         * np.exp(cl_cpdams[3, ..., na] * (1 - lmm_pa1e1b1nwzida0e0b0xyg1p0))
                                                 , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg2p0, axis = -1)
     ##Suckling volume pattern. Includes genotype scalar for milk yield (cl[0]) but excludes SA for potential intake of the young at foot
-    ### Separating gives flexibility for inclusion of PI of pasture in the Wwt calibration by adjusting sam['pi_yatf'].
+    ### Separating gives flexibility for inclusion of PI of pasture in the Wwt calibration by adjusting sap['pi_yatf'].
     ## Average for the days that the dam is lactating
     mp2_age_y_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(cl_cpyatf[0, ..., na] * nyatf_b1nwzida0e0b0xyg[...,na]
                                         * cl_cpdams[6, ..., na] * (cl_cpdams[12, ..., na] + cl_cpdams[13, ..., na]
                                         * np.exp(-cl_cpdams[14, ..., na] * age_p0_pa1e1b1nwzida0e0b0xyg2p0))
-                                                , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg2p0, axis = -1)   # * sen.sam['pi_yatf']
+                                                , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg2p0, axis = -1)   # * (1 + sen.sap['pi_yatf'])
     ##Pattern of conception efficiency (doy). Different methods are used to represent seasonality in the 3 conception functions
     ### cpg_doy_cs is for the GrazPlan equations to predict the seasonal effect on proportion greater than conception rate - active b1 axis
     cpg_doy_cs_pa1e1b1nwzida0e0b0xyg1 = np.nanmean(np.maximum(0,1 - cb1_cpdams[1, ..., na]
@@ -5603,7 +5603,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 ### Creation of a new variable is to be consistent with adults
                 sam_kg_yatf = sen.sam['kg_yatf']    # unlike adults this is not dependent on zf2.
                 sam_mr_yatf = sen.sam['mr_yatf']
-                sam_pi_yatf = sen.sam['pi_yatf']
+                sap_pi_yatf = sen.sap['pi_yatf']
 
 
             ##potential intake - yatf
@@ -5617,7 +5617,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                         , temp_min_pa1e1b1nwzida0e0b0xyg[p:p+1], rain_intake_pa1e1b1nwzida0e0b0xyg2[p:p+1]
                                         , rev_trait_values['yatf'][p], piyf = piyf_pa1e1b1nwzida0e0b0xyg2[p:p+1]
                                         , period_between_birthwean = period_between_birthwean_pa1e1b1nwzida0e0b0xyg1[p:p+1]
-                                        , sam_pi = sam_pi_yatf)
+                                        , sap_pi = sap_pi_yatf)
                     if eqn_used:
                         pi_yatf = temp0
                     if eqn_compare:
@@ -5633,7 +5633,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                         , temp_min_pa1e1b1nwzida0e0b0xyg[p:p+1], rain_intake_pa1e1b1nwzida0e0b0xyg2[p:p+1]
                                         , rev_trait_values['yatf'][p], piyf = piyf_pa1e1b1nwzida0e0b0xyg2[p:p+1]
                                         , period_between_birthwean = period_between_birthwean_pa1e1b1nwzida0e0b0xyg1[p:p+1]
-                                        , sam_pi = sam_pi_yatf)
+                                        , sap_pi = sap_pi_yatf)
                     if eqn_used:
                         pi_yatf = temp0
                     if eqn_compare:
