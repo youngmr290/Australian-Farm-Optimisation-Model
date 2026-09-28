@@ -109,7 +109,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         w = np.nan  #fleece growth prior to weaning is not carried forward to shearing
         p = coefficients_c[j]; j += 1
         y = coefficients_c[j]; j += 1
-        # sen.saa['ycfw_scalar'] = coefficients_c[j]; j += 1    #YCFW scalar, cw_dams[25] parameter which scales SFW
+        sen.saa['ycfw_scalar'] = coefficients_c[j]; j += 1    #YCFW scalar, cw_dams[25] parameter which scales SFW
         h = coefficients_c[j]; j += 1
         a = coefficients_c[j]; j += 1
         sen.saa['sfw_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
@@ -120,36 +120,36 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         w = np.nan  #fleece growth prior to weaning is not carried forward to shearing
         p = coefficients_c[j]; j += 1
         y = coefficients_c[j]; j += 1
-        # sen.saa['yfd_scalar'] = coefficients_c[j]; j += 1    #YFD scalar, cw_dams[26] parameter which scales SFD
+        sen.saa['yfd_scalar'] = coefficients_c[j]; j += 1    #YFD scalar, cw_dams[26] parameter which scales SFD
         h = coefficients_c[j]; j += 1
         a = coefficients_c[j]; j += 1
         sen.saa['sfd_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
-        # #Intrinsic staple strength, cw[16] parameter
-        # ##SS is calibrated manually to reduce the number of coefficients in the DE. It does not interact with other traits.
+        #Intrinsic staple strength, cw[16] parameter
+        ##SS is calibrated manually to reduce the number of coefficients in the DE. It does not interact with other traits.
         w = p = y = h = a = None
-        # w = np.nan  #fleece growth prior to weaning is not carried forward to shearing
-        # p = coefficients_c[j]; j += 1
-        # y = coefficients_c[j]; j += 1
-        # h = coefficients_c[j]; j += 1
-        # a = coefficients_c[j]; j += 1
+        w = np.nan  #fleece growth prior to weaning is not carried forward to shearing
+        p = coefficients_c[j]; j += 1
+        y = coefficients_c[j]; j += 1
+        h = coefficients_c[j]; j += 1
+        a = coefficients_c[j]; j += 1
         sen.saa['iss_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         #Follicle number to calibrate staple length, cw[11] parameter
         ##SL is calibrated for A and carried back.
         w = p = y = h = a = None
         w = np.nan  #fleece growth prior to weaning is not carried forward to shearing
-        # p = coefficients_c[j]; j += 1
-        # y = coefficients_c[j]; j += 1
-        # h = coefficients_c[j]; j += 1
-        # a = coefficients_c[j]; j += 1
+        p = coefficients_c[j]; j += 1
+        y = coefficients_c[j]; j += 1
+        h = coefficients_c[j]; j += 1
+        a = coefficients_c[j]; j += 1
         sen.saa['follicles_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         #Conception, cb1[24,25&26, 0:] parameter
         ##Conception only for adult stage
         w = p = y = h = a = None
-        # w =
-        # p = coefficients_c[j]; j += 1   #the Y joining is occurring during the post-wean age stage
+        w = np.nan
+        p = coefficients_c[j]; j += 1   #the Y joining is occurring during the post-wean age stage
         y = np.nan
         h = coefficients_c[j]; j += 1   #the A2 joining is occurring during the hogget age stage
         a = coefficients_c[j]; j += 1
@@ -158,8 +158,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         #Litter size, cb1[24,25&26, 2:] parameter
         ##Litter size only for adult stage
         w = p = y = h = a = None
-        # w =
-        # p = coefficients_c[j]; j += 1   #the Y joining is occurring during the post-wean age stage
+        w = np.nan
+        p = coefficients_c[j]; j += 1   #the Y joining is occurring during the post-wean age stage
         y = np.nan
         h = coefficients_c[j]; j += 1   #the A2 joining is occurring during the hogget age stage
         a = coefficients_c[j]; j += 1
@@ -168,9 +168,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         #Ewe rearing ability/lamb survival, cu6[8, -1] & cu2[8, -1] parameters
         ##Ewe rearing ability only for adult stage
         w = p = y = h = a = None
-        # w =
-        # p = np.nan  #post-wean is not a reproducing age group
-        # y = coefficients_c[j]; j += 1
+        w = np.nan
+        p = np.nan  #post-wean is not a reproducing age group
+        y = coefficients_c[j]; j += 1
         h = np.nan
         a = coefficients_c[j]; j += 1
         sen.saa['era_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
@@ -178,15 +178,14 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         #Standard reference weight coefficient adjustments can be linked to target LW or to an estimate of SRW from ALW & Fat %
         ##WT at younger ages can be calibrated by SRW age stage coefficients or by adjusting milk yield and the growth constant
         w = p = y = h = a = None
-        # sen.saa['birth_weight'] = coefficients_c[j]; j += 1    #Birth weight, #todo still to decide how to control BWT
+        # sen.saa['birth_weight'] = coefficients_c[j]; j += 1    #Birth weight no method to calibrate, #todo still to decide how to control BWT
         w = np.nan  #wwt is changed with a separate coefficient
         sen.saa['milk_yield'] = coefficients_c[j]; j += 1    #Weaning weight, cl_yatf[0] parameter which alters milk production, lamb milk intake and ewe PI during lactation
         p = coefficients_c[j]; j += 1
         y = coefficients_c[j]; j += 1   #ywt can be changed using the growth constant
-        # sen.saa['growth_constant'] = coefficients_c[j]; j += 1    #Yearling weight, cn_dams[1] parameter which alters the growth path
+        sen.saa['growth_constant'] = coefficients_c[j]; j += 1    #Yearling weight, cn_dams[1] parameter which alters the growth path
         h = coefficients_c[j]; j += 1
-        # a = coefficients_c[j]; j += 1
-        # srw_parameter += a  #actual parameter value for srw (for reporting & calculating Fat% at SRW)
+        a = coefficients_c[j]; j += 1
         sen.saa['srw_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         #Potential intake to calibrate Carcase fatness & WBE, ci[1] parameter
@@ -194,15 +193,15 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         w = np.nan  #intake pre-weaning is handled with the cl[0] parameter, which is intake of milk
         p = coefficients_c[j]; j += 1
         y = coefficients_c[j]; j += 1
-        # sen.saa['pi_z_constant'] = coefficients_c[j]; j += 1    #ci[22] parameter which alters the scaling of PI by z
-        h = np.nan  #no hfat
+        sen.saa['pi_z_constant'] = coefficients_c[j]; j += 1    #ci[22] parameter which alters the scaling of PI by z
+        h = coefficients_c[j]; j += 1  #no hfat
         a = coefficients_c[j]; j += 1  #np.nan when SRW is an active calibration coefficient
         sen.saa['pi_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         #EVG to calibrate Whole body energy, cg[8&9] parameters
         w = p = y = h = a = None
-        # w =
-        # p =
+        # w = np.nan   # no method to calibrate
+        # p = np.nan   # no method to calibrate
         # y = np.nan  #WBE is currently only an adult trait, but hogget is also changed.
         h = np.nan  #hogget is changed if HWT is not in the BO objective.
         a = coefficients_c[j]; adult_evg = cg8 + a; j += 1  #  assign a value to adult EVG for endogenous calculation of SRW.
@@ -211,18 +210,18 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         #Basal survival, cd[1] parameter
         w = p = y = h = a = None
         w = np.nan  #survival of yatf is represented through ewe rearing ability (era)
-        # p = coefficients_c[j]; j += 1
-        # y = coefficients_c[j]; j += 1
-        # h = coefficients_c[j]; j += 1
-        # a = coefficients_c[j]; j += 1  #adult survival can also be represented in peri-natal survival
+        p = coefficients_c[j]; j += 1
+        y = coefficients_c[j]; j += 1
+        h = coefficients_c[j]; j += 1
+        a = coefficients_c[j]; j += 1  #adult survival can also be represented in peri-natal survival
         sen.saa['bsurv_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         #Peri-natal survival, cu2[23, -1] parameter
         # w = p = y = h = a = None
-        # w =
-        # p =
-        # y = coefficients_c[j]; j += 1
-        h = np.nan  #ERA is a Y & A trait
+        # w = np.nan   #pn_surv is not a trait for non reproducing dams
+        p = np.nan   #pn_surv is not a trait for non reproducing dams
+        y = coefficients_c[j]; j += 1
+        h = np.nan  #peri-natal survival is a Y & A trait
         a = coefficients_c[j]; j += 1
         sen.saa['pnsurv_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
@@ -402,15 +401,6 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         uinp.parameters['i_ci_c2'][idx] = fun.f_sa(uinp.parameters['i_ci_c2'][idx], sen.saa['pi_z_constant'], 2)
         idx = fun.f_slice_idx(uinp.parameters['i_ci_c2'], {0: [22]})   #slice 22 GFS coefficient
         uinp.parameters['i_ci_c2'][idx] = fun.f_sa(uinp.parameters['i_ci_c2'][idx], sen.saa['pi_z_constant'], 2)
-
-    # else:   #not calibrate_trait_values
-    #     ## assign the zero values to the saa coefficients (for printing later).
-    #     ### coefficients and traits need to align with the numbers in the inversion (code above and below)
-    #     ### A source of the values is the analysis definitions in [Calibration_controls.xlsx]
-    #     n_coeff = 15  #Values for reporting arrays when not doing inversion (align with the code below)
-    #     n_traits = 11
-    #     coefficients_c = np.zeros(n_coeff)
-    #     calibration_targets_p = np.zeros (n_traits)
 
 
     ######################
@@ -8009,7 +7999,6 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         iss_std = iss_std_dams.item()
         iss_p11 = iss_std + sen.saa['iss_p11']
         b=1; w=2; p=3; y=4; h=5; a2=6; a3=7; a4=8; a5=9 # set the slice numbers in the saa_p11 arrays (a is using the a3 slice)
-
         pfd_min = np.min(fun.f_slice(o_d_fd_tpdams, p_flc_slc, default=0))
         pss = pfd_min ** 2 / pfd ** 2 * iss_p11[p]
         yfd_min = np.min(fun.f_slice(o_d_fd_tpdams, y_flc_slc, default=0))
@@ -8181,12 +8170,12 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         a4surv = 1- np.sum(fun.f_slice(o_mortality_dams, a4_flc_slc, default=0))
         a5surv = 1- np.sum(fun.f_slice(o_mortality_dams, a5_flc_slc, default=0))
         asurv = (a2surv + a3surv + a4surv + a5surv) / 4
-        # psurv = 0    # fun.f_divide(np.sum(o_numbers_start_tpdams[0,312,0,:,:,0,0,0,0,0,0,0,0,0,0,0])           #Mortality of ewes from yearling shearing to 5.5yo BTRT 11
-        #              #       , np.sum(o_numbers_start_tpdams[0,104,0,:,:,0,0,0,0,0,0,0,0,0,0,0]))
-        # ysurv = 0    # fun.f_divide(np.sum(o_numbers_start_tpdams[0,312,0,:,:,0,0,0,0,0,0,0,0,0,0,0])           #Mortality of ewes from yearling shearing to 5.5yo BTRT 11
-        #              #       , np.sum(o_numbers_start_tpdams[0,104,0,:,:,0,0,0,0,0,0,0,0,0,0,0]))
-        # hsurv = 0    # fun.f_divide(np.sum(o_numbers_start_tpdams[0,312,0,:,:,0,0,0,0,0,0,0,0,0,0,0])           #Mortality of ewes from yearling shearing to 5.5yo BTRT 11
-        #              #       , np.sum(o_numbers_start_tpdams[0,104,0,:,:,0,0,0,0,0,0,0,0,0,0,0]))
+        # psurv = fun.f_divide(np.sum(o_numbers_start_tpdams[0,312,0,:,:,0,0,0,0,0,0,0,0,0,0,0])           #Survival of ewes from yearling shearing to 5.5yo BTRT 11
+        #                      , np.sum(o_numbers_start_tpdams[0,104,0,:,:,0,0,0,0,0,0,0,0,0,0,0]))
+        # ysurv = fun.f_divide(np.sum(o_numbers_start_tpdams[0,312,0,:,:,0,0,0,0,0,0,0,0,0,0,0])           #Survival of ewes from yearling shearing to 5.5yo BTRT 11
+        #                      , np.sum(o_numbers_start_tpdams[0,104,0,:,:,0,0,0,0,0,0,0,0,0,0,0]))
+        # hsurv = fun.f_divide(np.sum(o_numbers_start_tpdams[0,312,0,:,:,0,0,0,0,0,0,0,0,0,0,0])           #Survival of ewes from yearling shearing to 5.5yo BTRT 11
+        #                      , np.sum(o_numbers_start_tpdams[0,104,0,:,:,0,0,0,0,0,0,0,0,0,0,0])
         ya5surv = fun.f_divide(np.sum(o_numbers_start_tpdams[0,312,0,:,:,0,0,0,0,0,0,0,0,0,0,0])           #Cumulative survival of ewes from yearling shearing to 5.5yo BTRT 11
                            , np.sum(o_numbers_start_tpdams[0,104,0,:,:,0,0,0,0,0,0,0,0,0,0,0]))
 
@@ -8374,21 +8363,21 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             logger.debug(f"HSL target {hsl_target} this {hsl} with (follicles={sen.saa['follicles_p11'][h]})")
             logger.debug(f"ASL target {asl_target} this {asl} with (follicles={sen.saa['follicles_p11'][a]})")
             logger.debug(f"2yo={a2sl} 3yo={a3sl} 4yo={a4sl} 5yo={a5sl}")
-            # logger.debug(f"YCON target {ycon_target} this {ycon} with ({sen.saa['con_p11'][y]})")
+            logger.debug(f"YCON target {ycon_target} this {ycon} with ({sen.saa['con_p11'][y]})")
             logger.debug(f"A2CON target {a2con_target} this {a2con} with ({sen.saa['con_p11'][h]})")   #A2CON is active at the hogget age stage
             logger.debug(f"ACON target {acon_target} this {acon} with ({sen.saa['con_p11'][a]})")
             logger.debug(f"3yo={a3con} 4yo={a5con} 5yo={a5con}")
-            # logger.debug(f"YLS target {yls_target} this {yls} with ({sen.saa['ls_p11'][y]})")
+            logger.debug(f"YLS target {yls_target} this {yls} with ({sen.saa['ls_p11'][y]})")
             logger.debug(f"A2LS target {a2ls_target} this {a2ls} with ({sen.saa['ls_p11'][h]})")   #A2LS is active at the hogget age stage
             logger.debug(f"ALS target {als_target} this {als} with ({sen.saa['ls_p11'][a]})")
             logger.debug(f"3yo={a3ls} 4yo={a4ls} 5yo={a5ls}")
-            # logger.debug(f"YERA target {yera_target} this {yera} with ({sen.saa['era_p11'][y]})")
+            logger.debug(f"YERA target {yera_target} this {yera} with ({sen.saa['era_p11'][y]})")
             logger.debug(f"AERA target {aera_target} this {aera} with ({sen.saa['era_p11'][a]})")
             logger.debug(f"2yo={a2era} 3yo={a3era} 4yo={a4era} 5yo={a5era}")
-            # logger.debug(f"YERA twins target {yera2_target} this {yera2} with ({sen.saa['era_p11'][y]})")
+            logger.debug(f"YERA twins target {yera2_target} this {yera2} with ({sen.saa['era_p11'][y]})")
             logger.debug(f"AERA twins target {aera2_target} this {aera2} with ({sen.saa['era_p11'][a]})")
             logger.debug(f"2yo={a2era2} 3yo={a3era2} 4yo={a4era2} 5yo={a5era2}")
-            # logger.debug(f"BWT target {bwt_target} this {bwt} with (srw_p11={sen.saa['srw_p11'][b]})")
+            logger.debug(f"BWT target {bwt_target} this {bwt} with (srw_p11={sen.saa['srw_p11'][b]})")
             logger.debug(f"WWT target {wwt_target} this {wwt} with (srw_p11={sen.saa['srw_p11'][w]} & milk_scalar={sen.saa['milk_yield']})")
             logger.debug(f"PWT target {pwt_target} this {pwt} with (srw_p11={sen.saa['srw_p11'][p]})")
             logger.debug(f"YWT target {ywt_target} this {ywt} with (srw_p11={sen.saa['srw_p11'][y]}, k={sen.saa['growth_constant']} & PI={sen.saa['pi_p11'][y]})")
@@ -8397,25 +8386,25 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             logger.debug(f"2yo={a2wt} 3yo={a3wt} 4yo={a4wt} 5yo={a5wt}")
             logger.debug(f"PFAT target {pfat_target} this {pfat} with (PI={sen.saa['pi_p11'][p]})")
             logger.debug(f"YFAT target {yfat_target} this {yfat} with (PI={sen.saa['pi_p11'][y]} & pi_z={sen.saa['pi_z_constant']})")
-            # logger.debug(f"HFAT target {hfat_target} this {hfat} with (PI={sen.saa['pi_p11'][h]})")
-            # logger.debug(f"AFAT target {afat_target} this {afat} with (PI={sen.saa['pi_p11'][a]})")
-            # logger.debug(f"2yo={a2fat} 3yo={a3fat} 4yo={a4fat} 5yo={a5fat}")
-            # logger.debug(f"WCS target {wcs_target} this {wcs} with (PI={sen.saa['pi_p11'][w]})")
-            # logger.debug(f"PCS target {pcs_target} this {pcs} with (PI={sen.saa['pi_p11'][p]})")
-            # logger.debug(f"YCS target {ycs_target} this {ycs} with (PI={sen.saa['pi_p11'][y]})")
-            # logger.debug(f"HCS target {hcs_target} this {hcs} with (PI={sen.saa['pi_p11'][h]})")
-            # logger.debug(f"ACS target {acs_target} this {acs} with (PI={sen.saa['pi_p11'][a]})")
-            # logger.debug(f"2yo={a2cs} 3yo={a3cs} 4yo={a4cs} 5yo={a5cs}")
-            # logger.debug(f"PWBE target {pwbe_target} this {pwbe} with (EVG={sen.saa['evg_p11'][p]} & PI={sen.saa['pi_p11'][p]})")
-            # logger.debug(f"YWBE target {ywbe_target} this {ywbe} with (EVG={sen.saa['evg_p11'][y]} & PI={sen.saa['pi_p11'][y]})")
-            # logger.debug(f"HWBE target {hwbe_target} this {hwbe} with (EVG={sen.saa['evg_p11'][h]} & PI={sen.saa['pi_p11'][h]})")
+            logger.debug(f"HFAT target {hfat_target} this {hfat} with (PI={sen.saa['pi_p11'][h]})")
+            logger.debug(f"AFAT target {afat_target} this {afat} with (PI={sen.saa['pi_p11'][a]})")
+            logger.debug(f"2yo={a2fat} 3yo={a3fat} 4yo={a4fat} 5yo={a5fat}")
+            logger.debug(f"WCS target {wcs_target} this {wcs} with (PI={sen.saa['pi_p11'][w]})")
+            logger.debug(f"PCS target {pcs_target} this {pcs} with (PI={sen.saa['pi_p11'][p]})")
+            logger.debug(f"YCS target {ycs_target} this {ycs} with (PI={sen.saa['pi_p11'][y]})")
+            logger.debug(f"HCS target {hcs_target} this {hcs} with (PI={sen.saa['pi_p11'][h]})")
+            logger.debug(f"ACS target {acs_target} this {acs} with (PI={sen.saa['pi_p11'][a]})")
+            logger.debug(f"2yo={a2cs} 3yo={a3cs} 4yo={a4cs} 5yo={a5cs}")
+            logger.debug(f"PWBE target {pwbe_target} this {pwbe} with (EVG={sen.saa['evg_p11'][p]} & PI={sen.saa['pi_p11'][p]})")
+            logger.debug(f"YWBE target {ywbe_target} this {ywbe} with (EVG={sen.saa['evg_p11'][y]} & PI={sen.saa['pi_p11'][y]})")
+            logger.debug(f"HWBE target {hwbe_target} this {hwbe} with (EVG={sen.saa['evg_p11'][h]} & PI={sen.saa['pi_p11'][h]})")
             logger.debug(f"AWBE target {awbe_target} this {awbe} with (EVG={sen.saa['evg_p11'][a]} & PI={sen.saa['pi_p11'][a]})")
             logger.debug(f"2yo={a2wbe} 3yo={a3wbe} 4yo={a4wbe} 5yo={a5wbe}")
             logger.debug(f"Estimated Fat% when ALW = SRW, {fat_at_srw} with (SRW_actual={srw_actual}, ALW={awt}, Fat%={awbe} & EVG={cg8})")
             logger.debug(f"Estimated SRW when Fat% = {srwfat_yg1[0,0]*100}, {srw_from_fat} with (ALW={awt}, Fat%={awbe} & EVG={cg8})")
-            # logger.debug(f"PSURV target {psurv_target} this {psurv} with ({sen.saa['bsurv_p11'][p]})")
-            # logger.debug(f"YSURV target {ysurv_target} this {ysurv} with ({sen.saa['bsurv_p11'][y]})")
-            # logger.debug(f"HSURV target {hsurv_target} this {hsurv} with ({sen.saa['bsurv_p11'][h]})")
+            logger.debug(f"PSURV target {psurv_target} this {psurv} with ({sen.saa['bsurv_p11'][p]})")
+            logger.debug(f"YSURV target {ysurv_target} this {ysurv} with ({sen.saa['bsurv_p11'][y]})")
+            logger.debug(f"HSURV target {hsurv_target} this {hsurv} with ({sen.saa['bsurv_p11'][h]})")
             logger.debug(f"ASURV target {asurv_target} this {asurv} with (Base={sen.saa['bsurv_p11'][a]} & PN={sen.saa['pnsurv_p11'][a]})")
             logger.debug(f"2yo={a2surv} 3yo={a3surv} 4yo={a4surv} 5yo={a5surv}")
             logger.debug(f"Y-A5SURV target {ya5surv_target} this {ya5surv} with (Base={sen.saa['bsurv_p11'][a]} & PN={sen.saa['pnsurv_p11'][a]})")
