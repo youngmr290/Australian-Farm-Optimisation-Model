@@ -63,9 +63,12 @@ except (IndexError, AttributeError):
 
 ##configure logging as early as possible (before StockGenerator's logger.debug() calls can fire) so
 ## calibration runs suppress StockGenerator debug output while report runs show it.
+## stream=sys.stdout so log lines share the print() stream and stay in order (stderr and stdout are
+## buffered separately so the obj print could otherwise appear in the middle of the trait output).
 logging.basicConfig(
+    stream=sys.stdout,
     level=logging.WARNING if RUN_CALIBRATION else logging.DEBUG,
-    format='%(processName)s %(name)s %(levelname)s: %(message)s'
+    format='%(processName)s %(name)s %(levelname)s: %(message)s' if RUN_CALIBRATION else '%(message)s'
 )
 
 # Optimisation controls. Team multiprocessing always uses one worker per team;
