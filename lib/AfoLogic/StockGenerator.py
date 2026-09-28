@@ -2144,6 +2144,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     saa = sfun.f1_saa_p11_to_p(sen.saa['follicles_p11'], scalar_psirep11)
     cw_p_cpsire[11] += saa
     ###dams
+    iss_std_dams = cw_cpdams[16, ...]  #iss before the age stage saa (cw_cpdams is overwritten with the p slice in the generator loop). Used for the calibration SS traits
     saa = sfun.f1_saa_p11_to_p(sen.saa['iss_p11'], scalar_pdamsp11)
     target_shape = np.broadcast_shapes(cw_cpdams.shape, saa.shape)
     cw_p_cpdams = np.broadcast_to(cw_cpdams, target_shape).copy()
@@ -8004,22 +8005,25 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         afd = (a2fd + a3fd + a4fd + a5fd) / 4
 
         ##SS values. Note: minimum cross-sectional area / average cross-sectional area
-        iss = cw_cpdams[16, ...].item()
+        ###iss for each age stage is the maximum expression of the age stage saa, i.e. iss_std + iss_p11
+        iss_std = iss_std_dams.item()
+        iss_p11 = iss_std + sen.saa['iss_p11']
+        b=1; w=2; p=3; y=4; h=5; a2=6; a3=7; a4=8; a5=9 # set the slice numbers in the saa_p11 arrays (a is using the a3 slice)
 
         pfd_min = np.min(fun.f_slice(o_d_fd_tpdams, p_flc_slc, default=0))
-        pss = pfd_min ** 2 / pfd ** 2 * iss
+        pss = pfd_min ** 2 / pfd ** 2 * iss_p11[p]
         yfd_min = np.min(fun.f_slice(o_d_fd_tpdams, y_flc_slc, default=0))
-        yss = yfd_min ** 2 / yfd ** 2 * iss
+        yss = yfd_min ** 2 / yfd ** 2 * iss_p11[y]
         hfd_min = np.min(fun.f_slice(o_d_fd_tpdams, h_flc_slc, default=0))
-        hss = hfd_min ** 2 / hfd ** 2 * iss
+        hss = hfd_min ** 2 / hfd ** 2 * iss_p11[h]
         a2fd_min = np.min(fun.f_slice(o_d_fd_tpdams, a2_flc_slc, default=0))
-        a2ss = a2fd_min ** 2 / a2fd ** 2 * iss
+        a2ss = a2fd_min ** 2 / a2fd ** 2 * iss_p11[a2]
         a3fd_min = np.min(fun.f_slice(o_d_fd_tpdams, a3_flc_slc, default=0))
-        a3ss = a3fd_min ** 2 / a3fd ** 2 * iss
+        a3ss = a3fd_min ** 2 / a3fd ** 2 * iss_p11[a3]
         a4fd_min = np.min(fun.f_slice(o_d_fd_tpdams, a4_flc_slc, default=0))
-        a4ss = a4fd_min ** 2 / a4fd ** 2 * iss
+        a4ss = a4fd_min ** 2 / a4fd ** 2 * iss_p11[a4]
         a5fd_min = np.min(fun.f_slice(o_d_fd_tpdams, a5_flc_slc, default=0))
-        a5ss = a5fd_min ** 2 / a5fd ** 2 * iss
+        a5ss = a5fd_min ** 2 / a5fd ** 2 * iss_p11[a5]
         ass = (a2ss + a3ss + a4ss + a5ss) / 4
 
         ##SL values. Note: sum of fibre length * staple length factor
