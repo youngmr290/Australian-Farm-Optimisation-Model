@@ -6,6 +6,7 @@ import os
 
 from ..AfoLogic import ReportFunctions as rfun
 from ..AfoLogic import relativeFile
+from ..AfoLogic import Functions as fun
 
 #todo should be able to simplify this module using loops with a couple of additions for the unique reports ie writing to excel needs to be different for reports where multiple tables are written to the same sheet. Maybe loop over all report that are standard then do the weird ones by hand after.
 def f_create_report_dfs(non_exist_trials):
@@ -725,19 +726,10 @@ def f_save_reports(report_run, reports, processor):
     except (IndexError, ValueError) as e: #in case no arg passed to python
         exp_group = None
 
-    ##first check that Excel is not open (Microsoft puts a lock on files, so they can't be updated from elsewhere while open)
-    report_file_path = relativeFile.find(__file__, "../../Output", f"Report{processor}_{exp_group}.xlsx")
-    if os.path.isfile(report_file_path): #to check if report.xl exists
-        while True:   # repeat until the try statement succeeds
-            try:
-                myfile = open(report_file_path,"w") # chucks an error if Excel file is open
-                break                             # exit the loop
-            except IOError:
-                input("Could not open file! Please close Excel. Press Enter to retry.")
-                # restart the loop
-
     ## Create a Pandas Excel writer using XlsxWriter as the engine. used to write to multiple sheets in Excel
-    writer = pd.ExcelWriter(report_file_path, engine='xlsxwriter')
+    ## If the file is open in Excel (Microsoft puts a lock on files) the user is prompted to close it
+    report_file_path = relativeFile.find(__file__, "../../Output", f"Report{processor}_{exp_group}.xlsx")
+    writer = fun.f_excel_writer(report_file_path)
 
     ##make empty df to store row and col index settings. Used when combining multiple report.xl
     df_settings = pd.DataFrame(columns=['index', 'cols'])

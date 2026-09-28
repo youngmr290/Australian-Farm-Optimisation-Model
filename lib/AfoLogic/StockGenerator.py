@@ -13012,18 +13012,10 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             # df_calcH = rfun.f_numpy2df(array_calcH, keys_bp3, [1], [0])
 
             print("Writing to Excel")
-            ##first check that Excel is not open (Microsoft puts a lock on files, so they can't be updated from elsewhere while open)
-            report_file_path = relativeFile.find(__file__, "../../Output", excel_filename)
-            if os.path.isfile(report_file_path):  #to check if report.xl exists
-                while True:  # repeat until the try statement succeeds
-                    try:
-                        myfile = open(report_file_path, "w")  # chucks an error if Excel file is open
-                        break  # exit the loop
-                    except IOError:
-                        input("Could not open file! Please close Excel. Press Enter to retry.")
-                        # restart the loop
             ## Create a Pandas Excel writer using XlsxWriter as the engine. used to write to multiple sheets in Excel
-            writer = pd.ExcelWriter(report_file_path, engine='xlsxwriter')
+            ## If the file is open in Excel (Microsoft puts a lock on files) the user is prompted to close it
+            report_file_path = relativeFile.find(__file__, "../../Output", excel_filename)
+            writer = fun.f_excel_writer(report_file_path)
             ## simple write df to xl
             col_a = 0  #column for df_a
             col_b = 5  #column for df_b with blank column in between

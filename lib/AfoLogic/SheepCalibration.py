@@ -335,7 +335,8 @@ def build_context(targets_tp, weights_p, bestbet_tc, bnd_lo_tc, bnd_up_tc, n_coe
     }
 
 
-def write_calibration_results(df_targets_tp, df_bnd_lo_tc, df_bnd_up_tc, keys_t, keys_c, results, n_teams_total=None):
+def write_calibration_results(df_targets_tp, df_bnd_lo_tc, df_bnd_up_tc, keys_t, keys_c, results, n_teams_total=None
+                              , wait_if_open=True):
     n_teams = len(keys_t) if n_teams_total is None else n_teams_total
     n_coef = len(keys_c)
     coefficients_tc = np.zeros((n_teams, n_coef))
@@ -359,8 +360,14 @@ def write_calibration_results(df_targets_tp, df_bnd_lo_tc, df_bnd_up_tc, keys_t,
     message = pd.DataFrame(message_t, index=keys_t, columns=["Message"])
 
     ### Write to Excel
+    ###if the file is open in Excel: the outcome depends on the flag 'wait if open'.
+    ### skip if False (the next write includes all results so far), otherwise wait for the user to close Excel
     calibration_path = relativeFile.findExcel('CalibrationResults.xlsx')
-    with pd.ExcelWriter(calibration_path, engine='xlsxwriter') as writer:
+    writer = fun.f_excel_writer(calibration_path, wait_if_open)
+    if writer is None:
+        print(f"Warning: could not write {calibration_path} (probably open in Excel). It will be re-written when the next team finishes.")
+        return False
+    with writer:
         df_targets_tp.to_excel(writer, "Targets", index=True, header=True, startrow=0, startcol=1)
         coefficients.to_excel(writer, "Coefficients", index=True, header=True, startrow=0, startcol=1)
         success.to_excel(writer, "Coefficients", index=False, header=True, startrow=0, startcol=n_coef+2)
@@ -369,6 +376,7 @@ def write_calibration_results(df_targets_tp, df_bnd_lo_tc, df_bnd_up_tc, keys_t,
         message.to_excel(writer, "Coefficients", index=False, header=True, startrow=0, startcol=n_coef+5)
         df_bnd_lo_tc.to_excel(writer, "Low", index=True, header=True, startrow=0, startcol=1)
         df_bnd_up_tc.to_excel(writer, "High", index=True, header=True, startrow=0, startcol=1)
+    return True
 
 
 def main():
@@ -459,9 +467,8 @@ def main():
                     try:
                         for result in pool.imap_unordered(run_calibration_for_team_worker, teams, chunksize=1):
                             results.append(result)
-                            write_calibration_results(
-                                df_targets_tp, df_bnd_lo_tc, df_bnd_up_tc, keys_t, keys_c, results, n_teams_total=n_teams
-                            )
+                            write_calibration_results(df_targets_tp, df_bnd_lo_tc, df_bnd_up_tc, keys_t, keys_c
+                                                      , results, n_teams_total=n_teams, wait_if_open=False)
                     except KeyboardInterrupt:
                         print("\nKeyboardInterrupt received — terminating worker processes...")
                         pool.terminate()
@@ -476,11 +483,11 @@ def main():
                     results.append(result)
                     time_list.append(timer())
                     print(f"Team {t} time {time_list[-1] - time_list[-2]:0.4f}secs")
-                    write_calibration_results(
-                        df_targets_tp, df_bnd_lo_tc, df_bnd_up_tc, keys_t, keys_c, results, n_teams_total=n_teams
-                    )
+                    write_calibration_results(df_targets_tp, df_bnd_lo_tc, df_bnd_up_tc, keys_t, keys_c
+                                              , results, n_teams_total=n_teams, wait_if_open=False)
 
-            write_calibration_results(df_targets_tp, df_bnd_lo_tc, df_bnd_up_tc, keys_t, keys_c, results)
+            write_calibration_results(df_targets_tp, df_bnd_lo_tc, df_bnd_up_tc, keys_t, keys_c
+                                      , results, wait_if_open=True)
 
             time_list.append(timer())
             time_elapsed = time_list[-1] - time_list[0]
@@ -526,7 +533,7 @@ def main():
         if data:
             traits_to_save = pd.DataFrame(data).T
             trait_file_path = relativeFile.find(__file__, "../../Output", "TraitValues.xlsx")
-            with pd.ExcelWriter(trait_file_path, engine='xlsxwriter') as writer:
+            with fun.f_excel_writer(trait_file_path) as writer:
                 traits_to_save.to_excel(writer, sheet_name='Traits', index=True, header=True)
             print(f'Trait values written to {trait_file_path}. Note: Optimisation is not being carried out')
         else:

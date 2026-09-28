@@ -1576,6 +1576,26 @@ def build_active_index(
     return active
 
 
+def f_excel_writer(path, wait_if_open=True):
+    '''Create a pandas ExcelWriter (xlsxwriter engine), handling the file being open in Excel.
+
+    Excel locks a file while it is open, so creating the writer raises PermissionError. Uncaught, that ends the run
+    (and in SheepCalibration terminates all the teams still being calibrated).
+
+    :param path: path of the Excel file to write.
+    :param wait_if_open: True: prompt the user to close Excel and retry until the writer is created.
+                         False: return None so the caller can skip this write and carry on.
+    :return: ExcelWriter, or None if the file is open and wait_if_open is False.
+    '''
+    while True:
+        try:
+            return pd.ExcelWriter(path, engine='xlsxwriter')
+        except PermissionError:
+            if not wait_if_open:
+                return None
+            input(f"Could not write {path}! Please close Excel. Press Enter to retry.")
+
+
 def write_variablesummary(model, trial_name, obj, option=0, property_id=''):
     '''
 
