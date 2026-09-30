@@ -88,7 +88,7 @@ DISP = True
 # reach an equivalent final precision.
 POLISH = True
 TOL = 0.05
-ATOL = 0.05   #If the trait weights are 100 * estimated EV then SQRT(Obj) is the error in the EV of the target trait
+ATOL = 0.01   #If the trait weights are 100 * estimated EV then SQRT(Obj) is the error in the EV of the target trait
 
 worker_context = {}
 
