@@ -70,10 +70,12 @@ if __name__=="__main__":
     from lib.AfoLogic import relativeFile
 
     import logging
+    ##WARNING for third-party libraries (pyomo/matplotlib DEBUG output bloats the log) but DEBUG for AFO's own loggers
     logging.basicConfig(
-        level=logging.DEBUG,
+        level=logging.WARNING,
         format='%(name)s %(levelname)s: %(message)s'
     )
+    logging.getLogger('lib').setLevel(logging.DEBUG)
 
     na = np.newaxis
 

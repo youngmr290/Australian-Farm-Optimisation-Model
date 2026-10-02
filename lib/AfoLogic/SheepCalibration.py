@@ -65,11 +65,13 @@ except (IndexError, AttributeError):
 ## calibration runs suppress StockGenerator debug output while report runs show it.
 ## stream=sys.stdout so log lines share the print() stream and stay in order (stderr and stdout are
 ## buffered separately so the obj print could otherwise appear in the middle of the trait output).
+## root is WARNING so third-party libraries (pyomo/matplotlib) stay quiet; AFO's own loggers (under 'lib') are DEBUG for report runs.
 logging.basicConfig(
     stream=sys.stdout,
-    level=logging.WARNING if RUN_CALIBRATION else logging.DEBUG,
+    level=logging.WARNING,
     format='%(processName)s %(name)s %(levelname)s: %(message)s' if RUN_CALIBRATION else '%(message)s'
 )
+logging.getLogger('lib').setLevel(logging.WARNING if RUN_CALIBRATION else logging.DEBUG)
 
 # Optimisation controls. Team multiprocessing always uses one worker per team;
 # single-team mode can use workers within scipy's differential_evolution.

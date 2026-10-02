@@ -1,10 +1,12 @@
 import time
 import pandas as pd
 import logging
+##WARNING for third-party libraries (pyomo/matplotlib DEBUG output bloats the log) but DEBUG for AFO's own loggers
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.WARNING,
     format='%(name)s %(levelname)s: %(message)s'
 )
+logging.getLogger('lib').setLevel(logging.DEBUG)
 
 #report the clock time that the experiment was started
 print(f'Experiment commenced at: {time.ctime()}')

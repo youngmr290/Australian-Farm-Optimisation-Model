@@ -3,10 +3,12 @@ from timeit import default_timer as timer
 import sys
 import os
 import logging
+##WARNING for third-party libraries (pyomo/matplotlib DEBUG output bloats the log) but DEBUG for AFO's own loggers
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.WARNING,
     format='%(name)s %(levelname)s: %(message)s'
 )
+logging.getLogger('lib').setLevel(logging.DEBUG)
 
 time_list = [] ; time_was = []
 time_list.append(timer()) ; time_was.append("start")
