@@ -5064,6 +5064,8 @@ def f1_create_pp11_scalar(age_p, age_stage_p11):
     Result has a p axis for generator period and p11 axis for age stage.
     Values are maximum (1) from 1/4 to 3/4 of this age stage. There is a ramp up from 0 to 1 from 3/4 of previous
      age stage to 1/4 of this age stage, and ramp down from 3/4 of this age to 1/4 of the following age stage.
+    Age stages with zero duration (end age not greater than the previous end age, e.g. unused slices with end = 0)
+     have a scalar of 0 so that an saa value in those slices has no effect.
 
     :param age_p: Age in days in each generator period.
     :param age_stage_p11: Age in days at end of the age stage for the target trait.
@@ -5090,6 +5092,8 @@ def f1_create_pp11_scalar(age_p, age_stage_p11):
     ramp_down = np.clip(fun.f_divide(days_down, duration_down), 0, 1)
 
     scalar_pp11 = ramp_up - ramp_down
+    #Zero duration age stages have no effect (otherwise the div0 handling in f_divide gives a scalar of 1 at all ages)
+    scalar_pp11 = scalar_pp11 * (duration > 0)
     return scalar_pp11
 
 
