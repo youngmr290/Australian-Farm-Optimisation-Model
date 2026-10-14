@@ -987,17 +987,36 @@ def f1_weight_energy_conversion(cg, option, weight=None, energy=None):
     return result
 
 
-def f1_adipose_propn(cg, evg):
+def f1_tissue_energy(cg):
     '''
-    proportion of fat in LW gain (% by wet weight), determined from the EVG based on mass & energy balance
+    Energy content (MJ/kg wet weight) of adipose tissue and of lean tissue (muscle & viscera combined).
     :param cg: Numpy array, sim parameters - weight change.
-    :param evg: Numpy array, energy value of the gain (MJ/kg empty body weight - wet weight).
+    :return: adipose_energy, mv_energy
     '''
     adipose_energy = cg[20, ...] * cg[26, ...]   #MJ per kg of adipose tissue (wet)
     # muscle_energy = cg[21, ...] * cg[27, ...]   # calculation only allowing for muscle and excluding the viscera component
     ##energy content averaged across muscle & viscera (wet) (See Working13 pg32 for derivation)
     mv_energy = (cg[21, ...] * cg[27, ...] * (1 + cg[38, ...] / (1 - cg[38, ...]))
                    / (1 + (cg[38, ...] * cg[21, ...] * cg[27, ...]) / ((1 - cg[38, ...]) * cg[22, ...] * cg[28, ...])))
+    return adipose_energy, mv_energy
+
+def f1_evg_bound(cg, evg):
+    '''
+    Limit EVG to the range that is achievable from the tissue energy contents, i.e. between gain that is all lean
+    (muscle & viscera) and gain that is all adipose. Outside this range the proportion of fat in the gain is < 0 or > 1.
+    :param cg: Numpy array, sim parameters - weight change.
+    :param evg: Numpy array, energy value of the gain (MJ/kg empty body weight - wet weight).
+    '''
+    adipose_energy, mv_energy = f1_tissue_energy(cg)
+    return np.clip(evg, mv_energy, adipose_energy)
+
+def f1_adipose_propn(cg, evg):
+    '''
+    proportion of fat in LW gain (% by wet weight), determined from the EVG based on mass & energy balance
+    :param cg: Numpy array, sim parameters - weight change.
+    :param evg: Numpy array, energy value of the gain (MJ/kg empty body weight - wet weight).
+    '''
+    adipose_energy, mv_energy = f1_tissue_energy(cg)
     adipose_propn = (evg - mv_energy) / (adipose_energy - mv_energy)
     return adipose_propn
 
@@ -1006,6 +1025,7 @@ def f1_fat_propn_initial(cg, cb0, relsize, fat_propn_birth):
     Proportion of fat in the empty body (by wet weight) at a given relative size, consistent with the EVG parameters.
     Whole body energy is accumulated from birth by integrating EVG over relative size, assuming a constant level of
     feeding and rc <= 1 (so zf2 = 0). zf1 is logistic so the integral has a closed form (see [Growth curve & partitioning.xlsx]).
+    EVG is floored at the energy content of lean (as in f1_evg_bound) for the small relative sizes where zf1 is high.
     Values are per kg of EBW at SRW, so the SRW and the EBW/LW ratio cancel.
 
     :param cg: Numpy array, sim parameters - weight change.
@@ -1026,11 +1046,21 @@ def f1_fat_propn_initial(cg, cb0, relsize, fat_propn_birth):
     ##Integral of zf1 with respect to relative size. zf1 = 1 / (1 + exp(cg4 * (z - cg5)))
     def f_zf1_integral(z):
         return z - np.logaddexp(0, cg[4, ...] * (z - cg[5, ...])) / cg[4, ...]
-    ##Whole body energy at relsize (MJ per kg of EBW at SRW). EVG = cg8 - zf1 * (cg9 - cg10 * (level - 1))
-    wbe = (relsize_birth * wbe_birth + cg[8, ...] * (relsize - relsize_birth)
-           - (cg[9, ...] - cg[10, ...] * (level - 1)) * (f_zf1_integral(relsize) - f_zf1_integral(relsize_birth)))
+    ##Relative size below which EVG = cg8 - zf1 * evg_slope is less than lean_energy (zf1 > zf1_floor) so EVG is floored.
+    ### If zf1_floor >= 1 EVG is never below the floor; if zf1_floor <= 0 it is always below the floor.
+    ### If evg_slope <= 0 (unrealistic) EVG is treated as always below the floor if cg8 < lean_energy, otherwise never.
+    evg_slope = cg[9, ...] - cg[10, ...] * (level - 1)
+    with np.errstate(divide='ignore', invalid='ignore'):
+        zf1_floor = (cg[8, ...] - lean_energy) / evg_slope
+        relsize_floor = cg[5, ...] + np.log(1 / zf1_floor - 1) / cg[4, ...]
+    relsize_floor = np.where(zf1_floor >= 1, -np.inf, np.where(zf1_floor <= 0, np.inf, relsize_floor))
+    relsize_floor = np.where(evg_slope <= 0, np.where(cg[8, ...] < lean_energy, np.inf, -np.inf), relsize_floor)
+    relsize_floor = np.clip(relsize_floor, relsize_birth, relsize)
+    ##Whole body energy at relsize (MJ per kg of EBW at SRW). Lean only up to relsize_floor then EVG = cg8 - zf1 * evg_slope
+    wbe = (relsize_birth * wbe_birth + lean_energy * (relsize_floor - relsize_birth) + cg[8, ...] * (relsize - relsize_floor)
+           - evg_slope * (f_zf1_integral(relsize) - f_zf1_integral(relsize_floor)))
     ##Proportion of fat from mass & energy balance, remainder is lean which is split to muscle & viscera
-    fat_propn = (wbe / relsize - lean_energy) / (fat_energy - lean_energy)
+    fat_propn = np.clip((wbe / relsize - lean_energy) / (fat_energy - lean_energy), 0, 1)
     muscle_propn = (1 - fat_propn) * (1 - cg[39, ...])
     viscera_propn = (1 - fat_propn) * cg[39, ...]
     return fat_propn, muscle_propn, viscera_propn
@@ -1851,6 +1881,8 @@ def f_lwc_cs(cg, rc_start, mei, mem, new, zf1, zf2, kg, kw, age, rev_trait_value
     evg = cg8 - zf1 * (cg9 - cg[10, ...] * (level - 1)) + zf2 * cg[11, ...] * (rc_start - 1)
     ## Scale based on zf2. zf2 increases from 0 to 1 as z increases from 0.9 to 0.97
     evg = fun.f_sa(evg, sen.sap['evg'], 1)   # * zf2, 1)
+    ## Limit EVG to the range between all lean & all adipose (so the proportion of fat in the gain is between 0 & 1)
+    evg = f1_evg_bound(cg, evg)
     # ##Process the EVG REV: if EVG is not the target trait overwrite trait value with value from the dictionary or update the REV dictionary
     # evg = f1_rev_update('evg', evg, rev_trait_value)
     #Protein content of gain (kg/kg EBW) (some uncertainty for sign associated with zf2.
@@ -2004,6 +2036,8 @@ def f_lwc_mu(cg, ck, rc_start, mei_initial, nem_ee, km, hp_mei, new, kw, zf1, zf
     evg = cg8 - zf1 * (cg9 - cg[10, ...] * (level - 1)) + zf2 * cg[11, ...] * (rc_start - 1)
     ## SA on EVG based on zf2. zf2 increases from 0 to 1 as z increases from 0.9 to 0.97
     evg_prior = fun.f_sa(evg, sen.sap['evg'], 1)     # * zf2, 1)
+    ## Limit EVG to the range between all lean & all adipose (so the proportion of fat in the gain is between 0 & 1)
+    evg_prior = f1_evg_bound(cg, evg_prior)
     ##Process the EVG REV: if EVG is not the target trait overwrite trait value with value from the dictionary or update the REV dictionary
     evg = f1_rev_update('evg', evg_prior, rev_trait_value)
     ## proportion of fat in EBW gain (% by wet weight)
