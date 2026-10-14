@@ -528,7 +528,7 @@ def create_sa():
     sar['feedsupply_r1jp'] = np.zeros(pinp.feedsupply['i_feedsupply_options_r1j2p'].shape, dtype='float64')  #SA value for feedsupply.
 
     #####################
-    ##stock parameters  #
+    ##stock parameters  #todo some of these SA parameters are c1c3c2 but it is not in the name. uinp.xl also need updating
     #####################
     ##SAV
     sav['srw_c2'] = np.full(uinp.parameters['i_srw_c2'].shape, '-', dtype=object)  #SA value for srw of each c2 genotype.
@@ -542,6 +542,7 @@ def create_sa():
     sav['cg_c1c2'] = np.full(uinp.parameters['i_cg_c2'].shape, '-', dtype=object)  #weight gain params for genotypes.
     sav['cd_c1c2'] = np.full(uinp.parameters['i_cd_c2'].shape, '-', dtype=object)  #mortality params for genotypes.
     sav['ck_c1c2'] = np.full(uinp.parameters['i_ck_c2'].shape, '-', dtype=object)  #energy efficiency params.
+    sav['cm_c1c2'] = np.full(uinp.parameters['i_cm_c2'].shape, '-', dtype=object)    #maintenance energy params.
     sav['cb0_c1c2'] = np.full(uinp.parameters['i_cb0_c2'].shape, '-', dtype=object)  #birth type params for genotypes.
     sav['cl0_c1c2'] = np.full(uinp.parameters['i_cl0_c2'].shape, '-', dtype=object)  #litter size params for genotypes.
     sav['cu2_c1c2'] = np.full(uinp.parameters['i_cu2_c2'].shape, '-', dtype=object)  #lamb survival params for genotypes.
@@ -557,7 +558,9 @@ def create_sa():
     ##SAP
     ##SAA
     saa['sfd_c2'] = 0.0              #std fibre diameter genotype params
+    saa['sfw_c2'] = np.zeros(uinp.parameters['i_sfw_c2'].shape, dtype='float64')  #std fleece weight genotype params
     saa['srw_c2'] = 0.0              #std reference weight genotype params
+    saa['bvcfw_c2'] = 0.0            #BV for clean fleece weight params
     saa['cg_c1c2'] = np.zeros(uinp.parameters['i_cg_c2'].shape, dtype='float64')  #SA value for weight gain params.
     saa['ck_c1c2'] = np.zeros(uinp.parameters['i_ck_c2'].shape, dtype='float64')  #SA value for energy efficiency params.
     saa['cl0_c1c2'] = np.zeros(uinp.parameters['i_cl0_c2'].shape, dtype='float64')  #SA value for litter size genotype params.
@@ -577,7 +580,7 @@ def create_sa():
     sav['calib_atol'] = '-'          #SA to alter the DE absolute convergence tolerance in SheepCalibration.py
 
     ##SAA on slices of the livestock parameters using the age stage axis
-    saa['sfw_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')         #SA value with age stages for clean fleece weight (sfw)
+    saa['bvcfw_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')       #SA value with age stages for clean fleece weight (sfw)
     saa['sfd_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')         #SA value with age stages for fibre diameter (sfd)
     saa['iss_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')         #SA value with age stages for staple strength (cw[16])
     saa['follicles_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')   #SA value with age stages for staple length (cw[11])

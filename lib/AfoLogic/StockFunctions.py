@@ -1089,17 +1089,35 @@ def f_egraze(cm, lw, i_steepness, density, foo, confinement, intake_f, dmd):
     return egraze
 
 
-def f_energy_cs(cx, cm, lw, ffcfw, mr_age, mei, km, i_steepness, density, foo, confinement, intake_f, dmd
+def f_ewool(cm, sfw, bv_cfw):
+    '''Calculate the increase in maintenance requirement linked to an increase in the breeding value for CFW.
+    cm[28] is in units of MJ/d per kg of CFW so the genetic increase in CFW needs to be converted from a percentage to a weight.
+    Conversion is by multiplying by the sfw for the period. sfw includes the dam age & birth type adjustments and the
+    BV (including the age stage adjustments from saa['bvcfw_p11']) but not the day length or age effects on wool growth.
+    '''
+    ##Calculate a scalar of the BV because sfw has already been scaled up by 1+BV/100
+    bv_scalar = bv_cfw / 100 / (1 + bv_cfw / 100)
+    ##Calculate the increase in the maintenance requirement.
+    ewool = bv_scalar * sfw * cm[28, ...]
+    return ewool
+
+
+
+def f_energy_cs(cx, cm, lw, ffcfw
+                , mr_age, mei, km, i_steepness, density
+                , foo, confinement, intake_f, dmd, sfw , bv_cfw
                 , mei_propn_milk=0, sam_mr=1):
     #Energy required for maintenance and efficiency of energy use for maintenance & growth
     ##Energy required at maint for metabolism
     emetab = cx[10, ...] * cm[2, ...] * ffcfw ** 0.75 * mr_age * (1 + cm[5, ...] * mei_propn_milk)
     ##Energy required for grazing (chewing, ruminating and walking)
     egraze = f_egraze(cm, lw, i_steepness, density, foo, confinement, intake_f, dmd)
+    ##Energy from increase in the BV of clean fleece weight
+    ewool = f_ewool(cm, sfw, bv_cfw)
     ##Energy associated with organ activity (organ ME requirement)
     omer = cm[1, ...] * mei
     ##ME requirement for maintenance (before ECold)
-    meme = ((emetab + egraze) / km + omer) * sam_mr
+    meme = ((emetab + egraze + ewool) / km + omer) * sam_mr
     # ##Calculate hp_maint for comparison with the new feeding standards which include HP for MEI above maintenance
     # ### the heat associated with feeding is the proportion that is not available for maintenance
     # bmei = 1 - km
@@ -1109,17 +1127,21 @@ def f_energy_cs(cx, cm, lw, ffcfw, mr_age, mei, km, i_steepness, density, foo, c
     return meme
 
 
-def f_energy_mu(cx, cm, lw, lean, mr_age, mei, km, i_steepness, density, foo, confinement, intake_f, dmd
+def f_energy_mu(cx, cm, lw, lean
+                , mr_age, mei, km, i_steepness, density
+                , foo, confinement, intake_f, dmd, sfw , bv_cfw
                 , mei_propn_milk=0):
     #Energy required for maintenance and efficiency of energy use for maintenance & growth
     ##Energy required at maint for metabolism
     emetab = cx[10, ...] * cm[24, ...] * lean * mr_age * (1 + cm[27, ...] * mei_propn_milk)
     ##Energy required for grazing (chewing, ruminating and walking)
     egraze = f_egraze(cm, lw, i_steepness, density, foo, confinement, intake_f, dmd)
+    ##Energy from increase in the BV of clean fleece weight
+    ewool = f_ewool(cm, sfw, bv_cfw)
     ##Energy associated with organ activity (organ ME requirement)
     omer = cm[23, ...] * mei
     ##Net energy required for maintenance (excluding ecold)
-    neme = emetab + egraze + omer    # sam_mr has been removed because it has a different definition than for CSIRO
+    neme = emetab + egraze + ewool + omer    # sam_mr has been removed because it has a different definition than for CSIRO
     ### heat associated with feeding calculated as per Oddy et al. 2024
     bmei = 1 - km
     hp_mei = bmei * mei
@@ -1129,8 +1151,10 @@ def f_energy_mu(cx, cm, lw, lean, mr_age, mei, km, i_steepness, density, foo, co
     return neme, hp_mei, meme_cs
 
 
-def f_energy_nfs(cm, cg, lw, fat, muscle, viscera, mei, km, i_steepness, density, foo
-                 , confinement, intake_f, dmd, mei_propn_milk=0):
+def f_energy_nfs(cm, cg, lw, fat, muscle, viscera
+                 , mei, km, i_steepness, density
+                 , foo , confinement, intake_f, dmd, sfw , bv_cfw
+                 , mei_propn_milk=0):
     '''Heat production associated with maintenance (fasting heat production and heat associated with feeding) & efficiency'''
     ##Calculate the energy content of fat, muscle and viscera from the weight
     f = f1_weight_energy_conversion(cg, 0, weight=fat)
@@ -1143,8 +1167,10 @@ def f_energy_nfs(cm, cg, lw, fat, muscle, viscera, mei, km, i_steepness, density
     hp_fasting = (cm[20, ...] * f + cm[21, ...] * m + cm[22, ...] * v) * (1 + cm[27, ...] * mei_propn_milk)
     ##Extra heat production associated with grazing (chewing, ruminating and walking)
     hp_graze = f_egraze(cm, lw, i_steepness, density, foo, confinement, intake_f, dmd)
+    ##Heat production from increase in the BV of clean fleece weight
+    hp_wool = f_ewool(cm, sfw, bv_cfw)
     ##Heat produced by maintenance type functions (before ECold)
-    hp_maint = hp_fasting + hp_graze
+    hp_maint = hp_fasting + hp_graze + hp_wool
     ##Heat associated with feeding - eating, rumination, rumen fermentation, digestion and excretion
     ## Note: rumination might change with fibre length but this is not accounted for, only varies with M/D
     bmei = 1 - km

@@ -112,7 +112,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         sen.saa['ycfw_scalar'] = coefficients_c[j]; j += 1    #YCFW scalar, cw_dams[25] parameter which scales SFW
         h = coefficients_c[j]; j += 1
         a = coefficients_c[j]; j += 1
-        sen.saa['sfw_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
+        sen.saa['bvcfw_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         #Standard fibre diameter, SFD parameter
         ##FD is calibrated for A for whole of life. Y is by the scalar
@@ -1911,6 +1911,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                 , uinp.parameters['i_sfd_y'], a_c2_c0, i_g3_inc)
     sfw_yg0, sfw_yg1, sfw_yg2, sfw_yg3 = sfun.f1_c2g(uinp.parameters['i_sfw_c2']
                                 , uinp.parameters['i_sfw_y'], a_c2_c0, i_g3_inc)
+    bvcfw_yg0, bvcfw_yg1, bvcfw_yg2, bvcfw_yg3 = sfun.f1_c2g(uinp.parameters['i_bvcfw_c2']
+                                , uinp.parameters['i_bvcfw_y'], a_c2_c0, i_g3_inc)
     cfw_initial_yg0, cfw_initial_yg1, cfw_initial_yatf, cfw_initial_yg3 = sfun.f1_c2g(uinp.parameters['i_cfw_initial_c2']
                                 , uinp.parameters['i_cfw_initial_y'], a_c2_c0, i_g3_inc)
     fd_initial_yg0, fd_initial_yg1, fd_initial_yatf, fd_initial_yg3 = sfun.f1_c2g(uinp.parameters['i_fd_initial_c2']
@@ -2054,7 +2056,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     ################################################################################
 
     #Test if the saa on age stages is required (any value != 0)
-    p11_active = (np.any(sen.saa['sfw_p11'])
+    p11_active = (np.any(sen.saa['bvcfw_p11'])
                 + np.any(sen.saa['sfd_p11'])
                 + np.any(sen.saa['iss_p11'])
                 + np.any(sen.saa['follicles_p11'])
@@ -2084,17 +2086,17 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
     ##standard fleece weight
     ###sire
-    saa = sfun.f1_saa_p11_to_p(sen.saa['sfw_p11'], scalar_psirep11)
-    sfw_p_pa1e1b1nwzida0e0b0xyg0 = sfw_yg0 + saa
+    saa = sfun.f1_saa_p11_to_p(sen.saa['bvcfw_p11'], scalar_psirep11)
+    bvcfw_p_pa1e1b1nwzida0e0b0xyg0 = bvcfw_yg0 + saa
     ###dams
-    saa = sfun.f1_saa_p11_to_p(sen.saa['sfw_p11'], scalar_pdamsp11)
-    sfw_p_pa1e1b1nwzida0e0b0xyg1 = sfw_yg1 + saa
+    saa = sfun.f1_saa_p11_to_p(sen.saa['bvcfw_p11'], scalar_pdamsp11)
+    bvcfw_p_pa1e1b1nwzida0e0b0xyg1 = bvcfw_yg1 + saa
     ####yatf
-    saa = sfun.f1_saa_p11_to_p(sen.saa['sfw_p11'], scalar_pyatfp11)
-    sfw_p_pa1e1b1nwzida0e0b0xyg2 = sfw_yg2 + saa
+    saa = sfun.f1_saa_p11_to_p(sen.saa['bvcfw_p11'], scalar_pyatfp11)
+    bvcfw_p_pa1e1b1nwzida0e0b0xyg2 = bvcfw_yg2 + saa
     ###offs
-    saa = sfun.f1_saa_p11_to_p(sen.saa['sfw_p11'], scalar_poffsp11)
-    sfw_p_pa1e1b1nwzida0e0b0xyg3 = sfw_yg3 + saa
+    saa = sfun.f1_saa_p11_to_p(sen.saa['bvcfw_p11'], scalar_poffsp11)
+    bvcfw_p_pa1e1b1nwzida0e0b0xyg3 = bvcfw_yg3 + saa
 
     ##standard fibre diameter
     ###sire
@@ -2408,13 +2410,14 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     adja_sfw_b0_pa1e1b1nwzida0e0b0xyg3 = cb0_cpoffs[12, ...]
     ###apply adjustments sfw
     ####inital fleece weight is not adjusted by saa_p11 (although it could be adjusted by the weaning value)
-    sfw_p_pa1e1b1nwzida0e0b0xyg0 = sfw_p_pa1e1b1nwzida0e0b0xyg0 + adja_sfw_d_pa1e1b1nwzida0e0b0xyg0 + adja_sfw_b0_pa1e1b1nwzida0e0b0xyg0
+    #todo does this sfw_p_pa1 variable need the _p_ in the name. Is the sfw_initial variable required?
+    sfw_p_pa1e1b1nwzida0e0b0xyg0 = sfw_yg0 + adja_sfw_d_pa1e1b1nwzida0e0b0xyg0 + adja_sfw_b0_pa1e1b1nwzida0e0b0xyg0
     sfw_initial_pa1e1b1nwzida0e0b0xyg0 = sfw_yg0 + adja_sfw_d_pa1e1b1nwzida0e0b0xyg0 + adja_sfw_b0_pa1e1b1nwzida0e0b0xyg0
-    sfw_p_pa1e1b1nwzida0e0b0xyg1 = sfw_p_pa1e1b1nwzida0e0b0xyg1 + adja_sfw_d_pa1e1b1nwzida0e0b0xyg1 + adja_sfw_b0_pa1e1b1nwzida0e0b0xyg1
+    sfw_p_pa1e1b1nwzida0e0b0xyg1 = sfw_yg1 + adja_sfw_d_pa1e1b1nwzida0e0b0xyg1 + adja_sfw_b0_pa1e1b1nwzida0e0b0xyg1
     sfw_initial_pa1e1b1nwzida0e0b0xyg1 = sfw_yg1 + adja_sfw_d_pa1e1b1nwzida0e0b0xyg1 + adja_sfw_b0_pa1e1b1nwzida0e0b0xyg1
-    sfw_p_pa1e1b1nwzida0e0b0xyg2 = sfw_p_pa1e1b1nwzida0e0b0xyg2 + adja_sfw_d_pa1e1b1nwzida0e0b0xyg2 + adja_sfw_b0_pa1e1b1nwzida0e0b0xyg2
+    sfw_p_pa1e1b1nwzida0e0b0xyg2 = sfw_yg2 + adja_sfw_d_pa1e1b1nwzida0e0b0xyg2 + adja_sfw_b0_pa1e1b1nwzida0e0b0xyg2
     #don't need a sfw_initial_g2 because none on hand at the start of the generator
-    sfw_p_pa1e1b1nwzida0e0b0xyg3 = sfw_p_pa1e1b1nwzida0e0b0xyg3 + adja_sfw_d_pa1e1b1nwzida0e0b0xyg3 + adja_sfw_b0_pa1e1b1nwzida0e0b0xyg3
+    sfw_p_pa1e1b1nwzida0e0b0xyg3 = sfw_yg3 + adja_sfw_d_pa1e1b1nwzida0e0b0xyg3 + adja_sfw_b0_pa1e1b1nwzida0e0b0xyg3
     sfw_initial_pa1e1b1nwzida0e0b0xyg3 = sfw_yg3 + adja_sfw_d_pa1e1b1nwzida0e0b0xyg3 + adja_sfw_b0_pa1e1b1nwzida0e0b0xyg3
     ###calc adjustments sfd
     adja_sfd_d_pa1e1b1nwzida0e0b0xyg0 = ce_cpsire[13, ...]   #ce[13] averaged across d
@@ -2462,6 +2465,11 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     w_b_std_b0_pa1e1b1nwzida0e0b0xyg3 = srw_female_yg3 * cb0_cpoffs[15, ...] * fun.f_slice(cx_cpoffs[15], {x_pos: mask_x})
     ##fetal param - normal birthweight young - used as target birthweight during pregnancy if sheep fed well and relative size=1. Average gender effect.
     w_b_std_y_p_pa1e1b1nwzida0e0b0xyg1 = srw_female_p_pa1e1b1nwzida0e0b0xyg2 * cb1_cpyatf[15, ...] * cp_cpyatf[15, ...] #gender not considered until actual birth therefore no cx
+    ##Scale sfw by the BV for CFW.
+    sfw_p_pa1e1b1nwzida0e0b0xyg0 = sfw_p_pa1e1b1nwzida0e0b0xyg0 * (1 + bvcfw_p_pa1e1b1nwzida0e0b0xyg0 / 100)
+    sfw_p_pa1e1b1nwzida0e0b0xyg1 = sfw_p_pa1e1b1nwzida0e0b0xyg1 * (1 + bvcfw_p_pa1e1b1nwzida0e0b0xyg1 / 100)
+    sfw_p_pa1e1b1nwzida0e0b0xyg2 = sfw_p_pa1e1b1nwzida0e0b0xyg2 * (1 + bvcfw_p_pa1e1b1nwzida0e0b0xyg2 / 100)
+    sfw_p_pa1e1b1nwzida0e0b0xyg3 = sfw_p_pa1e1b1nwzida0e0b0xyg3 * (1 + bvcfw_p_pa1e1b1nwzida0e0b0xyg3 / 100)
     ##wool growth efficiency
     ###wge is sfw divided by srw of a ewe of the given genotype. Scales the growth per unit intake to allow for the expected change in intake due to SRW
     ###Use SRW of the ewe so that males have same efficiency as females and hence grow more wool due to higher intake.
@@ -3820,7 +3828,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             cc_cpyatf = fun.f_slice(cc_p_cpyatf, p_slice)
             ce__cpdams = fun.f_slice(ce_p_cpdams, p_slice)
             ce__cpyatf = fun.f_slice(ce_p_cpyatf, p_slice)
-            # sfw_pa1e1b1nwzida0e0b0xyg2 = fun.f_slice(sfw_p_pa1e1b1nwzida0e0b0xyg2, p_slice)
+            sfw_pa1e1b1nwzida0e0b0xyg2 = fun.f_slice(sfw_p_pa1e1b1nwzida0e0b0xyg2, p_slice)
             wge_pa1e1b1nwzida0e0b0xyg2 = fun.f_slice(wge_p_pa1e1b1nwzida0e0b0xyg2, p_slice)
             d_cfw_ave_pa1e1b1nwzida0e0b0xyg2 = fun.f_slice(d_cfw_ave_p_pa1e1b1nwzida0e0b0xyg2, p_slice)
             sfd_pa1e1b1nwzida0e0b0xyg2 = fun.f_slice(sfd_p_pa1e1b1nwzida0e0b0xyg2, p_slice)
@@ -3848,9 +3856,14 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 p_slice = {p_pos: [p]}   # p_slice as a dict for f_slice()
             ###Slice parameters other than srw and vars dependent on srw
             ###standard fleece weight
-            # sfw_pa1e1b1nwzida0e0b0xyg0 = fun.f_slice(sfw_p_pa1e1b1nwzida0e0b0xyg0, p_slice)
-            # sfw_pa1e1b1nwzida0e0b0xyg1 = fun.f_slice(sfw_p_pa1e1b1nwzida0e0b0xyg1, p_slice)
-            # sfw_pa1e1b1nwzida0e0b0xyg3 = fun.f_slice(sfw_p_pa1e1b1nwzida0e0b0xyg3, p_slice)
+            sfw_pa1e1b1nwzida0e0b0xyg0 = fun.f_slice(sfw_p_pa1e1b1nwzida0e0b0xyg0, p_slice)
+            sfw_pa1e1b1nwzida0e0b0xyg1 = fun.f_slice(sfw_p_pa1e1b1nwzida0e0b0xyg1, p_slice)
+            sfw_pa1e1b1nwzida0e0b0xyg3 = fun.f_slice(sfw_p_pa1e1b1nwzida0e0b0xyg3, p_slice)
+            ###Breeding value of clean fleece weight
+            bvcfw_pa1e1b1nwzida0e0b0xyg0 = fun.f_slice(bvcfw_p_pa1e1b1nwzida0e0b0xyg0, p_slice)
+            bvcfw_pa1e1b1nwzida0e0b0xyg1 = fun.f_slice(bvcfw_p_pa1e1b1nwzida0e0b0xyg1, p_slice)
+            bvcfw_pa1e1b1nwzida0e0b0xyg2 = fun.f_slice(bvcfw_p_pa1e1b1nwzida0e0b0xyg2, p_slice)
+            bvcfw_pa1e1b1nwzida0e0b0xyg3 = fun.f_slice(bvcfw_p_pa1e1b1nwzida0e0b0xyg3, p_slice)
             ###average clean fleece weight (d_cfw_ave)
             d_cfw_ave_pa1e1b1nwzida0e0b0xyg0 = fun.f_slice(d_cfw_ave_p_pa1e1b1nwzida0e0b0xyg0, p_slice)
             d_cfw_ave_pa1e1b1nwzida0e0b0xyg1 = fun.f_slice(d_cfw_ave_p_pa1e1b1nwzida0e0b0xyg1, p_slice)
@@ -4375,7 +4388,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                                  , mr_age_pa1e1b1nwzida0e0b0xyg0[p:p+1], mei_sire, km_sire
                                                  , pinp.sheep['i_steepness'], densityw_pa1e1b1nwzida0e0b0xyg0[p:p+1]
                                                  , foo_sire, confinementw_tpa1e1b1nwzida0e0b0xyg0[:, p:p+1], intake_f_sire
-                                                 , dmd_sire, sam_mr = sam_mr_sire)
+                                                 , dmd_sire, sfw_pa1e1b1nwzida0e0b0xyg0, bvcfw_pa1e1b1nwzida0e0b0xyg0
+                                                 , sam_mr = sam_mr_sire)
                         meme_cs_sire = temp0
                         # if eqn_used:
                         if eqn_compare:
@@ -4388,7 +4402,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                                  , mr_age_pa1e1b1nwzida0e0b0xyg1[p:p+1], mei_dams, km_dams
                                                  , pinp.sheep['i_steepness'], densityw_pa1e1b1nwzida0e0b0xyg1[p:p+1]
                                                  , foo_dams, confinementw_tpa1e1b1nwzida0e0b0xyg1[:, p:p+1], intake_f_dams
-                                                 , dmd_dams, sam_mr = sam_mr_dams)
+                                                 , dmd_dams, sfw_pa1e1b1nwzida0e0b0xyg1, bvcfw_pa1e1b1nwzida0e0b0xyg1
+                                                 , sam_mr = sam_mr_dams)
                         meme_cs_dams = temp0
                         # if eqn_used:
                         if eqn_compare:
@@ -4401,7 +4416,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                                  , mr_age_pa1e1b1nwzida0e0b0xyg3[p:p+1], mei_offs, km_offs
                                                  , pinp.sheep['i_steepness'], densityw_pa1e1b1nwzida0e0b0xyg3[p:p+1]
                                                  , foo_offs, confinementw_tpa1e1b1nwzida0e0b0xyg3[:, p:p+1], intake_f_offs
-                                                 , dmd_offs, sam_mr = sam_mr_offs)
+                                                 , dmd_offs, sfw_pa1e1b1nwzida0e0b0xyg3, bvcfw_pa1e1b1nwzida0e0b0xyg3
+                                                 , sam_mr = sam_mr_offs)
                         meme_cs_offs = temp0
                         # if eqn_used:
                         if eqn_compare:
@@ -4417,7 +4433,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                                         , mr_agegraham_pa1e1b1nwzida0e0b0xyg0[p:p+1], mei_sire, km_sire
                                                         , pinp.sheep['i_steepness'], densityw_pa1e1b1nwzida0e0b0xyg0[p:p+1]
                                                         , foo_sire, confinementw_tpa1e1b1nwzida0e0b0xyg0[:, p:p+1]
-                                                        , intake_f_sire, dmd_sire)
+                                                        , intake_f_sire, dmd_sire
+                                                        , sfw_pa1e1b1nwzida0e0b0xyg0, bvcfw_pa1e1b1nwzida0e0b0xyg0)
                         neme_mu_sire = temp0
                         hp_mei_mu_sire = temp1
                         # if eqn_used:
@@ -4432,7 +4449,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                                         , mr_agegraham_pa1e1b1nwzida0e0b0xyg1[p:p+1], mei_dams, km_dams
                                                         , pinp.sheep['i_steepness'], densityw_pa1e1b1nwzida0e0b0xyg1[p:p+1]
                                                         , foo_dams, confinementw_tpa1e1b1nwzida0e0b0xyg1[:, p:p+1]
-                                                        , intake_f_dams, dmd_dams)
+                                                        , intake_f_dams, dmd_dams
+                                                        ,sfw_pa1e1b1nwzida0e0b0xyg1, bvcfw_pa1e1b1nwzida0e0b0xyg1)
                         neme_mu_dams = temp0
                         hp_mei_mu_dams = temp1
                         # if eqn_used:
@@ -4447,7 +4465,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                                         , mr_agegraham_pa1e1b1nwzida0e0b0xyg3[p:p+1], mei_offs, km_offs
                                                         , pinp.sheep['i_steepness'], densityw_pa1e1b1nwzida0e0b0xyg3[p:p+1]
                                                         , foo_offs, confinementw_tpa1e1b1nwzida0e0b0xyg3[:, p:p+1]
-                                                        , intake_f_offs, dmd_offs)
+                                                        , intake_f_offs, dmd_offs
+                                                        , sfw_pa1e1b1nwzida0e0b0xyg3, bvcfw_pa1e1b1nwzida0e0b0xyg3)
                         neme_mu_offs = temp0
                         hp_mei_mu_offs = temp1
                         # if eqn_used:
@@ -4463,7 +4482,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                                          , muscle_start_sire, viscera_start_sire, mei_sire, km_sire
                                                          , pinp.sheep['i_steepness'], densityw_pa1e1b1nwzida0e0b0xyg0[p:p+1]
                                                          , foo_sire, confinementw_tpa1e1b1nwzida0e0b0xyg0[:, p:p+1]
-                                                         , intake_f_sire, dmd_sire)
+                                                         , intake_f_sire, dmd_sire
+                                                         , sfw_pa1e1b1nwzida0e0b0xyg0, bvcfw_pa1e1b1nwzida0e0b0xyg0)
                         hp_maint_nfs_sire = temp0
                         hp_mei_nfs_sire = temp1
                         # if eqn_used:
@@ -4476,7 +4496,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                                                 , muscle_start_dams, viscera_start_dams, mei_dams, km_dams
                                                                 , pinp.sheep['i_steepness'], densityw_pa1e1b1nwzida0e0b0xyg1[p:p+1]
                                                                 , foo_dams, confinementw_tpa1e1b1nwzida0e0b0xyg1[:, p:p+1]
-                                                                , intake_f_dams, dmd_dams)
+                                                                , intake_f_dams, dmd_dams
+                                                                , sfw_pa1e1b1nwzida0e0b0xyg1, bvcfw_pa1e1b1nwzida0e0b0xyg1)
                         hp_maint_nfs_dams = temp0
                         hp_mei_nfs_dams = temp1
                         # if eqn_used:
@@ -4489,7 +4510,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                                          , muscle_start_offs, viscera_start_offs, mei_offs, km_offs
                                                          , pinp.sheep['i_steepness'], densityw_pa1e1b1nwzida0e0b0xyg3[p:p+1]
                                                          , foo_offs, confinementw_tpa1e1b1nwzida0e0b0xyg3[:, p:p+1]
-                                                         , intake_f_offs, dmd_offs)
+                                                         , intake_f_offs, dmd_offs
+                                                         , sfw_pa1e1b1nwzida0e0b0xyg3, bvcfw_pa1e1b1nwzida0e0b0xyg3)
                         hp_maint_nfs_offs = temp0
                         hp_mei_nfs_offs = temp1
                         # if eqn_used:
@@ -5708,6 +5730,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                              , mr_age_pa1e1b1nwzida0e0b0xyg2[p:p+1], mei_yatf, km_yatf
                                              , pinp.sheep['i_steepness'], densityw_pa1e1b1nwzida0e0b0xyg2[p:p+1], foo_yatf
                                              , confinementw_tpa1e1b1nwzida0e0b0xyg1[:, p:p+1], intake_f_yatf, dmd_yatf
+                                             , sfw_pa1e1b1nwzida0e0b0xyg2, bvcfw_pa1e1b1nwzida0e0b0xyg2
                                              , mei_propn_milk_yatf, sam_mr = sam_mr_yatf)  #same feedsupply as dams
                     meme_cs_yatf = temp0
                     # if eqn_used:
@@ -5723,7 +5746,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                                     , mr_agegraham_pa1e1b1nwzida0e0b0xyg2[p:p+1], mei_yatf, km_yatf
                                                     , pinp.sheep['i_steepness'], densityw_pa1e1b1nwzida0e0b0xyg2[p:p+1]
                                                     , foo_yatf, confinementw_tpa1e1b1nwzida0e0b0xyg1[:, p:p+1]
-                                                    , intake_f_yatf, dmd_yatf, mei_propn_milk_yatf)  #same feedsupply as dams
+                                                    , intake_f_yatf, dmd_yatf, sfw_pa1e1b1nwzida0e0b0xyg2
+                                                    , bvcfw_pa1e1b1nwzida0e0b0xyg2, mei_propn_milk_yatf)  #same feedsupply as dams
                     neme_mu_yatf = temp0
                     hp_mei_mu_yatf = temp1
                     # if eqn_used:
@@ -5739,7 +5763,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                                     , muscle_start_yatf, viscera_start_yatf, mei_yatf, km_yatf
                                                     , pinp.sheep['i_steepness'], densityw_pa1e1b1nwzida0e0b0xyg2[p:p+1]
                                                     , foo_yatf, confinementw_tpa1e1b1nwzida0e0b0xyg1[:, p:p+1]
-                                                    , intake_f_yatf, dmd_yatf, mei_propn_milk_yatf)  #same feedsupply as dams
+                                                    , intake_f_yatf, dmd_yatf, sfw_pa1e1b1nwzida0e0b0xyg2
+                                                    , bvcfw_pa1e1b1nwzida0e0b0xyg2, mei_propn_milk_yatf)  #same feedsupply as dams
                     hp_maint_nfs_yatf = temp0
                     hp_mei_nfs_yatf = temp1
                     # if eqn_used:
@@ -8343,10 +8368,10 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             #Report the values, coefficients and target for the current iteration
             b=1; w=2; p=3; y=4; h=5; a2=6; a=7 # set the slice numbers in the saa_p11 arrays (a is using the a3 slice)
 
-            logger.debug(f"PCFW target {pcfw_target} this {pcfw} with (sfw={sen.saa['sfw_p11'][p]})")
-            logger.debug(f"YCFW target {ycfw_target} this {ycfw} with (sfw={sen.saa['sfw_p11'][y]} & {sen.saa['ycfw_scalar']})")
-            logger.debug(f"HCFW target {hcfw_target} this {hcfw} with (sfw={sen.saa['sfw_p11'][h]})")
-            logger.debug(f"ACFW target {acfw_target} this {acfw} with (sfw={sen.saa['sfw_p11'][a]})")
+            logger.debug(f"PCFW target {pcfw_target} this {pcfw} with (bv={sen.saa['bvcfw_p11'][p]})")
+            logger.debug(f"YCFW target {ycfw_target} this {ycfw} with (bv={sen.saa['bvcfw_p11'][y]} & {sen.saa['ycfw_scalar']})")
+            logger.debug(f"HCFW target {hcfw_target} this {hcfw} with (bv={sen.saa['bvcfw_p11'][h]})")
+            logger.debug(f"ACFW target {acfw_target} this {acfw} with (bv={sen.saa['bvcfw_p11'][a]})")
             logger.debug(f"2yo={a2cfw} 3yo={a3cfw} 4yo={a4cfw} 5yo={a5cfw}")
             logger.debug(f"PFD target {pfd_target} this {pfd} with (sfd={sen.saa['sfd_p11'][p]})")
             logger.debug(f"YFD target {yfd_target} this {yfd} with (sfd={sen.saa['sfd_p11'][y]} & {sen.saa['yfd_scalar']})")

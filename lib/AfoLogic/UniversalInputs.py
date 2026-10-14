@@ -285,6 +285,7 @@ def f_universal_inp_sa(uinp_defaults):
     parameters['i_cg_c2'] = fun.f_sa(parameters['i_cg_c2'].astype(float), sen.sav['cg_c1c2'], 5) #growth parameters
     parameters['i_cd_c2'] = fun.f_sa(parameters['i_cd_c2'].astype(float), sen.sav['cd_c1c2'], 5) #mortality parameters
     parameters['i_ck_c2'] = fun.f_sa(parameters['i_ck_c2'].astype(float), sen.sav['ck_c1c2'], 5) #energy efficiency parameters
+    parameters['i_cm_c2'] = fun.f_sa(parameters['i_cm_c2'].astype(float), sen.sav['cm_c1c2'], 5) #maintenance energy parameters
     parameters['i_cb0_c2'] = fun.f_sa(parameters['i_cb0_c2'].astype(float), sen.sav['cb0_c1c2'], 5) #genotype birth type params
     parameters['i_cl0_c2'] = fun.f_sa(parameters['i_cl0_c2'].astype(float), sen.sav['cl0_c1c2'], 5) #genotype litter size params
     parameters['i_cu2_c2'] = fun.f_sa(parameters['i_cu2_c2'].astype(float), sen.sav['cu2_c1c2'], 5) #Murdoch Uni parameters
@@ -301,6 +302,8 @@ def f_universal_inp_sa(uinp_defaults):
     parameters['i_nlb_c2'] = fun.f_sa(parameters['i_nlb_c2'].astype(float),sen.saa['nlb_c2'], 2)
     parameters['i_sfd_c2'] = fun.f_sa(parameters['i_sfd_c2'].astype(float),sen.saa['sfd_c2'], 2)
     parameters['i_srw_c2'] = fun.f_sa(parameters['i_srw_c2'].astype(float),sen.saa['srw_c2'], 2)
+    parameters['i_sfw_c2'] = fun.f_sa(parameters['i_sfw_c2'].astype(float), sen.saa['sfw_c2'], 2) #genotype sfw
+    parameters['i_bvcfw_c2'] = fun.f_sa(parameters['i_bvcfw_c2'].astype(float), sen.saa['bvcfw_c2'], 2) #genotype BV for cfw
     parameters['i_cg_c2'] = fun.f_sa(parameters['i_cg_c2'].astype(float), sen.saa['cg_c1c2'], 2) #genotype growth params
     parameters['i_ck_c2'] = fun.f_sa(parameters['i_ck_c2'].astype(float), sen.saa['ck_c1c2'], 2) #genotype efficiency params
     parameters['i_cl0_c2'] = fun.f_sa(parameters['i_cl0_c2'].astype(float), sen.saa['cl0_c1c2'], 2) #genotype litter size params
