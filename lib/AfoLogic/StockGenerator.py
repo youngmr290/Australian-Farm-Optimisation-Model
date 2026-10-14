@@ -217,7 +217,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         sen.saa['bsurv_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         #Peri-natal survival, cu2[23, -1] parameter
-        # w = p = y = h = a = None
+        w = p = y = h = a = None
         # w = np.nan   #pn_surv is not a trait for non reproducing dams
         p = np.nan   #pn_surv is not a trait for non reproducing dams
         y = coefficients_c[j]; j += 1
