@@ -2,11 +2,17 @@ import time
 import pandas as pd
 import logging
 ##WARNING for third-party libraries (pyomo/matplotlib DEBUG output bloats the log) but DEBUG for AFO's own loggers
+##third-party messages include the logger name & level, AFO's own messages are reported as plain text
 logging.basicConfig(
     level=logging.WARNING,
     format='%(name)s %(levelname)s: %(message)s'
 )
-logging.getLogger('lib').setLevel(logging.DEBUG)
+afo_handler = logging.StreamHandler()
+afo_handler.setFormatter(logging.Formatter('%(message)s'))
+afo_logger = logging.getLogger('lib')
+afo_logger.addHandler(afo_handler)
+afo_logger.propagate = False
+afo_logger.setLevel(logging.DEBUG)
 
 #report the clock time that the experiment was started
 print(f'Experiment commenced at: {time.ctime()}')
