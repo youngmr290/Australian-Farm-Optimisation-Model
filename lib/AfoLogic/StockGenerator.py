@@ -1946,12 +1946,6 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     agedam_propn_da0e0b0xyg1 = agedam_propn_da0e0b0xyg1 / np.sum(agedam_propn_da0e0b0xyg1, axis=d_pos, keepdims=True) #scale unmasked slices to a total of 1
     agedam_propn_da0e0b0xyg2 = agedam_propn_da0e0b0xyg2 / np.sum(agedam_propn_da0e0b0xyg2, axis=d_pos, keepdims=True) #scale unmasked slices to a total of 1
     agedam_propn_da0e0b0xyg3 = agedam_propn_da0e0b0xyg3 / np.sum(agedam_propn_da0e0b0xyg3, axis=d_pos, keepdims=True) #scale unmasked slices to a total of 1
-    fat_propn_wean_yg0, fat_propn_wean_yg1, fat_propn_wean_yg2, fat_propn_wean_yg3 = sfun.f1_c2g(uinp.parameters['i_fat_propn_wean_c2']
-                                , uinp.parameters['i_fat_wean_y'], a_c2_c0, i_g3_inc)
-    muscle_propn_wean_yg0, muscle_propn_wean_yg1, muscle_propn_wean_yg2, muscle_propn_wean_yg3 = sfun.f1_c2g(uinp.parameters['i_muscle_propn_wean_c2']
-                                , uinp.parameters['i_muscle_wean_y'], a_c2_c0, i_g3_inc)
-    viscera_propn_wean_yg0, viscera_propn_wean_yg1, viscera_propn_wean_yg2, viscera_propn_wean_yg3 = sfun.f1_c2g(uinp.parameters['i_viscera_propn_wean_c2']
-                                , uinp.parameters['i_viscera_wean_y'], a_c2_c0, i_g3_inc)
     fat_propn_birth_yg0, fat_propn_birth_yg1, fat_propn_birth_yg2, fat_propn_birth_yg3 = sfun.f1_c2g(uinp.parameters['i_fat_propn_birth_c2']
                                 , uinp.parameters['i_fat_birth_y'], a_c2_c0, i_g3_inc) #only for yatf
     muscle_propn_birth_yg0, muscle_propn_birth_yg1, muscle_propn_birth_yg2, muscle_propn_birth_yg3 = sfun.f1_c2g(uinp.parameters['i_muscle_propn_birth_c2']
@@ -2643,7 +2637,15 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                                    , eqn_system = eqn_used_g3_q1p[7,0])
 
 
-    ##calc fat, muscle and viscera weight using estimated fat % at weaning. See [Growth curve & partitioning.xlsx]
+    ##calc fat, muscle and viscera weight using the composition at weaning that is consistent with the EVG parameters. See [Growth curve & partitioning.xlsx]
+    ### Composition is calculated at the standard initial relative size (lw_initial) and the BW of a single (cb0[15] b0 slice 0)
+    ### so it is the same for all animals in the group. todo option 2: use each animal's initial relative size (and possibly the BW of twins & triplets)
+    fat_propn_wean_yg0, muscle_propn_wean_yg0, viscera_propn_wean_yg0 = sfun.f1_fat_propn_initial(cg_cpsire, cb0_cpsire, lw_initial_yg0
+                                            , fat_propn_birth_yg0)
+    fat_propn_wean_yg1, muscle_propn_wean_yg1, viscera_propn_wean_yg1 = sfun.f1_fat_propn_initial(cg_cpdams, cb0_cpdams, lw_initial_yg1
+                                            , fat_propn_birth_yg1)
+    fat_propn_wean_yg3, muscle_propn_wean_yg3, viscera_propn_wean_yg3 = sfun.f1_fat_propn_initial(cg_cpoffs, cb0_cpoffs, lw_initial_yg3
+                                            , fat_propn_birth_yg3)
     ###Sire
     fat_initial_pa1e1b1nwzida0e0b0xyg0 = fat_propn_wean_yg0 * ebw_initial_pa1e1b1nwzida0e0b0xyg0
     muscle_initial_pa1e1b1nwzida0e0b0xyg0  = muscle_propn_wean_yg0 * ebw_initial_pa1e1b1nwzida0e0b0xyg0

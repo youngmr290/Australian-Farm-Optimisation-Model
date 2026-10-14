@@ -1001,6 +1001,40 @@ def f1_adipose_propn(cg, evg):
     adipose_propn = (evg - mv_energy) / (adipose_energy - mv_energy)
     return adipose_propn
 
+def f1_fat_propn_initial(cg, cb0, relsize, fat_propn_birth):
+    '''
+    Proportion of fat in the empty body (by wet weight) at a given relative size, consistent with the EVG parameters.
+    Whole body energy is accumulated from birth by integrating EVG over relative size, assuming a constant level of
+    feeding and rc <= 1 (so zf2 = 0). zf1 is logistic so the integral has a closed form (see [Growth curve & partitioning.xlsx]).
+    Values are per kg of EBW at SRW, so the SRW and the EBW/LW ratio cancel.
+
+    :param cg: Numpy array, sim parameters - weight change.
+    :param cb0: Numpy array, sim parameters - birth type. cb0[15] is the relative size at birth (BW/SRW).
+    :param relsize: Numpy array, relative size (LW/SRW) at which the composition is required, e.g. at weaning.
+    :param fat_propn_birth: Numpy array, proportion of fat in the empty body at birth.
+    :return: proportion of fat, muscle and viscera in the empty body at relsize.
+    '''
+    ##Level of feeding assumed for growth from birth to relsize
+    level = 1.5
+    ##Relative size at birth. Uses the BW of a single (b0 slice 0) so the composition is the same for all animals in the group
+    relsize_birth = fun.f_slice(cb0[15, ...], {sinp.stock['i_b0_pos']: 0})
+    ##Energy content (MJ/kg wet) of adipose tissue & lean tissue (muscle & viscera weighted by the proportion of viscera in lean)
+    fat_energy = cg[20, ...] * cg[26, ...]
+    lean_energy = cg[21, ...] * cg[27, ...] * (1 - cg[39, ...]) + cg[22, ...] * cg[28, ...] * cg[39, ...]
+    ##Energy content per kg of EBW at birth
+    wbe_birth = lean_energy + fat_propn_birth * (fat_energy - lean_energy)
+    ##Integral of zf1 with respect to relative size. zf1 = 1 / (1 + exp(cg4 * (z - cg5)))
+    def f_zf1_integral(z):
+        return z - np.logaddexp(0, cg[4, ...] * (z - cg[5, ...])) / cg[4, ...]
+    ##Whole body energy at relsize (MJ per kg of EBW at SRW). EVG = cg8 - zf1 * (cg9 - cg10 * (level - 1))
+    wbe = (relsize_birth * wbe_birth + cg[8, ...] * (relsize - relsize_birth)
+           - (cg[9, ...] - cg[10, ...] * (level - 1)) * (f_zf1_integral(relsize) - f_zf1_integral(relsize_birth)))
+    ##Proportion of fat from mass & energy balance, remainder is lean which is split to muscle & viscera
+    fat_propn = (wbe / relsize - lean_energy) / (fat_energy - lean_energy)
+    muscle_propn = (1 - fat_propn) * (1 - cg[39, ...])
+    viscera_propn = (1 - fat_propn) * cg[39, ...]
+    return fat_propn, muscle_propn, viscera_propn
+
 def f1_kg_cs(ck, belowmaint, km, kg_supp, mei_propn_supp, kg_fodd, mei_propn_herb
          , kl = 1, mei_propn_milk = 0, lact_propn = 0):
     '''Parameters
