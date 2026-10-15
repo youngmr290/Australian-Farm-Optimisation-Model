@@ -2743,21 +2743,21 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
     ##add p0 axis
     date_start_pa1e1b1nwzida0e0b0xygp0 = date_start_pa1e1b1nwzida0e0b0xyg[...,na] + index_p0
-    ##age open ie not capped at weaning. With test that animal exists in the following week
-    age_p0_pa1e1b1nwzida0e0b0xyg0p0 = (age_start_open_pa1e1b1nwzida0e0b0xyg0[..., na]
-                 + index_p0 * (np.roll(age_start_open_pa1e1b1nwzida0e0b0xyg0[..., na], -1, axis=0)>0))
-    age_p0_pa1e1b1nwzida0e0b0xyg1p0 = (age_start_open_pa1e1b1nwzida0e0b0xyg1[..., na]
-                 + index_p0 * (np.roll(age_start_open_pa1e1b1nwzida0e0b0xyg1[..., na], -1, axis=0)>0))
-    age_p0_pa1e1b1nwzida0e0b0xyg2p0 = (age_start_open_pa1e1b1nwzida0e0b0xyg2[..., na]
-                 + index_p0 * (np.roll(age_start_open_pa1e1b1nwzida0e0b0xyg2[..., na], -1, axis=0)>0))
-    age_p0_pa1e1b1nwzida0e0b0xyg3p0 = (age_start_open_pa1e1b1nwzida0e0b0xyg3[..., na]
-                 + index_p0 * (np.roll(age_start_open_pa1e1b1nwzida0e0b0xyg3[..., na], -1, axis=0)>0))
+    date_start_pa1e1b1nwzida0e0b0xyg3p0 = date_start_pa1e1b1nwzida0e0b0xyg3[...,na] + index_p0
+    ##age open (ie not capped at weaning) for each day of the period. Calculated from the dates (same dates as age_start_open).
+    ## raw age is negative on the days prior to birth, it is used for the yatf weights so the days before birth are excluded from the yatf p1 means.
+    ## age is clipped at 0 so the days before birth do not create errors in the functions of age (e.g. negative base with a fractional power).
+    age_p0_raw_pa1e1b1nwzida0e0b0xyg2p0 = date_start_pa1e1b1nwzida0e0b0xygp0 - date_born_pa1e1b1nwzida0e0b0xyg2[..., na]
+    age_p0_pa1e1b1nwzida0e0b0xyg0p0 = np.maximum(0, date_start_pa1e1b1nwzida0e0b0xygp0 - date_born_i_pa1e1b1nwzida0e0b0xyg0[..., na])
+    age_p0_pa1e1b1nwzida0e0b0xyg1p0 = np.maximum(0, date_start_pa1e1b1nwzida0e0b0xygp0 - date_born_i_pa1e1b1nwzida0e0b0xyg1[..., na])
+    age_p0_pa1e1b1nwzida0e0b0xyg2p0 = np.maximum(0, age_p0_raw_pa1e1b1nwzida0e0b0xyg2p0)
+    age_p0_pa1e1b1nwzida0e0b0xyg3p0 = np.maximum(0, date_start_pa1e1b1nwzida0e0b0xyg3p0 - date_born_i_pa1e1b1nwzida0e0b0xyg3[..., na])
     ##calc p1 weights - if age<=weaning it has 0 weighting (ie false) else weighting = 1 (ie true) - need so that the values are not included in the mean calculations below which determine the average production for a given p1 period.
     age_p0_weights_pa1e1b1nwzida0e0b0xyg0p0 = age_p0_pa1e1b1nwzida0e0b0xyg0p0>=(date_weaned_i_pa1e1b1nwzida0e0b0xyg0 - date_born_i_pa1e1b1nwzida0e0b0xyg0)[..., na].astype(int) #use date_wean - date born because that results in the average weaning age of all animal (age_weaned variable is just the age of the first animal)
     age_p0_weights_pa1e1b1nwzida0e0b0xyg1p0 = age_p0_pa1e1b1nwzida0e0b0xyg1p0>=(date_weaned_i_pa1e1b1nwzida0e0b0xyg1 - date_born_i_pa1e1b1nwzida0e0b0xyg1)[..., na].astype(int) #use date_wean - date born because that results in the average weaning age of all animal (age_weaned variable is just the age of the first animal)
     age_p0_weights_pa1e1b1nwzida0e0b0xyg3p0 = age_p0_pa1e1b1nwzida0e0b0xyg3p0>=(date_weaned_i_pa1e1b1nwzida0e0b0xyg3 - date_born_i_pa1e1b1nwzida0e0b0xyg3)[..., na].astype(int) #use date_wean - date born because that results in the average weaning age of all animal (age_weaned variable is just the age of the first animal)
-    ##calc yatf p1 weighting - if age is greater than weaning or less than 0 it will have 0 weighting in the p1 means calculated below else it will have weighting 1
-    age_p0_weights_pa1e1b1nwzida0e0b0xyg2p0 = np.logical_and(age_p0_pa1e1b1nwzida0e0b0xyg2p0>=0, age_p0_pa1e1b1nwzida0e0b0xyg2p0<(date_weaned_pa1e1b1nwzida0e0b0xyg2 - date_born_pa1e1b1nwzida0e0b0xyg2)[..., na].astype(int)) #use date_wean - date born because that results in the average weaning age of all animal (age_weaned variable is just the age of the first animal)
+    ##calc yatf p1 weighting - if age is greater than weaning or the yatf is not yet born (raw age less than 0) it will have 0 weighting in the p1 means calculated below else it will have weighting 1
+    age_p0_weights_pa1e1b1nwzida0e0b0xyg2p0 = np.logical_and(age_p0_raw_pa1e1b1nwzida0e0b0xyg2p0>=0, age_p0_pa1e1b1nwzida0e0b0xyg2p0<(date_weaned_pa1e1b1nwzida0e0b0xyg2 - date_born_pa1e1b1nwzida0e0b0xyg2)[..., na].astype(int)) #use date_wean - date born because that results in the average weaning age of all animal (age_weaned variable is just the age of the first animal)
     ##Age of foetus with minor axis (days)
     age_f_p0_pa1e1b1nwzida0e0b0xyg1p0 = (age_f_start_open_pa1e1b1nwzida0e0b0xyg1[...,na] + index_p0)
     ##calc foetus p1 weighting - if age is greater than birth or less than 0 it will have 0 weighting in the p1 means calculated below else it will have weighting 1
@@ -2907,6 +2907,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     rain_intake_pa1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(np.maximum(0, 1 - rain_pa1e1b1nwzida0e0b0xygp0[mask_p_offs_p] / ci_cpoffs[18, ..., na])
                                                         ,  weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg3p0, axis = -1)
     ##Proportion of peak intake due to time from birth
+    #todo pi_age_y is the average for the days the yatf exist & is not scaled by lact_propn when used (in f_potential_intake, lb_start is not a lactation flag).
+    # This is correct while birth always occurs at the start of a period. If birth could occur mid-period the birth period value would need to be scaled by lact_propn
+    # (but not after weaning, because pi_age_y continues post weaning (age_y_adj) so the effect decays over ~6 weeks).
     pi_age_y_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(cl_cpdams[0, ..., na] * cb1_cpdams[19, ..., na] * np.maximum(0,pimi_pa1e1b1nwzida0e0b0xyg1p0) ** ci_cpdams[9, ..., na]
                         * np.exp(ci_cpdams[9, ..., na] * (1 - pimi_pa1e1b1nwzida0e0b0xyg1p0)), weights=age_y_adj_weights_pa1e1b1nwzida0e0b0xyg1p0, axis = -1) #maximum to stop error in power (not sure why the negatives were causing a problem)
     ##Peak milk production pattern (time from birth). Average for the days that the dam is lactating
