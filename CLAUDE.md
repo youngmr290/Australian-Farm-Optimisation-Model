@@ -122,3 +122,32 @@ diffing the generated `.lp` file.
 - See `docs/debugging.rst` for a catalogue of known failure modes (infeasibility from tiny/NaN coefficients,
   stale constraints referencing rebuilt variables, mismatched weight distributions causing livestock to
   drop out of the solution, etc.) before assuming a new bug is novel.
+
+### Livestock feed supply inputs (`FeedSupply` sheet of the property workbook)
+
+- Two named ranges set the weekly nutrition (NV) of each animal class, and the Std/High/Low options the LP can choose from:
+  `i_feedsupply_options_r1j2p` (Table 1: Std/Min/Max NV per weekly generator period for sire, dams and offspring of each
+  breed x time of lambing) and `i_feedsupply_adj_options_r2p` (Table 2: additive adjustments for **dams** by scanning
+  class, e.g. dry/single/multiple). Columns are the weekly generator periods from 1 Jan 2019 (52 per year, 494 in GSW).
+  Used in `FeedSupplyStock.f1_stock_fs`; the N-axis options in the LP are built from Std/Min/Max and `nut_spread`.
+- Rows are selected by the position on the genotype axis (g0 sires, g1 dams, g3 offspring) via `ia_r1_zig*` and
+  `ia_r2_isk2g1`, not by the genetic parameter set (`genotype` SA / `a_c2_c0`) that the position uses. A trial that
+  changes the parameter set of position 0 (e.g. `Brd4&EL_test`: Maternal) still reads the BBB rows. To run a purebred
+  maternal composite (genotype 7 as the base genotype) with the Maternal feed supply set the scalar SA `fs_base_from_g`
+  = 3; it copies the pointers of g position 3 (the Maternal rows) to position 0 (0 = no change). The
+  B x M x T dams (position 3) share the Maternal rows with the purebred maternal composite.
+  A row that a trial does not read changes its profit by exactly 0 - a quick test of whether a row is live.
+- Table 2 has no period axis (a row applies prejoining to prejoining) and only applies when `r2adjust_inc` is True. The
+  offspring rows of Table 2 are not read. In the GSW sheet the Scan 3 rows were formulas (= Scan 2) and Scan 4 rows are
+  formulas (= Scan 3); Scan 3 / Triplet are now values.
+- Input conventions (keep when editing): ewes older than 2.5 yo are run together, so values are identical for the same
+  week of the year (also within each Table 2 class); values change gradually (GSW cap 0.6 NV/week) except at pasture
+  senescence/flush and at scanning; dry/single/multiple are identical from joining to scanning; Std/Min/Max stay within
+  the p6 NV bounds.
+- The values are tuned to the biology, prices and feed supply of the model, so they go stale when the generator, energy
+  equations, partitioning or prices change; re-optimise rather than hand-tweak. Changing them changes every GSW trial in
+  exp group 2 (re-run and commit the AFO-Test results).
+- GSW values were re-optimised on N11 profit in Oct 2026 (BBB, BBT and Maternal, Autumn/Winter/Spring lambing, Scan 0-3).
+  How it was done, results, traps and a checklist for the other regions (SWV, CWW, EWW) are in
+  `.claude/feed_supply_optimisation_plan.txt` (section "WHAT WAS ACTUALLY DONE"), with the scripts and a scratch test
+  harness (runs a trial in memory with overridden feed-supply arrays, no repo code changes) in `.claude/feed_supply_tools/`.
