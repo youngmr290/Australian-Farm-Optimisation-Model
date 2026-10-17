@@ -2302,8 +2302,21 @@ def f_lwc_nfs(cg, ck, muscle, viscera, muscle_target, mei_initial, km, md, hp_ma
 
 def f_wbe_mu(cg, fat, muscle, viscera=0):
     ## calculate whole body energy content from weight, dry matter and energy density of fat, muscle and viscera.
-    wbe = fat * cg[26, ...] * cg[20, ...] + muscle * cg[27, ...] * cg[21, ...] + viscera * cg[28, ...] * cg[22, ...]
+    fat_energy = cg[20, ...] * cg[26, ...]   #MJ per kg of fat (wet)
+    muscle_energy = cg[21, ...] * cg[27, ...]    #MJ per kg of muscle (wet)
+    viscera_energy = cg[22, ...] * cg[28, ...]   #MJ per kg of viscera (wet)
+    wbe = fat * fat_energy + muscle * muscle_energy + viscera * viscera_energy
     return wbe
+
+
+def f1_wbe2fat_propn(cg, wbe, ebw):
+    ## calculate the proportion of fat in the empty body (Fat%) from whole body energy (MJ) and empty body weight (kg).
+    ## Solves wbe = fat * fat_energy + (ebw - fat) * lean_energy for fat, which is the inverse of f_wbe_mu() with the
+    ## lean split to muscle & viscera by cg[39] (as for the change in lean in f_lwc_mu()).
+    fat_energy = cg[20, ...] * cg[26, ...]   #MJ per kg of fat (wet)
+    lean_energy = cg[21, ...] * cg[27, ...] * (1 - cg[39, ...]) + cg[22, ...] * cg[28, ...] * cg[39, ...]   #MJ per kg of lean (wet)
+    fat_propn = (wbe / ebw - lean_energy) / (fat_energy - lean_energy)
+    return fat_propn
 
 
 # def f1_convert_fs2nv(fs_input, nv_p6f, feedsupply_f, a_p6_pa1e1b1nwzida0e0b0xyg):

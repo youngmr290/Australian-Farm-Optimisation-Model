@@ -411,12 +411,37 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         f1_check_trait_names(target_names, 'targets read')
         assert len(target_names) == calibration_targets_p.size == n_traits, f"{len(target_names)} calibration targets are read in the generator but Calibration_control.xlsx has {calibration_targets_p.size} targets and {n_traits} weights"
 
-        ###Calculate SRW if it is being endogenously fitted from target ALW, target Fat% and EVG
+        ###Calculate SRW if it is being endogenously fitted from the target adult weight & fatness and EVG
         ###Test on endogenous calculation is that saa[adult EVG] coefficient has a value
         ###Estimating SRW as LW at 25% fat based on ALW and Fat% of adult ewes prior to prejoining
         ###The calculation is based on the fat & lean changing based on the proportion determined by cg8 (EVG) (see W18:99)
         if adult_evg is not None:
-            sen.sav['srw_c2'][genotype] = srw_parameter = awt_target * (1 + 34.8 / (adult_evg - 13.5) * (srwfat - afatper_target))
+            ###The adult weight & fatness are from the adult fatness target that is weighted in the objective. Only one can be weighted:
+            ### aFat% - ALW is aWT
+            ### aWBE - ALW is aWT and Fat% is calculated from WBE and EBW (aWT / cg[18])
+            ### aFatMass & aLeanMass - ALW is (FatMass + LeanMass) * cg[18] and Fat% is FatMass / (FatMass + LeanMass)
+            weight_trait = dict(zip(target_names, calibration_weights_p.ravel()))
+            fatness_traits = {'aFat%': weight_trait['aFat%'] != 0, 'aWBE': weight_trait['aWBE'] != 0
+                              , 'aFatMass & aLeanMass': weight_trait['aFatMass'] != 0 and weight_trait['aLeanMass'] != 0}
+            if sum(fatness_traits.values()) != 1 or (weight_trait['aFatMass'] != 0) != (weight_trait['aLeanMass'] != 0):
+                raise ValueError(f"Endogenous SRW (adult EVG is being calibrated) requires one adult fatness trait to be weighted in"
+                                 f" [Calibration_control.xlsx]Weights: aFat%, aWBE or both aFatMass & aLeanMass. Weights are"
+                                 f" {({name: weight_trait[name] for name in ['aFat%', 'aWBE', 'aFatMass', 'aLeanMass']})}")
+            cg_c2 = uinp.parameters['i_cg_c2'][:, genotype]   #scalar for each parameter (genotype of the base model)
+            lw_ebw = cg_c2[18]   #ratio of LW to EBW
+            if fatness_traits['aFatMass & aLeanMass']:
+                srw_awt = (afatmass_target + aleanmass_target) * lw_ebw
+                srw_afatper = afatmass_target / (afatmass_target + aleanmass_target)
+            elif fatness_traits['aWBE']:
+                srw_awt = awt_target
+                srw_afatper = sfun.f1_wbe2fat_propn(cg_c2, awbe_target, awt_target / lw_ebw)
+            else:
+                srw_awt = awt_target
+                srw_afatper = afatper_target
+            sen.sav['srw_c2'][genotype] = srw_parameter = srw_awt * (1 + 34.8 / (adult_evg - 13.5) * (srwfat - srw_afatper))
+            logger.debug(f"Endogenous SRW {srw_parameter} "
+                         f"from {[k for k, v in fatness_traits.items() if v][0]} "
+                         f"target: ALW={srw_awt}, Fat%={srw_afatper}, EVG={adult_evg}")
             # srw_from_fat = awt * (1 - afatper) / (1 - srwfat_yg1)   #alternative formula that assumes lean mass is constant eg Hutton's model.
             # srw_from_fat = awt / (1 + 1.54 * (afatper - srwfat_yg1))   # alternative formula that can be fitted to simulation data (see W18:p64)
 
