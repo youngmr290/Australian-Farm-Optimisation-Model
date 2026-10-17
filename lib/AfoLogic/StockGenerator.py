@@ -59,8 +59,8 @@ logger = logging.getLogger(__name__)
 # from memory_profiler import profile
 # @profile
 def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pkl_fs={}, stubble=None
-            , calibrate_trait_values=None, calibration_weights_p=None, calibration_targets_p=None, o_trait_values=None
-            , plots=False):
+            , calibrate_trait_values=None, calibration_weights_p=None, calibration_targets_p=None
+            , calibration_trait_names_p=None, o_trait_values=None, plots=False):
     """
     A function to wrap the generator and post-processing that can be called by SheepPyomo.
 
@@ -86,6 +86,21 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         # print(coefficients_c)   #only useful for debugging when not multiprocessing (workers=1, and not multiprocessing teams)
         n_coeff = coefficients_c.size
         n_traits = calibration_weights_p.size
+
+        def f1_check_trait_names(names_generator, description):
+            ##The traits are passed from [Calibration_control.xlsx]Targets & Weights by position (not by name), so a column that is
+            ## added, removed or moved in the spreadsheet shifts every following trait. Check the trait names used in the generator
+            ## against the column headings of Targets (not case sensitive). Skipped if the names are not passed.
+            if calibration_trait_names_p is None:
+                return
+            names_sheet = [str(name).strip() for name in calibration_trait_names_p]
+            mismatch = [f"position {i}: '{name_g}' in the generator, '{name_s}' in Calibration_control.xlsx"
+                        for i, (name_g, name_s) in enumerate(zip(names_generator, names_sheet)) if name_g.lower() != name_s.lower()]
+            if len(names_generator) != len(names_sheet):
+                mismatch.append(f"{len(names_generator)} {description} in the generator but {len(names_sheet)} trait columns in Calibration_control.xlsx")
+            if mismatch:
+                raise ValueError(f"Calibration trait names ({description}) do not match [Calibration_control.xlsx]Targets:\n  "
+                                 + "\n  ".join(mismatch[:10]) + (f"\n  ... and {len(mismatch) - 10} more" if len(mismatch) > 10 else ""))
 
         ##set default values for variables that are used in the calibration
         ### These can be sa passed from exp.xlsx, therefore reset here so not applied twice
@@ -280,111 +295,130 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         assert j == n_coeff, f"{j} calibration coefficients are used in the generator but {n_coeff} are supplied in Calibration_control.xlsx"
 
         ##Assign the target for printing and done early for calculation of SRW for AWT & Fat% targets
-        i = 0
-        pcfw_target = calibration_targets_p[i]; i += 1
-        ycfw_target = calibration_targets_p[i]; i += 1
-        hcfw_target = calibration_targets_p[i]; i += 1
-        acfw_target = calibration_targets_p[i]; i += 1
-        pfd_target = calibration_targets_p[i]; i += 1
-        yfd_target = calibration_targets_p[i]; i += 1
-        hfd_target = calibration_targets_p[i]; i += 1
-        afd_target = calibration_targets_p[i]; i += 1
-        pss_target = calibration_targets_p[i]; i += 1
-        yss_target = calibration_targets_p[i]; i += 1
-        hss_target = calibration_targets_p[i]; i += 1
-        ass_target = calibration_targets_p[i]; i += 1
-        psl_target = calibration_targets_p[i]; i += 1
-        ysl_target = calibration_targets_p[i]; i += 1
-        hsl_target = calibration_targets_p[i]; i += 1
-        asl_target = calibration_targets_p[i]; i += 1
-        ycon_target = calibration_targets_p[i]; i += 1
-        a2con_target = calibration_targets_p[i]; i += 1
-        acon_target = calibration_targets_p[i]; i += 1
-        yls_target = calibration_targets_p[i]; i += 1
-        a2ls_target = calibration_targets_p[i]; i += 1
-        als_target = calibration_targets_p[i]; i += 1
-        yera_target = calibration_targets_p[i]; i += 1
-        aera_target = calibration_targets_p[i]; i += 1
-        yera2_target = calibration_targets_p[i]; i += 1
-        aera2_target = calibration_targets_p[i]; i += 1
-        bwt_target = calibration_targets_p[i]; i += 1
-        wwt_target = calibration_targets_p[i]; i += 1
-        pwt_target = calibration_targets_p[i]; i += 1
-        ywt_target = calibration_targets_p[i]; i += 1
-        hwt_target = calibration_targets_p[i]; i += 1
-        awt_target = calibration_targets_p[i]; i += 1
-        srw_target = calibration_targets_p[i]; i += 1    #srw_target is not used. Included as a trait for TraitValues.xlsx
-        pfat_target = calibration_targets_p[i]; i += 1
-        yfat_target = calibration_targets_p[i]; i += 1
-        hfat_target = calibration_targets_p[i]; i += 1
-        afat_target = calibration_targets_p[i]; i += 1
-        wcs_target = calibration_targets_p[i]; i += 1
-        pcs_target = calibration_targets_p[i]; i += 1
-        ycs_target = calibration_targets_p[i]; i += 1
-        hcs_target = calibration_targets_p[i]; i += 1
-        acs_target = calibration_targets_p[i]; i += 1
-        pwbe_target = calibration_targets_p[i]; i += 1
-        ywbe_target = calibration_targets_p[i]; i += 1
-        hwbe_target = calibration_targets_p[i]; i += 1
-        awbe_target = calibration_targets_p[i]; i += 1
-        psurv_target = calibration_targets_p[i]; i += 1
-        ysurv_target = calibration_targets_p[i]; i += 1
-        hsurv_target = calibration_targets_p[i]; i += 1
-        asurv_target = calibration_targets_p[i]; i += 1
-        ya5surv_target = calibration_targets_p[i]; i += 1
-        elw0_target = calibration_targets_p[i]; i += 1
-        elw1_target = calibration_targets_p[i]; i += 1
-        elw2_target = calibration_targets_p[i]; i += 1
-        elw3_target = calibration_targets_p[i]; i += 1
-        elw4_target = calibration_targets_p[i]; i += 1
-        elw5_target = calibration_targets_p[i]; i += 1
-        elw6_target = calibration_targets_p[i]; i += 1
-        elw7_target = calibration_targets_p[i]; i += 1
-        elw8_target = calibration_targets_p[i]; i += 1
-        elw9_target = calibration_targets_p[i]; i += 1
-        elw10_target = calibration_targets_p[i]; i += 1
-        elw11_target = calibration_targets_p[i]; i += 1
-        elw12_target = calibration_targets_p[i]; i += 1
-        elw13_target = calibration_targets_p[i]; i += 1
-        elw14_target = calibration_targets_p[i]; i += 1
-        elw15_target = calibration_targets_p[i]; i += 1
-        elw16_target = calibration_targets_p[i]; i += 1
-        elw17_target = calibration_targets_p[i]; i += 1
-        elw18_target = calibration_targets_p[i]; i += 1
-        elw19_target = calibration_targets_p[i]; i += 1
-        elw20_target = calibration_targets_p[i]; i += 1
-        elw21_target = calibration_targets_p[i]; i += 1
-        elw22_target = calibration_targets_p[i]; i += 1
-        elw23_target = calibration_targets_p[i]; i += 1
-        elw24_target = calibration_targets_p[i]; i += 1
-        elw25_target = calibration_targets_p[i]; i += 1
-        elw26_target = calibration_targets_p[i]; i += 1
-        elw27_target = calibration_targets_p[i]; i += 1
-        wlw0_target = calibration_targets_p[i]; i += 1
-        wlw1_target = calibration_targets_p[i]; i += 1
-        wlw2_target = calibration_targets_p[i]; i += 1
-        wlw3_target = calibration_targets_p[i]; i += 1
-        wlw4_target = calibration_targets_p[i]; i += 1
-        wlw5_target = calibration_targets_p[i]; i += 1
-        wlw6_target = calibration_targets_p[i]; i += 1
-        wlw7_target = calibration_targets_p[i]; i += 1
-        wlw8_target = calibration_targets_p[i]; i += 1
-        wlw9_target = calibration_targets_p[i]; i += 1
-        wlw10_target = calibration_targets_p[i]; i += 1
-        wlw11_target = calibration_targets_p[i]; i += 1
-        wlw12_target = calibration_targets_p[i]; i += 1
-        wlw13_target = calibration_targets_p[i]; i += 1
-        ##check the number of targets read matches the number of traits in [Calibration_control.xlsx]Targets & Weights
-        assert i == calibration_targets_p.size == n_traits, f"{i} calibration targets are read in the generator but Calibration_control.xlsx has {calibration_targets_p.size} targets and {n_traits} weights"
+        ###The targets are read in the order of the columns in [Calibration_control.xlsx]Targets. The name of each trait is
+        ###recorded so it can be checked against the column headings.
+        target_names = []
+        def f1_target(name):
+            i = len(target_names)
+            target_names.append(name)
+            return calibration_targets_p[i] if i < calibration_targets_p.size else np.nan
+        pcfw_target = f1_target('pCFW')
+        ycfw_target = f1_target('yCFW')
+        hcfw_target = f1_target('hCFW')
+        acfw_target = f1_target('aCFW')
+        pfd_target = f1_target('pFD')
+        yfd_target = f1_target('yFD')
+        hfd_target = f1_target('hFD')
+        afd_target = f1_target('aFD')
+        pss_target = f1_target('pSS')
+        yss_target = f1_target('ySS')
+        hss_target = f1_target('hSS')
+        ass_target = f1_target('aSS')
+        psl_target = f1_target('pSL')
+        ysl_target = f1_target('ySL')
+        hsl_target = f1_target('hSL')
+        asl_target = f1_target('aSL')
+        ycon_target = f1_target('yCON')
+        a2con_target = f1_target('a2CON')
+        acon_target = f1_target('aCON')
+        yls_target = f1_target('yLS')
+        a2ls_target = f1_target('a2LS')
+        als_target = f1_target('aLS')
+        yera_target = f1_target('yERA')
+        aera_target = f1_target('ERA')
+        yera2_target = f1_target('yERA twins')
+        aera2_target = f1_target('ERA twins')
+        bwt_target = f1_target('bWT')
+        wwt_target = f1_target('wWT')
+        pwt_target = f1_target('pWT')
+        ywt_target = f1_target('yWT')
+        hwt_target = f1_target('hWT')
+        awt_target = f1_target('aWT')
+        srw_target = f1_target('SRW')    #srw_target is not used. Included as a trait for TraitValues.xlsx
+        pfat_target = f1_target('pFAT')
+        yfat_target = f1_target('yFAT')
+        hfat_target = f1_target('hFAT')
+        afat_target = f1_target('aFAT')
+        wcs_target = f1_target('wCS')
+        pcs_target = f1_target('pCS')
+        pwbe_target = f1_target('pWBE')
+        pfatmass_target = f1_target('pFatMass')
+        pleanmass_target = f1_target('pLeanMass')
+        pfatper_target = f1_target('pFat%')
+        ycs_target = f1_target('yCS')
+        ywbe_target = f1_target('yWBE')
+        yfatmass_target = f1_target('yFatMass')
+        yleanmass_target = f1_target('yLeanMass')
+        yfatper_target = f1_target('yFat%')
+        hcs_target = f1_target('hCS')
+        hwbe_target = f1_target('hWBE')
+        hfatmass_target = f1_target('hFatMass')
+        hleanmass_target = f1_target('hLeanMass')
+        hfatper_target = f1_target('hFat%')
+        acs_target = f1_target('aCS')
+        awbe_target = f1_target('aWBE')
+        afatmass_target = f1_target('aFatMass')
+        aleanmass_target = f1_target('aLeanMass')
+        afatper_target = f1_target('aFat%')
+        psurv_target = f1_target('pSURV')
+        ysurv_target = f1_target('ySURV')
+        hsurv_target = f1_target('hSURV')
+        asurv_target = f1_target('aSURV')
+        ya5surv_target = f1_target('y-a5SURV')
+        elw0_target = f1_target('ELW0')
+        elw1_target = f1_target('ELW1')
+        elw2_target = f1_target('ELW2')
+        elw3_target = f1_target('ELW3')
+        elw4_target = f1_target('ELW4')
+        elw5_target = f1_target('ELW5')
+        elw6_target = f1_target('ELW6')
+        elw7_target = f1_target('ELW7')
+        elw8_target = f1_target('ELW8')
+        elw9_target = f1_target('ELW9')
+        elw10_target = f1_target('ELW10')
+        elw11_target = f1_target('ELW11')
+        elw12_target = f1_target('ELW12')
+        elw13_target = f1_target('ELW13')
+        elw14_target = f1_target('ELW14')
+        elw15_target = f1_target('ELW15')
+        elw16_target = f1_target('ELW16')
+        elw17_target = f1_target('ELW17')
+        elw18_target = f1_target('ELW18')
+        elw19_target = f1_target('ELW19')
+        elw20_target = f1_target('ELW20')
+        elw21_target = f1_target('ELW21')
+        elw22_target = f1_target('ELW22')
+        elw23_target = f1_target('ELW23')
+        elw24_target = f1_target('ELW24')
+        elw25_target = f1_target('ELW25')
+        elw26_target = f1_target('ELW26')
+        elw27_target = f1_target('ELW27')
+        wlw0_target = f1_target('WLW0')
+        wlw1_target = f1_target('WLW1')
+        wlw2_target = f1_target('WLW2')
+        wlw3_target = f1_target('WLW3')
+        wlw4_target = f1_target('WLW4')
+        wlw5_target = f1_target('WLW5')
+        wlw6_target = f1_target('WLW6')
+        wlw7_target = f1_target('WLW7')
+        wlw8_target = f1_target('WLW8')
+        wlw9_target = f1_target('WLW9')
+        wlw10_target = f1_target('WLW10')
+        wlw11_target = f1_target('WLW11')
+        wlw12_target = f1_target('WLW12')
+        wlw13_target = f1_target('WLW13')
+        ##check the targets read match the traits in [Calibration_control.xlsx]Targets & Weights
+        f1_check_trait_names(target_names, 'targets read')
+        assert len(target_names) == calibration_targets_p.size == n_traits, f"{len(target_names)} calibration targets are read in the generator but Calibration_control.xlsx has {calibration_targets_p.size} targets and {n_traits} weights"
 
         ###Calculate SRW if it is being endogenously fitted from target ALW, target Fat% and EVG
         ###Test on endogenous calculation is that saa[adult EVG] coefficient has a value
         ###Estimating SRW as LW at 25% fat based on ALW and Fat% of adult ewes prior to prejoining
         ###The calculation is based on the fat & lean changing based on the proportion determined by cg8 (EVG) (see W18:99)
         if adult_evg is not None:
-            sen.sav['srw_c2'][genotype] = srw_parameter = awt_target * (1 + 34.8 / (adult_evg - 13.5) * (srwfat - awbe_target))
-            # srw_from_fat = awt * (1 - awbe) / (1 - srwfat_yg1)   #alternative formula that assumes lean mass is constant eg Hutton's model.
-            # srw_from_fat = awt / (1 + 1.54 * (awbe - srwfat_yg1))   # alternative formula that can be fitted to simulation data (see W18:p64)
+            sen.sav['srw_c2'][genotype] = srw_parameter = awt_target * (1 + 34.8 / (adult_evg - 13.5) * (srwfat - afatper_target))
+            # srw_from_fat = awt * (1 - afatper) / (1 - srwfat_yg1)   #alternative formula that assumes lean mass is constant eg Hutton's model.
+            # srw_from_fat = awt / (1 + 1.54 * (afatper - srwfat_yg1))   # alternative formula that can be fitted to simulation data (see W18:p64)
 
         ###Apply the SAA for genotype calibration that exclude the p11 axis
         uinp.parameters['i_srw_c2'] = fun.f_sa(uinp.parameters['i_srw_c2'].astype(float), sen.sav['srw_c2'], 5)
@@ -8142,22 +8176,59 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         a4fat = fun.f_slice(o_cfat_start_tpdams, a4_wt_slc, default=0)
         a5fat = fun.f_slice(o_cfat_start_tpdams, a5_wt_slc, default=0)
         afat = (a2fat + a3fat + a4fat + a5fat) / 4
-        ##WBE is Fat% (weight of fat divided by empty body weight)
-        pwbe = fun.f_divide_float(fun.f_slice(r_fat_tpdams, p_wt_slc, default=0)
-                                , fun.f_slice(r_ebw_tpdams, p_wt_slc, default=0))
-        ywbe = fun.f_divide_float(fun.f_slice(r_fat_tpdams, y_wt_slc, default=0)
-                                , fun.f_slice(r_ebw_tpdams, y_wt_slc, default=0))
-        hwbe = fun.f_divide_float(fun.f_slice(r_fat_tpdams, h_wt_slc, default=0)
-                                , fun.f_slice(r_ebw_tpdams, h_wt_slc, default=0))
-        a2wbe = fun.f_divide_float(fun.f_slice(r_fat_tpdams, a2_wt_slc, default=0)
-                                 , fun.f_slice(r_ebw_tpdams, a2_wt_slc, default=0))
-        a3wbe = fun.f_divide_float(fun.f_slice(r_fat_tpdams, a3_wt_slc, default=0)
-                                 , fun.f_slice(r_ebw_tpdams, a3_wt_slc, default=0))
-        a4wbe = fun.f_divide_float(fun.f_slice(r_fat_tpdams, a4_wt_slc, default=0)
-                                 , fun.f_slice(r_ebw_tpdams, a4_wt_slc, default=0))
-        a5wbe = fun.f_divide_float(fun.f_slice(r_fat_tpdams, a5_wt_slc, default=0)
-                                 , fun.f_slice(r_ebw_tpdams, a5_wt_slc, default=0))
+        ##Condition score
+        wcs = np.average(fun.f_slice(o_cs_start_tpyatf, w_wt_slc))
+        pcs = fun.f_slice(o_cs_start_tpdams, p_wt_slc, default=0)
+        ycs = fun.f_slice(o_cs_start_tpdams, y_wt_slc, default=0)
+        hcs = fun.f_slice(o_cs_start_tpdams, h_wt_slc, default=0)
+        a2cs = fun.f_slice(o_cs_start_tpdams, a2_wt_slc, default=0)
+        a3cs = fun.f_slice(o_cs_start_tpdams, a3_wt_slc, default=0)
+        a4cs = fun.f_slice(o_cs_start_tpdams, a4_wt_slc, default=0)
+        a5cs = fun.f_slice(o_cs_start_tpdams, a5_wt_slc, default=0)
+        acs = (a2cs + a3cs + a4cs + a5cs) / 4
+        ##Whole body energy (MJ). Energy in fat, muscle & viscera (excludes wool & conceptus)
+        pwbe = fun.f_slice(r_wbe_tpdams, p_wt_slc, default=0)
+        ywbe = fun.f_slice(r_wbe_tpdams, y_wt_slc, default=0)
+        hwbe = fun.f_slice(r_wbe_tpdams, h_wt_slc, default=0)
+        a2wbe = fun.f_slice(r_wbe_tpdams, a2_wt_slc, default=0)
+        a3wbe = fun.f_slice(r_wbe_tpdams, a3_wt_slc, default=0)
+        a4wbe = fun.f_slice(r_wbe_tpdams, a4_wt_slc, default=0)
+        a5wbe = fun.f_slice(r_wbe_tpdams, a5_wt_slc, default=0)
         awbe = (a2wbe + a3wbe + a4wbe + a5wbe) / 4
+        ##Fat mass (kg)
+        pfatmass = fun.f_slice(r_fat_tpdams, p_wt_slc, default=0)
+        yfatmass = fun.f_slice(r_fat_tpdams, y_wt_slc, default=0)
+        hfatmass = fun.f_slice(r_fat_tpdams, h_wt_slc, default=0)
+        a2fatmass = fun.f_slice(r_fat_tpdams, a2_wt_slc, default=0)
+        a3fatmass = fun.f_slice(r_fat_tpdams, a3_wt_slc, default=0)
+        a4fatmass = fun.f_slice(r_fat_tpdams, a4_wt_slc, default=0)
+        a5fatmass = fun.f_slice(r_fat_tpdams, a5_wt_slc, default=0)
+        afatmass = (a2fatmass + a3fatmass + a4fatmass + a5fatmass) / 4
+        ##Lean mass (kg). Muscle + viscera
+        pleanmass = fun.f_slice(r_lean_tpdams, p_wt_slc, default=0)
+        yleanmass = fun.f_slice(r_lean_tpdams, y_wt_slc, default=0)
+        hleanmass = fun.f_slice(r_lean_tpdams, h_wt_slc, default=0)
+        a2leanmass = fun.f_slice(r_lean_tpdams, a2_wt_slc, default=0)
+        a3leanmass = fun.f_slice(r_lean_tpdams, a3_wt_slc, default=0)
+        a4leanmass = fun.f_slice(r_lean_tpdams, a4_wt_slc, default=0)
+        a5leanmass = fun.f_slice(r_lean_tpdams, a5_wt_slc, default=0)
+        aleanmass = (a2leanmass + a3leanmass + a4leanmass + a5leanmass) / 4
+        ##Fat% (weight of fat divided by empty body weight)
+        pfatper = fun.f_divide_float(fun.f_slice(r_fat_tpdams, p_wt_slc, default=0)
+                                   , fun.f_slice(r_ebw_tpdams, p_wt_slc, default=0))
+        yfatper = fun.f_divide_float(fun.f_slice(r_fat_tpdams, y_wt_slc, default=0)
+                                   , fun.f_slice(r_ebw_tpdams, y_wt_slc, default=0))
+        hfatper = fun.f_divide_float(fun.f_slice(r_fat_tpdams, h_wt_slc, default=0)
+                                   , fun.f_slice(r_ebw_tpdams, h_wt_slc, default=0))
+        a2fatper = fun.f_divide_float(fun.f_slice(r_fat_tpdams, a2_wt_slc, default=0)
+                                    , fun.f_slice(r_ebw_tpdams, a2_wt_slc, default=0))
+        a3fatper = fun.f_divide_float(fun.f_slice(r_fat_tpdams, a3_wt_slc, default=0)
+                                    , fun.f_slice(r_ebw_tpdams, a3_wt_slc, default=0))
+        a4fatper = fun.f_divide_float(fun.f_slice(r_fat_tpdams, a4_wt_slc, default=0)
+                                    , fun.f_slice(r_ebw_tpdams, a4_wt_slc, default=0))
+        a5fatper = fun.f_divide_float(fun.f_slice(r_fat_tpdams, a5_wt_slc, default=0)
+                                    , fun.f_slice(r_ebw_tpdams, a5_wt_slc, default=0))
+        afatper = (a2fatper + a3fatper + a4fatper + a5fatper) / 4
 
         ##Adult SRW parameter averaged across adult age stages. Used in calculation of fat_at_srw
         a2srw = fun.f_slice(srw_p_pa1e1b1nwzida0e0b0xyg1, a2_srw_slc, default=0)
@@ -8172,23 +8243,12 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         ###The calculation is based on the fat & lean changing based on the proportion determined by cg8 (EVG) (see W18:99)
         ###This calculation is only used in the reporting
         cg8 = cg_cpdams[8, ...].item()
-        srw_from_fat = awt * (1 + 34.8 / (cg8 - 13.5) * (srwfat_yg1[0,0] - awbe))
-        # srw_from_fat = awt * (1 - awbe) / (1 - srwfat_yg1)   #alternate formula that assumes lean mass is constant eg Hutton's model.
-        # srw_from_fat = awt / (1 + 1.54 * (awbe - srwfat_yg1))   # alternative formula that can be fitted to simulation data (see W18:p64)
+        srw_from_fat = awt * (1 + 34.8 / (cg8 - 13.5) * (srwfat_yg1[0,0] - afatper))
+        # srw_from_fat = awt * (1 - afatper) / (1 - srwfat_yg1)   #alternate formula that assumes lean mass is constant eg Hutton's model.
+        # srw_from_fat = awt / (1 + 1.54 * (afatper - srwfat_yg1))   # alternative formula that can be fitted to simulation data (see W18:p64)
         ###Estimated proportion of fat in the body at the srw. Using same formula as above
-        fat_at_srw = awbe + (cg8 - 13.5) / 34.8 * (srw_actual - awt) / awt
-        # fat_at_srw = 1 - (awt / srw_actual * (1 - awbe))     #alternate formula if lean is constant
-
-        ##Condition score
-        wcs = np.average(fun.f_slice(o_cs_start_tpyatf, w_wt_slc))
-        pcs = fun.f_slice(o_cs_start_tpdams, p_wt_slc, default=0)
-        ycs = fun.f_slice(o_cs_start_tpdams, y_wt_slc, default=0)
-        hcs = fun.f_slice(o_cs_start_tpdams, h_wt_slc, default=0)
-        a2cs = fun.f_slice(o_cs_start_tpdams, a2_wt_slc, default=0)
-        a3cs = fun.f_slice(o_cs_start_tpdams, a3_wt_slc, default=0)
-        a4cs = fun.f_slice(o_cs_start_tpdams, a4_wt_slc, default=0)
-        a5cs = fun.f_slice(o_cs_start_tpdams, a5_wt_slc, default=0)
-        acs = (a2cs + a3cs + a4cs + a5cs) / 4
+        fat_at_srw = afatper + (cg8 - 13.5) / 34.8 * (srw_actual - awt) / awt
+        # fat_at_srw = 1 - (awt / srw_actual * (1 - afatper))     #alternate formula if lean is constant
 
         ## Survival. mortality_dams is the sum of base + weaner + perinatal + preg tox.
         ### Using the fleece growth slices for the martality periods.
@@ -8255,103 +8315,120 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
         ##Assign the calibration values for each production trait (p)
         ###All traits are assigned but some may not be weighted in the Objective
-        trait_values_p = np.zeros_like(calibration_targets_p)
-        i = 0
-        trait_values_p[i] = pcfw; i += 1
-        trait_values_p[i] = ycfw; i += 1
-        trait_values_p[i] = hcfw; i += 1
-        trait_values_p[i] = acfw; i += 1
-        trait_values_p[i] = pfd; i += 1
-        trait_values_p[i] = yfd; i += 1
-        trait_values_p[i] = hfd; i += 1
-        trait_values_p[i] = afd; i += 1
-        trait_values_p[i] = pss; i += 1
-        trait_values_p[i] = yss; i += 1
-        trait_values_p[i] = hss; i += 1
-        trait_values_p[i] = ass; i += 1
-        trait_values_p[i] = psl; i += 1
-        trait_values_p[i] = ysl; i += 1
-        trait_values_p[i] = hsl; i += 1
-        trait_values_p[i] = asl; i += 1
-        trait_values_p[i] = ycon; i += 1
-        trait_values_p[i] = a2con; i += 1
-        trait_values_p[i] = acon; i += 1
-        trait_values_p[i] = yls; i += 1
-        trait_values_p[i] = a2ls; i += 1
-        trait_values_p[i] = als; i += 1
-        trait_values_p[i] = yera; i += 1
-        trait_values_p[i] = aera; i += 1
-        trait_values_p[i] = yera2; i += 1
-        trait_values_p[i] = aera2; i += 1
-        trait_values_p[i] = bwt; i += 1
-        trait_values_p[i] = wwt; i += 1
-        trait_values_p[i] = pwt; i += 1
-        trait_values_p[i] = ywt; i += 1
-        trait_values_p[i] = hwt; i += 1
-        trait_values_p[i] = awt; i += 1
-        trait_values_p[i] = srw_parameter; i += 1   # srw_parameter is saved to TraitValues.xlsx because srw_p11 can be added to it
-        trait_values_p[i] = pfat; i += 1
-        trait_values_p[i] = yfat; i += 1
-        trait_values_p[i] = hfat; i += 1
-        trait_values_p[i] = afat; i += 1
-        trait_values_p[i] = wcs; i += 1
-        trait_values_p[i] = pcs; i += 1
-        trait_values_p[i] = ycs; i += 1
-        trait_values_p[i] = hcs; i += 1
-        trait_values_p[i] = acs; i += 1
-        trait_values_p[i] = pwbe; i += 1
-        trait_values_p[i] = ywbe; i += 1
-        trait_values_p[i] = hwbe; i += 1
-        trait_values_p[i] = awbe; i += 1
-        trait_values_p[i] = psurv; i += 1
-        trait_values_p[i] = ysurv; i += 1
-        trait_values_p[i] = hsurv; i += 1
-        trait_values_p[i] = asurv; i += 1
-        trait_values_p[i] = ya5surv; i += 1
-        trait_values_p[i] = elw0; i += 1
-        trait_values_p[i] = elw1; i += 1
-        trait_values_p[i] = elw2; i += 1
-        trait_values_p[i] = elw3; i += 1
-        trait_values_p[i] = elw4; i += 1
-        trait_values_p[i] = elw5; i += 1
-        trait_values_p[i] = elw6; i += 1
-        trait_values_p[i] = elw7; i += 1
-        trait_values_p[i] = elw8; i += 1
-        trait_values_p[i] = elw9; i += 1
-        trait_values_p[i] = elw10; i += 1
-        trait_values_p[i] = elw11; i += 1
-        trait_values_p[i] = elw12; i += 1
-        trait_values_p[i] = elw13; i += 1
-        trait_values_p[i] = elw14; i += 1
-        trait_values_p[i] = elw15; i += 1
-        trait_values_p[i] = elw16; i += 1
-        trait_values_p[i] = elw17; i += 1
-        trait_values_p[i] = elw18; i += 1
-        trait_values_p[i] = elw19; i += 1
-        trait_values_p[i] = elw20; i += 1
-        trait_values_p[i] = elw21; i += 1
-        trait_values_p[i] = elw22; i += 1
-        trait_values_p[i] = elw23; i += 1
-        trait_values_p[i] = elw24; i += 1
-        trait_values_p[i] = elw25; i += 1
-        trait_values_p[i] = elw26; i += 1
-        trait_values_p[i] = elw27; i += 1
-        trait_values_p[i] = wlw0; i += 1
-        trait_values_p[i] = wlw1; i += 1
-        trait_values_p[i] = wlw2; i += 1
-        trait_values_p[i] = wlw3; i += 1
-        trait_values_p[i] = wlw4; i += 1
-        trait_values_p[i] = wlw5; i += 1
-        trait_values_p[i] = wlw6; i += 1
-        trait_values_p[i] = wlw7; i += 1
-        trait_values_p[i] = wlw8; i += 1
-        trait_values_p[i] = wlw9; i += 1
-        trait_values_p[i] = wlw10; i += 1
-        trait_values_p[i] = wlw11; i += 1
-        trait_values_p[i] = wlw12; i += 1
-        trait_values_p[i] = wlw13; i += 1
+        ###in the order of the columns in [Calibration_control.xlsx]Targets, with the trait name checked against the column heading
+        trait_values = [
+            ('pCFW', pcfw),
+            ('yCFW', ycfw),
+            ('hCFW', hcfw),
+            ('aCFW', acfw),
+            ('pFD', pfd),
+            ('yFD', yfd),
+            ('hFD', hfd),
+            ('aFD', afd),
+            ('pSS', pss),
+            ('ySS', yss),
+            ('hSS', hss),
+            ('aSS', ass),
+            ('pSL', psl),
+            ('ySL', ysl),
+            ('hSL', hsl),
+            ('aSL', asl),
+            ('yCON', ycon),
+            ('a2CON', a2con),
+            ('aCON', acon),
+            ('yLS', yls),
+            ('a2LS', a2ls),
+            ('aLS', als),
+            ('yERA', yera),
+            ('ERA', aera),
+            ('yERA twins', yera2),
+            ('ERA twins', aera2),
+            ('bWT', bwt),
+            ('wWT', wwt),
+            ('pWT', pwt),
+            ('yWT', ywt),
+            ('hWT', hwt),
+            ('aWT', awt),
+            ('SRW', srw_parameter),   # srw_parameter is saved to TraitValues.xlsx because srw_p11 can be added to it
+            ('pFAT', pfat),
+            ('yFAT', yfat),
+            ('hFAT', hfat),
+            ('aFAT', afat),
+            ('wCS', wcs),
+            ('pCS', pcs),
+            ('pWBE', pwbe),
+            ('pFatMass', pfatmass),
+            ('pLeanMass', pleanmass),
+            ('pFat%', pfatper),
+            ('yCS', ycs),
+            ('yWBE', ywbe),
+            ('yFatMass', yfatmass),
+            ('yLeanMass', yleanmass),
+            ('yFat%', yfatper),
+            ('hCS', hcs),
+            ('hWBE', hwbe),
+            ('hFatMass', hfatmass),
+            ('hLeanMass', hleanmass),
+            ('hFat%', hfatper),
+            ('aCS', acs),
+            ('aWBE', awbe),
+            ('aFatMass', afatmass),
+            ('aLeanMass', aleanmass),
+            ('aFat%', afatper),
+            ('pSURV', psurv),
+            ('ySURV', ysurv),
+            ('hSURV', hsurv),
+            ('aSURV', asurv),
+            ('y-a5SURV', ya5surv),
+            ('ELW0', elw0),
+            ('ELW1', elw1),
+            ('ELW2', elw2),
+            ('ELW3', elw3),
+            ('ELW4', elw4),
+            ('ELW5', elw5),
+            ('ELW6', elw6),
+            ('ELW7', elw7),
+            ('ELW8', elw8),
+            ('ELW9', elw9),
+            ('ELW10', elw10),
+            ('ELW11', elw11),
+            ('ELW12', elw12),
+            ('ELW13', elw13),
+            ('ELW14', elw14),
+            ('ELW15', elw15),
+            ('ELW16', elw16),
+            ('ELW17', elw17),
+            ('ELW18', elw18),
+            ('ELW19', elw19),
+            ('ELW20', elw20),
+            ('ELW21', elw21),
+            ('ELW22', elw22),
+            ('ELW23', elw23),
+            ('ELW24', elw24),
+            ('ELW25', elw25),
+            ('ELW26', elw26),
+            ('ELW27', elw27),
+            ('WLW0', wlw0),
+            ('WLW1', wlw1),
+            ('WLW2', wlw2),
+            ('WLW3', wlw3),
+            ('WLW4', wlw4),
+            ('WLW5', wlw5),
+            ('WLW6', wlw6),
+            ('WLW7', wlw7),
+            ('WLW8', wlw8),
+            ('WLW9', wlw9),
+            ('WLW10', wlw10),
+            ('WLW11', wlw11),
+            ('WLW12', wlw12),
+            ('WLW13', wlw13),
+        ]
         ##check every trait has been assigned (unassigned traits would be left as 0 in the objective)
-        assert i == n_traits, f"{i} trait values are calculated in the generator but Calibration_control.xlsx has {n_traits} traits"
+        f1_check_trait_names([name for name, value in trait_values], 'trait values calculated')
+        assert len(trait_values) == n_traits, f"{len(trait_values)} trait values are calculated in the generator but Calibration_control.xlsx has {n_traits} traits"
+        trait_values_p = np.zeros_like(calibration_targets_p)
+        for i, (name, value) in enumerate(trait_values):
+            trait_values_p[i] = value
 
         #if calibrate_trait_values:
         ### Handle the multi-trait calibration using an a-priority method
@@ -8430,8 +8507,23 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             logger.debug(f"HWBE target {hwbe_target} this {hwbe} with (EVG={sen.saa['evg_p11'][h]} & PI={sen.saa['pi_p11'][h]})")
             logger.debug(f"AWBE target {awbe_target} this {awbe} with (EVG={sen.saa['evg_p11'][a]} & PI={sen.saa['pi_p11'][a]})")
             logger.debug(f"2yo={a2wbe} 3yo={a3wbe} 4yo={a4wbe} 5yo={a5wbe}")
-            logger.debug(f"Estimated Fat% when ALW = SRW, {fat_at_srw} with (SRW_actual={srw_actual}, ALW={awt}, Fat%={awbe} & EVG={cg8})")
-            logger.debug(f"Estimated SRW when Fat% = {srwfat_yg1[0,0]*100}, {srw_from_fat} with (ALW={awt}, Fat%={awbe} & EVG={cg8})")
+            logger.debug(f"PFATMASS target {pfatmass_target} this {pfatmass} with (EVG={sen.saa['evg_p11'][p]} & PI={sen.saa['pi_p11'][p]})")
+            logger.debug(f"YFATMASS target {yfatmass_target} this {yfatmass} with (EVG={sen.saa['evg_p11'][y]} & PI={sen.saa['pi_p11'][y]})")
+            logger.debug(f"HFATMASS target {hfatmass_target} this {hfatmass} with (EVG={sen.saa['evg_p11'][h]} & PI={sen.saa['pi_p11'][h]})")
+            logger.debug(f"AFATMASS target {afatmass_target} this {afatmass} with (EVG={sen.saa['evg_p11'][a]} & PI={sen.saa['pi_p11'][a]})")
+            logger.debug(f"2yo={a2fatmass} 3yo={a3fatmass} 4yo={a4fatmass} 5yo={a5fatmass}")
+            logger.debug(f"PLEANMASS target {pleanmass_target} this {pleanmass} with (EVG={sen.saa['evg_p11'][p]} & PI={sen.saa['pi_p11'][p]})")
+            logger.debug(f"YLEANMASS target {yleanmass_target} this {yleanmass} with (EVG={sen.saa['evg_p11'][y]} & PI={sen.saa['pi_p11'][y]})")
+            logger.debug(f"HLEANMASS target {hleanmass_target} this {hleanmass} with (EVG={sen.saa['evg_p11'][h]} & PI={sen.saa['pi_p11'][h]})")
+            logger.debug(f"ALEANMASS target {aleanmass_target} this {aleanmass} with (EVG={sen.saa['evg_p11'][a]} & PI={sen.saa['pi_p11'][a]})")
+            logger.debug(f"2yo={a2leanmass} 3yo={a3leanmass} 4yo={a4leanmass} 5yo={a5leanmass}")
+            logger.debug(f"PFATPER target {pfatper_target} this {pfatper} with (EVG={sen.saa['evg_p11'][p]} & PI={sen.saa['pi_p11'][p]})")
+            logger.debug(f"YFATPER target {yfatper_target} this {yfatper} with (EVG={sen.saa['evg_p11'][y]} & PI={sen.saa['pi_p11'][y]})")
+            logger.debug(f"HFATPER target {hfatper_target} this {hfatper} with (EVG={sen.saa['evg_p11'][h]} & PI={sen.saa['pi_p11'][h]})")
+            logger.debug(f"AFATPER target {afatper_target} this {afatper} with (EVG={sen.saa['evg_p11'][a]} & PI={sen.saa['pi_p11'][a]})")
+            logger.debug(f"2yo={a2fatper} 3yo={a3fatper} 4yo={a4fatper} 5yo={a5fatper}")
+            logger.debug(f"Estimated Fat% when ALW = SRW, {fat_at_srw} with (SRW_actual={srw_actual}, ALW={awt}, Fat%={afatper} & EVG={cg8})")
+            logger.debug(f"Estimated SRW when Fat% = {srwfat_yg1[0,0]*100}, {srw_from_fat} with (ALW={awt}, Fat%={afatper} & EVG={cg8})")
             logger.debug(f"PSURV target {psurv_target} this {psurv} with ({sen.saa['bsurv_p11'][p]})")
             logger.debug(f"YSURV target {ysurv_target} this {ysurv} with ({sen.saa['bsurv_p11'][y]})")
             logger.debug(f"HSURV target {hsurv_target} this {hsurv} with ({sen.saa['bsurv_p11'][h]})")

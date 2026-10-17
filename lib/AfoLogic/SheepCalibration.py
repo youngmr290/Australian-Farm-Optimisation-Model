@@ -186,6 +186,11 @@ def check_calibration_control(df_targets_tp, df_weights_p, df_bestbet_tc, df_bnd
     ##one weight for each target trait
     if df_weights_p.shape[1] != df_targets_tp.shape[1]:
         problems.append(f"Weights has {df_weights_p.shape[1]} trait columns but Targets has {df_targets_tp.shape[1]}.")
+    else:
+        ##same trait in each column (not case sensitive). The generator also checks the Targets names against its own list.
+        for c, (name_w, name_t) in enumerate(zip(df_weights_p.columns, df_targets_tp.columns)):
+            if str(name_w).strip().lower() != str(name_t).strip().lower():
+                problems.append(f"Weights column {c} is '{name_w}' but Targets column {c} is '{name_t}'.")
     ##bounds must be valid and contain the best bet (only checked if the shapes line up)
     if not problems:
         lo, up, bestbet = df_bnd_lo_tc.values, df_bnd_up_tc.values, df_bestbet_tc.values
@@ -287,6 +292,7 @@ def calibration_objective(coefficients_c, context):
         calibrate_trait_values=RUN_CALIBRATION,
         calibration_weights_p=context["calibration_weights"],
         calibration_targets_p=context["calibration_targets"],
+        calibration_trait_names_p=context["trait_names_p"],
     )
 
 
@@ -300,7 +306,7 @@ def run_calibration_for_team_worker(t):
 
 
 def build_context(targets_tp, weights_p, bestbet_tc, bnd_lo_tc, bnd_up_tc, n_coef, *, team_processes
-                  , trial, exp_data, trial_pinp, sinp_defaults, uinp_defaults, pinp_defaults):
+                  , trait_names_p, trial, exp_data, trial_pinp, sinp_defaults, uinp_defaults, pinp_defaults):
     """Collect the values needed by team calibration and objective evaluation.
 
     Requires sen to be populated for the current trial (see reset_trial_inputs) because the DE polish, tol
@@ -316,6 +322,7 @@ def build_context(targets_tp, weights_p, bestbet_tc, bnd_lo_tc, bnd_up_tc, n_coe
     return {
         "targets_tp": targets_tp,
         "weights_p": weights_p,
+        "trait_names_p": trait_names_p,
         "bestbet_tc": bestbet_tc,
         "bnd_lo_tc": bnd_lo_tc,
         "bnd_up_tc": bnd_up_tc,
@@ -444,6 +451,7 @@ def main():
             bnd_up_tc,
             n_coef,
             team_processes=team_processes,
+            trait_names_p=list(df_targets_tp.columns),
             trial=trial,
             exp_data=exp_data,
             trial_pinp=trial_pinp,
@@ -518,6 +526,7 @@ def main():
                     stubble = context["stubble"],
                     calibration_weights_p = context["weights_p"],
                     calibration_targets_p = context["targets_tp"][t],
+                    calibration_trait_names_p = context["trait_names_p"],
                 )
 
     ## this is for saving the calibration trait values for each team.
@@ -533,7 +542,7 @@ def main():
                     print(f"Warning: No output for Trial {trial} Team {t}")
 
         if data:
-            traits_to_save = pd.DataFrame(data).T
+            traits_to_save = pd.DataFrame(data, index=df_targets_tp.columns).T   #trait names as the column headings
             trait_file_path = relativeFile.find(__file__, "../../Output", "TraitValues.xlsx")
             with fun.f_excel_writer(trait_file_path) as writer:
                 traits_to_save.to_excel(writer, sheet_name='Traits', index=True, header=True)
