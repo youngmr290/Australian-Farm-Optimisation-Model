@@ -422,6 +422,7 @@ def create_sa():
     sav['date_shear_isxg3'] = np.full((len_i, len_s, len_x, len_g3), '-', dtype=object)      # SA value for the shearing offs
     sav['g3_included']      = np.full(pinp.sheep['i_g3_inc'].shape, '-', dtype=object)      # SA value for the inclusion of each offspring genotype
     sav['genotype']         = np.full(pinp.sheep['a_c2_c0'].shape, '-', dtype=object)       # this is the selection of the genotypes of the sires for B, M & T
+    sav['fs_bbb_from_g']    = '-'            # SA value for the g position whose feed supply rows are copied to the BBB genotype (position 0, BBB): 0 = no change, 3 = BMT rows. Used to run a purebred maternal composite (genotype 7) with the BMT feed supply
     sav['dse_type']         = '-'            # SA value for the dse type (0 is hd, 1 is MJ)
     sav['scan_og1']         = np.full(pinp.sheep['i_scan_og1'].shape, '-', dtype=object)    # SA value for the scanning management option
     sav['nut_mask_dams_oWi'] = np.full((pinp.sheep['i_o_len'], len_max_W1, pinp.sheep['i_i_len']), '-', dtype=object)    #masks the nutrition options available e.g. high low high - the options selected are available for each starting weight (ie len_W = len_w/n_start_weights). This array is cut down in the code to the correct w len.

@@ -508,6 +508,18 @@ def f_property_inp_sa(pinp_defaults):
     sheep['ia_r2_isk2g1'] = fun.f_sa(sheep['ia_r2_isk2g1'], sen.saa['r2_isk2g1'], 2).astype('int')
     sheep['ia_r1_zig3'] = fun.f_sa(sheep['ia_r1_zig3'], sen.saa['r1_izg3'], 2).astype('int')
     sheep['ia_r2_ik5g3'] = fun.f_sa(sheep['ia_r2_ik5g3'], sen.saa['r2_ik5g3'], 2).astype('int')
+    ###Feed supply for the base genotype (BBB, position 0 of the g axis). The feed supply tables hold a block of rows
+    ###for each breed (BBB, BBT, Maternal) and the ia_r1 & ia_r2 arrays point to the rows used by each g position.
+    ###A purebred maternal composite is run as the base genotype (SA 'genotype') so it would use the BBB rows.
+    ###The pointers of g position [fs_base_from_g] are copied to position 0 so the base genotype uses that feed supply
+    ###(eg 3 is the Maternal rows so BBB maternal compoisites use the BMT feed supply). 0 leaves the inputs as is.
+    fs_bbb_from_g = int(fun.f_sa(0, sen.sav['fs_bbb_from_g'], 5))
+    if fs_bbb_from_g != 0:
+        for name in ['ia_r1_zig1', 'ia_r1_zig3', 'ia_r2_ik0g1', 'ia_r2_ik1g1', 'ia_r2_isk2g1'
+                     , 'ia_r2_ik0g3', 'ia_r2_ik3g3', 'ia_r2_ik4g3', 'ia_r2_ik5g3']:
+            a = np.array(sheep[name])  #copy so the default inputs are not altered
+            a[..., 0] = a[..., fs_bbb_from_g]
+            sheep[name] = a
     sheep['i_date_born1st_iog2'] = fun.f_sa(sheep['i_date_born1st_iog2'], sen.saa['date_born1st_iog'], 2)
     #sheep['i_date_born1st_idg3'] = fun.f_sa(sheep['i_date_born1st_idg3'], sen.saa['date_born1st_iog'], 2)
     feedsupply['i_feedsupply_options_r1j2p'] = fun.f_sa(feedsupply['i_feedsupply_options_r1j2p'], sen.saa['feedsupply_r1jp'], 2)
