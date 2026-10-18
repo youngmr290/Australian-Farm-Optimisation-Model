@@ -254,6 +254,86 @@ def f1_DSTw(scan_g, cycles=1):
     dstwtr_gl0[..., 1] = 1 - np.sum(dstwtr_gl0 * t_mask, axis = -1) # mask out the Singles value in the sum of the array across the l0 axis
     return dstwtr_gl0
 
+def f1_dstwtr_adj(dstwtr_l0, con, ls, cycles=2):
+    '''
+    Adjust the proportion of dry, single, twin & triplet bearing dams for a change in conception and litter size,
+    e.g. the difference between a calibrated genotype and the std genotype.
+    Conception and litter size are adjusted independently. The proportion dry is reduced by con and the
+    proportion of singles, twins & triplets of the pregnant dams is the proportion predicted by f1_DSTw() at the
+    scanning percentage that has a litter size equal to the std litter size + ls.
+    If con & ls are 0 the proportions are unchanged.
+
+    :param dstwtr_l0: np array - proportion of dry, single, twin & triplet bearing dams (l0 axis first) from f1_DSTw().
+    :param con: np array - change in conception (proportion of dams pregnant). Broadcastable to dstwtr_l0[0].
+    :param ls: np array - change in litter size (foetuses per pregnant dam). Broadcastable to dstwtr_l0[0].
+    :param cycles: int, optional - the number of cycles used to calculate dstwtr_l0.
+    :return: Proportion of dry, single, twins & triplets (l0 axis first) adjusted for con & ls.
+    '''
+    nfoet_l0 = np.arange(4).reshape((4,) + (1,) * (dstwtr_l0.ndim - 1))
+    def f_ls(dst_l0):
+        return fun.f_divide(np.sum(dst_l0 * nfoet_l0[:, ...], axis=0), 1 - dst_l0[0])
+    ##litter size required
+    ls_target = f_ls(dstwtr_l0) + ls
+    ##litter size predicted by f1_DSTw() for a range of scanning percentages. Only the range where litter size
+    ## increases with scanning percentage is used (the polynomial is not monotonic at the extremes)
+    scan_grid = np.arange(0, 3.0005, 0.001)
+    dstwtr_grid_l0 = np.moveaxis(f1_DSTw(scan_grid, cycles=cycles), -1, 0)
+    ls_grid = fun.f_divide(np.sum(dstwtr_grid_l0 * np.arange(4)[:, na], axis=0), 1 - dstwtr_grid_l0[0])
+    start = np.argmax(ls_grid > 1)
+    not_increasing = np.diff(ls_grid[start:]) <= 0
+    end = start + np.argmax(not_increasing) + 1 if np.any(not_increasing) else len(ls_grid)
+    ##scanning percentage that has the required litter size (np.interp limits the values to the range of the grid)
+    scan_ls = np.interp(ls_target, ls_grid[start:end], scan_grid[start:end])
+    dstwtr_ls_l0 = np.moveaxis(f1_DSTw(scan_ls, cycles=cycles), -1, 0)
+    ##proportion of singles, twins & triplets of the pregnant dams. Std proportions if litter size is unchanged
+    preg_ls_l0 = fun.f_divide(dstwtr_ls_l0[1:], 1 - dstwtr_ls_l0[0:1])
+    preg_std_l0 = fun.f_divide(dstwtr_l0[1:], 1 - dstwtr_l0[0:1])
+    preg_l0 = np.where(ls != 0, preg_ls_l0, preg_std_l0)
+    ##proportion dry
+    dry = np.clip(dstwtr_l0[0] - con, 0, 1)
+    dstwtr_adj_l0 = np.concatenate([dry[na], (1 - dry) * preg_l0], axis=0)
+    ##return the inputs if there is no change (so they are identical)
+    return np.where(np.logical_or(con != 0, ls != 0), dstwtr_adj_l0, dstwtr_l0)
+
+
+def f1_lamb_survival_adj(pss, pstw, pstr, dstwtr_l0, era):
+    '''
+    Adjust the survival of single, twin & triplet lambs for a change in lamb survival (ERA, lambs reared per foetus),
+    e.g. the difference between a calibrated genotype and the std genotype.
+    The adjustment is a shift on the logit scale that is the same for each birth type (consistent with saa['era_p11']
+    which alters the intercept of the lamb survival equations). The shift is solved so that the survival of all the
+    foetuses (weighted by the number of foetuses of each birth type) increases by era.
+    If era is 0 the survival is unchanged.
+
+    :param pss: np array - survival of single born lambs.
+    :param pstw: np array - survival of twin born lambs.
+    :param pstr: np array - survival of triplet born lambs.
+    :param dstwtr_l0: np array - proportion of dry, single, twin & triplet bearing dams (l0 axis first).
+    :param era: np array - change in survival of all the foetuses (lambs reared / foetuses).
+    :return: pss, pstw & pstr adjusted for era.
+    '''
+    shape = np.broadcast_shapes(np.shape(pss), np.shape(pstw), np.shape(pstr), dstwtr_l0.shape[1:], np.shape(era))
+    p_l = np.stack([np.broadcast_to(pss, shape), np.broadcast_to(pstw, shape), np.broadcast_to(pstr, shape)]).astype(float)
+    ##number of foetuses of each birth type
+    nfoet_l = np.broadcast_to(dstwtr_l0[1:4] * np.arange(1, 4).reshape((3,) + (1,) * (dstwtr_l0.ndim - 1)), p_l.shape)
+    logit_l = np.log(np.clip(p_l, 1e-9, 1 - 1e-9) / (1 - np.clip(p_l, 1e-9, 1 - 1e-9)))
+    def f_survival(shift):
+        return fun.f_divide(np.sum(nfoet_l * fun.f_back_transform(logit_l + shift), axis=0), np.sum(nfoet_l, axis=0))
+    target = np.clip(f_survival(0) + era, 1e-6, 1 - 1e-6)
+    ##solve for the shift by bisection (survival increases with the shift)
+    low = np.full(shape, -20.0)
+    high = np.full(shape, 20.0)
+    for i in range(60):
+        mid = (low + high) / 2
+        too_low = f_survival(mid) < target
+        low = np.where(too_low, mid, low)
+        high = np.where(too_low, high, mid)
+    p_adj_l = fun.f_back_transform(logit_l + (low + high) / 2)
+    ##return the inputs if there is no change (so they are identical)
+    p_adj_l = np.where(np.broadcast_to(era, shape) != 0, p_adj_l, p_l)
+    return p_adj_l[0], p_adj_l[1], p_adj_l[2]
+
+
 def f1_RR_propn_logistic(RR_g, cb1, nfoet_b1any, nyatf_b1any, b1_pos, cycles=1):
     '''
     Returns the proportion of empty, single, twin & triplet bearing dams after the requested number of cycles

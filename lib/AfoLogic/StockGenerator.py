@@ -2434,6 +2434,24 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     dstwtr_l0yg1 = np.moveaxis(sfun.f1_DSTw(scan_std_yg1, cycles=2), -1, 0)
     dstwtr_l0yg3 = np.moveaxis(sfun.f1_DSTw(scan_dams_std_yg3, cycles=2), -1, 0)
 
+    ##Adjust the std scanning & survival for the change in adult conception, litter size and lamb survival of the dams
+    ### e.g. to include the BTRT of a calibrated genotype when evaluating its profitability. Inputs are the difference from the std genotype (sav).
+    ### Not included in the calibration (BTRT is 100% singles for the calibration).
+    ### The adult values are used for the progeny of all dam ages (ewe lamb yCON, yLS & yERA are not included).
+    ### Applied to the dams & offs (offs BTRT is based on the dams scanning). Sires are not adjusted.
+    con_btrt_g1 = fun.f_sa(np.array([0.0]), sen.sav['btrt_con_g1'][mask_dams_inc_g1], 5).astype(float)
+    ls_btrt_g1 = fun.f_sa(np.array([0.0]), sen.sav['btrt_ls_g1'][mask_dams_inc_g1], 5).astype(float)
+    era_btrt_g1 = fun.f_sa(np.array([0.0]), sen.sav['btrt_era_g1'][mask_dams_inc_g1], 5).astype(float)
+    if not (calibrate_trait_values or o_trait_values is not None) and np.any(con_btrt_g1 + ls_btrt_g1 + era_btrt_g1 != 0):
+        dstwtr_l0yg1 = sfun.f1_dstwtr_adj(dstwtr_l0yg1, con_btrt_g1, ls_btrt_g1)
+        dstwtr_l0yg3 = sfun.f1_dstwtr_adj(dstwtr_l0yg3, con_btrt_g1, ls_btrt_g1)
+        pss_std_yg1, pstw_std_yg1, pstr_std_yg1 = sfun.f1_lamb_survival_adj(pss_std_yg1, pstw_std_yg1, pstr_std_yg1
+                                                                             , dstwtr_l0yg1, era_btrt_g1)
+        pss_std_yg3, pstw_std_yg3, pstr_std_yg3 = sfun.f1_lamb_survival_adj(pss_std_yg3, pstw_std_yg3, pstr_std_yg3
+                                                                             , dstwtr_l0yg3, era_btrt_g1)
+        logger.debug(f"BTRT std adjusted for CON {con_btrt_g1}, LS {ls_btrt_g1} & ERA {era_btrt_g1}: DST dams {np.round(np.squeeze(dstwtr_l0yg1), 4)}"
+                     f", survival s/tw/tr dams {np.round(np.squeeze(pss_std_yg1), 4)}/{np.round(np.squeeze(pstw_std_yg1), 4)}/{np.round(np.squeeze(pstr_std_yg1), 4)}")
+
     ##Std scanning & survival: propn of progeny in each BTRT b0 category - 11, 22, 33, 21, 32, 31 and lambs surviving birth per ewe joined (standard weaning percentage)
     btrt_propn_b0xyg0, npw_std_xyg0 = sfun.f1_btrt0(dstwtr_l0yg0,pss_std_yg0,pstw_std_yg0,pstr_std_yg0)
     btrt_propn_b0xyg1, npw_std_xyg1 = sfun.f1_btrt0(dstwtr_l0yg1,pss_std_yg1,pstw_std_yg1,pstr_std_yg1)
