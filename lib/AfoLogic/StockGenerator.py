@@ -2498,6 +2498,16 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     srw_female_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(srw_female_p_pa1e1b1nwzida0e0b0xyg1, axis=p_pos, weights=age_pa1e1b1nwzida0e0b0xyg1>0) #average p for periods when the animal exists
     srw_female_pa1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(srw_female_p_pa1e1b1nwzida0e0b0xyg2, axis=p_pos, weights=age_pa1e1b1nwzida0e0b0xyg2>0) #average p for periods when the animal exists
     srw_female_pa1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(srw_female_p_pa1e1b1nwzida0e0b0xyg3, axis=p_pos, weights=age_cut_pa1e1b1nwzida0e0b0xyg3>0) #average p for periods when the animal exists
+    ####SRW at weaning (the start of the animal) including the age stage saa (srw_p11). Used for the initial animal so that srw_p11
+    #### only affects the initial LW through the age stage at weaning (rather than the average over the life of the animal).
+    #### Clip the index because the p axis is a singleton if the p11 saa are not active & the weaning index uses
+    #### date_start_P (which extends past the generator).
+    idx_wean_pa1e1b1nwzida0e0b0xyg0 = np.clip(date_weaned_idx_i_pa1e1b1nwzida0e0b0xyg0, 0, srw_female_p_pa1e1b1nwzida0e0b0xyg0.shape[p_pos] - 1)
+    srw_female_wean_pa1e1b1nwzida0e0b0xyg0 = np.take_along_axis(srw_female_p_pa1e1b1nwzida0e0b0xyg0, idx_wean_pa1e1b1nwzida0e0b0xyg0, axis=p_pos)
+    idx_wean_pa1e1b1nwzida0e0b0xyg1 = np.clip(date_weaned_idx_i_pa1e1b1nwzida0e0b0xyg1, 0, srw_female_p_pa1e1b1nwzida0e0b0xyg1.shape[p_pos] - 1)
+    srw_female_wean_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(srw_female_p_pa1e1b1nwzida0e0b0xyg1, idx_wean_pa1e1b1nwzida0e0b0xyg1, axis=p_pos)
+    idx_wean_pa1e1b1nwzida0e0b0xyg3 = np.clip(date_weaned_idx_i_pa1e1b1nwzida0e0b0xyg3, 0, srw_female_p_pa1e1b1nwzida0e0b0xyg3.shape[p_pos] - 1)   #offs p axis (offs_date_start_P)
+    srw_female_wean_pa1e1b1nwzida0e0b0xyg3 = np.take_along_axis(srw_female_p_pa1e1b1nwzida0e0b0xyg3, idx_wean_pa1e1b1nwzida0e0b0xyg3, axis=p_pos)
     muscle_target_pa1e1b1nwzida0e0b0xyg0 = (muscle_target_female_yg0 * np.sum(cb0_cpsire[11, ...] * btrt_propn_b0xyg0, axis = b0_pos)
                                                                      * fun.f_slice(cx_cpsire[11], {x_pos: [0,1]}))
     muscle_target_pa1e1b1nwzida0e0b0xyg1 = (muscle_target_female_yg1 * np.sum(cb0_cpdams[11, ...] * btrt_propn_b0xyg1, axis = b0_pos)
@@ -2575,9 +2585,10 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
     ###Calculate lw_initial from the initial lw input which is a proportion of srw
     ### Uses srw_b0xyg so may cause randomness when using a RR SA (because BTRT alters SRW, changing the starting animal)
-    lw_initial_pa1e1b1nwzida0e0b0xyg0 = (lw_initial_yg0 * (1 + adjp_lw_initial_wzida0e0b0xyg0)) * srw_female_pa1e1b1nwzida0e0b0xyg0
-    lw_initial_pa1e1b1nwzida0e0b0xyg1 = (lw_initial_yg1 * (1 + adjp_lw_initial_wzida0e0b0xyg1)) * srw_female_pa1e1b1nwzida0e0b0xyg1
-    lw_initial_pa1e1b1nwzida0e0b0xyg3 = (lw_initial_yg3 * (1 + adjp_lw_initial_wzida0e0b0xyg3)) * srw_female_pa1e1b1nwzida0e0b0xyg3
+    ### Uses the female SRW at weaning (including srw_p11 for the age stage at weaning). Gender, dam age & BTRT are additive adjustments below.
+    lw_initial_pa1e1b1nwzida0e0b0xyg0 = (lw_initial_yg0 * (1 + adjp_lw_initial_wzida0e0b0xyg0)) * srw_female_wean_pa1e1b1nwzida0e0b0xyg0
+    lw_initial_pa1e1b1nwzida0e0b0xyg1 = (lw_initial_yg1 * (1 + adjp_lw_initial_wzida0e0b0xyg1)) * srw_female_wean_pa1e1b1nwzida0e0b0xyg1
+    lw_initial_pa1e1b1nwzida0e0b0xyg3 = (lw_initial_yg3 * (1 + adjp_lw_initial_wzida0e0b0xyg3)) * srw_female_wean_pa1e1b1nwzida0e0b0xyg3
     ###the initial cfw input is a proportion of sfw
     cfw_initial_wzida0e0b0xyg0 = (cfw_initial_yg0 * (1 + adjp_cfw_initial_wzida0e0b0xyg0)) * sfw_yg0   #sfw w/o saa_p11
     cfw_initial_wzida0e0b0xyg1 = (cfw_initial_yg1 * (1 + adjp_cfw_initial_wzida0e0b0xyg1)) * sfw_yg1   #sfw w/o saa_p11
@@ -2687,18 +2698,21 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     ffcfw_initial_pa1e1b1nwzida0e0b0xyg1 = lw_initial_pa1e1b1nwzida0e0b0xyg1 - cfw_initial_pa1e1b1nwzida0e0b0xyg1 / cw_cpdams[3, ...]
     ffcfw_initial_pa1e1b1nwzida0e0b0xyg3 = lw_initial_pa1e1b1nwzida0e0b0xyg3 - cfw_initial_pa1e1b1nwzida0e0b0xyg3 / cw_cpoffs[3, ...]
 
-    ##calc initial ebw
-    ebw_initial_pa1e1b1nwzida0e0b0xyg0 = sfun.f1_ffcfw2ebw(cg_cpsire, cn_cpsire, ffcfw_initial_pa1e1b1nwzida0e0b0xyg0, srw_female_pa1e1b1nwzida0e0b0xyg0
-                                                   , eqn_system = eqn_used_g0_q1p[7,0])
-    ebw_initial_pa1e1b1nwzida0e0b0xyg1 = sfun.f1_ffcfw2ebw(cg_cpdams, cn_cpdams, ffcfw_initial_pa1e1b1nwzida0e0b0xyg1, srw_female_pa1e1b1nwzida0e0b0xyg1
-                                                          , eqn_system = eqn_used_g1_q1p[7,0])
-    ebw_initial_pa1e1b1nwzida0e0b0xyg3 = sfun.f1_ffcfw2ebw(cg_cpoffs, cn_cpoffs, ffcfw_initial_pa1e1b1nwzida0e0b0xyg3, srw_female_pa1e1b1nwzida0e0b0xyg3
-                                                   , eqn_system = eqn_used_g3_q1p[7,0])
+    ##calc initial ebw - uses the SRW at weaning to be consistent with lw_initial
+    ebw_initial_pa1e1b1nwzida0e0b0xyg0 = sfun.f1_ffcfw2ebw(cg_cpsire, cn_cpsire, ffcfw_initial_pa1e1b1nwzida0e0b0xyg0
+                                            , srw_female_wean_pa1e1b1nwzida0e0b0xyg0, eqn_system = eqn_used_g0_q1p[7,0])
+    ebw_initial_pa1e1b1nwzida0e0b0xyg1 = sfun.f1_ffcfw2ebw(cg_cpdams, cn_cpdams, ffcfw_initial_pa1e1b1nwzida0e0b0xyg1
+                                            , srw_female_wean_pa1e1b1nwzida0e0b0xyg1, eqn_system = eqn_used_g1_q1p[7,0])
+    ebw_initial_pa1e1b1nwzida0e0b0xyg3 = sfun.f1_ffcfw2ebw(cg_cpoffs, cn_cpoffs, ffcfw_initial_pa1e1b1nwzida0e0b0xyg3
+                                            , srw_female_wean_pa1e1b1nwzida0e0b0xyg3, eqn_system = eqn_used_g3_q1p[7,0])
 
 
     ##calc fat, muscle and viscera weight using the composition at weaning that is consistent with the EVG parameters. See [Growth curve & partitioning.xlsx]
     ### Composition is calculated at the standard initial relative size (lw_initial) and the BW of a single (cb0[15] b0 slice 0)
     ### so it is the same for all animals in the group. todo option 2: use each animal's initial relative size (and possibly the BW of twins & triplets)
+    ### todo the composition uses cg_cp (cg8 & cg9 without saa['evg_p11']) so the initial Fat% doesn't change with evg_p11. Change to use cg8 & cg9
+    ### including evg_p11 at weaning (as for srw_female_wean used for lw_initial) so it is consistent with the EVG of the age stage at weaning.
+    ###Note:the EVG parameters cg_cp???? are the values prior to adding the saa_p11.
     fat_propn_wean_yg0, muscle_propn_wean_yg0, viscera_propn_wean_yg0 = sfun.f1_fat_propn_initial(cg_cpsire, cb0_cpsire, lw_initial_yg0
                                             , fat_propn_birth_yg0)
     fat_propn_wean_yg1, muscle_propn_wean_yg1, viscera_propn_wean_yg1 = sfun.f1_fat_propn_initial(cg_cpdams, cb0_cpdams, lw_initial_yg1
@@ -3716,6 +3730,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
         ##yatf
         d_cfw_history_start_p2g2[...] = np.nan
+        #todo the yatf start weights (nw_start_yatf & ebw_start_yatf below) use srw_female averaged over the life of the animal. Change to the SRW at birth
+        # (including srw_p11 for the age stage at birth, as for lw_initial) when the system for calculating the value of a breeding value for birth weight is sorted out.
         nw_start_yatf = 0.1 * srw_female_pa1e1b1nwzida0e0b0xyg2   #srw_female because p axis is averaged
         rc_start_yatf = 1.0
         relsize_start_yatf = 0.1   #birth weight is approx 10% of SRW. Requires a value to stop div0 error
