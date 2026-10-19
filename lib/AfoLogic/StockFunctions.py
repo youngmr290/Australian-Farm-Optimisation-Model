@@ -2178,6 +2178,7 @@ def f_lwc_mu(cg, ck, rc_start, mei_initial, nem_ee, km, hp_mei, new, kw, zf1, zf
                          and np.allclose(d_fat_prior, d_fat, equal_nan=True)
                          and np.allclose(d_muscle_prior, d_muscle, equal_nan=True)
                          and np.allclose(d_viscera_prior, d_viscera, equal_nan=True)) #any energy component is altered by the REV adjustments
+    rev_affects_energy = False   #uncomment this line to bypass the back calculation
     # if True:    #uncomment this line to force the back calculation
     if rev_affects_energy:
         if sen.sam['heat_loss'] == 1:
