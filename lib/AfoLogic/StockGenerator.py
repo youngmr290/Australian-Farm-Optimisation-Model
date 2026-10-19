@@ -124,7 +124,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         w = np.nan  #fleece growth prior to weaning is not carried forward to shearing
         p = coefficients_c[j]; j += 1
         y = coefficients_c[j]; j += 1
-        sen.saa['ycfw_scalar'] = coefficients_c[j]; j += 1    #YCFW scalar, cw_dams[25] parameter which scales SFW
+        # sen.saa['ycfw_scalar'] = coefficients_c[j]; j += 1    #YCFW scalar, cw_dams[25] parameter which scales SFW
         h = coefficients_c[j]; j += 1
         a = coefficients_c[j]; j += 1
         sen.saa['bvcfw_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
@@ -135,7 +135,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         w = np.nan  #fleece growth prior to weaning is not carried forward to shearing
         p = coefficients_c[j]; j += 1
         y = coefficients_c[j]; j += 1
-        sen.saa['yfd_scalar'] = coefficients_c[j]; j += 1    #YFD scalar, cw_dams[26] parameter which scales SFD
+        # sen.saa['yfd_scalar'] = coefficients_c[j]; j += 1    #YFD scalar, cw_dams[26] parameter which scales SFD
         h = coefficients_c[j]; j += 1
         a = coefficients_c[j]; j += 1
         sen.saa['sfd_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
@@ -163,8 +163,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         #Conception, cb1[24,25&26, 0:] parameter
         ##Conception only for adult stage
         w = p = y = h = a = None
-        w = np.nan
-        p = coefficients_c[j]; j += 1   #the Y joining is occurring during the post-wean age stage
+        # w = np.nan
+        # p = coefficients_c[j]; j += 1   #the Y joining is occurring during the post-wean age stage
         y = np.nan
         h = coefficients_c[j]; j += 1   #the A2 joining is occurring during the hogget age stage
         a = coefficients_c[j]; j += 1
@@ -173,8 +173,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         #Litter size, cb1[24,25&26, 2:] parameter
         ##Litter size only for adult stage
         w = p = y = h = a = None
-        w = np.nan
-        p = coefficients_c[j]; j += 1   #the Y joining is occurring during the post-wean age stage
+        # w = np.nan
+        # p = coefficients_c[j]; j += 1   #the Y joining is occurring during the post-wean age stage
         y = np.nan
         h = coefficients_c[j]; j += 1   #the A2 joining is occurring during the hogget age stage
         a = coefficients_c[j]; j += 1
@@ -183,9 +183,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         #Ewe rearing ability/lamb survival, cu6[8, -1] & cu2[8, -1] parameters
         ##Ewe rearing ability only for adult stage
         w = p = y = h = a = None
-        w = np.nan
-        p = np.nan  #post-wean is not a reproducing age group
-        y = coefficients_c[j]; j += 1
+        # w = np.nan
+        # p = np.nan  #post-wean is not a reproducing age group
+        # y = coefficients_c[j]; j += 1
         h = np.nan
         a = coefficients_c[j]; j += 1
         sen.saa['era_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
@@ -193,12 +193,12 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         #Standard reference weight coefficient adjustments can be linked to target LW or to an estimate of SRW from ALW & Fat %
         ##WT at younger ages can be calibrated by SRW age stage coefficients or by adjusting milk yield and the growth constant
         w = p = y = h = a = None
-        # sen.saa['birth_weight'] = coefficients_c[j]; j += 1    #Birth weight no method to calibrate, #todo still to decide how to control BWT
+        # sen.saa['birth_weight'] = coefficients_c[j]; j += 1    #Birth weight, #todo still to decide how to control BWT
         w = np.nan  #wwt is changed with a separate coefficient
         sen.saa['milk_yield'] = coefficients_c[j]; j += 1    #Weaning weight, cl_yatf[0] parameter which alters milk production, lamb milk intake and ewe PI during lactation
         p = coefficients_c[j]; j += 1
         y = coefficients_c[j]; j += 1   #ywt can be changed using the growth constant
-        sen.saa['growth_constant'] = coefficients_c[j]; j += 1    #Yearling weight, cn_dams[1] parameter which alters the growth path
+        # sen.saa['growth_constant'] = coefficients_c[j]; j += 1    #Yearling weight, cn_dams[1] parameter which alters the growth path
         h = coefficients_c[j]; j += 1
         a = coefficients_c[j]; j += 1
         sen.saa['srw_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
@@ -208,36 +208,36 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         w = np.nan  #intake pre-weaning is handled with the cl[0] parameter, which is intake of milk
         p = coefficients_c[j]; j += 1
         y = coefficients_c[j]; j += 1
-        sen.saa['pi_z_constant'] = coefficients_c[j]; j += 1    #ci[22] parameter which alters the scaling of PI by z
-        h = coefficients_c[j]; j += 1  #no hfat
-        a = coefficients_c[j]; j += 1  #np.nan when SRW is an active calibration coefficient
+        # sen.saa['pi_z_constant'] = coefficients_c[j]; j += 1    #ci[22] parameter which alters the scaling of PI by z
+        h = np.nan  #no hfat
+        # a = coefficients_c[j]; j += 1  #np.nan when SRW is an active calibration coefficient
         sen.saa['pi_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         #EVG to calibrate Whole body energy, cg[8&9] parameters
         w = p = y = h = a = None
-        # w = np.nan   # no method to calibrate
-        # p = np.nan   # no method to calibrate
-        # y = np.nan  #WBE is currently only an adult trait, but hogget is also changed.
-        h = np.nan  #hogget is changed if HWT is not in the BO objective.
-        a = coefficients_c[j]; adult_evg = cg8 + a; j += 1  #  assign a value to adult EVG for endogenous calculation of SRW.
+        # w = np.nan    # no method to calibrate
+        # p = np.nan    # no method to calibrate
+        # y = np.nan # Changes to cg8 & 9 are done whole of life unless this line is uncommented
+        # h = np.nan  #hogget is changed if HWT is not in the BO objective.
+        # a = coefficients_c[j]; adult_evg = cg8 + a; j += 1  #  assign a value to adult EVG for endogenous calculation of SRW.
         sen.saa['evg_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         #Basal survival, cd[1] parameter
         w = p = y = h = a = None
         w = np.nan  #survival of yatf is represented through ewe rearing ability (era)
-        p = coefficients_c[j]; j += 1
-        y = coefficients_c[j]; j += 1
-        h = coefficients_c[j]; j += 1
+        # p = coefficients_c[j]; j += 1
+        # y = coefficients_c[j]; j += 1
+        # h = coefficients_c[j]; j += 1
         a = coefficients_c[j]; j += 1  #adult survival can also be represented in peri-natal survival
         sen.saa['bsurv_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         #Peri-natal survival, cu2[23, -1] parameter
         w = p = y = h = a = None
         # w = np.nan   #pn_surv is not a trait for non reproducing dams
-        p = np.nan   #pn_surv is not a trait for non reproducing dams
-        y = coefficients_c[j]; j += 1
-        h = np.nan  #peri-natal survival is a Y & A trait
-        a = coefficients_c[j]; j += 1
+        # p = np.nan   #pn_surv is not a trait for non reproducing dams
+        # y = coefficients_c[j]; j += 1
+        # h = np.nan  #peri-natal survival is a Y & A trait
+        # a = coefficients_c[j]; j += 1
         sen.saa['pnsurv_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         # ##Build and apply sar variable based on the next 44 coefficients
