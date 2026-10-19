@@ -91,6 +91,13 @@ DISP = True
 POLISH = True
 TOL = 0.05
 ATOL = 0.01   #If the trait weights are 100 * estimated EV then SQRT(Obj) is the error in the EV of the target trait
+# The initial population is split between members near BestBet and members spread over the full bounds (see
+# f_initial_population). With best1bin each trial is best + F*(r1-r2), so if the whole population is spread over wide
+# bounds the difference vectors are large and nearly every trial lands far from BestBet. Starting part of the population
+# near BestBet makes the early difference vectors small, while the spread members keep the full range of the bounds
+# available (e.g. for CFW coefficients that need to move a long way when LW is also being calibrated).
+INIT_NEAR_PROPN = 0.5    #proportion of the population sampled near BestBet (0 = Latin hypercube over the full bounds only)
+INIT_NEAR_SD = 0.05      #standard deviation of the near members as a proportion of each coefficient's range
 
 worker_context = {}
 
@@ -213,6 +220,25 @@ def init_worker(context):
     worker_context.update(context)
 
 
+def f_initial_population(bestbet, bounds, population, seed=None):
+    """Initial DE population: INIT_NEAR_PROPN of the members near BestBet, the rest a Latin hypercube over the bounds.
+
+    Passed to differential_evolution as init, so popsize is not used (the population is the number of rows).
+    x0 (BestBet) still replaces the first member.
+    """
+    rng = np.random.default_rng(seed)
+    lo, up = np.array(bounds, dtype=float).T
+    n_coef = lo.size
+    n_near = int(round(population * INIT_NEAR_PROPN))
+    n_wide = population - n_near
+    ##near members: normal around BestBet with sd a proportion of each coefficient's range, clipped to the bounds
+    near = np.clip(bestbet + rng.normal(0, INIT_NEAR_SD * (up - lo), (n_near, n_coef)), lo, up)
+    ##wide members: Latin hypercube - one member in each of n_wide equal strata of each coefficient, strata shuffled independently
+    strata = np.argsort(rng.random((n_wide, n_coef)), axis=0)
+    wide = lo + (strata + rng.random((n_wide, n_coef))) / n_wide * (up - lo)
+    return np.vstack([near, wide])
+
+
 def run_calibration_for_team(t, context):
     """Call Differential Evolution for one team.
 
@@ -235,6 +261,9 @@ def run_calibration_for_team(t, context):
 
     print(f"Starting calibration for Team {t}...")
 
+    population = context["popsize"] * len(bestbet)
+    init = f_initial_population(bestbet, bounds, population) if INIT_NEAR_PROPN > 0 else 'latinhypercube'
+
     result = spo.differential_evolution(
         calibration_objective,
         bounds,
@@ -248,7 +277,7 @@ def run_calibration_for_team(t, context):
         updating=context["updating"],
         workers=context["workers"],
         x0=bestbet,
-        init='latinhypercube',
+        init=init,
         #best1bin mutates every individual relative to the current best (best + F*(r1-r2)), the greedy
         #default strategy suited to this non-multimodal problem.
         #Also tested currenttobest1bin but it was slower to converge.
