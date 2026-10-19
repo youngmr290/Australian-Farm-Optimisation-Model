@@ -310,19 +310,27 @@ def calibration_objective(coefficients_c, context):
         user_sa=context["user_sa"],
     )
 
-    return sgen.generator(
-        coefficients_c=coefficients_c,
-        params={},
-        r_vals={},
-        nv={},
-        pkl_fs_info={},
-        pkl_fs=context["pkl_fs"],
-        stubble=context["stubble"],
-        calibrate_trait_values=RUN_CALIBRATION,
-        calibration_weights_p=context["calibration_weights"],
-        calibration_targets_p=context["calibration_targets"],
-        calibration_trait_names_p=context["trait_names_p"],
-    )
+    ##an extreme coefficient set can make the generator fail (e.g. so many animals die that the w axis can't be
+    ## collapsed). Return a large objective (as for a NaN objective in the generator) so DE discards that point,
+    ## rather than the error ending the calibration of every team.
+    try:
+        return sgen.generator(
+            coefficients_c=coefficients_c,
+            params={},
+            r_vals={},
+            nv={},
+            pkl_fs_info={},
+            pkl_fs=context["pkl_fs"],
+            stubble=context["stubble"],
+            calibrate_trait_values=RUN_CALIBRATION,
+            calibration_weights_p=context["calibration_weights"],
+            calibration_targets_p=context["calibration_targets"],
+            calibration_trait_names_p=context["trait_names_p"],
+        )
+    except Exception as e:
+        print(f"Warning: the generator failed for Team {context.get('team')} so the objective is set to 1e8."
+              f" {type(e).__name__}: {str(e).splitlines()[0] if str(e) else ''}")
+        return 1e8
 
 
 def run_calibration_for_team_worker(t):
