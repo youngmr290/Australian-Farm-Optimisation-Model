@@ -200,7 +200,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         y = coefficients_c[j]; j += 1   #ywt can be changed using the growth constant
         # sen.saa['growth_constant'] = coefficients_c[j]; j += 1    #Yearling weight, cn_dams[1] parameter which alters the growth path
         h = coefficients_c[j]; j += 1
-        a = coefficients_c[j]; j += 1
+        # a = coefficients_c[j]; j += 1
         sen.saa['srw_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         #Potential intake to calibrate Carcase fatness & WBE, ci[1] parameter
@@ -210,7 +210,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         y = coefficients_c[j]; j += 1
         # sen.saa['pi_z_constant'] = coefficients_c[j]; j += 1    #ci[22] parameter which alters the scaling of PI by z
         h = np.nan  #no hfat
-        # a = coefficients_c[j]; j += 1  #np.nan when SRW is an active calibration coefficient
+        a = coefficients_c[j]; j += 1  #np.nan when SRW is an active calibration coefficient
         sen.saa['pi_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         #EVG to calibrate Whole body energy, cg[8&9] parameters
@@ -219,7 +219,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         # p = np.nan    # no method to calibrate
         # y = np.nan # Changes to cg8 & 9 are done whole of life unless this line is uncommented
         # h = np.nan  #hogget is changed if HWT is not in the BO objective.
-        # a = coefficients_c[j]; adult_evg = cg8 + a; j += 1  #  assign a value to adult EVG for endogenous calculation of SRW.
+        a = coefficients_c[j]; adult_evg = cg8 + a; j += 1  #  assign a value to adult EVG for endogenous calculation of SRW.
         sen.saa['evg_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         #Basal survival, cd[1] parameter
