@@ -582,6 +582,7 @@ def create_sa():
     sav['calib_polish'] = '-'        #SA to control if the DE solution is polished (L-BFGS-B) in SheepCalibration.py
     sav['calib_tol'] = '-'           #SA to alter the DE relative convergence tolerance in SheepCalibration.py
     sav['calib_atol'] = '-'          #SA to alter the DE absolute convergence tolerance in SheepCalibration.py
+    sav['calib_offs'] = '-'          #SA to include the offspring in the generator when calibrating (default False to save time). Required if an offspring trait (e.g. WLW) is weighted. Offspring are always included when reporting the trait values
 
     ##SAA on slices of the livestock parameters using the age stage axis
     saa['bvcfw_p11'] = np.zeros(sinp.structuralsa['i_rev_age_stage_asbv'].shape, dtype='float64')       #SA value with age stages for clean fleece weight (sfw)
