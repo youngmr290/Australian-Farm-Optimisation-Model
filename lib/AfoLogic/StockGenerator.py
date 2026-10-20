@@ -82,6 +82,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     ##set the genotype to report. This is the genotype of the c2 axis in Universal.xlsx
     genotype = pinp.sheep['a_c2_c0'][0].copy()  #2 is CFS for MLP & GEPEP traditional, 3 is GFS for GEPEP
     srw_parameter = uinp.parameters['i_srw_c2'][genotype].copy()  #set a value in case whole section is commented out
+    calibrate_offs = True   #the offspring are generated unless calibrating without sav['calib_offs'] (see below)
     if calibrate_trait_values or o_trait_values is not None:
         # print(coefficients_c)   #only useful for debugging when not multiprocessing (workers=1, and not multiprocessing teams)
         n_coeff = coefficients_c.size
@@ -410,6 +411,15 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         ##check the targets read match the traits in [Calibration_control.xlsx]Targets & Weights
         f1_check_trait_names(target_names, 'targets read')
         assert len(target_names) == calibration_targets_p.size == n_traits, f"{len(target_names)} calibration targets are read in the generator but Calibration_control.xlsx has {calibration_targets_p.size} targets and {n_traits} weights"
+
+        ###To save time only include the offspring in the generator when calibrating if they are needed.
+        ### Need to set sav['calib_offs'] to True if an offspring trait (e.g. WLW) is included in the calibration.
+        ### Offspring are always included when reporting so that TraitValues.xlsx has real values.
+        ###Limitations: the LTW loop is not run (loop_ltw_len = 1) so the offspring don't get the lifetime wool adjustment,
+        ### and the offspring start weight is from i_lw_initial (not the yatf weaning weight), so calibrating wWT or milk
+        ### production doesn't flow through to the offspring traits.
+        calibrate_offs = o_trait_values is not None or bool(fun.f_sa(False, sen.sav['calib_offs'], 5))
+        logger.debug(f"Offspring included in the generator: {calibrate_offs}")
 
         ###Calculate SRW if it is being endogenously fitted from the target adult weight & fatness and EVG
         ###Test on endogenous calculation is that saa[adult EVG] coefficient has a value
@@ -3453,10 +3463,12 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     ##increment the number of loops. This may be specified in the SAV to finetune the LTW effect.
     loop_ltw_len = loop_ltw_len + fun.f_sa(0, sen.sav['LTW_loops_increment'], 5)
 
-    if calibrate_trait_values or o_trait_values is not None:   #set ltw_loops and remove sires and offs calculations in the loops
+    ###If calibrating, set the ltw_loops = 1 and remove calculation of sires (and offs if not required)
+    if calibrate_trait_values or o_trait_values is not None:
         loop_ltw_len = 1
         days_period_pa1e1b1nwzida0e0b0xyg0[...] = 0
-        days_period_pa1e1b1nwzida0e0b0xyg3[...] = 0
+        if not calibrate_offs:
+            days_period_pa1e1b1nwzida0e0b0xyg3[...] = 0
 
     fs_target_initialised = False   #the lw target info is set up in the first generator period (see p loop)
     for loop_ltw in range(loop_ltw_len):
@@ -3888,10 +3900,12 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         active_p_pyatf = f1_active_p(days_period_pa1e1b1nwzida0e0b0xyg2)
         active_p_poffs = f1_active_p(days_period_pa1e1b1nwzida0e0b0xyg3)
 
-        ##if calibrating or reporting trait values only the dams (& yatf) are generated so the p loop can stop after
-        ## the last period that the dams or yatf are active.
+        ##if calibrating or reporting trait values the p loop can stop after the last active period.
         if calibrate_trait_values or o_trait_values is not None:
-            p_end = min(p_end, np.max(np.flatnonzero(active_p_pdams | active_p_pyatf)) + 1)
+            active_p = active_p_pdams | active_p_pyatf
+            if calibrate_offs:
+                active_p = active_p | active_p_poffs
+            p_end = min(p_end, np.max(np.flatnonzero(active_p)) + 1)
 
         for p in range(p_start, p_end):   #-1 because assigns to [p+1] for start values
             # print(p)
