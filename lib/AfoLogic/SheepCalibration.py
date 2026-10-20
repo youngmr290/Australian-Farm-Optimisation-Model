@@ -80,7 +80,6 @@ POPSIZE = 5   # between 5 and 15. population = popsize * n_coeff
 MAX_WORKERS_WITHIN_TEAM = 10   #48  #setting workers to a factor of 'population' ensures even utilisation of CPUs
                                  #only takes effect when team_processes is False (n_processes==1) - team
                                  #multiprocessing always forces workers=1 per team regardless of this value
-DISP = True
 # POLISH, TOL & ATOL are defaults that can be overridden per trial in exp.xlsx using sav['calib_polish'],
 # sav['calib_tol'] & sav['calib_atol'] (see build_context).
 # scipy's polish step (L-BFGS-B) is single-threaded so it can't use the DE worker pool, and is a local
@@ -261,6 +260,18 @@ def run_calibration_for_team(t, context):
 
     print(f"Starting calibration for Team {t}...")
 
+    ##report each DE step with the team number. DE's own disp output doesn't include the team, so when the teams run
+    ## in parallel their steps can't be told apart. The callback (scipy 1.11) isn't passed the objective, so the best
+    ## objective is tracked in calibration_objective. This only works if the objective runs in this process
+    ## (workers = 1, as when multiprocessing the teams), otherwise f(x) is reported as n/a.
+    ##convergence is tol / (relative spread of the population objective). DE stops when it reaches 1 (or earlier if atol is met).
+    team_context["progress"] = {"step": 0, "best": np.inf}
+    def f1_report_step(xk, convergence):
+        progress = team_context["progress"]
+        progress["step"] += 1
+        best = f"{progress['best']:g}" if context["workers"] == 1 else "n/a"
+        print(f"Team {t} step {progress['step']}: f(x)= {best} convergence= {convergence:.3g}")
+
     population = context["popsize"] * len(bestbet)
     init = f_initial_population(bestbet, bounds, population) if INIT_NEAR_PROPN > 0 else 'latinhypercube'
 
@@ -278,6 +289,7 @@ def run_calibration_for_team(t, context):
         workers=context["workers"],
         x0=bestbet,
         init=init,
+        callback=f1_report_step,
         #best1bin mutates every individual relative to the current best (best + F*(r1-r2)), the greedy
         #default strategy suited to this non-multimodal problem.
         #Also tested currenttobest1bin but it was slower to converge.
@@ -314,7 +326,7 @@ def calibration_objective(coefficients_c, context):
     ## collapsed). Return a large objective (as for a NaN objective in the generator) so DE discards that point,
     ## rather than the error ending the calibration of every team.
     try:
-        return sgen.generator(
+        objective = sgen.generator(
             coefficients_c=coefficients_c,
             params={},
             r_vals={},
@@ -331,6 +343,10 @@ def calibration_objective(coefficients_c, context):
         print(f"Warning: the generator failed for Team {context.get('team')} so the objective is set to 1e8."
               f" {type(e).__name__}: {str(e).splitlines()[0] if str(e) else ''}")
         return 1e8
+    ##track the best objective for the step report (see f1_report_step in run_calibration_for_team)
+    if "progress" in context:
+        context["progress"]["best"] = min(context["progress"]["best"], objective)
+    return objective
 
 
 def run_calibration_for_team_worker(t):
@@ -353,6 +369,9 @@ def build_context(targets_tp, weights_p, bestbet_tc, bnd_lo_tc, bnd_up_tc, n_coe
     population = popsize * n_coef
     workers = 1 if team_processes else min(mp.cpu_count(), population, MAX_WORKERS_WITHIN_TEAM)
     updating = 'deferred' if workers != 1 else 'immediate'
+    ##DE's own step report (disp) doesn't include the team. With workers = 1 the steps are reported with the team by
+    ## f1_report_step, so disp is only needed when workers > 1 (f1_report_step can't track the objective)
+    disp = workers != 1
     polish = bool(fun.f_sa(POLISH, sen.sav['calib_polish'], 5))
     tol = float(fun.f_sa(TOL, sen.sav['calib_tol'], 5))
     atol = float(fun.f_sa(ATOL, sen.sav['calib_atol'], 5))
@@ -374,7 +393,7 @@ def build_context(targets_tp, weights_p, bestbet_tc, bnd_lo_tc, bnd_up_tc, n_coe
         "popsize": popsize,
         "tol": tol,
         "atol": atol,
-        "disp": DISP,
+        "disp": disp,
         "polish": polish,
         "workers": workers,
         "updating": updating,
