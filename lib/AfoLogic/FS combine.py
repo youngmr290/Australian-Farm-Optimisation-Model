@@ -7,7 +7,7 @@ vs feeding them based solely on twins you could run a fs_opt for scan 3 which ge
 and then update the twin scan 2 fs with the twin fs from scan 3.
 Different conventions have been used to define the pkl_fs.
 The current convention (Feb 26) for naming the feed supply is that 12 digits are used to describe the scenario
-    digit 1   - feeding equations (AFS-CSIRO, GFS-hybrid for GEPEP, RFS-Hutton)
+    digit 1   - feeding equations (CFS-CSIRO, GFS-hybrid for GEPEP, RFS-Hutton)
           2   - number of offspring sale opportunities
           3   - Region
           4   - Breed
@@ -18,6 +18,8 @@ The current convention (Feb 26) for naming the feed supply is that 12 digits are
           10  - Crop grazing inc
           11 - Pasture % pointer
           12 - Age EL joined
+fs numbers are text (Oct 26) so the leading 0 is kept (e.g. digit 1 = 0) and letters can be used. Previously
+the leading 0 was dropped (e.g. pkl_fs42201321201 is now pkl_fs042201321201).
 
 The convention required to carry out the example above of switching a twin pattern from a scan 3 run requires including
   digit 1 - scan number
