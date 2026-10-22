@@ -31,6 +31,7 @@ import pickle as pkl
 #import matplotlib.pyplot as plt
 import time
 import collections
+import copy
 # from numba import jit
 import sys,traceback
 import os.path
@@ -3869,8 +3870,10 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
         ##load in and create condensed start dict - used to standardise the starting animal at condensing time.
         ###load condensed start info from previous trial if being used in this trial.
+        ###deepcopy so that when the trial uses and creates a pkl_fs each LTW loop reads the values from the
+        ###original pkl_fs, not those written in the previous loop.
         if sinp.structuralsa['i_fs_use_pkl']:
-            pkl_condensed_values = pkl_fs['pkl_condensed_values']
+            pkl_condensed_values = copy.deepcopy(pkl_fs['pkl_condensed_values'])
         ###create empty to store condensed start info for current trial - this is only stored at the end if fs is stored.
         else:
             pkl_condensed_values = collections.defaultdict(dict)
