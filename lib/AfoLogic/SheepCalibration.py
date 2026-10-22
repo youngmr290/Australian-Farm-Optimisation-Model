@@ -265,12 +265,17 @@ def run_calibration_for_team(t, context):
     ## objective is tracked in calibration_objective. This only works if the objective runs in this process
     ## (workers = 1, as when multiprocessing the teams), otherwise f(x) is reported as n/a.
     ##convergence is tol / (relative spread of the population objective). DE stops when it reaches 1 (or earlier if atol is met).
+    ##the best coefficients (xk) are also printed on one line at full precision, so if a run is stopped early (or a rerun
+    ## is started from where a team got to) the latest best can be recovered from the log. Each line is written in one
+    ## call (newline included) so lines from teams running in parallel don't get mixed together (python -u writes the
+    ## text and print's end separately).
     team_context["progress"] = {"step": 0, "best": np.inf}
     def f1_report_step(xk, convergence):
         progress = team_context["progress"]
         progress["step"] += 1
         best = f"{progress['best']:g}" if context["workers"] == 1 else "n/a"
-        print(f"Team {t} step {progress['step']}: f(x)= {best} convergence= {convergence:.3g}")
+        print(f"Team {t} step {progress['step']}: f(x)= {best} convergence= {convergence:.3g}\n"
+              f"Team {t} step {progress['step']} x: {xk.tolist()}\n", end='')
 
     population = context["popsize"] * len(bestbet)
     init = f_initial_population(bestbet, bounds, population) if INIT_NEAR_PROPN > 0 else 'latinhypercube'
