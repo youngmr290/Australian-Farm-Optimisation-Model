@@ -50,6 +50,10 @@ your own).
   weighted sum-of-squared-error between simulated and target trait values. Because `StockGenerator` reads
   and mutates shared module state (`sinp`/`uinp`/`pinp`), the trial inputs are reset before every DE
   objective evaluation (see `calibration_objective`/`setup_trial`).
+  The end-to-end process used for the GEPEP EVwo economic values (calibrating genotype teams, fitted trait values,
+  writing the coefficients into `exp.xlsx`, profit runs, per-team feed-supply optimisation and the EV methods) is in
+  `.claude/ev_analysis_process.md`, with the scripts in `.claude/ev_analysis_tools/` (EVwo paths are hard coded;
+  section 13 lists what to change for EVwith or another analysis).
 
 There is no linter or automated test suite configured in this repo (no pytest/tox/pyproject.toml). Validate
 changes by running a trial and comparing the variable summary / profit against a known-good baseline, or by
