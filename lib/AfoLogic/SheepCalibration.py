@@ -108,11 +108,11 @@ INIT_NEAR_SD = 0.05      #standard deviation of the near members as a proportion
 #   reasonable BestBet (e.g. the BBMatrix of the calibration Master, v12w on). A target that can't be reached ends at the
 #   best compromise within the bounds.
 # 'lsq+de' runs lsq, then DE from the lsq result for the teams still above LSQ_DE_ABOVE.
-METHOD = 'de'
+METHOD = 'lsq'
 LSQ_STEP = 0.05        #finite-difference step for the Jacobian, as a proportion of each coefficient's half-range (doubled for the central differences at the Standard)
-LSQ_TARGET = 1e-4      #stop when the objective is below this
+LSQ_TARGET = 1e-5      #stop when the objective is below this
 LSQ_MAX_EVAL = 600     #maximum generator evaluations per team
-LSQ_DE_ABOVE = 0.04    #'lsq+de': teams with an objective above this after lsq continue with DE
+LSQ_DE_ABOVE = 0.005   #'lsq+de': teams with an objective above this after lsq continue with DE
 
 worker_context = {}
 

@@ -50,9 +50,9 @@ your own).
   weighted sum-of-squared-error between simulated and target trait values. Because `StockGenerator` reads
   and mutates shared module state (`sinp`/`uinp`/`pinp`), the trial inputs are reset before every DE
   objective evaluation (see `calibration_objective`/`setup_trial`).
-  An optional 4th argument (or sav `calib_method`) selects the method: `de` (default), `lsq` (bounded Gauss-Newton
-  least squares from BestBet: tens to a few hundred evaluations per team instead of thousands, see `METHOD`) or
-  `lsq+de` (DE for the teams lsq leaves above `LSQ_DE_ABOVE`). Each team is evaluated once more at its final
+  An optional 4th argument (or sav `calib_method`) selects the method: `lsq` (the default: bounded Gauss-Newton
+  least squares from BestBet, tens to a few hundred evaluations per team instead of thousands, see `METHOD`), `de`
+  or `lsq+de` (DE for the teams lsq leaves above `LSQ_DE_ABOVE`). Each team is evaluated once more at its final
   coefficients (report style, offspring included) for the `Traits`, `Misses` and `Contributions` sheets of
   CalibrationResults.xlsx, so a separate report-mode run isn't needed for the fitted trait values.
   The end-to-end process used for the GEPEP EVwo economic values (calibrating genotype teams, fitted trait values,
