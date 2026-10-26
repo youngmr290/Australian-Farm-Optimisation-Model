@@ -61,7 +61,7 @@ logger = logging.getLogger(__name__)
 # @profile
 def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pkl_fs={}, stubble=None
             , calibrate_trait_values=None, calibration_weights_p=None, calibration_targets_p=None
-            , calibration_trait_names_p=None, o_trait_values=None, plots=False):
+            , calibration_trait_names_p=None, o_trait_values=None, plots=False, o_calibration_traits=None):
     """
     A function to wrap the generator and post-processing that can be called by SheepPyomo.
 
@@ -8616,6 +8616,10 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         #     logger.debug(f"({trait_values_p[i]}, {coefficients_c[j]}, {calibration_targets_p[i]})", end='')
         #     i += 1; j += 1
 
+        ##the trait values can also be returned when calibrating (SheepCalibration's least squares method needs the
+        ## trait errors, not just the objective). Unlike o_trait_values this doesn't switch on the offspring.
+        if o_calibration_traits is not None:
+            o_calibration_traits["output"] = trait_values_p.copy()
         if calibrate_trait_values:
             return calibration_objective
         else:

@@ -8,6 +8,7 @@ SheepCalibration.py is run using python -u SheepCalibration.py {<exp no>} {<numb
 <exp no> is an optional argument, if it is excluded the default trial is QT
 <number of processes> is an optional argument. The default is 1 (don't multiprocess teams use MAX_WORKERS_WITHIN_TEAM on each team)
 <calibrate/report> is optional, default True. True is calibrate, False is report the trait values.
+<method> is optional: de, lsq or lsq+de (see METHOD). If blank, sav['calib_method'] in exp.xlsx or METHOD is used.
 
 Multiprocessing the teams (with workers =1) will be quicker if
  (1) the number of cpus is greater than population size - Population size is pop_size parameter (5 to 15) x number of coefficients
@@ -97,6 +98,21 @@ ATOL = 0.01   #If the trait weights are 100 * estimated EV then SQRT(Obj) is the
 # available (e.g. for CFW coefficients that need to move a long way when LW is also being calibrated).
 INIT_NEAR_PROPN = 0.5    #proportion of the population sampled near BestBet (0 = Latin hypercube over the full bounds only)
 INIT_NEAR_SD = 0.05      #standard deviation of the near members as a proportion of each coefficient's range
+# Calibration method, overridden by sav['calib_method'] in exp.xlsx or the 4th command line argument.
+# 'de' is differential evolution: a global search, thousands of generator evaluations per team.
+# 'lsq' is bounded Gauss-Newton least squares from BestBet: a local search, tens to a few hundred evaluations per team.
+#   The weighted trait errors are linearised with the Jacobian (traits w.r.t. coefficients) and each step solves that
+#   linear problem within the bounds and a trust region. The Jacobian starts as the one at the Standard (measured once
+#   and shared by the teams), is updated from each step (Broyden), and is re-measured at the team's point (one evaluation
+#   per coefficient) when a step fails to halve the objective, so curved traits (e.g. fat) still converge. It needs a
+#   reasonable BestBet (e.g. the BBMatrix of the calibration Master, v12w on). A target that can't be reached ends at the
+#   best compromise within the bounds.
+# 'lsq+de' runs lsq, then DE from the lsq result for the teams still above LSQ_DE_ABOVE.
+METHOD = 'lsq'
+LSQ_STEP = 0.05        #finite-difference step for the Jacobian, as a proportion of each coefficient's half-range (doubled for the central differences at the Standard)
+LSQ_TARGET = 1e-5      #stop when the objective is below this
+LSQ_MAX_EVAL = 600     #maximum generator evaluations per team
+LSQ_DE_ABOVE = 0.005   #'lsq+de': teams with an objective above this after lsq continue with DE
 
 worker_context = {}
 
@@ -217,6 +233,9 @@ def init_worker(context):
     context = context.copy()
     worker_context.clear()
     worker_context.update(context)
+    ##on Windows the workers are spawned without python's -u, so their output would sit in a buffer until it fills or
+    ## the worker ends. Line buffering writes each print as it is made (in one write, so lines from teams don't mix).
+    sys.stdout.reconfigure(line_buffering=True)
 
 
 def f_initial_population(bestbet, bounds, population, seed=None):
@@ -238,39 +257,85 @@ def f_initial_population(bestbet, bounds, population, seed=None):
     return np.vstack([near, wide])
 
 
-def run_calibration_for_team(t, context):
-    """Call Differential Evolution for one team.
-
-    This is used by both run modes:
-    - sequential loop over teams and workers >= 1
-    - multiprocessing loop where each process handles a team and workers = 1
-    """
-    bounds = list(zip(context["bnd_lo_tc"][t], context["bnd_up_tc"][t]))
-    bestbet = context["bestbet_tc"][t]
-
+def f1_team_context(t, context):
+    """Context for evaluating team t: the team's targets and weights, and the trial's SA and feed supply."""
     team_context = context.copy()
     team_context["team"] = t
     team_context["calibration_weights"] = context["weights_p"]
     team_context["calibration_targets"] = context["targets_tp"][t]
     # pkl_fs only depends on user_sa (fixed for the whole team), not on the coefficients
-    # being tested, so it's safe to load it once here rather than on every DE evaluation.
+    # being tested, so it's safe to load it once here rather than on every evaluation.
     user_sa = get_trial_sa(context["exp_data"], context["trial"])
     team_context["user_sa"] = user_sa
     team_context["pkl_fs"] = load_trial_fs(user_sa)
+    return team_context
 
+
+def run_calibration_for_team(t, context):
+    """Calibrate one team with the selected method (see METHOD).
+
+    This is used by both run modes:
+    - sequential loop over teams and workers >= 1
+    - multiprocessing loop where each process handles a team and workers = 1
+    """
+    lo, up = context["bnd_lo_tc"][t], context["bnd_up_tc"][t]
+    bestbet = context["bestbet_tc"][t]
+    team_context = f1_team_context(t, context)
+    team_context["progress"] = {"step": 0, "best": np.inf}
     print(f"Starting calibration for Team {t}...")
+    if context["method"] == 'de':
+        result = f1_run_de(t, team_context, bestbet, lo, up)
+    else:
+        result = f1_run_lsq(t, team_context, bestbet, lo, up)
+        if context["method"] == 'lsq+de' and result[3] > LSQ_DE_ABOVE:
+            print(f"Team {t} objective {result[3]:g} after lsq is above {LSQ_DE_ABOVE}: continuing with DE from the lsq result")
+            result_de = f1_run_de(t, team_context, result[1], lo, up)
+            result = result_de if result_de[3] < result[3] else result
+    ##all the trait values at the final coefficients (for the Traits sheet of CalibrationResults.xlsx)
+    return result + (f1_final_traits(result[1], team_context),)
+
+
+def f1_final_traits(x, team_context):
+    """All the trait values at a team's final coefficients, evaluated as in report mode (offspring included) so the
+    offspring traits are real too. One extra (slower) evaluation per team; it replaces a separate report-mode run."""
+    reset_trial_inputs(team_context["trial"], team_context["exp_data"], team_context["trial_pinp"]
+                       , team_context["sinp_defaults"], team_context["uinp_defaults"], team_context["pinp_defaults"]
+                       , user_sa=team_context["user_sa"])
+    out = {}
+    try:
+        sgen.generator(coefficients_c=x, params={}, r_vals={}, nv={}, pkl_fs_info={}, pkl_fs=team_context["pkl_fs"]
+                       , o_trait_values=out, stubble=team_context["stubble"]
+                       , calibration_weights_p=team_context["calibration_weights"]
+                       , calibration_targets_p=team_context["calibration_targets"]
+                       , calibration_trait_names_p=team_context["trait_names_p"])
+    except Exception as e:
+        print(f"Warning: the trait values of Team {team_context.get('team')} could not be evaluated. {type(e).__name__}: {str(e).splitlines()[0] if str(e) else ''}")
+        return None
+    return out.get("output")
+
+
+def f1_run_de(t, team_context, x0, lo, up):
+    """Differential Evolution for one team, starting from x0 (BestBet, or the lsq result for 'lsq+de')."""
+    bounds = list(zip(lo, up))
+    bestbet = x0
+    context = team_context
 
     ##report each DE step with the team number. DE's own disp output doesn't include the team, so when the teams run
     ## in parallel their steps can't be told apart. The callback (scipy 1.11) isn't passed the objective, so the best
     ## objective is tracked in calibration_objective. This only works if the objective runs in this process
     ## (workers = 1, as when multiprocessing the teams), otherwise f(x) is reported as n/a.
     ##convergence is tol / (relative spread of the population objective). DE stops when it reaches 1 (or earlier if atol is met).
-    team_context["progress"] = {"step": 0, "best": np.inf}
+    ##the best coefficients (xk) are also printed on one line at full precision, so if a run is stopped early (or a rerun
+    ## is started from where a team got to) the latest best can be recovered from the log. Each line is written in one
+    ## call (newline included) so lines from teams running in parallel don't get mixed together (python -u writes the
+    ## text and print's end separately).
+    ##the step count continues from an lsq run ('lsq+de') so the latest step in the log is the latest point
     def f1_report_step(xk, convergence):
         progress = team_context["progress"]
         progress["step"] += 1
         best = f"{progress['best']:g}" if context["workers"] == 1 else "n/a"
-        print(f"Team {t} step {progress['step']}: f(x)= {best} convergence= {convergence:.3g}")
+        print(f"Team {t} step {progress['step']}: f(x)= {best} convergence= {convergence:.3g}\n"
+              f"Team {t} step {progress['step']} x: {xk.tolist()}\n", end='')
 
     population = context["popsize"] * len(bestbet)
     init = f_initial_population(bestbet, bounds, population) if INIT_NEAR_PROPN > 0 else 'latinhypercube'
@@ -349,6 +414,140 @@ def calibration_objective(coefficients_c, context):
     return objective
 
 
+def calibration_traits(coefficients_c, context):
+    """Trait values and objective for one coefficient set (as calibration_objective, but also returning the trait values,
+    which the least squares method needs). Returns (None, 1e8) if the generator fails or the objective is NaN."""
+    reset_trial_inputs(context["trial"], context["exp_data"], context["trial_pinp"], context["sinp_defaults"]
+                       , context["uinp_defaults"], context["pinp_defaults"], user_sa=context["user_sa"])
+    out = {}
+    try:
+        objective = sgen.generator(coefficients_c=coefficients_c, params={}, r_vals={}, nv={}, pkl_fs_info={}
+                                   , pkl_fs=context["pkl_fs"], stubble=context["stubble"], calibrate_trait_values=True
+                                   , calibration_weights_p=context["calibration_weights"]
+                                   , calibration_targets_p=context["calibration_targets"]
+                                   , calibration_trait_names_p=context["trait_names_p"], o_calibration_traits=out)
+    except Exception as e:
+        print(f"Warning: the generator failed for Team {context.get('team')}. {type(e).__name__}: {str(e).splitlines()[0] if str(e) else ''}")
+        return None, 1e8
+    traits = out.get("output")
+    if traits is None or objective >= 1e8 or not np.all(np.isfinite(traits)):
+        return None, 1e8
+    return np.asarray(traits, dtype=float).ravel(), objective
+
+
+def f1_jacobian(x, traits_x, lo, up, context):
+    """Forward-difference Jacobian of the trait values w.r.t. the coefficients at x (traits x coefficients).
+    Each step is LSQ_STEP of the coefficient's half-range, towards the further bound so the point stays in the bounds.
+    Returns the Jacobian and the number of generator evaluations."""
+    half = (up - lo) / 2
+    jac = np.zeros((traits_x.size, x.size))
+    n = 0
+    for j in np.flatnonzero(half > 0):
+        d = LSQ_STEP * half[j] * (1 if up[j] - x[j] >= x[j] - lo[j] else -1)
+        xj = x.copy()
+        xj[j] += d
+        traits_j, _ = calibration_traits(xj, context)
+        n += 1
+        if traits_j is not None:
+            jac[:, j] = (traits_j - traits_x) / d
+    return jac, n
+
+
+def f1_standard_traits_worker(x):
+    """Pool worker for f_standard_jacobian: trait values at x (team 0's context; the traits don't depend on the targets)."""
+    return calibration_traits(x, f1_team_context(0, worker_context))[0]
+
+
+def f_standard_jacobian(context, n_processes):
+    """Jacobian of the trait values at the Standard (all coefficients 0, because they are adjustments to the standard
+    values), by central differences with steps of 2 x LSQ_STEP of team 0's half-ranges. Measured once and shared by
+    the teams as the starting Jacobian for lsq. The 2 x n_coef evaluations are spread over the processes."""
+    lo, up = context["bnd_lo_tc"][0], context["bnd_up_tc"][0]
+    h = 2 * LSQ_STEP * (up - lo) / 2
+    free = np.flatnonzero(h > 0)
+    points = [s * h[j] * np.eye(h.size)[j] for j in free for s in (1, -1)]
+    if n_processes > 1:
+        with mp.Pool(processes=n_processes, initializer=init_worker, initargs=(context.copy(),)) as pool:
+            traits = pool.map(f1_standard_traits_worker, points, chunksize=1)
+    else:
+        init_worker(context.copy())
+        traits = [f1_standard_traits_worker(x) for x in points]
+    if any(tr is None for tr in traits):
+        raise ValueError("The generator failed at a Standard Jacobian point: reduce LSQ_STEP or check the bounds of team 0.")
+    jac = np.zeros((traits[0].size, h.size))
+    for k, j in enumerate(free):
+        jac[:, j] = (traits[2 * k] - traits[2 * k + 1]) / (2 * h[j])
+    return jac
+
+
+def f1_run_lsq(t, team_context, x0, lo, up):
+    """Bounded Gauss-Newton least squares for one team (see METHOD).
+
+    Minimises sum(((traits - targets) * weights)^2), the same objective as DE. Each step solves the linearised problem
+    within the bounds and a trust region (the largest change of any coefficient, in half-ranges). A step that reduces
+    the objective is accepted and the trust region grows if the reduction was as predicted (shrinks if much less);
+    a step that doesn't is rejected and the trust region shrinks. After each step the Jacobian is updated along the
+    step (Broyden), and it is re-measured at the current point when the step failed to halve the objective."""
+    w = np.asarray(team_context["calibration_weights"], dtype=float).ravel()
+    tgt = np.asarray(team_context["calibration_targets"], dtype=float).ravel()
+    lo, up = np.asarray(lo, dtype=float), np.asarray(up, dtype=float)
+    half = (up - lo) / 2
+    free = half > 0
+    progress = team_context["progress"]
+    x = np.clip(np.asarray(x0, dtype=float), lo, up)
+    traits, f = calibration_traits(x, team_context)
+    nfev, n_jac = 1, 0
+    if traits is None:
+        print(f"Team {t} coefficients are {x} obj: {f} evaluations {nfev} - False")
+        return t, x, False, f, 0, "lsq: the generator failed at BestBet"
+    r = (traits - tgt) * w
+    if team_context.get("jac0") is not None:
+        a = team_context["jac0"] * w[:, None]
+        a_at_x = False
+    else:
+        jac, n = f1_jacobian(x, traits, lo, up, team_context)
+        a, a_at_x, nfev, n_jac = jac * w[:, None], True, nfev + n, n_jac + 1
+    radius = 1.0
+    while f > LSQ_TARGET and nfev < LSQ_MAX_EVAL and radius > 1e-6:
+        ##step: least squares of the linearised weighted errors, within the bounds and the trust region (scaled by the half-ranges)
+        lb = np.maximum(lo - x, -radius * half)[free] / half[free]
+        ub = np.minimum(up - x, radius * half)[free] / half[free]
+        sol = spo.lsq_linear(a[:, free] * half[free], -r, bounds=(lb, np.maximum(ub, lb + 1e-15)), method='bvls')
+        p = np.zeros_like(x)
+        p[free] = sol.x * half[free]
+        x_new = np.clip(x + p, lo, up)
+        p = x_new - x    #the step taken (the clip only removes rounding beyond the bounds)
+        predicted = np.sum((r + a @ p) ** 2)
+        traits_new, f_new = calibration_traits(x_new, team_context)
+        nfev += 1
+        if traits_new is not None and f_new < f:
+            r_new = (traits_new - tgt) * w
+            ##Broyden update of the weighted Jacobian along the step
+            a += np.outer(r_new - r - a @ p, p) / (p @ p)
+            ratio = (f - f_new) / max(f - predicted, 1e-300)
+            if ratio > 0.75 and np.max(np.abs(p[free]) / half[free]) > 0.99 * radius:
+                radius *= 2
+            elif ratio < 0.25:
+                radius *= 0.5
+            remeasure = f_new > 0.5 * f
+            x, traits, r, f, a_at_x = x_new, traits_new, r_new, f_new, False
+        else:
+            radius *= 0.25
+            remeasure = True
+        ##the Jacobian in use isn't good enough here (e.g. a curved trait away from the Standard): re-measure it at x
+        if remeasure and not a_at_x:
+            jac, n = f1_jacobian(x, traits, lo, up, team_context)
+            a, a_at_x, nfev, n_jac = jac * w[:, None], True, nfev + n, n_jac + 1
+        progress["step"] += 1
+        print(f"Team {t} step {progress['step']}: f(x)= {f:g} evaluations= {nfev} radius= {radius:.3g} jacobians= {n_jac}\n"
+              f"Team {t} step {progress['step']} x: {x.tolist()}\n", end='')
+    success = f <= LSQ_DE_ABOVE
+    reason = ("reached LSQ_TARGET" if f <= LSQ_TARGET else "LSQ_MAX_EVAL evaluations" if nfev >= LSQ_MAX_EVAL
+              else "no further improvement (trust region collapsed)")
+    print(f"Team {t} coefficients are {x} obj: {f} evaluations {nfev} - {success}")
+    return t, x, success, f, progress["step"], f"lsq: {reason}; {nfev} evaluations, {n_jac} Jacobians re-measured"
+
+
 def run_calibration_for_team_worker(t):
     """Pool.map wrapper.
 
@@ -375,7 +574,12 @@ def build_context(targets_tp, weights_p, bestbet_tc, bnd_lo_tc, bnd_up_tc, n_coe
     polish = bool(fun.f_sa(POLISH, sen.sav['calib_polish'], 5))
     tol = float(fun.f_sa(TOL, sen.sav['calib_tol'], 5))
     atol = float(fun.f_sa(ATOL, sen.sav['calib_atol'], 5))
+    ##calibration method: command line (4th argument) > sav in exp.xlsx > METHOD
+    method = str(sys.argv[4] if len(sys.argv) > 4 else fun.f_sa(METHOD, sen.sav['calib_method'], 5)).strip().lower()
+    if method not in ('de', 'lsq', 'lsq+de'):
+        raise ValueError(f"Unknown calibration method '{method}'. Use 'de', 'lsq' or 'lsq+de'.")
     return {
+        "method": method,
         "targets_tp": targets_tp,
         "weights_p": weights_p,
         "trait_names_p": trait_names_p,
@@ -401,7 +605,7 @@ def build_context(targets_tp, weights_p, bestbet_tc, bnd_lo_tc, bnd_up_tc, n_coe
 
 
 def write_calibration_results(df_targets_tp, df_bnd_lo_tc, df_bnd_up_tc, keys_t, keys_c, results, n_teams_total=None
-                              , wait_if_open=True):
+                              , wait_if_open=True, df_weights_p=None):
     n_teams = len(keys_t) if n_teams_total is None else n_teams_total
     n_coef = len(keys_c)
     coefficients_tc = np.zeros((n_teams, n_coef))
@@ -410,13 +614,25 @@ def write_calibration_results(df_targets_tp, df_bnd_lo_tc, df_bnd_up_tc, keys_t,
     nit_t = np.zeros(n_teams)
     message_t = np.empty(n_teams, dtype=object)
     message_t[:] = "Pending"
+    traits_tp = np.full((n_teams, df_targets_tp.shape[1]), np.nan)
 
-    for t, coefficients, success, wsmse, nit, message in sorted(results, key=lambda item: item[0]):
+    for t, coefficients, success, wsmse, nit, message, *traits in sorted(results, key=lambda item: item[0]):
         coefficients_tc[t, :] = coefficients
         success_t[t] = success
         wsmse_t[t] = wsmse
         nit_t[t] = nit
         message_t[t] = message
+        if traits and traits[0] is not None:
+            traits_tp[t, :] = traits[0]
+
+    ##trait values at the final coefficients, the misses (achieved - target) and each trait's share of the objective
+    ## ((miss x weight)^2). The Traits sheet has the same layout as Output/TraitValues.xlsx (teams in column A).
+    traits = pd.DataFrame(traits_tp, index=keys_t, columns=df_targets_tp.columns)
+    misses = traits - df_targets_tp.values
+    contributions = None
+    if df_weights_p is not None:
+        contributions = (misses * np.asarray(df_weights_p, dtype=float).ravel()) ** 2
+        contributions.insert(0, "Objective (sum)", contributions.sum(axis=1, min_count=1))
 
     coefficients = pd.DataFrame(coefficients_tc, index=keys_t, columns=keys_c)
     success = pd.DataFrame(success_t, index=keys_t, columns=["Optimal"])
@@ -441,6 +657,10 @@ def write_calibration_results(df_targets_tp, df_bnd_lo_tc, df_bnd_up_tc, keys_t,
         message.to_excel(writer, "Coefficients", index=False, header=True, startrow=0, startcol=n_coef+5)
         df_bnd_lo_tc.to_excel(writer, "Low", index=True, header=True, startrow=0, startcol=1)
         df_bnd_up_tc.to_excel(writer, "High", index=True, header=True, startrow=0, startcol=1)
+        traits.to_excel(writer, "Traits", index=True, header=True)
+        misses.to_excel(writer, "Misses", index=True, header=True)
+        if contributions is not None:
+            contributions.to_excel(writer, "Contributions", index=True, header=True)
     return True
 
 
@@ -518,7 +738,13 @@ def main():
 
         teams = list(range(n_teams))
         if RUN_CALIBRATION:
+            print(f"Calibration method: {context['method']}")
             print(f"DE controls: polish={context['polish']} tol={context['tol']} atol={context['atol']}")
+            if context["method"] != 'de':
+                print(f"lsq controls: step={LSQ_STEP} target={LSQ_TARGET} max evaluations={LSQ_MAX_EVAL} DE above={LSQ_DE_ABOVE}")
+                t0 = timer()
+                context["jac0"] = f_standard_jacobian(context, n_processes)
+                print(f"Jacobian at the Standard measured in {timer() - t0:.0f} s")
             if team_processes:
                 print(f"multiprocess across {n_processes} teams with population of {context['popsize'] * n_coef}")
                 worker_init_context = context.copy()
@@ -534,7 +760,7 @@ def main():
                         for result in pool.imap_unordered(run_calibration_for_team_worker, teams, chunksize=1):
                             results.append(result)
                             write_calibration_results(df_targets_tp, df_bnd_lo_tc, df_bnd_up_tc, keys_t, keys_c
-                                                      , results, n_teams_total=n_teams, wait_if_open=False)
+                                                      , results, n_teams_total=n_teams, wait_if_open=False, df_weights_p=df_weights_p)
                     except KeyboardInterrupt:
                         print("\nKeyboardInterrupt received — terminating worker processes...")
                         pool.terminate()
@@ -550,10 +776,10 @@ def main():
                     time_list.append(timer())
                     print(f"Team {t} time {time_list[-1] - time_list[-2]:0.4f}secs")
                     write_calibration_results(df_targets_tp, df_bnd_lo_tc, df_bnd_up_tc, keys_t, keys_c
-                                              , results, n_teams_total=n_teams, wait_if_open=False)
+                                              , results, n_teams_total=n_teams, wait_if_open=False, df_weights_p=df_weights_p)
 
             write_calibration_results(df_targets_tp, df_bnd_lo_tc, df_bnd_up_tc, keys_t, keys_c
-                                      , results, wait_if_open=True)
+                                      , results, wait_if_open=True, df_weights_p=df_weights_p)
 
             time_list.append(timer())
             time_elapsed = time_list[-1] - time_list[0]
