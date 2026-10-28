@@ -412,6 +412,7 @@ def create_sa():
     sav['age_max'] = '-'  #SA on length of the generator for dams (years)
     sav['age_max_offs'] = '-'    #SA on length of the generator for offspring (years)
     sav['eqn_compare']      = '-'                  #SA to alter if the different equation systems in the sheep sim are run and compared
+    sav['lwc_mid_rc']       = '-'                  #SA to calculate EVG at the mid-period rc rather than the rc at the start of the period (default False). Removes the drift in fat over cycles of gain & loss (CS & MU LWC equations)
     sav['eqn_used_g0_q1p7'] = np.full(uinp.sheep['i_eqn_used_g0_q1p7'].shape, '-', dtype=object) #SA value for which equation system to use
     sav['eqn_used_g1_q1p7'] = np.full(uinp.sheep['i_eqn_used_g1_q1p7'].shape, '-', dtype=object) #SA value for which equation system to use
     sav['eqn_used_g2_q1p7'] = np.full(uinp.sheep['i_eqn_used_g2_q1p7'].shape, '-', dtype=object) #SA value for which equation system to use

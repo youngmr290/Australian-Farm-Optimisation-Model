@@ -425,7 +425,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         ###Calculate SRW if it is being endogenously fitted from the target adult weight & fatness and EVG
         ###Test on endogenous calculation is that saa[adult EVG] coefficient has a value
         ###Estimating SRW as LW at 25% fat based on ALW and Fat% of adult ewes prior to prejoining
-        ###The calculation is based on the fat & lean changing based on the proportion determined by cg8 (EVG) (see W18:99)
+        ###The calculation is based on the fat & lean changing based on the proportion determined by cg8 (EVG) (see W18:99 & W19:32)
         if adult_evg is not None:
             ###The adult weight & fatness are from the adult fatness target that is weighted in the objective. Only one can be weighted:
             ### aFat% - ALW is aWT
@@ -5193,7 +5193,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     if (eqn_used or eqn_compare) and active_p_psire[p]:
                         temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_lwc_cs(cg_cpsire, rc_start_sire, mei_sire
                                 , mem_sire, new_sire, zf1_sire, zf2_sire, kg_sire, kw_cs_sire
-                                , age_pa1e1b1nwzida0e0b0xyg0[p:p+1], rev_trait_values['sire'][p])
+                                , age_pa1e1b1nwzida0e0b0xyg0[p:p+1], rev_trait_values['sire'][p]
+                                , days_per_period=days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1], ebw_start=ebw_start_sire)
                         if eqn_used:
                             ebg_sire = temp0
                             evg_sire = temp1
@@ -5214,7 +5215,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                 , mem_dams, new_dams, zf1_dams, zf2_dams, kg_dams, kw_cs_dams
                                 , age_pa1e1b1nwzida0e0b0xyg1[p:p+1], rev_trait_values['dams'][p]
                                 , nec_dams, kc_cs_pa1e1b1nwzida0e0b0xyg1, nel_dams, kl_cs_dams
-                                , gest_propn_pa1e1b1nwzida0e0b0xyg1[p:p+1], lact_propn_pa1e1b1nwzida0e0b0xyg1[p:p+1])
+                                , gest_propn_pa1e1b1nwzida0e0b0xyg1[p:p+1], lact_propn_pa1e1b1nwzida0e0b0xyg1[p:p+1]
+                                , days_per_period=days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1], ebw_start=ebw_start_dams)
                         if eqn_used:
                             ebg_dams = temp0
                             evg_dams = temp1
@@ -5233,7 +5235,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     if (eqn_used or eqn_compare) and active_p_poffs[p]:
                         temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_lwc_cs(cg_cpoffs, rc_start_offs, mei_offs
                                 , mem_offs, new_offs, zf1_offs, zf2_offs, kg_offs, kw_cs_offs
-                                , age_cut_pa1e1b1nwzida0e0b0xyg3[p:p+1], rev_trait_values['offs'][p])
+                                , age_cut_pa1e1b1nwzida0e0b0xyg3[p:p+1], rev_trait_values['offs'][p]
+                                , days_per_period=days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1], ebw_start=ebw_start_offs)
                         if eqn_used:
                             ebg_offs = temp0
                             evg_offs = temp1
@@ -5256,7 +5259,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                         temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9 = sfun.f_lwc_mu(cg_cpsire
                                 , ck_cpsire, rc_start_sire, mei_sire, neme_mu_sire, km_sire, hp_mei_mu_sire, new_sire
                                 , kw_mu_yg0, zf1_sire, zf2_sire, heat_loss_sirem0p1, age_pa1e1b1nwzida0e0b0xyg0[p:p+1]
-                                , rev_trait_values['sire'][p], days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1], sam_kg=sam_kg_sire)
+                                , rev_trait_values['sire'][p], days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1], sam_kg=sam_kg_sire
+                                , ebw_start=ebw_start_sire)
                         #use this version of hp_total in f_templc_nfs() in next function call
                         hp_total_mu_sire = temp6
                         if eqn_used:
@@ -5297,7 +5301,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                 , kw_mu_yg1, zf1_dams, zf2_dams, heat_loss_damsm0p1, age_pa1e1b1nwzida0e0b0xyg1[p:p+1]
                                 , rev_trait_values['dams'][p], days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1], nec=nec_dams
                                 , kc=kc_mu_pa1e1b1nwzida0e0b0xyg1, nel=nel_dams, kl=kl_mu_dams, gest_propn=gest_propn_pa1e1b1nwzida0e0b0xyg1[p:p+1]
-                                , lact_propn=lact_propn_pa1e1b1nwzida0e0b0xyg1[p:p+1], sam_kg=sam_kg_dams)
+                                , lact_propn=lact_propn_pa1e1b1nwzida0e0b0xyg1[p:p+1], sam_kg=sam_kg_dams, ebw_start=ebw_start_dams)
                         #use this version of hp_total in f_templc_nfs() in next function call. It excludes chill increment
                         hp_total_mu_dams = temp6
                         if eqn_used:
@@ -5337,7 +5341,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                         temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9 = sfun.f_lwc_mu(cg_cpoffs
                                 , ck_cpoffs, rc_start_offs, mei_offs, neme_mu_offs, km_offs, hp_mei_mu_offs, new_offs
                                 , kw_mu_yg3, zf1_offs, zf2_offs, heat_loss_offsm0p1, age_cut_pa1e1b1nwzida0e0b0xyg3[p:p+1]
-                                , rev_trait_values['offs'][p], days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1], sam_kg=sam_kg_offs)
+                                , rev_trait_values['offs'][p], days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1], sam_kg=sam_kg_offs
+                                , ebw_start=ebw_start_offs)
                         #use this version of hp_total in f_templc_nfs() in next function call
                         hp_total_mu_offs = temp6
                         if eqn_used:
@@ -6043,7 +6048,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_lwc_cs(cg_cpyatf, rc_start_yatf, mei_yatf, mem_yatf
                             , new_yatf, zf1_yatf, zf2_yatf, kg_yatf, kw_cs_yatf
                             , age_pa1e1b1nwzida0e0b0xyg2[p:p+1], rev_trait_values['yatf'][p]
-                            , days_per_period=days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...], b_mask=(nyatf_b1nwzida0e0b0xyg>0))
+                            , days_per_period=days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...], b_mask=(nyatf_b1nwzida0e0b0xyg>0)
+                            , ebw_start=ebw_start_yatf)
                     if eqn_used:
                         ebg_yatf = temp0
                         evg_yatf = temp1
@@ -6069,7 +6075,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             , kw_mu_yg2, zf1_yatf, zf2_yatf, heat_loss_yatfm0p1, age_pa1e1b1nwzida0e0b0xyg2[p:p+1]
                             , rev_trait_values['yatf'][p], days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1]
                             , b_mask=(nyatf_b1nwzida0e0b0xyg>0), mei_propn_milk=mei_propn_milk_yatf, sam_kg=sam_kg_yatf
-                            , scenario=scenario)
+                            , scenario=scenario, ebw_start=ebw_start_yatf)
                     #use this version of hp_total in f_templc_nfs() in next function call
                     hp_total_mu_yatf = temp6
                     if eqn_used:

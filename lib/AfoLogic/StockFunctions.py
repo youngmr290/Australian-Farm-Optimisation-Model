@@ -1100,6 +1100,32 @@ def f1_adipose_propn(cg, evg):
     adipose_propn = (evg - mv_energy) / (adipose_energy - mv_energy)
     return adipose_propn
 
+def f1_evg_mid_rc(cg, evg_start, wbec, zf2, rc_start, ebw_start, days):
+    '''
+    EVG at the mid-period rc. Used if sav['lwc_mid_rc'] is True.
+
+    EVG increases with rc (zf2 * cg[11]) and rc changes during the period, so the EVG at rc_start under-estimates the fat
+    in a gain and over-estimates the fat lost in a loss. The fat drifts down over each cycle of gain & loss (about 0.08
+    percentage points of Fat% per year for adult ewes with weekly periods).
+    evg_mid = evg_start + slope * d_rc / 2, where slope = zf2 * cg[11] (scaled by sap['evg']) and the change in rc over
+    the period is d_rc = ebg * days * rc_start / ebw_start with ebg = wbec / evg_mid. So
+        evg_mid^2 - evg_start * evg_mid - q * wbec = 0    where q = slope * rc_start / ebw_start * days / 2
+    The larger root is the solution (= evg_start if wbec or q is 0). With EVG linear in rc the fat in the gain is then
+    the exact integral over the period (as in f1_srw_from_fat()). rc_start / ebw_start (ffcfw / (ebw * nw)) includes
+    gut fill at the average ratio and nw is constant within the period. A loss so large that there is no solution
+    (not expected for sheep) uses the vertex (evg_start / 2) and the result is bounded by the caller.
+
+    :param cg: Numpy array, sim parameters - weight change.
+    :param evg_start: EVG at rc_start (MJ/kg EBW) after sap['evg'] & f1_evg_bound (so it is positive).
+    :param wbec: change in whole body energy (MJ/d), negative if losing weight.
+    :param zf2: EVG size factor (increases at maturity).
+    :param rc_start: relative condition at the start of the period.
+    :param ebw_start: empty body weight at the start of the period (kg).
+    :param days: days in the period.
+    '''
+    q = zf2 * cg[11, ...] * (1 + sen.sap['evg']) * fun.f_divide(rc_start, ebw_start) * days / 2
+    return (evg_start + np.sqrt(np.maximum(evg_start ** 2 + 4 * q * wbec, 0))) / 2
+
 def f1_fat_propn_initial(cg, cb0, relsize, fat_propn_birth):
     '''
     Proportion of fat in the empty body (by wet weight) at a given relative size, consistent with the EVG parameters.
@@ -1937,8 +1963,9 @@ def f_heatloss_nfs(cc, ffcfw_start, rc_start, sl_start, temp_ave, temp_max, temp
 
 
 def f_lwc_cs(cg, rc_start, mei, mem, new, zf1, zf2, kg, kw, age, rev_trait_value, nec = 0, kc = 1, nel = 0, kl = 1
-             , gest_propn = 0, lact_propn = 0, days_per_period=7, b_mask = 1):
+             , gest_propn = 0, lact_propn = 0, days_per_period=7, b_mask = 1, ebw_start = None):
     ##Note: The energy components of rev_trait_value are not active in this function. Have to be using f_lwc_nfs
+    ##ebw_start is only required for EVG at the mid-period rc (sav['lwc_mid_rc'])
 
     ##Calculate me for conceptus growth, milk production & wool growth
     mec = nec / kc
@@ -1963,6 +1990,9 @@ def f_lwc_cs(cg, rc_start, mei, mem, new, zf1, zf2, kg, kw, age, rev_trait_value
     evg = fun.f_sa(evg, sen.sap['evg'], 1)   # * zf2, 1)
     ## Limit EVG to the range between all lean & all adipose (so the proportion of fat in the gain is between 0 & 1)
     evg = f1_evg_bound(cg, evg)
+    ## EVG at the mid-period rc rather than rc_start (if sav['lwc_mid_rc'])
+    if ebw_start is not None and fun.f_sa(True, sen.sav['lwc_mid_rc'], 5):
+        evg = f1_evg_bound(cg, f1_evg_mid_rc(cg, evg, neg, zf2, rc_start, ebw_start, days_per_period))
     # ##Process the EVG REV: if EVG is not the target trait overwrite trait value with value from the dictionary or update the REV dictionary
     # evg = f1_rev_update('evg', evg, rev_trait_value)
     #Protein content of gain (kg/kg EBW) (some uncertainty for sign associated with zf2.
@@ -2089,9 +2119,11 @@ def f1_back_calculate_mei(ck, cg, nem_ee, nefat, nemuscle, neviscera, hp_wcl, ne
     return mei, wbec_ee, surplus_energy_ee, hp_total_ee, chill_increment
 
 def f_lwc_mu(cg, ck, rc_start, mei_initial, nem_ee, km, hp_mei, new, kw, zf1, zf2, heat_loss_m0p1, age, rev_trait_value
-    , days_period, b_mask = 1, nec = 0, kc = 1, nel = 0, kl = 1, gest_propn = 0, lact_propn = 0, mei_propn_milk = 0, sam_kg=1, scenario='-'):
+    , days_period, b_mask = 1, nec = 0, kc = 1, nel = 0, kl = 1, gest_propn = 0, lact_propn = 0, mei_propn_milk = 0, sam_kg=1, scenario='-'
+    , ebw_start = None):
     #Calculate LW change from energy surplus to maintenance. Uses energy & efficiency approach like CSIRO
     #but separates kf & kp and calculates proportion of fat & protein from mass and energy balance.
+    #ebw_start is only required for EVG at the mid-period rc (sav['lwc_mid_rc'])
 
     ##Calculate me for conceptus growth, milk production & wool growth
     hp_dc = nec * (fun.f_divide(1, kc) - 1)
@@ -2145,6 +2177,12 @@ def f_lwc_mu(cg, ck, rc_start, mei_initial, nem_ee, km, hp_mei, new, kw, zf1, zf
     ##Process the WBE REV: if WBE is not the target trait overwrite trait value with value from the dictionary or update the REV dictionary
     ###Note: If using the wbec REV then consider the fat, muscle & viscera traits (probably exclude them i.e. REV=0)
     wbec = f1_rev_update('wbec', wbec_prior, rev_trait_value)
+    ##EVG at the mid-period rc rather than rc_start (if sav['lwc_mid_rc']). kg (above) uses the EVG at rc_start.
+    ###The second EVG REV update replaces the value stored (or overwrites with the stored value) by the first.
+    if ebw_start is not None and fun.f_sa(True, sen.sav['lwc_mid_rc'], 5):
+        evg_prior = f1_evg_bound(cg, f1_evg_mid_rc(cg, evg_prior, wbec, zf2, rc_start, ebw_start, days_period))
+        evg = f1_rev_update('evg', evg_prior, rev_trait_value)
+        adipose_propn = f1_adipose_propn(cg, evg)
     ##Empty bodyweight gain (prior to REVs)
     ebg_prior = wbec / evg
     ## energy gained as fat (MJ)
