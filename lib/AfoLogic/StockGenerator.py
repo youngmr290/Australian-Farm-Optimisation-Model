@@ -431,32 +431,43 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             ### aFat% - ALW is aWT
             ### aWBE - ALW is aWT and Fat% is calculated from WBE and EBW (aWT / cg[18])
             ### aFatMass & aLeanMass - ALW is (FatMass + LeanMass) * cg[18] and Fat% is FatMass / (FatMass + LeanMass)
-            weight_trait = dict(zip(target_names, calibration_weights_p.ravel()))
-            fatness_traits = {'aFat%': weight_trait['aFat%'] != 0, 'aWBE': weight_trait['aWBE'] != 0
-                              , 'aFatMass & aLeanMass': weight_trait['aFatMass'] != 0 and weight_trait['aLeanMass'] != 0}
-            if sum(fatness_traits.values()) != 1 or (weight_trait['aFatMass'] != 0) != (weight_trait['aLeanMass'] != 0):
-                raise ValueError(f"Endogenous SRW (adult EVG is being calibrated) requires one adult fatness trait to be weighted in"
-                                 f" [Calibration_control.xlsx]Weights: aFat%, aWBE or both aFatMass & aLeanMass. Weights are"
-                                 f" {({name: weight_trait[name] for name in ['aFat%', 'aWBE', 'aFatMass', 'aLeanMass']})}")
+            trait_weight = dict(zip(target_names, calibration_weights_p.ravel()))
+            fatness_traits = {'aWT': trait_weight['aWT'] != 0
+                            , 'aFat%': trait_weight['aFat%'] != 0
+                            , 'aWBE': trait_weight['aWBE'] != 0
+                            , 'aFatMass': trait_weight['aFatMass'] != 0
+                            , 'aLeanMass': trait_weight['aLeanMass'] != 0}
+            if sum(fatness_traits.values()) != 2:
+                raise ValueError(f"Endogenous SRW (adult EVG is being calibrated) requires two adult traits to be weighted"
+                                 f" [Calibration_control.xlsx]Weights: aWT, aFat%, aWBE, aFatMass & aLeanMass. Weights are"
+                                 f" {({name: trait_weight[name] for name in ['aWT', 'aFat%', 'aWBE', 'aFatMass', 'aLeanMass']})}")
             cg_c2 = uinp.parameters['i_cg_c2'][:, genotype]   #scalar for each parameter (genotype of the base model)
             lw_ebw = cg_c2[18]   #ratio of LW to EBW
-            if fatness_traits['aFatMass & aLeanMass']:
+            if fatness_traits['aFatMass'] and fatness_traits['aLeanMass']:
                 srw_awt = (afatmass_target + aleanmass_target) * lw_ebw
                 srw_afatper = afatmass_target / (afatmass_target + aleanmass_target)
-            elif fatness_traits['aWBE']:
+            elif fatness_traits['aWT'] and fatness_traits['aFatMass']:
+                srw_awt = awt_target
+                srw_afatper = afatmass_target / (awt_target / lw_ebw)
+            elif fatness_traits['aWT'] and fatness_traits['aLeanMass']:
+                srw_awt = awt_target
+                srw_afatper = 1 - (aleanmass_target / (awt_target / lw_ebw))
+            elif fatness_traits['aWT'] and fatness_traits['aWBE']:
                 srw_awt = awt_target
                 srw_afatper = sfun.f1_wbe2fat_propn(cg_c2, awbe_target, awt_target / lw_ebw)
-            else:
+            else:   #ALW & Fat%
                 srw_awt = awt_target
                 srw_afatper = afatper_target
-            sen.sav['srw_c2'][genotype] = srw_parameter = srw_awt * (1 + 34.8 / (adult_evg - 13.5) * (srwfat - srw_afatper))
-            logger.debug(f"Endogenous SRW {srw_parameter} "
-                         f"from {[k for k, v in fatness_traits.items() if v][0]} "
-                         f"target: ALW={srw_awt}, Fat%={srw_afatper}, EVG={adult_evg}")
-            # srw_from_fat = awt * (1 - afatper) / (1 - srwfat_yg1)   #alternative formula that assumes lean mass is constant eg Hutton's model.
-            # srw_from_fat = awt / (1 + 1.54 * (afatper - srwfat_yg1))   # alternative formula that can be fitted to simulation data (see W18:p64)
 
-        ###Apply the SAA for genotype calibration that exclude the p11 axis
+            marginal_fatper = sfun.f1_wbe2fat_propn(cg_c2, adult_evg, 1)   #the propn of fat in the marginal kg at SRW
+            rc_slope = sfun.f1_wbe2fat_propn(cg_c2, adult_evg + cg_c2[11], 1) - marginal_fatper   #change in the marginal fat propn per unit of rc (from cg11)
+            sen.sav['srw_c2'][genotype] = srw_parameter = sfun.f1_srw_from_fat(srw_awt, srw_afatper, srwfat, marginal_fatper, rc_slope)
+            logger.debug(f"Endogenous SRW {srw_parameter} "
+                         f"from {[k for k, v in fatness_traits.items() if v]} "
+                         f"target: ALW={srw_awt}, Fat%={srw_afatper}, EVG={adult_evg}, cg11={cg_c2[11]}")
+            # srw_from_fat = awt * (1 - afatper) / (1 - srwfat_yg1)   #alternative formula that assumes lean mass is constant eg Hutton's model.
+
+        ###Apply the SAA for genotype calibration coefficients that exclude the p11 axis
         uinp.parameters['i_srw_c2'] = fun.f_sa(uinp.parameters['i_srw_c2'].astype(float), sen.sav['srw_c2'], 5)
         idx = fun.f_slice_idx(uinp.parameters['i_cw_c2'], {0: [25]})
         uinp.parameters['i_cw_c2'][idx] = fun.f_sa(uinp.parameters['i_cw_c2'][idx], sen.saa['ycfw_scalar'], 2)
@@ -8316,14 +8327,17 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             srw_actual = srw_actual.item()
 
         ##Estimating SRW as LW at 25% fat based on simulated LW and Fat% of adult ewes prior to prejoining
-        ###The calculation is based on the fat & lean changing based on the proportion determined by cg8 (EVG) (see W18:99)
+        ###The calculation is based on the fat & lean changing based on the proportion determined by cg8 (EVG) and the rc term of EVG (cg11) (see W18:99)
         ###This calculation is only used in the reporting
-        cg8 = cg_cpdams[8, ...].item()
-        srw_from_fat = awt * (1 + 34.8 / (cg8 - 13.5) * (srwfat_yg1[0,0] - afatper))
+        cg8 = cg_cpdams[8, ...].item()   #this will fail if more than 1 active axis in cg_cpdams.
+        cg11 = cg_cpdams[11, ...].item()
+        marginal_fatper = sfun.f1_wbe2fat_propn(cg_cpdams, cg8, 1).item()  #the propn of fat in the marginal kg at SRW
+        rc_slope = sfun.f1_wbe2fat_propn(cg_cpdams, cg8 + cg11, 1).item() - marginal_fatper   #change in the marginal fat propn per unit of rc
+        srw_from_fat = sfun.f1_srw_from_fat(awt, afatper, srwfat_yg1[0,0], marginal_fatper, rc_slope)
         # srw_from_fat = awt * (1 - afatper) / (1 - srwfat_yg1)   #alternate formula that assumes lean mass is constant eg Hutton's model.
         # srw_from_fat = awt / (1 + 1.54 * (afatper - srwfat_yg1))   # alternative formula that can be fitted to simulation data (see W18:p64)
         ###Estimated proportion of fat in the body at the srw. Using same formula as above
-        fat_at_srw = afatper + (cg8 - 13.5) / 34.8 * (srw_actual - awt) / awt
+        fat_at_srw = sfun.f1_fat_at_srw(awt, afatper, srw_actual, marginal_fatper, rc_slope)
         # fat_at_srw = 1 - (awt / srw_actual * (1 - afatper))     #alternate formula if lean is constant
 
         ## Survival. mortality_dams is the sum of base + weaner + perinatal + preg tox.
