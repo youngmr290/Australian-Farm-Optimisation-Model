@@ -2399,6 +2399,41 @@ def f1_wbe2fat_propn(cg, wbe, ebw):
     return fat_propn
 
 
+def f1_srw_from_fat(awt, afatper, srwfat, marginal_fatper, rc_slope):
+    ## Estimate SRW (LW when Fat% = srwfat) from the adult LW & Fat% (see W18:99 & W19:32).
+    ## At maturity zf1 ~ 0 and zf2 = 1, so EVG = cg8 + cg11 * (rc - 1) and the propn of fat in the marginal kg is
+    ## marginal_fatper + rc_slope * (r - 1), where r = ALW / SRW is used as an approximation of rc (ffcfw / normal weight).
+    ## Integrating the fat in the gain (or loss) from SRW to ALW:
+    ##     Fat% * r = srwfat + marginal_fatper * (r - 1) + rc_slope / 2 * (r - 1)^2    (a quadratic in r)
+    ## The larger root is the branch that includes r = 1. If rc_slope = 0 it is the linear formula
+    ##     SRW = ALW * (Fat% - marginal_fatper) / (srwfat - marginal_fatper)
+    ## Below a turning point Fat% increases as r decreases (the weight lost when rc < 1 is mostly lean), so a Fat% below the
+    ## minimum of the curve has no solution. Then the r at the vertex of the quadratic (the closest to a solution) is used.
+    ## EVG is not bounded to the energy of lean & fat (f1_evg_bound) in this calculation.
+    ## The quadratic is a*r^2 + b*r + c = 0 with the coefficients below. The larger root (a > 0) is the usual
+    ##     r = (-b + sqrt(D)) / (2a)    where D = b^2 - 4ac
+    ## Multiplying the top & bottom by (-b - sqrt(D)) and using b^2 - D = 4ac:
+    ##     r = (-b + sqrt(D))(-b - sqrt(D)) / (2a(-b - sqrt(D))) = 4ac / (2a(-b - sqrt(D))) = 2c / (-b - sqrt(D))
+    ## which is the same value but a has cancelled, so:
+    ##     - it is correct if rc_slope = 0 (a = 0, D = b^2, r = -c / b = (marginal_fatper - srwfat) / (marginal_fatper - Fat%),
+    ##       the linear formula) without a separate branch.
+    ##     - it avoids the loss of precision in -b + sqrt(D) (the difference of two similar numbers) when rc_slope is small.
+    a = rc_slope / 2
+    b = marginal_fatper - rc_slope - afatper
+    c = srwfat - marginal_fatper + rc_slope / 2
+    disc = b ** 2 - 4 * a * c
+    with np.errstate(divide='ignore', invalid='ignore'):
+        r = 2 * c / (-b - np.sqrt(np.maximum(disc, 0)))   #larger root (this form is also correct if rc_slope = 0)
+        r = np.where(disc < 0, -b / (2 * a), r)   #r at the vertex if there is no solution
+    return awt / r
+
+
+def f1_fat_at_srw(awt, afatper, srw, marginal_fatper, rc_slope):
+    ## Estimate the Fat% at SRW from the adult LW & Fat%. The inverse of f1_srw_from_fat() for srwfat.
+    r = awt / srw
+    return afatper * r - marginal_fatper * (r - 1) - rc_slope / 2 * (r - 1) ** 2
+
+
 # def f1_convert_fs2nv(fs_input, nv_p6f, feedsupply_f, a_p6_pa1e1b1nwzida0e0b0xyg):
 #     ##convert a feed supply array (feed) and return an NV array using a conversion array (nv_p6f) for a corresponding feedsupply (feedsupply_f)
 #     ## expect feed to have a p axis as axis 0.
