@@ -107,9 +107,13 @@ INIT_NEAR_SD = 0.05      #standard deviation of the near members as a proportion
 #   per coefficient) when a step fails to halve the objective, so curved traits (e.g. fat) still converge. It needs a
 #   reasonable BestBet (e.g. the BBMatrix of the calibration Master, v12w on). A target that can't be reached ends at the
 #   best compromise within the bounds.
+#   Bounds: with a cLimits sheet in Calibration_control.xlsx (Master v12z on: the biological limits of each coefficient
+#   adjustment, blank = no limit) lsq is bounded by those limits and Low/High only set its scale (the Jacobian step and the
+#   trust region, in half-ranges of Low/High). Without the sheet Low/High are both the bounds and the scale.
 # 'lsq+de' runs lsq, then DE from the lsq result for the teams still above LSQ_DE_ABOVE.
+#   DE searches Low/High (clipped to the cLimits). If lsq ended outside Low/High, DE's range is re-centred on the lsq result.
 METHOD = 'lsq'
-LSQ_STEP = 0.05        #finite-difference step for the Jacobian, as a proportion of each coefficient's half-range (doubled for the central differences at the Standard)
+LSQ_STEP = 0.05        #finite-difference step for the Jacobian, as a proportion of each coefficient's Low/High half-range (doubled for the central differences at the Standard)
 LSQ_TARGET = 1e-5      #stop when the objective is below this
 LSQ_MAX_EVAL = 600     #maximum generator evaluations per team
 LSQ_DE_ABOVE = 0.005   #'lsq+de': teams with an objective above this after lsq continue with DE
@@ -181,10 +185,16 @@ def read_calibration_control():
     df_bestbet_tc = pd.read_excel(relativeFile.findExcel("Calibration_control.xlsx"), sheet_name="BestBet", index_col=[0], header=[0], engine='openpyxl')
     df_bnd_lo_tc = pd.read_excel(relativeFile.findExcel("Calibration_control.xlsx"), sheet_name="Low", index_col=[0], header=[0], engine='openpyxl')
     df_bnd_up_tc = pd.read_excel(relativeFile.findExcel("Calibration_control.xlsx"), sheet_name="High", index_col=[0], header=[0], engine='openpyxl')
-    return df_targets_tp, df_weights_p, df_bestbet_tc, df_bnd_lo_tc, df_bnd_up_tc
+    ##biological limits of the coefficient adjustments (rows Lower & Upper, blank = no limit). Optional: control files made
+    ## before Master v12z don't have the sheet and Low/High are then the only bounds.
+    try:
+        df_lim_c = pd.read_excel(relativeFile.findExcel("Calibration_control.xlsx"), sheet_name="cLimits", index_col=[0], header=[0], engine='openpyxl')
+    except ValueError:
+        df_lim_c = None
+    return df_targets_tp, df_weights_p, df_bestbet_tc, df_bnd_lo_tc, df_bnd_up_tc, df_lim_c
 
 
-def check_calibration_control(df_targets_tp, df_weights_p, df_bestbet_tc, df_bnd_lo_tc, df_bnd_up_tc):
+def check_calibration_control(df_targets_tp, df_weights_p, df_bestbet_tc, df_bnd_lo_tc, df_bnd_up_tc, df_lim_c=None):
     """Check the Calibration_control.xlsx sheets line up before starting the calibration.
 
     The coefficients and traits are passed to the generator by position (not by name), so a column that is
@@ -193,7 +203,7 @@ def check_calibration_control(df_targets_tp, df_weights_p, df_bestbet_tc, df_bnd
     """
     problems = []
     ##coefficient sheets must have identical columns (BestBet is the x0 for DE, Low/High are the bounds)
-    for name, df in [("Low", df_bnd_lo_tc), ("High", df_bnd_up_tc)]:
+    for name, df in [("Low", df_bnd_lo_tc), ("High", df_bnd_up_tc)] + ([("cLimits", df_lim_c)] if df_lim_c is not None else []):
         if list(df.columns) != list(df_bestbet_tc.columns):
             only_bestbet = [c for c in df_bestbet_tc.columns if c not in df.columns]
             only_other = [c for c in df.columns if c not in df_bestbet_tc.columns]
@@ -219,8 +229,26 @@ def check_calibration_control(df_targets_tp, df_weights_p, df_bestbet_tc, df_bnd
         for desc, mask in [("Low > High", lo > up), ("BestBet outside Low/High", (bestbet < lo) | (bestbet > up))]:
             for t, c in zip(*np.nonzero(mask)):
                 problems.append(f"{desc}: team row {t} ({df_targets_tp.index[t]}), coefficient {df_bestbet_tc.columns[c]}.")
+    ##the biological limits must be valid (Low/High may go past them: DE's range is clipped to them). A BestBet outside
+    ## them is only a warning: the calibration starts from the BestBet clipped to the limits.
+    if not problems and df_lim_c is not None:
+        if list(df_lim_c.index[:2].str.lower()) != ['lower', 'upper']:
+            problems.append(f"cLimits rows must be Lower and Upper, not {list(df_lim_c.index)}.")
+        else:
+            lim_lo, lim_up = f1_limits(df_lim_c)
+            for c in np.flatnonzero(lim_lo > lim_up):
+                problems.append(f"cLimits Lower > Upper: coefficient {df_bestbet_tc.columns[c]}.")
+            for t, c in zip(*np.nonzero((bestbet < lim_lo) | (bestbet > lim_up))):
+                print(f"Warning: BestBet outside cLimits, team row {t} ({df_targets_tp.index[t]}), coefficient"
+                      f" {df_bestbet_tc.columns[c]}: {bestbet[t, c]:g} is clipped to [{lim_lo[c]:g}, {lim_up[c]:g}].")
     if problems:
         raise ValueError("Calibration_control.xlsx sheets do not line up:\n  " + "\n  ".join(problems))
+
+
+def f1_limits(df_lim_c):
+    """Lower and Upper rows of cLimits as arrays, a blank (no limit) as -inf/+inf."""
+    lim = df_lim_c.apply(pd.to_numeric, errors='coerce').values.astype(float)
+    return np.nan_to_num(lim[0], nan=-np.inf), np.nan_to_num(lim[1], nan=np.inf)
 
 
 def init_worker(context):
@@ -279,17 +307,29 @@ def run_calibration_for_team(t, context):
     - multiprocessing loop where each process handles a team and workers = 1
     """
     lo, up = context["bnd_lo_tc"][t], context["bnd_up_tc"][t]
-    bestbet = context["bestbet_tc"][t]
+    ##biological limits (cLimits), else Low/High. lsq is bounded by the limits and scaled by the Low/High half-range;
+    ## DE searches Low/High clipped to the limits.
+    lim_lo, lim_up = (context["lim_lo_c"], context["lim_up_c"]) if context.get("lim_lo_c") is not None else (lo, up)
+    half = (up - lo) / 2
+    bestbet = np.clip(context["bestbet_tc"][t], lim_lo, lim_up)
     team_context = f1_team_context(t, context)
     team_context["progress"] = {"step": 0, "best": np.inf}
     print(f"Starting calibration for Team {t}...")
     if context["method"] == 'de':
-        result = f1_run_de(t, team_context, bestbet, lo, up)
+        ##(widened to the clipped BestBet if Low/High lie wholly beyond a limit)
+        de_lo = np.minimum(np.maximum(lo, lim_lo), bestbet)
+        de_up = np.maximum(np.minimum(up, lim_up), bestbet)
+        result = f1_run_de(t, team_context, bestbet, de_lo, de_up)
     else:
-        result = f1_run_lsq(t, team_context, bestbet, lo, up)
+        result = f1_run_lsq(t, team_context, bestbet, lim_lo, lim_up, half)
         if context["method"] == 'lsq+de' and result[3] > LSQ_DE_ABOVE:
             print(f"Team {t} objective {result[3]:g} after lsq is above {LSQ_DE_ABOVE}: continuing with DE from the lsq result")
-            result_de = f1_run_de(t, team_context, result[1], lo, up)
+            ##DE's range is Low/High, re-centred on the lsq result for a coefficient that lsq took outside it
+            x = result[1]
+            outside = (x < lo) | (x > up)
+            de_lo = np.maximum(np.where(outside, x - half, lo), lim_lo)
+            de_up = np.minimum(np.where(outside, x + half, up), lim_up)
+            result_de = f1_run_de(t, team_context, x, de_lo, de_up)
             result = result_de if result_de[3] < result[3] else result
     ##all the trait values at the final coefficients (for the Traits sheet of CalibrationResults.xlsx)
     return result + (f1_final_traits(result[1], team_context),)
@@ -435,15 +475,17 @@ def calibration_traits(coefficients_c, context):
     return np.asarray(traits, dtype=float).ravel(), objective
 
 
-def f1_jacobian(x, traits_x, lo, up, context):
+def f1_jacobian(x, traits_x, lo, up, context, half=None):
     """Forward-difference Jacobian of the trait values w.r.t. the coefficients at x (traits x coefficients).
-    Each step is LSQ_STEP of the coefficient's half-range, towards the further bound so the point stays in the bounds.
+    Each step is LSQ_STEP of the coefficient's half-range (half, default the half-range of lo/up), towards the further
+    bound so the point stays in the bounds (shortened if that bound is nearer than the step).
     Returns the Jacobian and the number of generator evaluations."""
-    half = (up - lo) / 2
+    half = (up - lo) / 2 if half is None else half
     jac = np.zeros((traits_x.size, x.size))
     n = 0
-    for j in np.flatnonzero(half > 0):
-        d = LSQ_STEP * half[j] * (1 if up[j] - x[j] >= x[j] - lo[j] else -1)
+    for j in np.flatnonzero((half > 0) & (up > lo)):
+        room = max(up[j] - x[j], x[j] - lo[j])
+        d = min(LSQ_STEP * half[j], room) * (1 if up[j] - x[j] >= x[j] - lo[j] else -1)
         xj = x.copy()
         xj[j] += d
         traits_j, _ = calibration_traits(xj, context)
@@ -461,11 +503,15 @@ def f1_standard_traits_worker(x):
 def f_standard_jacobian(context, n_processes):
     """Jacobian of the trait values at the Standard (all coefficients 0, because they are adjustments to the standard
     values), by central differences with steps of 2 x LSQ_STEP of team 0's half-ranges. Measured once and shared by
-    the teams as the starting Jacobian for lsq. The 2 x n_coef evaluations are spread over the processes."""
+    the teams as the starting Jacobian for lsq. The 2 x n_coef evaluations are spread over the processes.
+    A step that would cross a cLimit is shortened on that side (an uneven central difference)."""
     lo, up = context["bnd_lo_tc"][0], context["bnd_up_tc"][0]
     h = 2 * LSQ_STEP * (up - lo) / 2
-    free = np.flatnonzero(h > 0)
-    points = [s * h[j] * np.eye(h.size)[j] for j in free for s in (1, -1)]
+    hp, hm = h.copy(), h.copy()
+    if context.get("lim_lo_c") is not None:
+        hp, hm = np.clip(context["lim_up_c"], 0, h), np.clip(-context["lim_lo_c"], 0, h)
+    free = np.flatnonzero((h > 0) & (hp + hm > 0))
+    points = [(hp[j] if s == 1 else -hm[j]) * np.eye(h.size)[j] for j in free for s in (1, -1)]
     if n_processes > 1:
         with mp.Pool(processes=n_processes, initializer=init_worker, initargs=(context.copy(),)) as pool:
             traits = pool.map(f1_standard_traits_worker, points, chunksize=1)
@@ -476,23 +522,25 @@ def f_standard_jacobian(context, n_processes):
         raise ValueError("The generator failed at a Standard Jacobian point: reduce LSQ_STEP or check the bounds of team 0.")
     jac = np.zeros((traits[0].size, h.size))
     for k, j in enumerate(free):
-        jac[:, j] = (traits[2 * k] - traits[2 * k + 1]) / (2 * h[j])
+        jac[:, j] = (traits[2 * k] - traits[2 * k + 1]) / (hp[j] + hm[j])
     return jac
 
 
-def f1_run_lsq(t, team_context, x0, lo, up):
+def f1_run_lsq(t, team_context, x0, lo, up, half=None):
     """Bounded Gauss-Newton least squares for one team (see METHOD).
 
     Minimises sum(((traits - targets) * weights)^2), the same objective as DE. Each step solves the linearised problem
     within the bounds and a trust region (the largest change of any coefficient, in half-ranges). A step that reduces
     the objective is accepted and the trust region grows if the reduction was as predicted (shrinks if much less);
     a step that doesn't is rejected and the trust region shrinks. After each step the Jacobian is updated along the
-    step (Broyden), and it is re-measured at the current point when the step failed to halve the objective."""
+    step (Broyden), and it is re-measured at the current point when the step failed to halve the objective.
+    lo/up are the bounds (the cLimits, which can be infinite) and half the scale (the Low/High half-range); without
+    half the scale is the half-range of lo/up."""
     w = np.asarray(team_context["calibration_weights"], dtype=float).ravel()
     tgt = np.asarray(team_context["calibration_targets"], dtype=float).ravel()
     lo, up = np.asarray(lo, dtype=float), np.asarray(up, dtype=float)
-    half = (up - lo) / 2
-    free = half > 0
+    half = (up - lo) / 2 if half is None else np.asarray(half, dtype=float)
+    free = (half > 0) & (up > lo)
     progress = team_context["progress"]
     x = np.clip(np.asarray(x0, dtype=float), lo, up)
     traits, f = calibration_traits(x, team_context)
@@ -505,7 +553,7 @@ def f1_run_lsq(t, team_context, x0, lo, up):
         a = team_context["jac0"] * w[:, None]
         a_at_x = False
     else:
-        jac, n = f1_jacobian(x, traits, lo, up, team_context)
+        jac, n = f1_jacobian(x, traits, lo, up, team_context, half)
         a, a_at_x, nfev, n_jac = jac * w[:, None], True, nfev + n, n_jac + 1
     radius = 1.0
     while f > LSQ_TARGET and nfev < LSQ_MAX_EVAL and radius > 1e-6:
@@ -536,7 +584,7 @@ def f1_run_lsq(t, team_context, x0, lo, up):
             remeasure = True
         ##the Jacobian in use isn't good enough here (e.g. a curved trait away from the Standard): re-measure it at x
         if remeasure and not a_at_x:
-            jac, n = f1_jacobian(x, traits, lo, up, team_context)
+            jac, n = f1_jacobian(x, traits, lo, up, team_context, half)
             a, a_at_x, nfev, n_jac = jac * w[:, None], True, nfev + n, n_jac + 1
         progress["step"] += 1
         print(f"Team {t} step {progress['step']}: f(x)= {f:g} evaluations= {nfev} radius= {radius:.3g} jacobians= {n_jac}\n"
@@ -558,7 +606,8 @@ def run_calibration_for_team_worker(t):
 
 
 def build_context(targets_tp, weights_p, bestbet_tc, bnd_lo_tc, bnd_up_tc, n_coef, *, team_processes
-                  , trait_names_p, trial, exp_data, trial_pinp, sinp_defaults, uinp_defaults, pinp_defaults):
+                  , trait_names_p, trial, exp_data, trial_pinp, sinp_defaults, uinp_defaults, pinp_defaults
+                  , lim_lo_c=None, lim_up_c=None):
     """Collect the values needed by team calibration and objective evaluation.
 
     Requires sen to be populated for the current trial (see reset_trial_inputs) because the DE polish, tol
@@ -586,6 +635,8 @@ def build_context(targets_tp, weights_p, bestbet_tc, bnd_lo_tc, bnd_up_tc, n_coe
         "bestbet_tc": bestbet_tc,
         "bnd_lo_tc": bnd_lo_tc,
         "bnd_up_tc": bnd_up_tc,
+        "lim_lo_c": lim_lo_c,
+        "lim_up_c": lim_up_c,
         "trial": trial,
         "exp_data": exp_data,
         "trial_pinp": trial_pinp,
@@ -692,8 +743,9 @@ def main():
     for trial in dataset:
         o_trait_values[trial] = {}  # create row key inside calibration dictionary
 
-        df_targets_tp, df_weights_p, df_bestbet_tc, df_bnd_lo_tc, df_bnd_up_tc = read_calibration_control()
-        check_calibration_control(df_targets_tp, df_weights_p, df_bestbet_tc, df_bnd_lo_tc, df_bnd_up_tc)
+        df_targets_tp, df_weights_p, df_bestbet_tc, df_bnd_lo_tc, df_bnd_up_tc, df_lim_c = read_calibration_control()
+        check_calibration_control(df_targets_tp, df_weights_p, df_bestbet_tc, df_bnd_lo_tc, df_bnd_up_tc, df_lim_c)
+        lim_lo_c, lim_up_c = f1_limits(df_lim_c) if df_lim_c is not None else (None, None)
 
         keys_t = df_targets_tp.index
         keys_c = df_bestbet_tc.columns
@@ -733,7 +785,9 @@ def main():
             trial_pinp=trial_pinp,
             sinp_defaults=sinp_defaults,
             uinp_defaults=uinp_defaults,
-            pinp_defaults=pinp_defaults
+            pinp_defaults=pinp_defaults,
+            lim_lo_c=lim_lo_c,
+            lim_up_c=lim_up_c
         )
 
         teams = list(range(n_teams))
@@ -742,6 +796,7 @@ def main():
             print(f"DE controls: polish={context['polish']} tol={context['tol']} atol={context['atol']}")
             if context["method"] != 'de':
                 print(f"lsq controls: step={LSQ_STEP} target={LSQ_TARGET} max evaluations={LSQ_MAX_EVAL} DE above={LSQ_DE_ABOVE}")
+                print("lsq bounds: " + ("cLimits (scaled by Low/High)" if lim_lo_c is not None else "Low/High (no cLimits sheet)"))
                 t0 = timer()
                 context["jac0"] = f_standard_jacobian(context, n_processes)
                 print(f"Jacobian at the Standard measured in {timer() - t0:.0f} s")
