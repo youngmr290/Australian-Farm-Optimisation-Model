@@ -1071,14 +1071,12 @@ def f1_tissue_energy(cg):
     '''
     Energy content (MJ/kg wet weight) of adipose tissue and of lean tissue (muscle & viscera combined).
     :param cg: Numpy array, sim parameters - weight change.
-    :return: adipose_energy, mv_energy
+    :return: adipose_energy, lean_energy
     '''
     adipose_energy = cg[20, ...] * cg[26, ...]   #MJ per kg of adipose tissue (wet)
-    # muscle_energy = cg[21, ...] * cg[27, ...]   # calculation only allowing for muscle and excluding the viscera component
-    ##energy content averaged across muscle & viscera (wet) (See Working13 pg32 for derivation)
-    mv_energy = (cg[21, ...] * cg[27, ...] * (1 + cg[38, ...] / (1 - cg[38, ...]))
-                   / (1 + (cg[38, ...] * cg[21, ...] * cg[27, ...]) / ((1 - cg[38, ...]) * cg[22, ...] * cg[28, ...])))
-    return adipose_energy, mv_energy
+    ##weighted average energy content across muscle & viscera (wet) (See Working13 pg32 for derivation)
+    lean_energy = cg[21] * cg[27] * (1 - cg[39]) + cg[22] * cg[28] * cg[39]
+    return adipose_energy, lean_energy
 
 def f1_evg_bound(cg, evg):
     '''
@@ -1087,8 +1085,8 @@ def f1_evg_bound(cg, evg):
     :param cg: Numpy array, sim parameters - weight change.
     :param evg: Numpy array, energy value of the gain (MJ/kg empty body weight - wet weight).
     '''
-    adipose_energy, mv_energy = f1_tissue_energy(cg)
-    return np.clip(evg, mv_energy, adipose_energy)
+    adipose_energy, lean_energy = f1_tissue_energy(cg)
+    return np.clip(evg, lean_energy, adipose_energy)
 
 def f1_adipose_propn(cg, evg):
     '''
@@ -1096,8 +1094,8 @@ def f1_adipose_propn(cg, evg):
     :param cg: Numpy array, sim parameters - weight change.
     :param evg: Numpy array, energy value of the gain (MJ/kg empty body weight - wet weight).
     '''
-    adipose_energy, mv_energy = f1_tissue_energy(cg)
-    adipose_propn = (evg - mv_energy) / (adipose_energy - mv_energy)
+    adipose_energy, lean_energy = f1_tissue_energy(cg)
+    adipose_propn = (evg - lean_energy) / (adipose_energy - lean_energy)
     return adipose_propn
 
 def f1_evg_rc_term(cg, rc, zf2, slope=False):
@@ -1165,8 +1163,7 @@ def f1_fat_propn_initial(cg, cb0, relsize, fat_propn_birth):
     ##Relative size at birth. Uses the BW of a single (b0 slice 0) so the composition is the same for all animals in the group
     relsize_birth = fun.f_slice(cb0[15, ...], {sinp.stock['i_b0_pos']: 0})
     ##Energy content (MJ/kg wet) of adipose tissue & lean tissue (muscle & viscera weighted by the proportion of viscera in lean)
-    fat_energy = cg[20, ...] * cg[26, ...]
-    lean_energy = cg[21, ...] * cg[27, ...] * (1 - cg[39, ...]) + cg[22, ...] * cg[28, ...] * cg[39, ...]
+    fat_energy, lean_energy = f1_tissue_energy(cg)
     ##Energy content per kg of EBW at birth
     wbe_birth = lean_energy + fat_propn_birth * (fat_energy - lean_energy)
     ##Integral of zf1 with respect to relative size. zf1 = 1 / (1 + exp(cg4 * (z - cg5)))
@@ -2440,10 +2437,8 @@ def f_lwc_nfs(cg, ck, muscle, viscera, muscle_target, mei_initial, km, md, hp_ma
 
 def f_wbe_mu(cg, fat, muscle, viscera=0):
     ## calculate whole body energy content from weight, dry matter and energy density of fat, muscle and viscera.
-    fat_energy = cg[20, ...] * cg[26, ...]   #MJ per kg of fat (wet)
-    muscle_energy = cg[21, ...] * cg[27, ...]    #MJ per kg of muscle (wet)
-    viscera_energy = cg[22, ...] * cg[28, ...]   #MJ per kg of viscera (wet)
-    wbe = fat * fat_energy + muscle * muscle_energy + viscera * viscera_energy
+    wbe = (f1_weight_energy_conversion(cg, 0, weight=fat) + f1_weight_energy_conversion(cg, 1, weight=muscle)
+           + f1_weight_energy_conversion(cg, 2, weight=viscera))
     return wbe
 
 
@@ -2451,9 +2446,8 @@ def f1_wbe2fat_propn(cg, wbe, ebw):
     ## calculate the proportion of fat in the empty body (Fat%) from whole body energy (MJ) and empty body weight (kg).
     ## Solves wbe = fat * fat_energy + (ebw - fat) * lean_energy for fat, which is the inverse of f_wbe_mu() with the
     ## lean split to muscle & viscera by cg[39] (as for the change in lean in f_lwc_mu()).
-    fat_energy = cg[20, ...] * cg[26, ...]   #MJ per kg of fat (wet)
-    lean_energy = cg[21, ...] * cg[27, ...] * (1 - cg[39, ...]) + cg[22, ...] * cg[28, ...] * cg[39, ...]   #MJ per kg of lean (wet)
-    fat_propn = (wbe / ebw - lean_energy) / (fat_energy - lean_energy)
+    ## This is the same as the proportion of fat in a gain with EVG = wbe / ebw (f1_adipose_propn).
+    fat_propn = f1_adipose_propn(cg, wbe / ebw)
     return fat_propn
 
 
