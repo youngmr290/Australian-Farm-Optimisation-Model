@@ -336,7 +336,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         ywt_target = f1_target('yWT')
         hwt_target = f1_target('hWT')
         awt_target = f1_target('aWT')
-        srw_target = f1_target('SRW')    #srw_target is not used. Included as a trait for TraitValues.xlsx
+        srw_target = f1_target('SRW')    #srw_target can be used to fit cg8 for the standard genotype
         pfat_target = f1_target('pFAT')
         yfat_target = f1_target('yFAT')
         hfat_target = f1_target('hFAT')
@@ -8448,7 +8448,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             ('yWT', ywt),
             ('hWT', hwt),
             ('aWT', awt),
-            ('SRW', srw_parameter),   # srw_parameter is saved to TraitValues.xlsx because srw_p11 can be added to it
+            ('SRW', srw_from_fat),   # srw_parameter is saved to TraitValues.xlsx because srw_p11 can be added to it
             ('pFAT', pfat),
             ('yFAT', yfat),
             ('hFAT', hfat),
