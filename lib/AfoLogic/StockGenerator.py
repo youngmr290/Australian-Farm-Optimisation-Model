@@ -461,10 +461,11 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
             marginal_fatper = sfun.f1_wbe2fat_propn(cg_c2, adult_evg, 1)   #the propn of fat in the marginal kg at SRW
             rc_slope = sfun.f1_wbe2fat_propn(cg_c2, adult_evg + cg_c2[11], 1) - marginal_fatper   #change in the marginal fat propn per unit of rc (from cg11)
-            sen.sav['srw_c2'][genotype] = srw_parameter = sfun.f1_srw_from_fat(srw_awt, srw_afatper, srwfat, marginal_fatper, rc_slope)
+            rc_curve = sfun.f1_wbe2fat_propn(cg_c2, adult_evg + cg_c2[16], 1) - marginal_fatper   #change in the marginal fat propn per unit of (rc - 1)^2 above rc 1 (from cg16)
+            sen.sav['srw_c2'][genotype] = srw_parameter = sfun.f1_srw_from_fat(srw_awt, srw_afatper, srwfat, marginal_fatper, rc_slope, rc_curve)
             logger.debug(f"Endogenous SRW {srw_parameter} "
                          f"from {[k for k, v in fatness_traits.items() if v]} "
-                         f"target: ALW={srw_awt}, Fat%={srw_afatper}, EVG={adult_evg}, cg11={cg_c2[11]}")
+                         f"target: ALW={srw_awt}, Fat%={srw_afatper}, EVG={adult_evg}, cg11={cg_c2[11]}, cg16={cg_c2[16]}")
             # srw_from_fat = awt * (1 - afatper) / (1 - srwfat_yg1)   #alternative formula that assumes lean mass is constant eg Hutton's model.
 
         ###Apply the SAA for genotype calibration coefficients that exclude the p11 axis
@@ -8337,13 +8338,15 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         ###This calculation is only used in the reporting
         cg8 = cg_cpdams[8, ...].item()   #this will fail if more than 1 active axis in cg_cpdams.
         cg11 = cg_cpdams[11, ...].item()
+        cg16 = cg_cpdams[16, ...].item()
         marginal_fatper = sfun.f1_wbe2fat_propn(cg_cpdams, cg8, 1).item()  #the propn of fat in the marginal kg at SRW
         rc_slope = sfun.f1_wbe2fat_propn(cg_cpdams, cg8 + cg11, 1).item() - marginal_fatper   #change in the marginal fat propn per unit of rc
-        srw_from_fat = sfun.f1_srw_from_fat(awt, afatper, srwfat_yg1[0,0], marginal_fatper, rc_slope)
+        rc_curve = sfun.f1_wbe2fat_propn(cg_cpdams, cg8 + cg16, 1).item() - marginal_fatper   #change in the marginal fat propn per unit of (rc - 1)^2 above rc 1
+        srw_from_fat = sfun.f1_srw_from_fat(awt, afatper, srwfat_yg1[0,0], marginal_fatper, rc_slope, rc_curve)
         # srw_from_fat = awt * (1 - afatper) / (1 - srwfat_yg1)   #alternate formula that assumes lean mass is constant eg Hutton's model.
         # srw_from_fat = awt / (1 + 1.54 * (afatper - srwfat_yg1))   # alternative formula that can be fitted to simulation data (see W18:p64)
         ###Estimated proportion of fat in the body at the srw. Using same formula as above
-        fat_at_srw = sfun.f1_fat_at_srw(awt, afatper, srw_actual, marginal_fatper, rc_slope)
+        fat_at_srw = sfun.f1_fat_at_srw(awt, afatper, srw_actual, marginal_fatper, rc_slope, rc_curve)
         # fat_at_srw = 1 - (awt / srw_actual * (1 - afatper))     #alternate formula if lean is constant
 
         ## Survival. mortality_dams is the sum of base + weaner + perinatal + preg tox.
