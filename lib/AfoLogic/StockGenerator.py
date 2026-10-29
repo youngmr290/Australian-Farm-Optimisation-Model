@@ -423,15 +423,19 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         logger.debug(f"Offspring included in the generator: {calibrate_offs}")
 
         ###Calculate SRW if it is being endogenously fitted from the target adult weight & fatness and EVG
-        ###Test on endogenous calculation is that saa[adult EVG] coefficient has a value
+        ###Test on endogenous calculation is that saa[adult EVG] coefficient has a value and SRW is not a weighted trait.
+        ### If SRW is weighted the SRW is the input value (plus srw_p11) and EVG is fitted so that the SRW estimated from
+        ### the simulated adult weight & fatness (srw_from_fat) matches the SRW target.
         ###Estimating SRW as LW at 25% fat based on ALW and Fat% of adult ewes prior to prejoining
         ###The calculation is based on the fat & lean changing based on the proportion determined by cg8 (EVG) (see W18:99 & W19:32)
-        if adult_evg is not None:
+        trait_weight = dict(zip(target_names, calibration_weights_p.ravel()))
+        if adult_evg is not None and trait_weight['SRW'] != 0:
+            logger.debug("SRW is a weighted trait so SRW is not endogenous (EVG is fitted to the SRW target)")
+        if adult_evg is not None and trait_weight['SRW'] == 0:
             ###The adult weight & fatness are from the adult fatness target that is weighted in the objective. Only one can be weighted:
             ### aFat% - ALW is aWT
             ### aWBE - ALW is aWT and Fat% is calculated from WBE and EBW (aWT / cg[18])
             ### aFatMass & aLeanMass - ALW is (FatMass + LeanMass) * cg[18] and Fat% is FatMass / (FatMass + LeanMass)
-            trait_weight = dict(zip(target_names, calibration_weights_p.ravel()))
             fatness_traits = {'aWT': trait_weight['aWT'] != 0
                             , 'aFat%': trait_weight['aFat%'] != 0
                             , 'aWBE': trait_weight['aWBE'] != 0
