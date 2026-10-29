@@ -1071,14 +1071,12 @@ def f1_tissue_energy(cg):
     '''
     Energy content (MJ/kg wet weight) of adipose tissue and of lean tissue (muscle & viscera combined).
     :param cg: Numpy array, sim parameters - weight change.
-    :return: adipose_energy, mv_energy
+    :return: adipose_energy, lean_energy
     '''
     adipose_energy = cg[20, ...] * cg[26, ...]   #MJ per kg of adipose tissue (wet)
-    # muscle_energy = cg[21, ...] * cg[27, ...]   # calculation only allowing for muscle and excluding the viscera component
-    ##energy content averaged across muscle & viscera (wet) (See Working13 pg32 for derivation)
-    mv_energy = (cg[21, ...] * cg[27, ...] * (1 + cg[38, ...] / (1 - cg[38, ...]))
-                   / (1 + (cg[38, ...] * cg[21, ...] * cg[27, ...]) / ((1 - cg[38, ...]) * cg[22, ...] * cg[28, ...])))
-    return adipose_energy, mv_energy
+    ##weighted average energy content across muscle & viscera (wet) (See Working13 pg32 for derivation)
+    lean_energy = cg[21] * cg[27] * (1 - cg[39]) + cg[22] * cg[28] * cg[39]
+    return adipose_energy, lean_energy
 
 def f1_evg_bound(cg, evg):
     '''
@@ -1087,8 +1085,8 @@ def f1_evg_bound(cg, evg):
     :param cg: Numpy array, sim parameters - weight change.
     :param evg: Numpy array, energy value of the gain (MJ/kg empty body weight - wet weight).
     '''
-    adipose_energy, mv_energy = f1_tissue_energy(cg)
-    return np.clip(evg, mv_energy, adipose_energy)
+    adipose_energy, lean_energy = f1_tissue_energy(cg)
+    return np.clip(evg, lean_energy, adipose_energy)
 
 def f1_adipose_propn(cg, evg):
     '''
@@ -1096,9 +1094,55 @@ def f1_adipose_propn(cg, evg):
     :param cg: Numpy array, sim parameters - weight change.
     :param evg: Numpy array, energy value of the gain (MJ/kg empty body weight - wet weight).
     '''
-    adipose_energy, mv_energy = f1_tissue_energy(cg)
-    adipose_propn = (evg - mv_energy) / (adipose_energy - mv_energy)
+    adipose_energy, lean_energy = f1_tissue_energy(cg)
+    adipose_propn = (evg - lean_energy) / (adipose_energy - lean_energy)
     return adipose_propn
+
+def f1_evg_rc_term(cg, rc, zf2, slope=False):
+    '''
+    The rc term of EVG: zf2 * (cg[11] * (rc - 1) + cg[16] * max(rc - 1, 0)^2).
+    EVG increases linearly with rc (cg[11]) and above rc 1 also with the square of (rc - 1) (cg[16]), so the EVG of fat
+    animals approaches the energy content of adipose (e.g. cg[11] 13.8 & cg[16] 32.7 give EVG 27 at rc 1.4 if cg[8] is
+    16.25). The slope at rc 1 is cg[11] from both sides. The squared term is not applied below rc 1 because the
+    curvature would make EVG increase again as rc decreases (below rc 0.79 for the values above).
+    :param cg: Numpy array, sim parameters - weight change.
+    :param rc: relative condition (ffcfw / normal weight).
+    :param zf2: EVG size factor (increases at maturity).
+    :param slope: if True return the slope of the rc term (dEVG/drc) rather than its value.
+    '''
+    rc_above = np.maximum(rc - 1, 0)
+    if slope:
+        return zf2 * (cg[11, ...] + 2 * cg[16, ...] * rc_above)
+    return zf2 * (cg[11, ...] * (rc - 1) + cg[16, ...] * rc_above ** 2)
+
+def f1_evg_mid_rc(cg, evg_start, wbec, zf2, rc_start, ebw_start, days):
+    '''
+    EVG at the mid-period rc. Used if sav['lwc_mid_rc'] is True.
+
+    EVG increases with rc (f1_evg_rc_term) and rc changes during the period, so the EVG at rc_start under-estimates the fat
+    in a gain and over-estimates the fat lost in a loss. The fat drifts down over each cycle of gain & loss (about 0.08
+    percentage points of Fat% per year for adult ewes with weekly periods).
+    evg_mid = evg_start + slope * d_rc / 2, where slope = dEVG/drc at rc_start (f1_evg_rc_term with slope=True,
+    scaled by sap['evg']), and the change in rc over the period is d_rc = ebg * days * rc_start / ebw_start with
+    ebg = wbec / evg_mid. So
+        evg_mid^2 - evg_start * evg_mid - q * wbec = 0    where q = slope * rc_start / ebw_start * days / 2
+    The larger root is the solution (= evg_start if wbec or q is 0). With EVG linear in rc the fat in the gain is then
+    the exact integral over the period (as in f1_srw_from_fat()). With the cg[16] term (rc > 1) the slope at rc_start is
+    used for the whole period, so the error is about cg[16] * (d_rc / 2)^2 (~0.001 MJ/kg for a week). rc_start / ebw_start (ffcfw / (ebw * nw)) includes
+    gut fill at the average ratio and nw is constant within the period. A loss so large that there is no solution
+    (not expected for sheep) uses the vertex (evg_start / 2) and the result is bounded by the caller.
+
+    :param cg: Numpy array, sim parameters - weight change.
+    :param evg_start: EVG at rc_start (MJ/kg EBW) after sap['evg'] & f1_evg_bound (so it is positive).
+    :param wbec: change in whole body energy (MJ/d), negative if losing weight.
+    :param zf2: EVG size factor (increases at maturity).
+    :param rc_start: relative condition at the start of the period.
+    :param ebw_start: empty body weight at the start of the period (kg).
+    :param days: days in the period.
+    '''
+    slope = f1_evg_rc_term(cg, rc_start, zf2, slope=True)   #dEVG/drc at rc_start
+    q = slope * (1 + sen.sap['evg']) * fun.f_divide(rc_start, ebw_start) * days / 2
+    return (evg_start + np.sqrt(np.maximum(evg_start ** 2 + 4 * q * wbec, 0))) / 2
 
 def f1_fat_propn_initial(cg, cb0, relsize, fat_propn_birth):
     '''
@@ -1119,8 +1163,7 @@ def f1_fat_propn_initial(cg, cb0, relsize, fat_propn_birth):
     ##Relative size at birth. Uses the BW of a single (b0 slice 0) so the composition is the same for all animals in the group
     relsize_birth = fun.f_slice(cb0[15, ...], {sinp.stock['i_b0_pos']: 0})
     ##Energy content (MJ/kg wet) of adipose tissue & lean tissue (muscle & viscera weighted by the proportion of viscera in lean)
-    fat_energy = cg[20, ...] * cg[26, ...]
-    lean_energy = cg[21, ...] * cg[27, ...] * (1 - cg[39, ...]) + cg[22, ...] * cg[28, ...] * cg[39, ...]
+    fat_energy, lean_energy = f1_tissue_energy(cg)
     ##Energy content per kg of EBW at birth
     wbe_birth = lean_energy + fat_propn_birth * (fat_energy - lean_energy)
     ##Integral of zf1 with respect to relative size. zf1 = 1 / (1 + exp(cg4 * (z - cg5)))
@@ -1937,8 +1980,9 @@ def f_heatloss_nfs(cc, ffcfw_start, rc_start, sl_start, temp_ave, temp_max, temp
 
 
 def f_lwc_cs(cg, rc_start, mei, mem, new, zf1, zf2, kg, kw, age, rev_trait_value, nec = 0, kc = 1, nel = 0, kl = 1
-             , gest_propn = 0, lact_propn = 0, days_per_period=7, b_mask = 1):
+             , gest_propn = 0, lact_propn = 0, days_per_period=7, b_mask = 1, ebw_start = None):
     ##Note: The energy components of rev_trait_value are not active in this function. Have to be using f_lwc_nfs
+    ##ebw_start is only required for EVG at the mid-period rc (sav['lwc_mid_rc'])
 
     ##Calculate me for conceptus growth, milk production & wool growth
     mec = nec / kc
@@ -1958,11 +2002,14 @@ def f_lwc_cs(cg, rc_start, mei, mem, new, zf1, zf2, kg, kw, age, rev_trait_value
     ##Energy Value of gain (MJ/kg EBW)
     cg8 = f1_rev_sa(cg[8, ...], sen.saa['rev_evg'], age, sa_type=2)
     cg9 = f1_rev_sa(cg[9, ...], sen.saa['rev_evg'], age, sa_type=2)
-    evg = cg8 - zf1 * (cg9 - cg[10, ...] * (level - 1)) + zf2 * cg[11, ...] * (rc_start - 1)
+    evg = cg8 - zf1 * (cg9 - cg[10, ...] * (level - 1)) + f1_evg_rc_term(cg, rc_start, zf2)
     ## Scale based on zf2. zf2 increases from 0 to 1 as z increases from 0.9 to 0.97
     evg = fun.f_sa(evg, sen.sap['evg'], 1)   # * zf2, 1)
     ## Limit EVG to the range between all lean & all adipose (so the proportion of fat in the gain is between 0 & 1)
     evg = f1_evg_bound(cg, evg)
+    ## EVG at the mid-period rc rather than rc_start (if sav['lwc_mid_rc'])
+    if ebw_start is not None and fun.f_sa(True, sen.sav['lwc_mid_rc'], 5):
+        evg = f1_evg_bound(cg, f1_evg_mid_rc(cg, evg, neg, zf2, rc_start, ebw_start, days_per_period))
     # ##Process the EVG REV: if EVG is not the target trait overwrite trait value with value from the dictionary or update the REV dictionary
     # evg = f1_rev_update('evg', evg, rev_trait_value)
     #Protein content of gain (kg/kg EBW) (some uncertainty for sign associated with zf2.
@@ -2089,9 +2136,11 @@ def f1_back_calculate_mei(ck, cg, nem_ee, nefat, nemuscle, neviscera, hp_wcl, ne
     return mei, wbec_ee, surplus_energy_ee, hp_total_ee, chill_increment
 
 def f_lwc_mu(cg, ck, rc_start, mei_initial, nem_ee, km, hp_mei, new, kw, zf1, zf2, heat_loss_m0p1, age, rev_trait_value
-    , days_period, b_mask = 1, nec = 0, kc = 1, nel = 0, kl = 1, gest_propn = 0, lact_propn = 0, mei_propn_milk = 0, sam_kg=1, scenario='-'):
+    , days_period, b_mask = 1, nec = 0, kc = 1, nel = 0, kl = 1, gest_propn = 0, lact_propn = 0, mei_propn_milk = 0, sam_kg=1, scenario='-'
+    , ebw_start = None):
     #Calculate LW change from energy surplus to maintenance. Uses energy & efficiency approach like CSIRO
     #but separates kf & kp and calculates proportion of fat & protein from mass and energy balance.
+    #ebw_start is only required for EVG at the mid-period rc (sav['lwc_mid_rc'])
 
     ##Calculate me for conceptus growth, milk production & wool growth
     hp_dc = nec * (fun.f_divide(1, kc) - 1)
@@ -2113,7 +2162,7 @@ def f_lwc_mu(cg, ck, rc_start, mei_initial, nem_ee, km, hp_mei, new, kw, zf1, zf
     ##Energy Value of gain as calculated.
     cg8 = f1_rev_sa(cg[8, ...], sen.saa['rev_evg'], age, sa_type=2)
     cg9 = f1_rev_sa(cg[9, ...], sen.saa['rev_evg'], age, sa_type=2)
-    evg = cg8 - zf1 * (cg9 - cg[10, ...] * (level - 1)) + zf2 * cg[11, ...] * (rc_start - 1)
+    evg = cg8 - zf1 * (cg9 - cg[10, ...] * (level - 1)) + f1_evg_rc_term(cg, rc_start, zf2)
     ## SA on EVG based on zf2. zf2 increases from 0 to 1 as z increases from 0.9 to 0.97
     evg_prior = fun.f_sa(evg, sen.sap['evg'], 1)     # * zf2, 1)
     ## Limit EVG to the range between all lean & all adipose (so the proportion of fat in the gain is between 0 & 1)
@@ -2145,6 +2194,12 @@ def f_lwc_mu(cg, ck, rc_start, mei_initial, nem_ee, km, hp_mei, new, kw, zf1, zf
     ##Process the WBE REV: if WBE is not the target trait overwrite trait value with value from the dictionary or update the REV dictionary
     ###Note: If using the wbec REV then consider the fat, muscle & viscera traits (probably exclude them i.e. REV=0)
     wbec = f1_rev_update('wbec', wbec_prior, rev_trait_value)
+    ##EVG at the mid-period rc rather than rc_start (if sav['lwc_mid_rc']). kg (above) uses the EVG at rc_start.
+    ###The second EVG REV update replaces the value stored (or overwrites with the stored value) by the first.
+    if ebw_start is not None and fun.f_sa(True, sen.sav['lwc_mid_rc'], 5):
+        evg_prior = f1_evg_bound(cg, f1_evg_mid_rc(cg, evg_prior, wbec, zf2, rc_start, ebw_start, days_period))
+        evg = f1_rev_update('evg', evg_prior, rev_trait_value)
+        adipose_propn = f1_adipose_propn(cg, evg)
     ##Empty bodyweight gain (prior to REVs)
     ebg_prior = wbec / evg
     ## energy gained as fat (MJ)
@@ -2383,10 +2438,8 @@ def f_lwc_nfs(cg, ck, muscle, viscera, muscle_target, mei_initial, km, md, hp_ma
 
 def f_wbe_mu(cg, fat, muscle, viscera=0):
     ## calculate whole body energy content from weight, dry matter and energy density of fat, muscle and viscera.
-    fat_energy = cg[20, ...] * cg[26, ...]   #MJ per kg of fat (wet)
-    muscle_energy = cg[21, ...] * cg[27, ...]    #MJ per kg of muscle (wet)
-    viscera_energy = cg[22, ...] * cg[28, ...]   #MJ per kg of viscera (wet)
-    wbe = fat * fat_energy + muscle * muscle_energy + viscera * viscera_energy
+    wbe = (f1_weight_energy_conversion(cg, 0, weight=fat) + f1_weight_energy_conversion(cg, 1, weight=muscle)
+           + f1_weight_energy_conversion(cg, 2, weight=viscera))
     return wbe
 
 
@@ -2394,10 +2447,62 @@ def f1_wbe2fat_propn(cg, wbe, ebw):
     ## calculate the proportion of fat in the empty body (Fat%) from whole body energy (MJ) and empty body weight (kg).
     ## Solves wbe = fat * fat_energy + (ebw - fat) * lean_energy for fat, which is the inverse of f_wbe_mu() with the
     ## lean split to muscle & viscera by cg[39] (as for the change in lean in f_lwc_mu()).
-    fat_energy = cg[20, ...] * cg[26, ...]   #MJ per kg of fat (wet)
-    lean_energy = cg[21, ...] * cg[27, ...] * (1 - cg[39, ...]) + cg[22, ...] * cg[28, ...] * cg[39, ...]   #MJ per kg of lean (wet)
-    fat_propn = (wbe / ebw - lean_energy) / (fat_energy - lean_energy)
+    ## This is the same as the proportion of fat in a gain with EVG = wbe / ebw (f1_adipose_propn).
+    fat_propn = f1_adipose_propn(cg, wbe / ebw)
     return fat_propn
+
+
+def f1_srw_from_fat(awt, afatper, srwfat, marginal_fatper, rc_slope, rc_curve=0):
+    ## Estimate SRW (LW when Fat% = srwfat) from the adult LW & Fat% (see W18:99 & W19:32).
+    ## At maturity zf1 ~ 0 and zf2 = 1, so EVG = cg8 + cg11 * (rc - 1) + cg16 * max(rc - 1, 0)^2 (f1_evg_rc_term) and the
+    ## propn of fat in the marginal kg is marginal_fatper + rc_slope * (r - 1) + rc_curve * max(r - 1, 0)^2, where
+    ## r = ALW / SRW is used as an approximation of rc (ffcfw / normal weight).
+    ## Integrating the fat in the gain (or loss) from SRW to ALW:
+    ##     Fat% * r = srwfat + marginal_fatper * (r - 1) + rc_slope / 2 * (r - 1)^2 + rc_curve / 3 * max(r - 1, 0)^3
+    ## Below r = 1 (or if rc_curve = 0) it is a quadratic in r, which is solved first (below). Above r = 1 it is a cubic.
+    ## The larger root is the branch that includes r = 1. If rc_slope = 0 it is the linear formula
+    ##     SRW = ALW * (Fat% - marginal_fatper) / (srwfat - marginal_fatper)
+    ## Below a turning point Fat% increases as r decreases (the weight lost when rc < 1 is mostly lean), so a Fat% below the
+    ## minimum of the curve has no solution. Then the r at the vertex of the quadratic (the closest to a solution) is used.
+    ## EVG is not bounded to the energy of lean & fat (f1_evg_bound) in this calculation.
+    ## The quadratic is a*r^2 + b*r + c = 0 with the coefficients below. The larger root (a > 0) is the usual
+    ##     r = (-b + sqrt(D)) / (2a)    where D = b^2 - 4ac
+    ## Multiplying the top & bottom by (-b - sqrt(D)) and using b^2 - D = 4ac:
+    ##     r = (-b + sqrt(D))(-b - sqrt(D)) / (2a(-b - sqrt(D))) = 4ac / (2a(-b - sqrt(D))) = 2c / (-b - sqrt(D))
+    ## which is the same value but a has cancelled, so:
+    ##     - if rc_slope = 0 (a = 0, D = b^2) it is the linear formula r = -c / b = (marginal_fatper - srwfat) / (marginal_fatper - Fat%)
+    ##       if b > 0 (Fat% < marginal_fatper). If b < 0 then -b - sqrt(D) = 0, so the linear formula is used for a = 0.
+    ##     - it avoids the loss of precision in -b + sqrt(D) (the difference of two similar numbers) when rc_slope is small.
+    a = rc_slope / 2
+    b = marginal_fatper - rc_slope - afatper
+    c = srwfat - marginal_fatper + rc_slope / 2
+    disc = b ** 2 - 4 * a * c
+    with np.errstate(divide='ignore', invalid='ignore'):
+        r = 2 * c / (-b - np.sqrt(np.maximum(disc, 0)))   #larger root
+        r = np.where(a == 0, -c / b, r)   #linear formula if rc_slope = 0 (the form above divides by 0 if b < 0)
+        r = np.where(disc < 0, -b / (2 * a), r)   #r at the vertex if there is no solution
+    ## The cubic (rc_curve > 0 & r > 1) is solved by Newton's method starting from the root of the quadratic (r_q).
+    ## g(r) = srwfat + marginal_fatper * (r - 1) + ... - Fat% * r (the quadratic above plus the cubic term) is negative at
+    ## r = 1, positive at r_q (the cubic term is positive) and convex above r = 1, so there is one root between 1 and r_q
+    ## and Newton's method converges to it from r_q without overshooting.
+    cubic = (rc_curve > 0) & (disc >= 0) & (r > 1)
+    if np.any(cubic):
+        for _ in range(50):
+            x = np.maximum(r - 1, 0)
+            g = srwfat + marginal_fatper * x + rc_slope / 2 * x ** 2 + rc_curve / 3 * x ** 3 - afatper * r
+            dg = marginal_fatper + rc_slope * x + rc_curve * x ** 2 - afatper
+            step = np.where(cubic & (dg > 0), g / np.where(dg > 0, dg, 1), 0)
+            r = r - step
+            if np.all(np.abs(step) < 1e-12):
+                break
+    return awt / r
+
+
+def f1_fat_at_srw(awt, afatper, srw, marginal_fatper, rc_slope, rc_curve=0):
+    ## Estimate the Fat% at SRW from the adult LW & Fat%. The inverse of f1_srw_from_fat() for srwfat.
+    r = awt / srw
+    return (afatper * r - marginal_fatper * (r - 1) - rc_slope / 2 * (r - 1) ** 2
+            - rc_curve / 3 * np.maximum(r - 1, 0) ** 3)
 
 
 # def f1_convert_fs2nv(fs_input, nv_p6f, feedsupply_f, a_p6_pa1e1b1nwzida0e0b0xyg):

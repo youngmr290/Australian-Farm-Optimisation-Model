@@ -64,6 +64,21 @@ There is no linter or automated test suite configured in this repo (no pytest/to
 changes by running a trial and comparing the variable summary / profit against a known-good baseline, or by
 diffing the generated `.lp` file.
 
+### Analyst overview (`.claude/AFO_analysts_overview.md`)
+
+A plain-language overview for designing an analysis (attached at the start of Claude.ai planning sessions, see
+`.claude/Planning methodology.txt`): the GSW base trial and its results, run time and memory, decision variables vs
+inputs, SA keys by subsystem, regions and their status, outputs and what the headline figures mean, how data is brought
+in, recipes and limitations. Keep it current:
+- Update it in the same change when something it describes changes: the sheep generator, prices, a region's feed supply,
+  the Quick_test settings, Pyomo decision variables or constraints, SA keys in `Sensitivity.py` or SA columns in
+  exp.xlsx, the regions (property workbooks), the reports or the profit/DSE definitions, the recipes in `.claude/`, or a
+  limitation it lists.
+- Each time AFO-Test is recreated (exp group 2 re-run, which rewrites `AFO Test.txt` through `SaveOutputs.py`), review it
+  against the code and inputs. Update the base result (section 2), the run times (section 3, from that run's log), the
+  test profits for each region (section 6), anything else that has changed since the last review, and the dates at the
+  top.
+
 ## Architecture
 
 ### Execution pipeline (per trial, see `lib/AfoLogic/AfoInit.py::exp()`)

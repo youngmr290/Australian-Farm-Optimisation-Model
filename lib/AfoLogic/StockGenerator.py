@@ -425,38 +425,50 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         ###Calculate SRW if it is being endogenously fitted from the target adult weight & fatness and EVG
         ###Test on endogenous calculation is that saa[adult EVG] coefficient has a value
         ###Estimating SRW as LW at 25% fat based on ALW and Fat% of adult ewes prior to prejoining
-        ###The calculation is based on the fat & lean changing based on the proportion determined by cg8 (EVG) (see W18:99)
+        ###The calculation is based on the fat & lean changing based on the proportion determined by cg8 (EVG) (see W18:99 & W19:32)
         if adult_evg is not None:
             ###The adult weight & fatness are from the adult fatness target that is weighted in the objective. Only one can be weighted:
             ### aFat% - ALW is aWT
             ### aWBE - ALW is aWT and Fat% is calculated from WBE and EBW (aWT / cg[18])
             ### aFatMass & aLeanMass - ALW is (FatMass + LeanMass) * cg[18] and Fat% is FatMass / (FatMass + LeanMass)
-            weight_trait = dict(zip(target_names, calibration_weights_p.ravel()))
-            fatness_traits = {'aFat%': weight_trait['aFat%'] != 0, 'aWBE': weight_trait['aWBE'] != 0
-                              , 'aFatMass & aLeanMass': weight_trait['aFatMass'] != 0 and weight_trait['aLeanMass'] != 0}
-            if sum(fatness_traits.values()) != 1 or (weight_trait['aFatMass'] != 0) != (weight_trait['aLeanMass'] != 0):
-                raise ValueError(f"Endogenous SRW (adult EVG is being calibrated) requires one adult fatness trait to be weighted in"
-                                 f" [Calibration_control.xlsx]Weights: aFat%, aWBE or both aFatMass & aLeanMass. Weights are"
-                                 f" {({name: weight_trait[name] for name in ['aFat%', 'aWBE', 'aFatMass', 'aLeanMass']})}")
+            trait_weight = dict(zip(target_names, calibration_weights_p.ravel()))
+            fatness_traits = {'aWT': trait_weight['aWT'] != 0
+                            , 'aFat%': trait_weight['aFat%'] != 0
+                            , 'aWBE': trait_weight['aWBE'] != 0
+                            , 'aFatMass': trait_weight['aFatMass'] != 0
+                            , 'aLeanMass': trait_weight['aLeanMass'] != 0}
+            if sum(fatness_traits.values()) != 2:
+                raise ValueError(f"Endogenous SRW (adult EVG is being calibrated) requires two adult traits to be weighted"
+                                 f" [Calibration_control.xlsx]Weights: aWT, aFat%, aWBE, aFatMass & aLeanMass. Weights are"
+                                 f" {({name: trait_weight[name] for name in ['aWT', 'aFat%', 'aWBE', 'aFatMass', 'aLeanMass']})}")
             cg_c2 = uinp.parameters['i_cg_c2'][:, genotype]   #scalar for each parameter (genotype of the base model)
             lw_ebw = cg_c2[18]   #ratio of LW to EBW
-            if fatness_traits['aFatMass & aLeanMass']:
+            if fatness_traits['aFatMass'] and fatness_traits['aLeanMass']:
                 srw_awt = (afatmass_target + aleanmass_target) * lw_ebw
                 srw_afatper = afatmass_target / (afatmass_target + aleanmass_target)
-            elif fatness_traits['aWBE']:
+            elif fatness_traits['aWT'] and fatness_traits['aFatMass']:
+                srw_awt = awt_target
+                srw_afatper = afatmass_target / (awt_target / lw_ebw)
+            elif fatness_traits['aWT'] and fatness_traits['aLeanMass']:
+                srw_awt = awt_target
+                srw_afatper = 1 - (aleanmass_target / (awt_target / lw_ebw))
+            elif fatness_traits['aWT'] and fatness_traits['aWBE']:
                 srw_awt = awt_target
                 srw_afatper = sfun.f1_wbe2fat_propn(cg_c2, awbe_target, awt_target / lw_ebw)
-            else:
+            else:   #ALW & Fat%
                 srw_awt = awt_target
                 srw_afatper = afatper_target
-            sen.sav['srw_c2'][genotype] = srw_parameter = srw_awt * (1 + 34.8 / (adult_evg - 13.5) * (srwfat - srw_afatper))
-            logger.debug(f"Endogenous SRW {srw_parameter} "
-                         f"from {[k for k, v in fatness_traits.items() if v][0]} "
-                         f"target: ALW={srw_awt}, Fat%={srw_afatper}, EVG={adult_evg}")
-            # srw_from_fat = awt * (1 - afatper) / (1 - srwfat_yg1)   #alternative formula that assumes lean mass is constant eg Hutton's model.
-            # srw_from_fat = awt / (1 + 1.54 * (afatper - srwfat_yg1))   # alternative formula that can be fitted to simulation data (see W18:p64)
 
-        ###Apply the SAA for genotype calibration that exclude the p11 axis
+            marginal_fatper = sfun.f1_wbe2fat_propn(cg_c2, adult_evg, 1)   #the propn of fat in the marginal kg at SRW
+            rc_slope = sfun.f1_wbe2fat_propn(cg_c2, adult_evg + cg_c2[11], 1) - marginal_fatper   #change in the marginal fat propn per unit of rc (from cg11)
+            rc_curve = sfun.f1_wbe2fat_propn(cg_c2, adult_evg + cg_c2[16], 1) - marginal_fatper   #change in the marginal fat propn per unit of (rc - 1)^2 above rc 1 (from cg16)
+            sen.sav['srw_c2'][genotype] = srw_parameter = sfun.f1_srw_from_fat(srw_awt, srw_afatper, srwfat, marginal_fatper, rc_slope, rc_curve)
+            logger.debug(f"Endogenous SRW {srw_parameter} "
+                         f"from {[k for k, v in fatness_traits.items() if v]} "
+                         f"target: ALW={srw_awt}, Fat%={srw_afatper}, EVG={adult_evg}, cg11={cg_c2[11]}, cg16={cg_c2[16]}")
+            # srw_from_fat = awt * (1 - afatper) / (1 - srwfat_yg1)   #alternative formula that assumes lean mass is constant eg Hutton's model.
+
+        ###Apply the SAA for genotype calibration coefficients that exclude the p11 axis
         uinp.parameters['i_srw_c2'] = fun.f_sa(uinp.parameters['i_srw_c2'].astype(float), sen.sav['srw_c2'], 5)
         idx = fun.f_slice_idx(uinp.parameters['i_cw_c2'], {0: [25]})
         uinp.parameters['i_cw_c2'][idx] = fun.f_sa(uinp.parameters['i_cw_c2'][idx], sen.saa['ycfw_scalar'], 2)
@@ -5182,7 +5194,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     if (eqn_used or eqn_compare) and active_p_psire[p]:
                         temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_lwc_cs(cg_cpsire, rc_start_sire, mei_sire
                                 , mem_sire, new_sire, zf1_sire, zf2_sire, kg_sire, kw_cs_sire
-                                , age_pa1e1b1nwzida0e0b0xyg0[p:p+1], rev_trait_values['sire'][p])
+                                , age_pa1e1b1nwzida0e0b0xyg0[p:p+1], rev_trait_values['sire'][p]
+                                , days_per_period=days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1], ebw_start=ebw_start_sire)
                         if eqn_used:
                             ebg_sire = temp0
                             evg_sire = temp1
@@ -5203,7 +5216,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                 , mem_dams, new_dams, zf1_dams, zf2_dams, kg_dams, kw_cs_dams
                                 , age_pa1e1b1nwzida0e0b0xyg1[p:p+1], rev_trait_values['dams'][p]
                                 , nec_dams, kc_cs_pa1e1b1nwzida0e0b0xyg1, nel_dams, kl_cs_dams
-                                , gest_propn_pa1e1b1nwzida0e0b0xyg1[p:p+1], lact_propn_pa1e1b1nwzida0e0b0xyg1[p:p+1])
+                                , gest_propn_pa1e1b1nwzida0e0b0xyg1[p:p+1], lact_propn_pa1e1b1nwzida0e0b0xyg1[p:p+1]
+                                , days_per_period=days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1], ebw_start=ebw_start_dams)
                         if eqn_used:
                             ebg_dams = temp0
                             evg_dams = temp1
@@ -5222,7 +5236,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     if (eqn_used or eqn_compare) and active_p_poffs[p]:
                         temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_lwc_cs(cg_cpoffs, rc_start_offs, mei_offs
                                 , mem_offs, new_offs, zf1_offs, zf2_offs, kg_offs, kw_cs_offs
-                                , age_cut_pa1e1b1nwzida0e0b0xyg3[p:p+1], rev_trait_values['offs'][p])
+                                , age_cut_pa1e1b1nwzida0e0b0xyg3[p:p+1], rev_trait_values['offs'][p]
+                                , days_per_period=days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1], ebw_start=ebw_start_offs)
                         if eqn_used:
                             ebg_offs = temp0
                             evg_offs = temp1
@@ -5245,7 +5260,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                         temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9 = sfun.f_lwc_mu(cg_cpsire
                                 , ck_cpsire, rc_start_sire, mei_sire, neme_mu_sire, km_sire, hp_mei_mu_sire, new_sire
                                 , kw_mu_yg0, zf1_sire, zf2_sire, heat_loss_sirem0p1, age_pa1e1b1nwzida0e0b0xyg0[p:p+1]
-                                , rev_trait_values['sire'][p], days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1], sam_kg=sam_kg_sire)
+                                , rev_trait_values['sire'][p], days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1], sam_kg=sam_kg_sire
+                                , ebw_start=ebw_start_sire)
                         #use this version of hp_total in f_templc_nfs() in next function call
                         hp_total_mu_sire = temp6
                         if eqn_used:
@@ -5286,7 +5302,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                 , kw_mu_yg1, zf1_dams, zf2_dams, heat_loss_damsm0p1, age_pa1e1b1nwzida0e0b0xyg1[p:p+1]
                                 , rev_trait_values['dams'][p], days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1], nec=nec_dams
                                 , kc=kc_mu_pa1e1b1nwzida0e0b0xyg1, nel=nel_dams, kl=kl_mu_dams, gest_propn=gest_propn_pa1e1b1nwzida0e0b0xyg1[p:p+1]
-                                , lact_propn=lact_propn_pa1e1b1nwzida0e0b0xyg1[p:p+1], sam_kg=sam_kg_dams)
+                                , lact_propn=lact_propn_pa1e1b1nwzida0e0b0xyg1[p:p+1], sam_kg=sam_kg_dams, ebw_start=ebw_start_dams)
                         #use this version of hp_total in f_templc_nfs() in next function call. It excludes chill increment
                         hp_total_mu_dams = temp6
                         if eqn_used:
@@ -5326,7 +5342,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                         temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9 = sfun.f_lwc_mu(cg_cpoffs
                                 , ck_cpoffs, rc_start_offs, mei_offs, neme_mu_offs, km_offs, hp_mei_mu_offs, new_offs
                                 , kw_mu_yg3, zf1_offs, zf2_offs, heat_loss_offsm0p1, age_cut_pa1e1b1nwzida0e0b0xyg3[p:p+1]
-                                , rev_trait_values['offs'][p], days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1], sam_kg=sam_kg_offs)
+                                , rev_trait_values['offs'][p], days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1], sam_kg=sam_kg_offs
+                                , ebw_start=ebw_start_offs)
                         #use this version of hp_total in f_templc_nfs() in next function call
                         hp_total_mu_offs = temp6
                         if eqn_used:
@@ -6032,7 +6049,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_lwc_cs(cg_cpyatf, rc_start_yatf, mei_yatf, mem_yatf
                             , new_yatf, zf1_yatf, zf2_yatf, kg_yatf, kw_cs_yatf
                             , age_pa1e1b1nwzida0e0b0xyg2[p:p+1], rev_trait_values['yatf'][p]
-                            , days_per_period=days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...], b_mask=(nyatf_b1nwzida0e0b0xyg>0))
+                            , days_per_period=days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1,...], b_mask=(nyatf_b1nwzida0e0b0xyg>0)
+                            , ebw_start=ebw_start_yatf)
                     if eqn_used:
                         ebg_yatf = temp0
                         evg_yatf = temp1
@@ -6058,7 +6076,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             , kw_mu_yg2, zf1_yatf, zf2_yatf, heat_loss_yatfm0p1, age_pa1e1b1nwzida0e0b0xyg2[p:p+1]
                             , rev_trait_values['yatf'][p], days_period_pa1e1b1nwzida0e0b0xyg2[p:p+1]
                             , b_mask=(nyatf_b1nwzida0e0b0xyg>0), mei_propn_milk=mei_propn_milk_yatf, sam_kg=sam_kg_yatf
-                            , scenario=scenario)
+                            , scenario=scenario, ebw_start=ebw_start_yatf)
                     #use this version of hp_total in f_templc_nfs() in next function call
                     hp_total_mu_yatf = temp6
                     if eqn_used:
@@ -8316,14 +8334,19 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             srw_actual = srw_actual.item()
 
         ##Estimating SRW as LW at 25% fat based on simulated LW and Fat% of adult ewes prior to prejoining
-        ###The calculation is based on the fat & lean changing based on the proportion determined by cg8 (EVG) (see W18:99)
+        ###The calculation is based on the fat & lean changing based on the proportion determined by cg8 (EVG) and the rc term of EVG (cg11) (see W18:99)
         ###This calculation is only used in the reporting
-        cg8 = cg_cpdams[8, ...].item()
-        srw_from_fat = awt * (1 + 34.8 / (cg8 - 13.5) * (srwfat_yg1[0,0] - afatper))
+        cg8 = cg_cpdams[8, ...].item()   #this will fail if more than 1 active axis in cg_cpdams.
+        cg11 = cg_cpdams[11, ...].item()
+        cg16 = cg_cpdams[16, ...].item()
+        marginal_fatper = sfun.f1_wbe2fat_propn(cg_cpdams, cg8, 1).item()  #the propn of fat in the marginal kg at SRW
+        rc_slope = sfun.f1_wbe2fat_propn(cg_cpdams, cg8 + cg11, 1).item() - marginal_fatper   #change in the marginal fat propn per unit of rc
+        rc_curve = sfun.f1_wbe2fat_propn(cg_cpdams, cg8 + cg16, 1).item() - marginal_fatper   #change in the marginal fat propn per unit of (rc - 1)^2 above rc 1
+        srw_from_fat = sfun.f1_srw_from_fat(awt, afatper, srwfat_yg1[0,0], marginal_fatper, rc_slope, rc_curve)
         # srw_from_fat = awt * (1 - afatper) / (1 - srwfat_yg1)   #alternate formula that assumes lean mass is constant eg Hutton's model.
         # srw_from_fat = awt / (1 + 1.54 * (afatper - srwfat_yg1))   # alternative formula that can be fitted to simulation data (see W18:p64)
         ###Estimated proportion of fat in the body at the srw. Using same formula as above
-        fat_at_srw = afatper + (cg8 - 13.5) / 34.8 * (srw_actual - awt) / awt
+        fat_at_srw = sfun.f1_fat_at_srw(awt, afatper, srw_actual, marginal_fatper, rc_slope, rc_curve)
         # fat_at_srw = 1 - (awt / srw_actual * (1 - afatper))     #alternate formula if lean is constant
 
         ## Survival. mortality_dams is the sum of base + weaner + perinatal + preg tox.
