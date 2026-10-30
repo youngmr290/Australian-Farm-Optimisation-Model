@@ -8265,6 +8265,12 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         a4wt = fun.f_slice(o_ffcfw_tpdams, a4_wt_slc, default=0)
         a5wt = fun.f_slice(o_ffcfw_tpdams, a5_wt_slc, default=0)
         awt = (a2wt + a3wt + a4wt + a5wt) / 4
+        ##EBW Empty body weight, used in calculation of adult fat percentage (afatper)
+        a2ebw = fun.f_slice(r_ebw_tpdams, a2_wt_slc, default=0)
+        a3ebw = fun.f_slice(r_ebw_tpdams, a3_wt_slc, default=0)
+        a4ebw = fun.f_slice(r_ebw_tpdams, a4_wt_slc, default=0)
+        a5ebw = fun.f_slice(r_ebw_tpdams, a5_wt_slc, default=0)
+        aebw = (a2ebw + a3ebw + a4ebw + a5ebw) / 4
         ##C-site fat depth
         pfat = fun.f_slice(o_cfat_start_tpdams, p_wt_slc, default=0)
         yfat = fun.f_slice(o_cfat_start_tpdams, y_wt_slc, default=0)
@@ -8326,7 +8332,10 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                     , fun.f_slice(r_ebw_tpdams, a4_wt_slc, default=0))
         a5fatper = fun.f_divide_float(fun.f_slice(r_fat_tpdams, a5_wt_slc, default=0)
                                     , fun.f_slice(r_ebw_tpdams, a5_wt_slc, default=0))
-        afatper = (a2fatper + a3fatper + a4fatper + a5fatper) / 4
+        ###Adult Fat% is the total fat divided by the total EBW of the adult ages (ratio of the means, not the mean of the ratios)
+        ### so that it is consistent with the Fat% derived from the adult means of WBE, fat mass, lean mass & LW. This is required
+        ### for the endogenous SRW (calculated from the targets) to equal srw_from_fat (calculated from the simulated traits)
+        afatper = fun.f_divide_float(afatmass, aebw)
 
         ##Adult SRW parameter averaged across adult age stages. Used in calculation of fat_at_srw
         a2srw = fun.f_slice(srw_p_pa1e1b1nwzida0e0b0xyg1, a2_srw_slc, default=0)
