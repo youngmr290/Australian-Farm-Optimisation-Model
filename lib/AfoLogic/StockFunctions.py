@@ -1527,8 +1527,8 @@ def f_birthweight_mu(cu1, cb1, cg, cx, ce, w_b, cf_w_b_dams, ffcfw_birth_dams, e
     #Animals are born on the first day of a generator period.
     #Note: there can be a disconnect between the calculated BW and the energy associated with foetal growth during gestation.
     ##Carry forward BW increment
-    d_cf_w_b = f1_carryforward_u1(cu1[16, ...], cg, ebg_dams, False, period_between_joinscan, period_between_scanbirth
-                                 , False, days_period, gest_propn)
+    d_cf_w_b = f1_carryforward_u1(cu1[16, ...], cg, ebg_dams, False, period_between_joinscan
+                                  , period_between_scanbirth, False, days_period, gest_propn)
     ##Increment the total carry forward BW
     cf_w_b_dams = cf_w_b_dams + d_cf_w_b
     ##estimate BW by including the intercept, the effect of dam weight at birth and other non-LW coefficients
@@ -3353,31 +3353,19 @@ def f_mortality_progeny_mu(cu2, cb1, cx, ce, w_b, w_b_std, cv_weight, foo, chill
     using the LTW & LMAT prediction equations (Oldham et al. 2011) with inclusion of chill index, FOO and mob size.
     Uses BW as a proportion of SRW (which is passed as the w_b argument)
 
-    # Removed - The paddock level scalar is added (Young et al 2011) however, this is not calibrated for high chill environments (>1000)
-    # The scalar adjusts the difference in survival if birth weight is different from the standard birthweight
-    # this is to reflect the difference in survival observed in the LTW paddock trial compared with the plot scale trials.
+    # Removed the paddock level scalar (Young et al 2011) because it is not calibrated for high chill environments (>1000)
     '''
     ##transformed survival for actual & standard
     ###distribution on w_b & rc_birth - add distribution to w_b & w_b_std and then average (axis =-1)
     w_b_p1p2 = fun.f_distribution7(w_b, cv=cv_weight)[...,na,:]
-    ##removed the capacity to do a paddock level scalar because scalar is incorrect with chill index.
-    ### leave code in case it is needed for backward compatibility to original LTW analysis (will need a diff slice)
-    # w_b_std_p1p2 = fun.f_distribution7(w_b_std, cv=cv_weight)[...,na,:]
 
     t_survival_p1p2 = (cu2[8, 0, ...,na,na] * w_b_p1p2 + cu2[8, 1, ..., na,na] * w_b_p1p2 ** 2
                       + (cu2[8, 2, ..., na,na] + cx[9, ..., na, na]) * chill_index_p1[...,na]
                       + cu2[8, 4, ..., na,na] * foo[..., na,na] + cu2[8, 5, ..., na,na] * foo[..., na,na] ** 2
                       + cu2[8, -1, ..., na,na] + cb1[8, ..., na,na] + cb1[9, ..., na, na] * mob_size[..., na, na]
                       + cx[8, ..., na,na] + ce[8, ..., na,na])
-    # t_survival_std_p1p2 = (cu2[8, 0, ..., na,na] * w_b_std_p1p2 + cu2[8, 1, ..., na,na] * w_b_std_p1p2 ** 2
-    #                   + cu2[8, 2, ..., na,na] * chill_index_p1[...,na] + cu2[8, 4, ..., na,na] * foo[..., na,na]
-    #                   + cu2[8, 5, ..., na,na] * foo[..., na,na] ** 2 + cu2[8, -1, ..., na,na] + cb1[8, ..., na,na]
-    #                   + cx[8, ..., na,na] + cx[9, ..., na,na] * chill_index_p1[...,na] + ce[8, ..., na,na])
     ##back transform survival & convert to mortality
     mortalityx = (1 - np.average(fun.f_back_transform(t_survival_p1p2),axis = (-1,-2))) * period_is_birth #p1 axis averaged
-    # mortalityx_std = (1 - np.average(fun.f_back_transform(t_survival_std_p1p2),axis = (-1,-2))) * period_is_birth #p1 axis averaged
-    # ##Scale progeny survival using paddock level scalars
-    # mortalityx = mortalityx_std + (mortalityx - mortalityx_std) * cb1[9, ...]
     ##Apply SA to progeny mortality at birth (LTW)
     mortalityx = fun.f_sa(mortalityx, sap_mortalityp, sa_type = 1, value_min = 0)
     mortalityx = fun.f_sa(mortalityx, saa_mortalityx * (mortalityx > 0), sa_type = 2, value_min = 0)
