@@ -584,6 +584,7 @@ def create_sa():
     sav['calib_tol'] = '-'           #SA to alter the DE relative convergence tolerance in SheepCalibration.py
     sav['calib_atol'] = '-'          #SA to alter the DE absolute convergence tolerance in SheepCalibration.py
     sav['calib_method'] = '-'        #SA to select the calibration method in SheepCalibration.py: 'de', 'lsq' or 'lsq+de' (see METHOD there)
+    sav['report_trait_values'] = '-' #SA to calculate the calibration trait values in an LP trial (with the debug report of the traits if the logger is at DEBUG).
     sav['calib_offs'] = '-'          #SA to include the offspring in the generator when calibrating (default False to save time). Required if an offspring trait (e.g. WLW) is weighted. Offspring are always included when reporting the trait values
 
     ##SAA on slices of the livestock parameters using the age stage axis

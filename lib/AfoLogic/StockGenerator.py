@@ -84,9 +84,19 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     genotype = pinp.sheep['a_c2_c0'][0].copy()  #2 is CFS for MLP & GEPEP traditional, 3 is GFS for GEPEP
     srw_parameter = uinp.parameters['i_srw_c2'][genotype].copy()  #set a value in case whole section is commented out
     calibrate_offs = True   #the offspring are generated unless calibrating without sav['calib_offs'] (see below)
-    if calibrate_trait_values or o_trait_values is not None:
+    calibration_code_inc = calibrate_trait_values or o_trait_values is not None
+    ##A trial initiated in RunAfoRaw can report its trait values (sav['report_trait_values'])
+    ### using the debug report of the calibration traits. This is included so the genotype production levels
+    ### can be compared with the calibrated genotype. The calibration coefficients are from exp.xlsx.
+    ### Coefficient assignment and the endogenous SRW are skipped.
+    ### sav['btrt_con, _ls & _era] are not included and LTW loops are excluded so the LP is not solved.
+    report_lp_traits = fun.f_sa(False, sen.sav['report_trait_values'], 5) and not calibration_code_inc
+    if report_lp_traits:
+        calibration_targets_p = np.zeros(0)    #no targets: every target is reported as nan
+        calibration_weights_p = np.zeros(0)
+    if calibration_code_inc:
         # print(coefficients_c)   #only useful for debugging when not multiprocessing (workers=1, and not multiprocessing teams)
-        n_coeff = coefficients_c.size
+        n_coeff = np.size(coefficients_c)
         n_traits = calibration_weights_p.size
 
         def f1_check_trait_names(names_generator, description):
@@ -296,6 +306,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         ##check the number of coefficients used matches the number supplied (columns in [Calibration_control.xlsx]BestBet/Low/High)
         assert j == n_coeff, f"{j} calibration coefficients are used in the generator but {n_coeff} are supplied in Calibration_control.xlsx"
 
+    if calibration_code_inc or report_lp_traits:
         ##Assign the target for printing and done early for calculation of SRW for AWT & Fat% targets
         ###The targets are read in the order of the columns in [Calibration_control.xlsx]Targets. The name of each trait is
         ###recorded so it can be checked against the column headings.
@@ -336,7 +347,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         ywt_target = f1_target('yWT')
         hwt_target = f1_target('hWT')
         awt_target = f1_target('aWT')
-        srw_target = f1_target('SRW')    #srw_target can be used to fit cg8 for the standard genotype
+        srw_input_target = f1_target('SRW_input')    # the SRW used, it is for reporting rather than as a calibration trait
+        srw_result_target = f1_target('SRW_result')    #srw_result can be a target to fit cg8 for the standard genotype
         pfat_target = f1_target('pFAT')
         yfat_target = f1_target('yFAT')
         hfat_target = f1_target('hFAT')
@@ -410,6 +422,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         wlw12_target = f1_target('WLW12')
         wlw13_target = f1_target('WLW13')
         ##check the targets read match the traits in [Calibration_control.xlsx]Targets & Weights
+    if calibration_code_inc:
         f1_check_trait_names(target_names, 'targets read')
         assert len(target_names) == calibration_targets_p.size == n_traits, f"{len(target_names)} calibration targets are read in the generator but Calibration_control.xlsx has {calibration_targets_p.size} targets and {n_traits} weights"
 
@@ -423,15 +436,18 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         logger.debug(f"Offspring included in the generator: {calibrate_offs}")
 
         ###Calculate SRW if it is being endogenously fitted from the target adult weight & fatness and EVG
-        ###Test on endogenous calculation is that saa[adult EVG] coefficient has a value and SRW is not a weighted trait.
-        ### If SRW is weighted the SRW is the input value (plus srw_p11) and EVG is fitted so that the SRW estimated from
-        ### the simulated adult weight & fatness (srw_from_fat) matches the SRW target.
+        ###A test for endogenous calculation is that saa[adult EVG] coefficient has a value and SRW_result is not a weighted trait.
+        ### If SRW_result is weighted the SRW is the input value (plus srw_p11) and EVG is fitted so that the SRW estimated from
+        ### the simulated adult weight & fatness (srw_from_fat) matches the SRW_result target.
+        ### SRW_input (the SRW used in the simulation) is for reporting only, and should not be weighted.
         ###Estimating SRW as LW at 25% fat based on ALW and Fat% of adult ewes prior to prejoining
         ###The calculation is based on the fat & lean changing based on the proportion determined by cg8 (EVG) (see W18:99 & W19:32)
         trait_weight = dict(zip(target_names, calibration_weights_p.ravel()))
-        if adult_evg is not None and trait_weight['SRW'] != 0:
-            logger.debug("SRW is a weighted trait so SRW is not endogenous (EVG is fitted to the SRW target)")
-        if adult_evg is not None and trait_weight['SRW'] == 0:
+        if trait_weight['SRW_input'] != 0:
+            raise ValueError("SRW_input is the SRW used and is report only. Set its weight to 0 in [Calibration_control.xlsx]Weights (weight SRW_result to fit EVG to the SRW)")
+        if adult_evg is not None and trait_weight['SRW_result'] != 0:
+            logger.debug("SRW_result is a weighted trait so EVG is being fitted to the SRW_result target")
+        if adult_evg is not None and trait_weight['SRW_result'] == 0:
             ###The adult weight & fatness are from the adult fatness target that is weighted in the objective. Only one can be weighted:
             ### aFat% - ALW is aWT
             ### aWBE - ALW is aWT and Fat% is calculated from WBE and EBW (aWT / cg[18])
@@ -481,8 +497,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         idx = fun.f_slice_idx(uinp.parameters['i_cl_c2'], {0: [0]})
         uinp.parameters['i_cl_c2'][idx] = fun.f_sa(uinp.parameters['i_cl_c2'][idx], sen.saa['milk_yield'], 2)
         sen.sap['pi_yatf'] = fun.f_sa(sen.sap['pi_yatf'], sen.saa['milk_yield'], 2)  #increase yatf PI (pasture as well as milk)
-        idx = fun.f_slice_idx(uinp.parameters['i_cx_c2'], {0: [1]})
-        uinp.parameters['i_cx_c2'][idx] = fun.f_sa(uinp.parameters['i_cx_c2'][idx].astype(float), sen.saa['growth_constant'], 2)
+        idx = fun.f_slice_idx(uinp.parameters['i_cn_c2'], {0: [1]})
+        uinp.parameters['i_cn_c2'][idx] = fun.f_sa(uinp.parameters['i_cn_c2'][idx].astype(float), sen.saa['growth_constant'], 2)
         idx = fun.f_slice_idx(uinp.parameters['i_ci_c2'], {0: [2]})   #slice 2 CFS coefficient
         uinp.parameters['i_ci_c2'][idx] = fun.f_sa(uinp.parameters['i_ci_c2'][idx], sen.saa['pi_z_constant'], 2)
         idx = fun.f_slice_idx(uinp.parameters['i_ci_c2'], {0: [22]})   #slice 22 GFS coefficient
@@ -2469,7 +2485,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     con_btrt_g1 = fun.f_sa(np.array([0.0]), sen.sav['btrt_con_g1'][mask_dams_inc_g1], 5).astype(float)
     ls_btrt_g1 = fun.f_sa(np.array([0.0]), sen.sav['btrt_ls_g1'][mask_dams_inc_g1], 5).astype(float)
     era_btrt_g1 = fun.f_sa(np.array([0.0]), sen.sav['btrt_era_g1'][mask_dams_inc_g1], 5).astype(float)
-    if not (calibrate_trait_values or o_trait_values is not None) and np.any(con_btrt_g1 + ls_btrt_g1 + era_btrt_g1 != 0):
+    if not (calibration_code_inc or report_lp_traits) and np.any(con_btrt_g1 + ls_btrt_g1 + era_btrt_g1 != 0):
         dstwtr_l0yg1 = sfun.f1_dstwtr_adj(dstwtr_l0yg1, con_btrt_g1, ls_btrt_g1)
         dstwtr_l0yg3 = sfun.f1_dstwtr_adj(dstwtr_l0yg3, con_btrt_g1, ls_btrt_g1)
         pss_std_yg1, pstw_std_yg1, pstr_std_yg1 = sfun.f1_lamb_survival_adj(pss_std_yg1, pstw_std_yg1, pstr_std_yg1
@@ -2484,7 +2500,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     btrt_propn_b0xyg1, npw_std_xyg1 = sfun.f1_btrt0(dstwtr_l0yg1,pss_std_yg1,pstw_std_yg1,pstr_std_yg1)
     btrt_propn_b0xyg3, npw_std_xyg3 = sfun.f1_btrt0(dstwtr_l0yg3,pss_std_yg3,pstw_std_yg3,pstr_std_yg3)
 
-    if calibrate_trait_values or o_trait_values is not None:
+    if calibration_code_inc or report_lp_traits:
         btrt_propn_b0xyg1 = (index_b0xyg == 0) * 1   #For the calibration, set the initial btrt to 100% BTRT 11
 
     ##Std scanning & survival: proportion of progeny reared in each BTRT b1 category - NM, 00, 11, 22, 33, 21, 32, 31, 10, 20, 30
@@ -2896,24 +2912,19 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     lmm_pa1e1b1nwzida0e0b0xyg1p0 = (age_p0_pa1e1b1nwzida0e0b0xyg2p0 + cl_cpdams[1, ..., na]) / cl_cpdams[2, ..., na]
 
     ##Proportion of SRW with age
-    srw_age_pa1e1b1nwzida0e0b0xyg0 = 1 - fun.f_weighted_average(1 - np.exp(-fun.f_slice(cx_cpsire[1], {x_pos: [0,1]})[..., na]
+    srw_age_pa1e1b1nwzida0e0b0xyg0 = 1 - fun.f_weighted_average(1 - np.exp(-fun.f_slice(cn_cpsire[1] * cx_cpsire[1], {x_pos: [0,1]})[..., na]
                     * age_p0_pa1e1b1nwzida0e0b0xyg0p0 / srw_p_pa1e1b1nwzida0e0b0xyg0[..., na] ** cn_cpsire[2, ..., na])
                     , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg0p0, axis = -1)
-    srw_age_pa1e1b1nwzida0e0b0xyg1 = 1 - fun.f_weighted_average(1 - np.exp(-fun.f_slice(cx_cpdams[1], {x_pos: [1,2]})[..., na]
+    srw_age_pa1e1b1nwzida0e0b0xyg1 = 1 - fun.f_weighted_average(1 - np.exp(-fun.f_slice(cn_cpdams[1] * cx_cpdams[1], {x_pos: [1,2]})[..., na]
                     * age_p0_pa1e1b1nwzida0e0b0xyg1p0 / srw_p_pa1e1b1nwzida0e0b0xyg1[..., na] ** cn_cpdams[2, ..., na])
                     , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg1p0, axis = -1)
-    srw_age_pa1e1b1nwzida0e0b0xyg2 = (1 - fun.f_weighted_average(1 - np.exp(-fun.f_slice(cx_cpyatf[1], {x_pos: mask_x})[..., na]
+    srw_age_pa1e1b1nwzida0e0b0xyg2 = (1 - fun.f_weighted_average(1 - np.exp(-fun.f_slice(cn_cpyatf[1] * cx_cpyatf[1], {x_pos: mask_x})[..., na]
                     * age_p0_pa1e1b1nwzida0e0b0xyg2p0 / srw_p_pa1e1b1nwzida0e0b0xyg2[..., na] ** cn_cpyatf[2, ..., na])
                     , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg2p0, axis = -1)
                     * (nyatf_b1nwzida0e0b0xyg > 0))
-    srw_age_pa1e1b1nwzida0e0b0xyg3 = 1 - fun.f_weighted_average(1 - np.exp(-fun.f_slice(cx_cpoffs[1], {x_pos: mask_x})[..., na]
+    srw_age_pa1e1b1nwzida0e0b0xyg3 = 1 - fun.f_weighted_average(1 - np.exp(-fun.f_slice(cn_cpoffs[1] * cx_cpoffs[1], {x_pos: mask_x})[..., na]
                     * age_p0_pa1e1b1nwzida0e0b0xyg3p0 / srw_p_pa1e1b1nwzida0e0b0xyg3[..., na] ** cn_cpoffs[2, ..., na])
                     , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg3p0, axis = -1)
-
-    #srw_age_pa1e1b1nwzida0e0b0xyg0 = np.nanmean(np.exp(-cx_cpsire[1, ..., 0, :, :, na] * age_p0_pa1e1b1nwzida0e0b0xyg0p0 / srw_b0xyg0[..., na] ** cn_cpsire[2, ..., na]), axis = -1)
-    #srw_age_pa1e1b1nwzida0e0b0xyg1 = np.nanmean(np.exp(-cx_cpdams[1, ..., 1, :, :, na] * age_p0_pa1e1b1nwzida0e0b0xyg1p0 / srw_b0xyg1[..., na] ** cn_cpdams[2, ..., na]), axis = -1)
-    #srw_age_pa1e1b1nwzida0e0b0xyg2 = np.nanmean(np.exp(-cx_cpyatf[1, ..., mask_x, :, :, na] * age_p0_pa1e1b1nwzida0e0b0xyg2p0 / srw_b1xyg2[..., na] ** cn_cpyatf[2, ..., na]), axis = -1)
-    #srw_age_pa1e1b1nwzida0e0b0xyg3 = np.nanmean(np.exp(-cx_cpoffs[1, ..., mask_x, :, :, na] * age_p0_pa1e1b1nwzida0e0b0xyg3p0 / srw_b0xyg3[..., na] ** cn_cpoffs[2, ..., na]), axis = -1)
 
     ##age factor wool part 1- reduces fleece growth early in life based on Lyne 1961 & follicle maturation
     af1_wool_pa1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(cw_cpsire[5, ..., na] + (1 - cw_cpsire[5, ..., na])
@@ -3178,15 +3189,15 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
     ##Expected relative size
     relsize_exp_pa1e1b1nwzida0e0b0xyg0  = (1 - (1 - w_b_std_b0_pa1e1b1nwzida0e0b0xyg0 / srw_p_pa1e1b1nwzida0e0b0xyg0)
-                                            * np.exp(-fun.f_slice(cx_cpsire[1], {x_pos: [0,1]})
+                                            * np.exp(-fun.f_slice(cn_cpsire[1] * cx_cpsire[1], {x_pos: [0,1]})
                                                      * agedam_lamb1st_a1e1b1nwzida0e0b0xyg0
                                                      / (srw_p_pa1e1b1nwzida0e0b0xyg0**cn_cpsire[2, ...])))
     relsize_exp_pa1e1b1nwzida0e0b0xyg1  = (1 - (1 - w_b_std_b0_pa1e1b1nwzida0e0b0xyg1 / srw_p_pa1e1b1nwzida0e0b0xyg1)
-                                            * np.exp(-fun.f_slice(cx_cpdams[1], {x_pos: [1,2]})
+                                            * np.exp(-fun.f_slice(cn_cpdams[1] * cx_cpdams[1], {x_pos: [1,2]})
                                                      * agedam_lamb1st_a1e1b1nwzida0e0b0xyg1
                                                      / (srw_p_pa1e1b1nwzida0e0b0xyg1**cn_cpdams[2, ...])))
     relsize_exp_pa1e1b1nwzida0e0b0xyg3  = (1 - (1 - w_b_std_b0_pa1e1b1nwzida0e0b0xyg3 / srw_p_pa1e1b1nwzida0e0b0xyg3)
-                                            * np.exp(-fun.f_slice(cx_cpoffs[1], {x_pos: mask_x})
+                                            * np.exp(-fun.f_slice(cn_cpoffs[1] * cx_cpoffs[1], {x_pos: mask_x})
                                                      * agedam_lamb1st_a1e1b1nwzida0e0b0xyg3
                                                      / (srw_p_pa1e1b1nwzida0e0b0xyg3**cn_cpoffs[2, ...])))
 
@@ -3480,8 +3491,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     ##increment the number of loops. This may be specified in the SAV to finetune the LTW effect.
     loop_ltw_len = loop_ltw_len + fun.f_sa(0, sen.sav['LTW_loops_increment'], 5)
 
-    ###If calibrating, set the ltw_loops = 1 and remove calculation of sires (and offs if not required)
-    if calibrate_trait_values or o_trait_values is not None:
+    ###If calibrating, set the ltw_loops = 1 and remove calculation of sires (and offs if not required).
+    if calibration_code_inc or report_lp_traits:
         loop_ltw_len = 1
         days_period_pa1e1b1nwzida0e0b0xyg0[...] = 0
         if not calibrate_offs:
@@ -3920,7 +3931,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         active_p_poffs = f1_active_p(days_period_pa1e1b1nwzida0e0b0xyg3)
 
         ##if calibrating or reporting trait values the p loop can stop after the last active period.
-        if calibrate_trait_values or o_trait_values is not None:
+        if calibration_code_inc or report_lp_traits:
             active_p = active_p_pdams | active_p_pyatf
             if calibrate_offs:
                 active_p = active_p | active_p_poffs
@@ -8080,7 +8091,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
     ##if calibrating or reporting trait values: calculate the calibration variables for each production trait (p)
     ###See DropBox [Calibration periods.xlsx] for slice numbers
-    if calibrate_trait_values or o_trait_values is not None:
+    if calibration_code_inc or report_lp_traits:
         ##assign values to the p slices and ranges for the age stages. See
         ###WT slices
         b_wt_slc = {p_pos: [135,292,52], b1_pos: 2, x_pos: [0,2]}     #1st cycle single born female & castrate yatf of 2 tooth and adult ewes at birth, annually
@@ -8093,10 +8104,11 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         a4_wt_slc = {p_pos: 266, b1_pos: 2}    #single bearing ewes prior to prejoining after 4yo lambing
         a5_wt_slc = {p_pos: 318, b1_pos: 2}    #single bearing ewes prior to prejoining after 5yo lambing
         ###SRW slices
-        a2_srw_slc = {p_pos: 162}    #single bearing ewes prior to prejoining after 2yo lambing
-        a3_srw_slc = {p_pos: 214}    #single bearing ewes prior to prejoining after 3yo lambing
-        a4_srw_slc = {p_pos: 266}    #single bearing ewes prior to prejoining after 4yo lambing
-        a5_srw_slc = {p_pos: 318}    #single bearing ewes prior to prejoining after 5yo lambing
+        p_in_srw = srw_p_pa1e1b1nwzida0e0b0xyg1.shape[p_pos] - 1  #The maximum index in srw array
+        a2_srw_slc = {p_pos: min(p_in_srw, 162)}    #single bearing ewes prior to prejoining after 2yo lambing
+        a3_srw_slc = {p_pos: min(p_in_srw, 214)}    #single bearing ewes prior to prejoining after 3yo lambing
+        a4_srw_slc = {p_pos: min(p_in_srw, 266)}    #single bearing ewes prior to prejoining after 4yo lambing
+        a5_srw_slc = {p_pos: min(p_in_srw, 318)}    #single bearing ewes prior to prejoining after 5yo lambing
         ###Fleece slices
         p_flc_slc = {p_pos: [52,73], b1_pos: 0}      #NM ewes duration of the p age stage
         y_flc_slc = {p_pos: [73,95], b1_pos: 0}      #NM ewes duration of the y age stage
@@ -8461,7 +8473,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             ('yWT', ywt),
             ('hWT', hwt),
             ('aWT', awt),
-            ('SRW', srw_from_fat),   # srw_parameter is saved to TraitValues.xlsx because srw_p11 can be added to it
+            ('SRW_input', srw_parameter),   # the SRW used excluding srw_p11 (endogenous if calculated from the targets). The value for sav['srw_c2'] in exp.xlsx
+            ('SRW_result', srw_from_fat),   # the SRW estimated from the simulated adult LW & Fat%. EVG can be fitted to it
             ('pFAT', pfat),
             ('yFAT', yfat),
             ('hFAT', hfat),
@@ -8535,6 +8548,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             ('WLW12', wlw12),
             ('WLW13', wlw13),
         ]
+
+    if calibration_code_inc:
         ##check every trait has been assigned (unassigned traits would be left as 0 in the objective)
         f1_check_trait_names([name for name, value in trait_values], 'trait values calculated')
         assert len(trait_values) == n_traits, f"{len(trait_values)} trait values are calculated in the generator but Calibration_control.xlsx has {n_traits} traits"
@@ -8558,6 +8573,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         calibration_objective = 1e8 if np.isnan(t_objective) else t_objective
         print(f"obj: {calibration_objective:10.3f} trait  Team SRW: {srw_parameter}")
 
+    if calibration_code_inc or report_lp_traits:
         if logger.isEnabledFor(logging.DEBUG):
             #Report the values, coefficients and target for the current iteration
             b=1; w=2; p=3; y=4; h=5; a2=6; a=7 # set the slice numbers in the saa_p11 arrays (a is using the a3 slice)
@@ -8643,14 +8659,14 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             logger.debug(f"2yo={a2surv} 3yo={a3surv} 4yo={a4surv} 5yo={a5surv}")
             logger.debug(f"Y-A5SURV target {ya5surv_target} this {ya5surv} with (Base={sen.saa['bsurv_p11'][a]} & PN={sen.saa['pnsurv_p11'][a]})")
 
-        # logger.debug("LW targets Ewes (value, sar, target)")
-        # for k in range(28):
-        #     logger.debug(f"({trait_values_p[i]}, {coefficients_c[j]}, {calibration_targets_p[i]})",end='')
-        #     i += 1; j += 1
-        # logger.debug("\n LW targets Wethers (value, sar, target)")
-        # for k in range(14):
-        #     logger.debug(f"({trait_values_p[i]}, {coefficients_c[j]}, {calibration_targets_p[i]})", end='')
-        #     i += 1; j += 1
+            # logger.debug("LW targets Ewes (value, sar, target)")
+            # for k in range(28):
+            #     logger.debug(f"({trait_values_p[i]}, {coefficients_c[j]}, {calibration_targets_p[i]})",end='')
+            #     i += 1; j += 1
+            # logger.debug("\n LW targets Wethers (value, sar, target)")
+            # for k in range(14):
+            #     logger.debug(f"({trait_values_p[i]}, {coefficients_c[j]}, {calibration_targets_p[i]})", end='')
+            #     i += 1; j += 1
 
         ##the trait values can also be returned when calibrating (SheepCalibration's least squares method needs the
         ## trait errors, not just the objective). Unlike o_trait_values this doesn't switch on the offspring.
@@ -8658,9 +8674,13 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             o_calibration_traits["output"] = trait_values_p.copy()
         if calibrate_trait_values:
             return calibration_objective
-        else:
+        elif o_trait_values is not None:
             o_trait_values["output"] = trait_values_p
+            o_trait_values["names"] = [name for name, value in trait_values]
             return
+        else:  #report_lp_traits: stop the trial because the btrt savs aren't applied, so the LP results would be wrong
+            raise RuntimeError(
+                "Trait values reported (sav['report_trait_values']). The trial is stopped because the btrt con/ls/era savs are not applied")
 
 
     ###########################

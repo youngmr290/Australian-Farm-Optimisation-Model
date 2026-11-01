@@ -315,8 +315,8 @@ def f_universal_inp_sa(uinp_defaults):
     parameters['i_cw_c2'][idx] = fun.f_sa(parameters['i_cw_c2'][idx], sen.saa['yfd_scalar'], 2)
     idx = fun.f_slice_idx(parameters['i_cl_c2'], {0: [0]})
     parameters['i_cl_c2'][idx] = fun.f_sa(parameters['i_cl_c2'][idx], sen.saa['milk_yield'], 2)
-    idx = fun.f_slice_idx(parameters['i_cx_c2'], {0: [1]})
-    parameters['i_cx_c2'][idx] = fun.f_sa(parameters['i_cx_c2'][idx].astype(float), sen.saa['growth_constant'], 2)
+    idx = fun.f_slice_idx(parameters['i_cn_c2'], {0: [1]})
+    parameters['i_cn_c2'][idx] = fun.f_sa(parameters['i_cn_c2'][idx].astype(float), sen.saa['growth_constant'], 2)
     idx = fun.f_slice_idx(parameters['i_ci_c2'], {0: [2]})  #slice 2 CFS coefficient
     parameters['i_ci_c2'][idx] = fun.f_sa(parameters['i_ci_c2'][idx], sen.saa['pi_z_constant'], 2)
     idx = fun.f_slice_idx(parameters['i_ci_c2'], {0: [22]})  #slice 22 GFS coefficient
