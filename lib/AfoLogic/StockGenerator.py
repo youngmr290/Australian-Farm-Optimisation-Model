@@ -230,7 +230,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         # w = np.nan    # no method to calibrate
         # p = np.nan    # no method to calibrate
         # y = np.nan # Changes to cg8 & 9 are done whole of life unless this line is uncommented
-        # h = np.nan  #hogget is changed if HWT is not in the BO objective.
+        h = np.nan  #cg8 & 9 are only altered for adults, the impacts on the younger age stages are not included and the endogenous SRW change will be largely offset by srw_p11 adjusting to calibrate the younger weights.
         a = coefficients_c[j]; adult_evg = cg8 + a; j += 1  #  assign a value to adult EVG for endogenous calculation of SRW.
         sen.saa['evg_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
@@ -239,7 +239,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         w = np.nan  #survival of yatf is represented through ewe rearing ability (era)
         # p = coefficients_c[j]; j += 1
         # y = coefficients_c[j]; j += 1
-        # h = coefficients_c[j]; j += 1
+        h = np.nan  # adult survival does not cascade to younger ages. The EV of aSURV is only due to adults
         a = coefficients_c[j]; j += 1  #adult survival can also be represented in peri-natal survival
         sen.saa['bsurv_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
