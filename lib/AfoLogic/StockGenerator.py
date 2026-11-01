@@ -239,7 +239,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         w = np.nan  #survival of yatf is represented through ewe rearing ability (era)
         # p = coefficients_c[j]; j += 1
         # y = coefficients_c[j]; j += 1
-        # h = coefficients_c[j]; j += 1
+        h = np.nan    # adult survival does not cascade to younger ages. The EV of aSURV is only due to adults
         a = coefficients_c[j]; j += 1  #adult survival can also be represented in peri-natal survival
         sen.saa['bsurv_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
