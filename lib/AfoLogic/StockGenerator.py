@@ -206,7 +206,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         ##WT at younger ages can be calibrated by SRW age stage coefficients or by adjusting milk yield and the growth constant
         w = p = y = h = a = None
         # sen.saa['birth_weight'] = coefficients_c[j]; j += 1    #Birth weight, #todo still to decide how to control BWT
-        w = np.nan  #wwt is changed with a separate coefficient
+        b = np.nan  #wwt is changed with a separate coefficient
+        # w = np.nan  #wwt is changed with a separate coefficient but srw[p] cascades so that growth potential changes with srw[p] when WBE changes
         sen.saa['milk_yield'] = coefficients_c[j]; j += 1    #Weaning weight, cl_yatf[0] parameter which alters milk production, lamb milk intake and ewe PI during lactation
         p = coefficients_c[j]; j += 1
         y = coefficients_c[j]; j += 1   #ywt can be changed using the growth constant
