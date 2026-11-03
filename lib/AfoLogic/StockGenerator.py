@@ -3257,24 +3257,25 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     w_b_exp_pa1e1b1nwzida0e0b0xyg3 = w_b_std_b0_pa1e1b1nwzida0e0b0xyg3 * ce_d_relsize_cpoffs[15, ...]   #ce[15] with active d axis
 
     ##Normal weight max (if animal is well-fed)
-    ###Use a temporary variable and ensure that nw_max does not reduce, which could occur when SRW is adjusted for REVs at an age stage
-    t_nw_max_pa1e1b1nwzida0e0b0xyg0 = (srw_p_pa1e1b1nwzida0e0b0xyg0 * (1 - srw_age_pa1e1b1nwzida0e0b0xyg0)
-                                       + w_b_exp_pa1e1b1nwzida0e0b0xyg0 * srw_age_pa1e1b1nwzida0e0b0xyg0)
-    nw_max_pa1e1b1nwzida0e0b0xyg0 = np.maximum.accumulate(t_nw_max_pa1e1b1nwzida0e0b0xyg0, axis=0)
-    t_nw_max_pa1e1b1nwzida0e0b0xyg1 = (srw_p_pa1e1b1nwzida0e0b0xyg1 * (1 - srw_age_pa1e1b1nwzida0e0b0xyg1)
-                                       + w_b_exp_pa1e1b1nwzida0e0b0xyg1 * srw_age_pa1e1b1nwzida0e0b0xyg1)
-    nw_max_pa1e1b1nwzida0e0b0xyg1 = np.maximum.accumulate(t_nw_max_pa1e1b1nwzida0e0b0xyg1, axis=0)
-    t_nw_max_pa1e1b1nwzida0e0b0xyg3 = (srw_p_pa1e1b1nwzida0e0b0xyg3 * (1 - srw_age_pa1e1b1nwzida0e0b0xyg3)
-                                       + w_b_exp_pa1e1b1nwzida0e0b0xyg3 * srw_age_pa1e1b1nwzida0e0b0xyg3)
-    nw_max_pa1e1b1nwzida0e0b0xyg3 = np.maximum.accumulate(t_nw_max_pa1e1b1nwzida0e0b0xyg3, axis=0)
+    ###Calculated from the SRW of the current period, so if SRW changes between age stages (srw_p11 or the REV srw) nw_max follows the
+    ###growth curve of the current SRW. If SRW decreases, nw_max reduces and normal weight reverts (nw is capped by nw_max in the loop),
+    ###so an SRW increase in an earlier age stage does not raise normal weight later in life.
+    ###With a constant SRW nw_max increases with age, so this is the same as the previous cumulative maximum if srw_p11 and the REV srw are 0.
+    nw_max_pa1e1b1nwzida0e0b0xyg0 = (srw_p_pa1e1b1nwzida0e0b0xyg0 * (1 - srw_age_pa1e1b1nwzida0e0b0xyg0)
+                                     + w_b_exp_pa1e1b1nwzida0e0b0xyg0 * srw_age_pa1e1b1nwzida0e0b0xyg0)
+    nw_max_pa1e1b1nwzida0e0b0xyg1 = (srw_p_pa1e1b1nwzida0e0b0xyg1 * (1 - srw_age_pa1e1b1nwzida0e0b0xyg1)
+                                     + w_b_exp_pa1e1b1nwzida0e0b0xyg1 * srw_age_pa1e1b1nwzida0e0b0xyg1)
+    nw_max_pa1e1b1nwzida0e0b0xyg3 = (srw_p_pa1e1b1nwzida0e0b0xyg3 * (1 - srw_age_pa1e1b1nwzida0e0b0xyg3)
+                                     + w_b_exp_pa1e1b1nwzida0e0b0xyg3 * srw_age_pa1e1b1nwzida0e0b0xyg3)
 
     ##Change in normal weight max - the last period will be 0 by default but this is okay because nw hits an asymptote so change in will be 0 in the last period.
+    ###Not less than 0, because nw_max reduces if SRW decreases between age stages and the expected gain used in the mortality functions is not negative.
     d_nw_max_pa1e1b1nwzida0e0b0xyg0 = np.zeros_like(nw_max_pa1e1b1nwzida0e0b0xyg0)
-    d_nw_max_pa1e1b1nwzida0e0b0xyg0[0:-1, ...] = (nw_max_pa1e1b1nwzida0e0b0xyg0[1:, ...] - nw_max_pa1e1b1nwzida0e0b0xyg0[0:-1, ...]) / np.maximum(1,days_period_pa1e1b1nwzida0e0b0xyg0[0:-1, ...]) #np max to stop div/0
+    d_nw_max_pa1e1b1nwzida0e0b0xyg0[0:-1, ...] = np.maximum(0, nw_max_pa1e1b1nwzida0e0b0xyg0[1:, ...] - nw_max_pa1e1b1nwzida0e0b0xyg0[0:-1, ...]) / np.maximum(1,days_period_pa1e1b1nwzida0e0b0xyg0[0:-1, ...]) #np max to stop div/0
     d_nw_max_pa1e1b1nwzida0e0b0xyg1 = np.zeros_like(nw_max_pa1e1b1nwzida0e0b0xyg1)
-    d_nw_max_pa1e1b1nwzida0e0b0xyg1[0:-1, ...] = (nw_max_pa1e1b1nwzida0e0b0xyg1[1:, ...] - nw_max_pa1e1b1nwzida0e0b0xyg1[0:-1, ...]) / np.maximum(1,days_period_pa1e1b1nwzida0e0b0xyg1[0:-1, ...]) #np max to stop div/0
+    d_nw_max_pa1e1b1nwzida0e0b0xyg1[0:-1, ...] = np.maximum(0, nw_max_pa1e1b1nwzida0e0b0xyg1[1:, ...] - nw_max_pa1e1b1nwzida0e0b0xyg1[0:-1, ...]) / np.maximum(1,days_period_pa1e1b1nwzida0e0b0xyg1[0:-1, ...]) #np max to stop div/0
     d_nw_max_pa1e1b1nwzida0e0b0xyg3 = np.zeros_like(nw_max_pa1e1b1nwzida0e0b0xyg3)
-    d_nw_max_pa1e1b1nwzida0e0b0xyg3[0:-1, ...] = (nw_max_pa1e1b1nwzida0e0b0xyg3[1:, ...] - nw_max_pa1e1b1nwzida0e0b0xyg3[0:-1, ...]) / np.maximum(1,days_period_cut_pa1e1b1nwzida0e0b0xyg3[0:-1, ...]) #np max to stop div/0
+    d_nw_max_pa1e1b1nwzida0e0b0xyg3[0:-1, ...] = np.maximum(0, nw_max_pa1e1b1nwzida0e0b0xyg3[1:, ...] - nw_max_pa1e1b1nwzida0e0b0xyg3[0:-1, ...]) / np.maximum(1,days_period_cut_pa1e1b1nwzida0e0b0xyg3[0:-1, ...]) #np max to stop div/0
 
 
     #########################
