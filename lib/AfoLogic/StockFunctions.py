@@ -4038,6 +4038,37 @@ def f1_collapse(membership, index_unique_wzida0e0b0xyg, prod, numbers, period_is
 
     return prod
 
+def f1_pkl_condensed_align(pkl_condensed, current, generate_with_t, a_t_g):
+    '''
+    Align a condensed value from a pkl fs (e.g. the condensed ebw) with the equivalent array in the current generator.
+
+    t is the first axis of both arrays and the other axes are aligned to the right. Depending on the trial the arrays
+    may or may not include a singleton p axis after t, so the number of axes can differ between the trial that created
+    the pkl and the current trial.
+
+    1. If the current trial is generated without t and the pkl has a t axis, take the retained t slice for each g
+       (a pkl created without t already has a singleton t, which is the retained slice).
+    2. Add or remove the singleton p axis (after t) so the number of axes matches the current array.
+
+    :param pkl_condensed: condensed value from the pkl fs.
+    :param current: the equivalent array in the current trial (only the number of axes is used).
+    :param generate_with_t: True if the current trial is generated with the t axis.
+    :param a_t_g: association for the retained t slice of each g (1d with a g axis).
+    :return: pkl_condensed with the same number of axes as current.
+    '''
+    ##take the retained t slice if the current trial is generated without t
+    if not generate_with_t and pkl_condensed.shape[0] > 1:
+        a_t = np.asarray(a_t_g).reshape((1,) * (pkl_condensed.ndim - 1) + (-1,))  #t is the first axis and g the last
+        pkl_condensed = np.take_along_axis(pkl_condensed, a_t, axis=0)
+    ##add or remove the singleton p axis after t
+    n_extra = np.ndim(current) - pkl_condensed.ndim
+    if n_extra > 0:
+        pkl_condensed = np.expand_dims(pkl_condensed, axis=tuple(range(1, 1 + n_extra)))
+    elif n_extra < 0:
+        pkl_condensed = np.squeeze(pkl_condensed, axis=tuple(range(1, 1 - n_extra)))
+    return pkl_condensed
+
+
 def f1_adjust_pkl_condensed_axis_len(temporary, i_w_len, i_t_len):
     ####handle when the current trial has a different number of w slices than the create trial
     if i_w_len!=temporary.shape[sinp.stock['i_w_pos']]:

@@ -7913,8 +7913,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     if np.any(period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]): #using p+1 because this is being calculated at the end of the loop for next period.
                         ###slice the w axis just for the starting w slices.
                         pkl_ebw_condensed_dams = pkl_condensed_values['dams'][p]['ebw_dams']
-                        if not sinp.structuralsa['i_generate_with_t']:
-                            pkl_ebw_condensed_dams = np.take_along_axis(pkl_ebw_condensed_dams, a_t_tpg1[:,0,...], axis=p_pos)
+                        ###take the retained t slice if generating without t & align the axes with the current trial (with or without a singleton p axis)
+                        pkl_ebw_condensed_dams = sfun.f1_pkl_condensed_align(pkl_ebw_condensed_dams, ebw_start_dams,
+                                                                             sinp.structuralsa['i_generate_with_t'], a_t_g1)
 
                         pkl_ebw_condensed_dams = fun.f_slice(pkl_ebw_condensed_dams, {w_pos: [0, None
                                                 , int(pkl_ebw_condensed_dams.shape[w_pos] / w_start_len1)]})
@@ -7941,8 +7942,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     if np.any(period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1:p+2]):
                         ###slice the w axis just for the starting w slices.
                         pkl_ebw_condensed_offs = pkl_condensed_values['offs'][p]['ebw_offs']
-                        if not sinp.structuralsa['i_generate_with_t']:
-                            pkl_ebw_condensed_offs=pkl_ebw_condensed_offs[0:1,...]
+                        ###take the retained t slice if generating without t & align the axes with the current trial (with or without a singleton p axis)
+                        pkl_ebw_condensed_offs = sfun.f1_pkl_condensed_align(pkl_ebw_condensed_offs, ebw_start_offs,
+                                                                             sinp.structuralsa['i_generate_with_t'], a_t_g3)
                         pkl_ebw_condensed_offs = fun.f_slice(pkl_ebw_condensed_offs, {w_pos: [0, None
                                                         , int(pkl_ebw_condensed_offs.shape[w_pos] / w_start_len3)]})
                         t_fs_w_reallocation_tpa1e1b1nw8zida0e0b0xyg3s9 = sfun.f1_lw_distribution(pkl_ebw_condensed_offs,
