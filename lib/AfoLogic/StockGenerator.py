@@ -7662,13 +7662,13 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
                                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2], update=update_start_dams)
                 ###Dam mortality carryover (running tally of coeff * dam LW change during pregnancy)
-                cf_mort_start_damsp1p2 = sfun.f1_period_start_prod2(pointers_dams[...,na,na], index_unique_w_dams[...,na,na], cf_mort_damsp1p2
+                cf_mort_start_damsp1p2 = sfun.f1_period_start_prod2(pointers_dams[...,na,na,:], index_unique_w_dams[...,na,na], cf_mort_damsp1p2
                                         , numbers_end_dams[...,na,na], p_pos-2, w_pos-2, z_pos-2, tuple(x-2 for x in prejoin_tup)
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2,...,na,na], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2,...,na,na]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1:p+2,...,na,na] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1:p+2,...,na,na]
                                         , stub_lw_idx=stub_lw_idx_dams[...,na,na], len_gen_t=len_gen_t1, a_t_g=a_t_g1[...,na,na]
                                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2,...,na,na], update=update_start_dams)
-                cf_lact_start_damsp1p2 = sfun.f1_period_start_prod2(pointers_dams[...,na,na], index_unique_w_dams[...,na,na], cf_lact_damsp1p2
+                cf_lact_start_damsp1p2 = sfun.f1_period_start_prod2(pointers_dams[...,na,na,:], index_unique_w_dams[...,na,na], cf_lact_damsp1p2
                                         , numbers_end_dams[...,na,na], p_pos-2, w_pos-2, z_pos-2, tuple(x-2 for x in prejoin_tup)
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2,...,na,na], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2,...,na,na]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1:p+2,...,na,na] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1:p+2,...,na,na]

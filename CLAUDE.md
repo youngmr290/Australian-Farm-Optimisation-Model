@@ -147,6 +147,24 @@ in, recipes and limitations. Keep it current:
   stale constraints referencing rebuilt variables, mismatched weight distributions causing livestock to
   drop out of the solution, etc.) before assuming a new bug is novel.
 
+### Regrouping into the start LW profiles (`StockFunctions.f1_collapse_pointers` / `f1_collapse`)
+
+- At prejoining, season start and condense the generator regroups the a1/e1/b1, z and w classes into the start LW
+  profiles. Since 3 Nov 2026 the regrouping is a continuous function of the inputs: a smooth percentile rank, a smooth
+  count of the groups, and a weighting that tapers outside the tolerance window, so an animal near a window edge can be
+  split between two start animals. The old discrete method had steps in the trait response that stalled lsq calibrations.
+- Controlled by `[Structural.xlsx]Stock!` `i_collapse_rank_h` (smoothing width, default 0.25 kg EBW) and
+  `i_collapse_sigma` (taper as a proportion of the tolerance, default 0.25). 0 / 0 reproduces the old discrete method
+  exactly; use it to compare with results made before the change (calibrations, Standard targets, feed-supply pkls and
+  AFO-Test results from before 3 Nov 2026 used the discrete method).
+- `f1_collapse_pointers` returns a weighting array (the ebw shape plus a trailing axis for the w of the new animal), not
+  integer pointers; the generator variables keep the name `pointers_dams` / `pointers_offs`. With the discrete method
+  the weighting is 1 for the start animal of the old pointer and 0 for the others. If a call adds trailing axes to the
+  production array (e.g. the p1p2 carryovers `cf_mort` / `cf_lact`), insert them before the last axis:
+  `pointers_dams[...,na,na,:]`. Leading axes (`[na,...]`) need no change.
+- Cost (N33_test): about +17 s in the generator (the pairwise smooth rank, chunked at about 2e7 elements); no change in
+  peak memory.
+
 ### Livestock feed supply inputs (`FeedSupply` sheet of the property workbook)
 
 - Two named ranges set the weekly nutrition (NV) of each animal class, and the Std/High/Low options the LP can choose from:
