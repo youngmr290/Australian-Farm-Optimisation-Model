@@ -389,10 +389,13 @@ def f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1n
 
         ###slice t axis if t is not being included in the looping part of sgen
         ### take the 'retain' t slice (slice so that singleton axis remains)
+        ### the dams slice is only taken if the pkl t axis is not singleton (a pkl created without t is already the retained slice)
         if not sinp.structuralsa['i_generate_with_t']:
-            t_confinement_stpa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(t_confinement_stpa1e1b1nwzida0e0b0xyg1, a_t_tpg1[na], axis=p_pos - 1)
+            if t_confinement_stpa1e1b1nwzida0e0b0xyg1.shape[p_pos - 1] > 1:
+                t_confinement_stpa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(t_confinement_stpa1e1b1nwzida0e0b0xyg1, a_t_tpg1[na], axis=p_pos - 1)
             t_confinement_stpa1e1b1nwzida0e0b0xyg3 = t_confinement_stpa1e1b1nwzida0e0b0xyg3[:,0:1]
-            t_feedsupply_stpa1e1b1j2wzida0e0b0xyg1 = np.take_along_axis(t_feedsupply_stpa1e1b1j2wzida0e0b0xyg1, a_t_tpg1[na], axis=p_pos - 1)
+            if t_feedsupply_stpa1e1b1j2wzida0e0b0xyg1.shape[p_pos - 1] > 1:
+                t_feedsupply_stpa1e1b1j2wzida0e0b0xyg1 = np.take_along_axis(t_feedsupply_stpa1e1b1j2wzida0e0b0xyg1, a_t_tpg1[na], axis=p_pos - 1)
             t_feedsupply_stpa1e1b1j2wzida0e0b0xyg3 = t_feedsupply_stpa1e1b1j2wzida0e0b0xyg3[:,0:1]
 
         #todo a_k2_pa1e1b1nwzida0e0b0xyg1 is not right for this purpose. We need to build a new a_b1_p... association.
