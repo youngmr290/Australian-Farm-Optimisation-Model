@@ -247,13 +247,13 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         ## be changed by rerunning the calibration and they are reported with the results. The 3 lines are active (or commented) together.
         ## If the coefficient is active the SRW is not endogenous (SRW is the input value plus srw_p11).
         w = p = y = h = a = None
-        h = np.nan  #adult only (not cascaded to the younger age stages)
-        a = coefficients_c[j]; energy_calibrated = True; j += 1
-        energy_p11 = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
-        energy_k_evg = coefficients_c[j]; j += 1   #fixed coefficient: change in EVG (cg[8] & cg[9], the same absolute change) per unit of energy
-        energy_k_pi = coefficients_c[j]; j += 1    #fixed coefficient: change in PI (ci[1] & ci[21]) per unit of energy
-        sen.saa['evg_p11'] = sen.saa['evg_p11'] + energy_k_evg * energy_p11
-        sen.saa['pi_p11'] = sen.saa['pi_p11'] + energy_k_pi * energy_p11
+        # h = np.nan  #adult only (not cascaded to the younger age stages)
+        # a = coefficients_c[j]; energy_calibrated = True; j += 1
+        # energy_p11 = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
+        # energy_k_evg = coefficients_c[j]; j += 1   #fixed coefficient: change in EVG (cg[8] & cg[9], the same absolute change) per unit of energy
+        # energy_k_pi = coefficients_c[j]; j += 1    #fixed coefficient: change in PI (ci[1] & ci[21]) per unit of energy
+        # sen.saa['evg_p11'] = sen.saa['evg_p11'] + energy_k_evg * energy_p11
+        # sen.saa['pi_p11'] = sen.saa['pi_p11'] + energy_k_pi * energy_p11
 
         #Basal survival, cd[1] parameter
         w = p = y = h = a = None
