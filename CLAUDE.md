@@ -175,7 +175,7 @@ in, recipes and limitations. Keep it current:
 - Rows are selected by the position on the genotype axis (g0 sires, g1 dams, g3 offspring) via `ia_r1_zig*` and
   `ia_r2_isk2g1`, not by the genetic parameter set (`genotype` SA / `a_c2_c0`) that the position uses. A trial that
   changes the parameter set of position 0 (e.g. `Brd4&EL_test`: Maternal) still reads the BBB rows. To run a purebred
-  maternal composite (genotype 7 as the base genotype) with the Maternal feed supply set the scalar SA `fs_base_from_g`
+  maternal composite (genotype 7 as the base genotype) with the Maternal feed supply set the scalar SA `fs_bbb_from_g`
   = 3; it copies the pointers of g position 3 (the Maternal rows) to position 0 (0 = no change). The
   B x M x T dams (position 3) share the Maternal rows with the purebred maternal composite.
   A row that a trial does not read changes its profit by exactly 0 - a quick test of whether a row is live.
