@@ -1,604 +1,582 @@
 Trial: Quick test
-Quick test profit: 512802.08213635953
+Quick test profit: 501915.93969876156
 Variable v_tree_area_l
 Variable v_phase_area
-   ('q0', 's0', 'zm0', 'typ', 'AAAA2A1a', 'lmu0') 50.0000
-   ('q0', 's0', 'zm0', 'typ', 'AAAA2A1a', 'lmu1') 100.0000
+   ('q0', 's0', 'zm0', 'typ', 'AAAA2A1a', 'lmu0') 29.6797
+   ('q0', 's0', 'zm0', 'typ', 'AAAA2A1a', 'lmu1') 84.1180
    ('q0', 's0', 'zm0', 'typ', 'AAAA2A1a', 'lmu2') 400.0000
-   ('q0', 's0', 'zm0', 'typ', 'YAAA2Nw', 'lmu4') 0.0858
-   ('q0', 's0', 'zm0', 'typ', 'YYAA2A1z', 'lmu4') 0.0858
-   ('q0', 's0', 'zm0', 'typ', 'YYBA2A1a', 'lmu4') 0.0858
-   ('q0', 's0', 'zm0', 'typ', 'YYNWBrd', 'lmu3') 231.3657
-   ('q0', 's0', 'zm0', 'typ', 'YYWBNw', 'lmu3') 265.6828
-   ('q0', 's0', 'zm0', 'typ', 'YYWBNw', 'lmu4') 113.0412
-   ('q0', 's0', 'zm0', 'typ', 'YYBNWb', 'lmu3') 265.6828
-   ('q0', 's0', 'zm0', 'typ', 'YYBNWb', 'lmu4') 113.0412
-   ('q0', 's0', 'zm0', 'typ', 'YYNWBl', 'lmu3') 34.3172
-   ('q0', 's0', 'zm0', 'typ', 'YYNWBl', 'lmu4') 113.0412
-   ('q0', 's0', 'zm0', 'typ', 'YYWBL1w', 'lmu3') 34.3172
-   ('q0', 's0', 'zm0', 'typ', 'YYWBL1w', 'lmu4') 113.0412
-   ('q0', 's0', 'zm0', 'typ', 'YYBLWb', 'lmu3') 34.3172
-   ('q0', 's0', 'zm0', 'typ', 'YYBLWb', 'lmu4') 98.5764
-   ('q0', 's0', 'zm0', 'typ', 'YYBLWbd', 'lmu4') 14.4648
-   ('q0', 's0', 'zm0', 'typ', 'YYLWBrd', 'lmu3') 34.3172
-   ('q0', 's0', 'zm0', 'typ', 'YYLWBrd', 'lmu4') 113.0412
-   ('q0', 's0', 'zm0', 'typ', 'AAANWbd', 'lmu4') 0.0858
-   ('q0', 's0', 'zm0', 'typ', 'AANWBa', 'lmu4') 0.0858
-   ('q0', 's0', 'zm0', 'typ', 'AYWBA1a', 'lmu4') 0.0858
-   ('q0', 's0', 'zm0', 'typ', 'UUUNWbd', 'lmu4') 2.6547
-   ('q0', 's0', 'zm0', 'typ', 'UUUUNw', 'lmu4') 2.6547
-   ('q0', 's0', 'zm0', 'typ', 'UUUUUz', 'lmu4') 2.6547
-   ('q0', 's0', 'zm0', 'typ', 'YUUUUu', 'lmu4') 2.6547
-   ('q0', 's0', 'zm0', 'typ', 'YYUUUu', 'lmu4') 2.6547
-   ('q0', 's0', 'zm0', 'typ', 'YYBUUu', 'lmu4') 2.6547
-   ('q0', 's0', 'zm0', 'typ', 'UYWBUu', 'lmu4') 2.6547
-   ('q0', 's0', 'zm0', 'typ', 'UUNWBu', 'lmu4') 2.6547
+   ('q0', 's0', 'zm0', 'typ', 'YABA2Ba', 'lmu0') 10.1602
+   ('q0', 's0', 'zm0', 'typ', 'AYABA1b', 'lmu0') 10.1602
+   ('q0', 's0', 'zm0', 'typ', 'YYNWBrd', 'lmu3') 300.0000
+   ('q0', 's0', 'zm0', 'typ', 'YYNWBrd', 'lmu4') 12.8790
+   ('q0', 's0', 'zm0', 'typ', 'YYWBNw', 'lmu3') 300.0000
+   ('q0', 's0', 'zm0', 'typ', 'YYWBNw', 'lmu4') 123.1062
+   ('q0', 's0', 'zm0', 'typ', 'YYBNWb', 'lmu3') 300.0000
+   ('q0', 's0', 'zm0', 'typ', 'YYBNWb', 'lmu4') 123.1062
+   ('q0', 's0', 'zm0', 'typ', 'YYNWBl', 'lmu4') 110.2272
+   ('q0', 's0', 'zm0', 'typ', 'YYWBL1w', 'lmu4') 110.2272
+   ('q0', 's0', 'zm0', 'typ', 'YYBLWb', 'lmu4') 101.9533
+   ('q0', 's0', 'zm0', 'typ', 'YYBLWbd', 'lmu4') 8.2739
+   ('q0', 's0', 'zm0', 'typ', 'YYLWBrd', 'lmu4') 110.2272
+   ('q0', 's0', 'zm0', 'typ', 'UUUNWbd', 'lmu1') 1.9853
+   ('q0', 's0', 'zm0', 'typ', 'UUUUNw', 'lmu1') 1.9853
+   ('q0', 's0', 'zm0', 'typ', 'UUUUUz', 'lmu1') 1.9853
+   ('q0', 's0', 'zm0', 'typ', 'YUUUUu', 'lmu1') 1.9853
+   ('q0', 's0', 'zm0', 'typ', 'YYUUUu', 'lmu1') 1.9853
+   ('q0', 's0', 'zm0', 'typ', 'YYBUUu', 'lmu1') 1.9853
+   ('q0', 's0', 'zm0', 'typ', 'UYWBUu', 'lmu1') 1.9853
+   ('q0', 's0', 'zm0', 'typ', 'UUNWBu', 'lmu1') 1.9853
 Variable v_phase_change_increase
-   ('q0', 's0', 'zm0', 'typ', 'AAAA2A1a', 'lmu0') 50.0000
-   ('q0', 's0', 'zm0', 'typ', 'AAAA2A1a', 'lmu1') 100.0000
+   ('q0', 's0', 'zm0', 'typ', 'AAAA2A1a', 'lmu0') 29.6797
+   ('q0', 's0', 'zm0', 'typ', 'AAAA2A1a', 'lmu1') 84.1180
    ('q0', 's0', 'zm0', 'typ', 'AAAA2A1a', 'lmu2') 400.0000
-   ('q0', 's0', 'zm0', 'typ', 'YAAA2Nw', 'lmu4') 0.0858
-   ('q0', 's0', 'zm0', 'typ', 'YYAA2A1z', 'lmu4') 0.0858
-   ('q0', 's0', 'zm0', 'typ', 'YYBA2A1a', 'lmu4') 0.0858
-   ('q0', 's0', 'zm0', 'typ', 'YYNWBrd', 'lmu3') 231.3657
-   ('q0', 's0', 'zm0', 'typ', 'YYWBNw', 'lmu3') 265.6828
-   ('q0', 's0', 'zm0', 'typ', 'YYWBNw', 'lmu4') 113.0412
-   ('q0', 's0', 'zm0', 'typ', 'YYBNWb', 'lmu3') 265.6828
-   ('q0', 's0', 'zm0', 'typ', 'YYBNWb', 'lmu4') 113.0412
-   ('q0', 's0', 'zm0', 'typ', 'YYNWBl', 'lmu3') 34.3172
-   ('q0', 's0', 'zm0', 'typ', 'YYNWBl', 'lmu4') 113.0412
-   ('q0', 's0', 'zm0', 'typ', 'YYWBL1w', 'lmu3') 34.3172
-   ('q0', 's0', 'zm0', 'typ', 'YYWBL1w', 'lmu4') 113.0412
-   ('q0', 's0', 'zm0', 'typ', 'YYBLWb', 'lmu3') 34.3172
-   ('q0', 's0', 'zm0', 'typ', 'YYBLWb', 'lmu4') 98.5764
-   ('q0', 's0', 'zm0', 'typ', 'YYBLWbd', 'lmu4') 14.4648
-   ('q0', 's0', 'zm0', 'typ', 'YYLWBrd', 'lmu3') 34.3172
-   ('q0', 's0', 'zm0', 'typ', 'YYLWBrd', 'lmu4') 113.0412
-   ('q0', 's0', 'zm0', 'typ', 'AAANWbd', 'lmu4') 0.0858
-   ('q0', 's0', 'zm0', 'typ', 'AANWBa', 'lmu4') 0.0858
-   ('q0', 's0', 'zm0', 'typ', 'AYWBA1a', 'lmu4') 0.0858
-   ('q0', 's0', 'zm0', 'typ', 'UUUNWbd', 'lmu4') 330.1526
-   ('q0', 's0', 'zm0', 'typ', 'UUUUNw', 'lmu4') 2.6547
-   ('q0', 's0', 'zm0', 'typ', 'UUUUUz', 'lmu4') 2.6547
-   ('q0', 's0', 'zm0', 'typ', 'YUUUUu', 'lmu4') 2.6547
-   ('q0', 's0', 'zm0', 'typ', 'YYUUUu', 'lmu4') 2.6547
-   ('q0', 's0', 'zm0', 'typ', 'YYBUUu', 'lmu4') 2.6547
-   ('q0', 's0', 'zm0', 'typ', 'UYWBUu', 'lmu4') 2.6547
-   ('q0', 's0', 'zm0', 'typ', 'UUNWBu', 'lmu4') 2.6547
+   ('q0', 's0', 'zm0', 'typ', 'ANWFWb', 'lmu4') 3.4720
+   ('q0', 's0', 'zm0', 'typ', 'ANWFWbd', 'lmu1') 27.0802
+   ('q0', 's0', 'zm0', 'typ', 'ANWFWbd', 'lmu4') 157.4904
+   ('q0', 's0', 'zm0', 'typ', 'YABA2Ba', 'lmu0') 10.1602
+   ('q0', 's0', 'zm0', 'typ', 'AYABA1b', 'lmu0') 10.1602
+   ('q0', 's0', 'zm0', 'typ', 'YYNWBrd', 'lmu3') 300.0000
+   ('q0', 's0', 'zm0', 'typ', 'YYNWBrd', 'lmu4') 12.8790
+   ('q0', 's0', 'zm0', 'typ', 'YYWBNw', 'lmu3') 300.0000
+   ('q0', 's0', 'zm0', 'typ', 'YYWBNw', 'lmu4') 123.1062
+   ('q0', 's0', 'zm0', 'typ', 'YYBNWb', 'lmu3') 300.0000
+   ('q0', 's0', 'zm0', 'typ', 'YYBNWb', 'lmu4') 123.1062
+   ('q0', 's0', 'zm0', 'typ', 'YYNWBl', 'lmu4') 110.2272
+   ('q0', 's0', 'zm0', 'typ', 'YYWBL1w', 'lmu4') 110.2272
+   ('q0', 's0', 'zm0', 'typ', 'YYBLWb', 'lmu4') 101.9533
+   ('q0', 's0', 'zm0', 'typ', 'YYBLWbd', 'lmu4') 8.2739
+   ('q0', 's0', 'zm0', 'typ', 'YYLWBrd', 'lmu4') 110.2272
+   ('q0', 's0', 'zm0', 'typ', 'UUUNWbd', 'lmu1') 1.9853
+   ('q0', 's0', 'zm0', 'typ', 'UUUUNw', 'lmu1') 1.9853
+   ('q0', 's0', 'zm0', 'typ', 'UUUUUz', 'lmu1') 1.9853
+   ('q0', 's0', 'zm0', 'typ', 'YUUUUu', 'lmu1') 1.9853
+   ('q0', 's0', 'zm0', 'typ', 'YYUUUu', 'lmu1') 1.9853
+   ('q0', 's0', 'zm0', 'typ', 'YYBUUu', 'lmu1') 1.9853
+   ('q0', 's0', 'zm0', 'typ', 'UYWBUu', 'lmu1') 1.9853
+   ('q0', 's0', 'zm0', 'typ', 'UUNWBu', 'lmu1') 1.9853
 Variable v_phase_change_reduce
-   ('q0', 's0', 'zm0', 'typ', 'UUUNWbd', 'lmu4') 327.4979
+   ('q0', 's0', 'zm0', 'typ', 'ANWFWb', 'lmu4') 3.4720
+   ('q0', 's0', 'zm0', 'typ', 'ANWFWbd', 'lmu1') 27.0802
+   ('q0', 's0', 'zm0', 'typ', 'ANWFWbd', 'lmu4') 157.4904
 Variable v_use_biomass
+   ('q0', 's0', 'zm0', 'typ', 'b', 'lmu0', 'Harv') 66.9201
    ('q0', 's0', 'zm0', 'typ', 'b', 'lmu3', 'Harv') 2466.4217
-   ('q0', 's0', 'zm0', 'typ', 'b', 'lmu4', 'Harv') 1812.0824
-   ('q0', 's0', 'zm0', 'typ', 'l', 'lmu3', 'Graz') 187.1188
-   ('q0', 's0', 'zm0', 'typ', 'l', 'lmu4', 'Graz') 616.3718
-   ('q0', 's0', 'zm0', 'typ', 'rd', 'lmu3', 'Harv') 2484.2015
-   ('q0', 's0', 'zm0', 'typ', 'rd', 'lmu4', 'Harv') 1056.9638
-   ('q0', 's0', 'zm0', 'typ', 'w', 'lmu3', 'Harv') 2459.5872
-   ('q0', 's0', 'zm0', 'typ', 'w', 'lmu4', 'Harv') 2039.0105
-   ('q0', 's0', 'zm0', 'typ', 'z', 'lmu4', 'Harv') 24.8675
+   ('q0', 's0', 'zm0', 'typ', 'b', 'lmu4', 'Harv') 1925.2063
+   ('q0', 's0', 'zm0', 'typ', 'l', 'lmu4', 'Graz') 601.0278
+   ('q0', 's0', 'zm0', 'typ', 'rd', 'lmu3', 'Harv') 2805.0756
+   ('q0', 's0', 'zm0', 'typ', 'rd', 'lmu4', 'Harv') 1151.0737
+   ('q0', 's0', 'zm0', 'typ', 'w', 'lmu1', 'Harv') 11.7641
+   ('q0', 's0', 'zm0', 'typ', 'w', 'lmu3', 'Harv') 2428.5383
+   ('q0', 's0', 'zm0', 'typ', 'w', 'lmu4', 'Harv') 2074.7202
+   ('q0', 's0', 'zm0', 'typ', 'z', 'lmu1', 'Harv') 11.6607
 Variable v_sell_product
-   ('q0', 's0', 'zm0', 'typ', 'b', 'Harv') 1535.1292
-   ('q0', 's0', 'zm0', 'typ', 'rd', 'Harv') 686.9861
-   ('q0', 's0', 'zm0', 'typ', 'w', 'Harv') 1776.0463
-   ('q0', 's0', 'zm0', 'typ', 'z', 'Harv') 4.8243
+   ('q0', 's0', 'zm0', 'typ', 'b', 'Harv') 1654.0025
+   ('q0', 's0', 'zm0', 'typ', 'rd', 'Harv') 767.4930
+   ('q0', 's0', 'zm0', 'typ', 'w', 'Harv') 1782.5309
+   ('q0', 's0', 'zm0', 'typ', 'z', 'Harv') 2.2622
 Variable v_product_debit
 Variable v_product_credit
 Variable v_biomass_debit
 Variable v_biomass_credit
 Variable v_seeding_machdays
-   ('q0', 's0', 'typ', 'P00', 'a', 'lmu4') 0.0011
-   ('q0', 's0', 'typ', 'P00', 'bd', 'lmu4') 4.4282
-   ('q0', 's0', 'typ', 'P00', 'rd', 'lmu3') 3.4131
-   ('q0', 's0', 'typ', 'P00', 'rd', 'lmu4') 1.4522
-   ('q0', 's0', 'typ', 'P01', 'b', 'lmu4') 0.4160
-   ('q0', 's0', 'typ', 'P01', 'l', 'lmu3') 0.4409
-   ('q0', 's0', 'typ', 'P01', 'l', 'lmu4') 1.4522
-   ('q0', 's0', 'typ', 'P01', 'z', 'lmu4') 0.0352
+   ('q0', 's0', 'typ', 'P00', 'bd', 'lmu1') 0.3734
+   ('q0', 's0', 'typ', 'P00', 'bd', 'lmu4') 2.1295
+   ('q0', 's0', 'typ', 'P00', 'rd', 'lmu3') 3.8540
+   ('q0', 's0', 'typ', 'P00', 'rd', 'lmu4') 1.5815
+   ('q0', 's0', 'typ', 'P01', 'b', 'lmu0') 0.1374
+   ('q0', 's0', 'typ', 'P01', 'b', 'lmu4') 0.7168
+   ('q0', 's0', 'typ', 'P01', 'l', 'lmu4') 1.4160
+   ('q0', 's0', 'typ', 'P01', 'z', 'lmu1') 0.0255
    ('q0', 's0', 'typ', 'P02', 'b', 'lmu3') 3.8540
-   ('q0', 's0', 'typ', 'P02', 'b', 'lmu4') 2.3025
-   ('q0', 's0', 'typ', 'P02', 'w', 'lmu4') 0.3185
+   ('q0', 's0', 'typ', 'P02', 'b', 'lmu4') 2.2191
+   ('q0', 's0', 'typ', 'P02', 'w', 'lmu1') 0.0255
+   ('q0', 's0', 'typ', 'P02', 'w', 'lmu4') 0.3765
    ('q0', 's0', 'typ', 'P03', 'w', 'lmu3') 3.8540
    ('q0', 's0', 'typ', 'P03', 'w', 'lmu4') 2.6210
-   ('q0', 's0', 'typ', 'P07', 'u', 'lmu4') 0.0341
+   ('q0', 's0', 'typ', 'P07', 'u', 'lmu1') 0.0255
 Variable v_contractseeding_ha
 Variable v_harv_hours
-   ('q0', 's0', 'typ', 'P09', 'rd') 19.4915
-   ('q0', 's0', 'typ', 'P10', 'b') 95.6535
-   ('q0', 's0', 'typ', 'P10', 'rd') 86.6067
-   ('q0', 's0', 'typ', 'P10', 'w') 96.0025
-   ('q0', 's0', 'typ', 'P10', 'z') 0.7451
+   ('q0', 's0', 'typ', 'P09', 'rd') 29.6634
+   ('q0', 's0', 'typ', 'P09', 'z') 0.3494
+   ('q0', 's0', 'typ', 'P10', 'b') 99.6787
+   ('q0', 's0', 'typ', 'P10', 'rd') 88.8683
+   ('q0', 's0', 'typ', 'P10', 'w') 96.3530
 Variable v_contractharv_hours
 Variable v_unharvested_yield
 Variable v_hay_made
 Variable v_hay_tobe_made
 Variable v_terminal_wealth
-   ('q0', 's0', 'typ', 'c1_0') 404443.0674
+   ('q0', 's0', 'typ', 'c1_0') 396964.6199
 Variable v_credit
-   ('q0', 's0', 'c1_0', 'zm0', 'typ') 590061.2445
+   ('q0', 's0', 'c1_0', 'zm0', 'typ') 579537.4543
 Variable v_debit
 Variable v_wc_credit
 Variable v_wc_debit
 Variable v_dep
-   ('q0', 's0', 'zm0', 'typ') 77250.7710
+   ('q0', 's0', 'zm0', 'typ') 77613.2909
 Variable v_asset_cost
-   ('q0', 's0', 'zm0', 'typ') 108359.0147
+   ('q0', 's0', 'zm0', 'typ') 104951.3198
 Variable v_minroe
 Variable v_flex_labour_allocation
    ('q0', 's0', 'P12') 1.0000
 Variable v_quantity_casual
-   ('q0', 's0', 'P00', 'typ') 1.3934
-   ('q0', 's0', 'P01', 'typ') 0.1629
-   ('q0', 's0', 'P02', 'typ') 2.0586
-   ('q0', 's0', 'P03', 'typ') 1.6674
-   ('q0', 's0', 'P04', 'typ') 0.1795
-   ('q0', 's0', 'P05', 'typ') 0.0270
-   ('q0', 's0', 'P10', 'typ') 2.5746
-   ('q0', 's0', 'P13', 'typ') 0.3572
+   ('q0', 's0', 'P00', 'typ') 0.9964
+   ('q0', 's0', 'P02', 'typ') 1.9019
+   ('q0', 's0', 'P03', 'typ') 1.5268
+   ('q0', 's0', 'P04', 'typ') 0.0572
+   ('q0', 's0', 'P05', 'typ') 0.0654
+   ('q0', 's0', 'P09', 'typ') 0.4366
+   ('q0', 's0', 'P10', 'typ') 2.5895
+   ('q0', 's0', 'P11', 'typ') 0.0449
+   ('q0', 's0', 'P13', 'typ') 0.3481
 Variable v_quantity_perm
 Variable v_quantity_manager
    ('q0', 's0') 1.0000
 Variable v_casualsupervision_perm
 Variable v_casualsupervision_manager
-   ('q0', 's0', 'P00', 'typ') 16.7203
-   ('q0', 's0', 'P01', 'typ') 0.9120
-   ('q0', 's0', 'P02', 'typ') 11.5282
-   ('q0', 's0', 'P03', 'typ') 9.3377
-   ('q0', 's0', 'P04', 'typ') 5.3842
-   ('q0', 's0', 'P05', 'typ') 0.8105
-   ('q0', 's0', 'P10', 'typ') 57.6704
-   ('q0', 's0', 'P13', 'typ') 15.0042
+   ('q0', 's0', 'P00', 'typ') 11.9568
+   ('q0', 's0', 'P02', 'typ') 10.6508
+   ('q0', 's0', 'P03', 'typ') 8.5499
+   ('q0', 's0', 'P04', 'typ') 1.7156
+   ('q0', 's0', 'P05', 'typ') 1.9627
+   ('q0', 's0', 'P09', 'typ') 2.4447
+   ('q0', 's0', 'P10', 'typ') 58.0056
+   ('q0', 's0', 'P11', 'typ') 1.3462
+   ('q0', 's0', 'P13', 'typ') 14.6209
 Variable v_permsupervision_manager
 Variable v_manager_holiday_allocation
-   ('q0', 's0', 'P06') 0.1247
-   ('q0', 's0', 'P07') 0.3432
-   ('q0', 's0', 'P08') 0.2346
-   ('q0', 's0', 'P11') 0.1398
-   ('q0', 's0', 'P12') 0.1577
+   ('q0', 's0', 'P06') 0.1595
+   ('q0', 's0', 'P07') 0.4032
+   ('q0', 's0', 'P08') 0.2678
+   ('q0', 's0', 'P12') 0.1695
 Variable v_perm_holiday_allocation
 Variable v_sheep_labour_manager
-   ('q0', 's0', 'P00', 'any', 'typ') 53.0006
-   ('q0', 's0', 'P00', 'perm', 'typ') 10.3285
-   ('q0', 's0', 'P01', 'any', 'typ') 29.8698
-   ('q0', 's0', 'P01', 'perm', 'typ') 6.7739
-   ('q0', 's0', 'P02', 'perm', 'typ') 6.7692
-   ('q0', 's0', 'P03', 'perm', 'typ') 6.7459
-   ('q0', 's0', 'P04', 'any', 'typ') 93.1674
-   ('q0', 's0', 'P04', 'perm', 'typ') 42.2183
-   ('q0', 's0', 'P05', 'any', 'typ') 35.8952
-   ('q0', 's0', 'P05', 'perm', 'typ') 54.5586
-   ('q0', 's0', 'P06', 'any', 'typ') 37.0412
-   ('q0', 's0', 'P06', 'perm', 'typ') 51.4847
-   ('q0', 's0', 'P07', 'any', 'typ') 137.4672
-   ('q0', 's0', 'P07', 'perm', 'typ') 84.0931
-   ('q0', 's0', 'P08', 'any', 'typ') 113.6270
-   ('q0', 's0', 'P08', 'perm', 'typ') 61.0248
-   ('q0', 's0', 'P09', 'any', 'typ') 0.0550
-   ('q0', 's0', 'P09', 'perm', 'typ') 14.0636
-   ('q0', 's0', 'P10', 'perm', 'typ') 56.1711
-   ('q0', 's0', 'P11', 'any', 'typ') 142.6167
-   ('q0', 's0', 'P11', 'perm', 'typ') 79.4823
-   ('q0', 's0', 'P12', 'any', 'typ') 54.3830
-   ('q0', 's0', 'P12', 'perm', 'typ') 20.8822
-   ('q0', 's0', 'P13', 'any', 'typ') 68.9265
-   ('q0', 's0', 'P13', 'perm', 'typ') 36.3362
+   ('q0', 's0', 'P00', 'perm', 'typ') 9.2441
+   ('q0', 's0', 'P01', 'any', 'typ') 23.1018
+   ('q0', 's0', 'P01', 'perm', 'typ') 6.0627
+   ('q0', 's0', 'P02', 'perm', 'typ') 6.0585
+   ('q0', 's0', 'P03', 'perm', 'typ') 6.0376
+   ('q0', 's0', 'P04', 'any', 'typ') 61.0574
+   ('q0', 's0', 'P04', 'perm', 'typ') 37.7858
+   ('q0', 's0', 'P05', 'any', 'typ') 30.9866
+   ('q0', 's0', 'P05', 'perm', 'typ') 48.8304
+   ('q0', 's0', 'P06', 'any', 'typ') 33.1548
+   ('q0', 's0', 'P06', 'perm', 'typ') 46.0792
+   ('q0', 's0', 'P07', 'any', 'typ') 133.0881
+   ('q0', 's0', 'P07', 'perm', 'typ') 75.2641
+   ('q0', 's0', 'P08', 'any', 'typ') 112.8709
+   ('q0', 's0', 'P08', 'perm', 'typ') 54.6177
+   ('q0', 's0', 'P09', 'perm', 'typ') 12.5871
+   ('q0', 's0', 'P10', 'any', 'typ') 83.0754
+   ('q0', 's0', 'P10', 'perm', 'typ') 50.2736
+   ('q0', 's0', 'P11', 'any', 'typ') 179.8021
+   ('q0', 's0', 'P11', 'perm', 'typ') 71.1373
+   ('q0', 's0', 'P12', 'any', 'typ') 54.0436
+   ('q0', 's0', 'P12', 'perm', 'typ') 18.6897
+   ('q0', 's0', 'P13', 'any', 'typ') 70.9116
+   ('q0', 's0', 'P13', 'perm', 'typ') 32.5212
 Variable v_phase_labour_manager
-   ('q0', 's0', 'P00', 'any', 'typ') 27.9505
-   ('q0', 's0', 'P01', 'any', 'typ') 30.0443
-   ('q0', 's0', 'P02', 'any', 'typ') 50.1026
-   ('q0', 's0', 'P03', 'any', 'typ') 53.9165
-   ('q0', 's0', 'P04', 'any', 'typ') 109.9175
-   ('q0', 's0', 'P04', 'perm', 'typ') 15.3126
-   ('q0', 's0', 'P05', 'any', 'typ') 130.9036
-   ('q0', 's0', 'P05', 'perm', 'typ') 22.3309
-   ('q0', 's0', 'P06', 'any', 'typ') 79.4208
-   ('q0', 's0', 'P06', 'perm', 'typ') 17.1218
-   ('q0', 's0', 'P07', 'any', 'typ') 29.6420
-   ('q0', 's0', 'P07', 'perm', 'typ') 21.3309
+   ('q0', 's0', 'P00', 'any', 'typ') 86.7991
+   ('q0', 's0', 'P01', 'any', 'typ') 38.4355
+   ('q0', 's0', 'P02', 'any', 'typ') 51.6907
+   ('q0', 's0', 'P03', 'any', 'typ') 55.4125
+   ('q0', 's0', 'P04', 'any', 'typ') 141.7792
+   ('q0', 's0', 'P04', 'perm', 'typ') 15.5667
+   ('q0', 's0', 'P05', 'any', 'typ') 134.6142
+   ('q0', 's0', 'P05', 'perm', 'typ') 22.7014
+   ('q0', 's0', 'P06', 'any', 'typ') 80.9012
+   ('q0', 's0', 'P06', 'perm', 'typ') 17.4183
+   ('q0', 's0', 'P07', 'any', 'typ') 29.5241
+   ('q0', 's0', 'P07', 'perm', 'typ') 21.7014
    ('q0', 's0', 'P08', 'any', 'typ') 34.0000
-   ('q0', 's0', 'P09', 'any', 'typ') 48.8813
-   ('q0', 's0', 'P10', 'any', 'typ') 138.1585
+   ('q0', 's0', 'P09', 'any', 'typ') 47.9682
+   ('q0', 's0', 'P10', 'any', 'typ') 56.3597
    ('q0', 's0', 'P11', 'any', 'typ') 8.0000
-   ('q0', 's0', 'P12', 'any', 'typ') 16.6681
-   ('q0', 's0', 'P13', 'any', 'typ') 249.7331
+   ('q0', 's0', 'P12', 'any', 'typ') 16.6468
+   ('q0', 's0', 'P13', 'any', 'typ') 205.9463
 Variable v_fixed_labour_manager
    ('q0', 's0', 'P01', 'mngr', 'typ') 2.4000
    ('q0', 's0', 'P02', 'mngr', 'typ') 1.6000
+   ('q0', 's0', 'P04', 'any', 'typ') 8.0952
    ('q0', 's0', 'P04', 'mngr', 'typ') 4.0000
-   ('q0', 's0', 'P05', 'any', 'typ') 21.5013
+   ('q0', 's0', 'P05', 'any', 'typ') 26.9048
    ('q0', 's0', 'P05', 'mngr', 'typ') 4.0000
    ('q0', 's0', 'P06', 'mngr', 'typ') 4.0000
    ('q0', 's0', 'P07', 'any', 'typ') 23.3333
    ('q0', 's0', 'P07', 'mngr', 'typ') 8.0000
    ('q0', 's0', 'P08', 'any', 'typ') 6.6667
    ('q0', 's0', 'P08', 'mngr', 'typ') 4.0000
+   ('q0', 's0', 'P10', 'any', 'typ') 4.2857
    ('q0', 's0', 'P11', 'any', 'typ') 5.7143
    ('q0', 's0', 'P11', 'mngr', 'typ') 4.0000
    ('q0', 's0', 'P12', 'any', 'typ') 20.0000
    ('q0', 's0', 'P12', 'mngr', 'typ') 70.0000
+   ('q0', 's0', 'P13', 'any', 'typ') 46.0000
    ('q0', 's0', 'P13', 'mngr', 'typ') 8.0000
 Variable v_sheep_labour_permanent
 Variable v_phase_labour_permanent
 Variable v_fixed_labour_permanent
 Variable v_sheep_labour_casual
-   ('q0', 's0', 'P02', 'any', 'typ') 62.2599
-   ('q0', 's0', 'P03', 'any', 'typ') 29.8698
-   ('q0', 's0', 'P10', 'any', 'typ') 87.1596
+   ('q0', 's0', 'P00', 'any', 'typ') 47.4360
+   ('q0', 's0', 'P02', 'any', 'typ') 55.0739
+   ('q0', 's0', 'P03', 'any', 'typ') 23.1018
+   ('q0', 's0', 'P04', 'any', 'typ') 11.4375
+   ('q0', 's0', 'P05', 'any', 'typ') 13.0847
+   ('q0', 's0', 'P09', 'any', 'typ') 0.3871
+   ('q0', 's0', 'P11', 'any', 'typ') 8.9749
 Variable v_phase_labour_casual
-   ('q0', 's0', 'P00', 'any', 'typ') 111.4689
-   ('q0', 's0', 'P01', 'any', 'typ') 9.1200
-   ('q0', 's0', 'P02', 'any', 'typ') 53.0224
-   ('q0', 's0', 'P03', 'any', 'typ') 63.5068
-   ('q0', 's0', 'P04', 'any', 'typ') 27.7995
-   ('q0', 's0', 'P10', 'any', 'typ') 485.2589
-   ('q0', 's0', 'P13', 'any', 'typ') 54.0280
+   ('q0', 's0', 'P00', 'any', 'typ') 32.2758
+   ('q0', 's0', 'P02', 'any', 'typ') 51.4343
+   ('q0', 's0', 'P03', 'any', 'typ') 62.3969
+   ('q0', 's0', 'P09', 'any', 'typ') 24.0599
+   ('q0', 's0', 'P10', 'any', 'typ') 580.0556
+   ('q0', 's0', 'P13', 'any', 'typ') 97.4728
 Variable v_fixed_labour_casual
-   ('q0', 's0', 'P04', 'any', 'typ') 8.0952
-   ('q0', 's0', 'P05', 'any', 'typ') 5.4035
-   ('q0', 's0', 'P10', 'any', 'typ') 4.2857
-   ('q0', 's0', 'P13', 'any', 'typ') 46.0000
 Variable v_greenpas_ha
-   ('q0', 's0', 'nv0', 'Graz0', 'FooL', 'fp01', 'lmu4', 'typ', 'lucerne') 11.4289
-   ('q0', 's0', 'nv0', 'Graz0', 'FooL', 'fp02', 'lmu4', 'typ', 'annual') 0.4946
-   ('q0', 's0', 'nv0', 'Graz0', 'FooM', 'fp01', 'lmu4', 'typ', 'lucerne') 1.1809
-   ('q0', 's0', 'nv0', 'Graz0', 'FooH', 'fp05', 'lmu0', 'typ', 'annual') 25.2756
-   ('q0', 's0', 'nv0', 'Graz25', 'FooL', 'fp03', 'lmu4', 'typ', 'lucerne') 0.2532
-   ('q0', 's0', 'nv0', 'Graz25', 'FooL', 'fp06', 'lmu4', 'typ', 'lucerne') 1.7414
-   ('q0', 's0', 'nv0', 'Graz25', 'FooM', 'fp04', 'lmu1', 'typ', 'annual') 57.4375
-   ('q0', 's0', 'nv0', 'Graz25', 'FooM', 'fp04', 'lmu2', 'typ', 'annual') 392.7045
-   ('q0', 's0', 'nv0', 'Graz25', 'FooM', 'fp05', 'lmu0', 'typ', 'annual') 24.7244
-   ('q0', 's0', 'nv0', 'Graz25', 'FooM', 'fp05', 'lmu2', 'typ', 'annual') 176.3139
-   ('q0', 's0', 'nv0', 'Graz50', 'FooM', 'fp03', 'lmu4', 'typ', 'lucerne') 1.8288
-   ('q0', 's0', 'nv0', 'Graz50', 'FooM', 'fp05', 'lmu2', 'typ', 'annual') 15.9174
-   ('q0', 's0', 'nv0', 'Graz100', 'FooL', 'fp03', 'lmu2', 'typ', 'annual') 2.2049
-   ('q0', 's0', 'nv0', 'Graz100', 'FooH', 'fp08', 'lmu4', 'typ', 'lucerne') 0.3977
-   ('q0', 's0', 'nv0', 'Graz100', 'FooH', 'fp09', 'lmu4', 'typ', 'lucerne') 1.0530
-   ('q0', 's0', 'nv1', 'Graz0', 'FooM', 'fp04', 'lmu4', 'typ', 'annual') 0.4363
-   ('q0', 's0', 'nv1', 'Graz25', 'FooL', 'fp03', 'lmu0', 'typ', 'annual') 17.2150
-   ('q0', 's0', 'nv1', 'Graz25', 'FooL', 'fp03', 'lmu1', 'typ', 'annual') 49.2408
-   ('q0', 's0', 'nv1', 'Graz25', 'FooL', 'fp03', 'lmu2', 'typ', 'annual') 99.9976
-   ('q0', 's0', 'nv1', 'Graz25', 'FooL', 'fp03', 'lmu4', 'typ', 'lucerne') 3.3895
-   ('q0', 's0', 'nv1', 'Graz25', 'FooL', 'fp06', 'lmu4', 'typ', 'lucerne') 0.3811
-   ('q0', 's0', 'nv1', 'Graz25', 'FooM', 'fp05', 'lmu1', 'typ', 'annual') 63.7521
-   ('q0', 's0', 'nv1', 'Graz25', 'FooM', 'fp05', 'lmu2', 'typ', 'annual') 113.1733
-   ('q0', 's0', 'nv1', 'Graz25', 'FooM', 'fp05', 'lmu4', 'typ', 'annual') 0.2714
-   ('q0', 's0', 'nv1', 'Graz25', 'FooH', 'fp01', 'lmu2', 'typ', 'annual') 179.4366
-   ('q0', 's0', 'nv1', 'Graz25', 'FooH', 'fp05', 'lmu2', 'typ', 'annual') 18.0780
-   ('q0', 's0', 'nv1', 'Graz25', 'FooH', 'fp05', 'lmu4', 'typ', 'annual') 0.5171
-   ('q0', 's0', 'nv1', 'Graz50', 'FooM', 'fp01', 'lmu0', 'typ', 'annual') 0.4237
-   ('q0', 's0', 'nv1', 'Graz50', 'FooM', 'fp03', 'lmu0', 'typ', 'annual') 20.9365
-   ('q0', 's0', 'nv1', 'Graz50', 'FooM', 'fp03', 'lmu1', 'typ', 'annual') 41.8731
-   ('q0', 's0', 'nv1', 'Graz50', 'FooM', 'fp03', 'lmu4', 'typ', 'lucerne') 5.6973
-   ('q0', 's0', 'nv1', 'Graz50', 'FooH', 'fp01', 'lmu1', 'typ', 'annual') 98.6811
-   ('q0', 's0', 'nv1', 'Graz50', 'FooH', 'fp03', 'lmu2', 'typ', 'annual') 134.3281
-   ('q0', 's0', 'nv1', 'Graz50', 'FooH', 'fp07', 'lmu4', 'typ', 'lucerne') 2.2185
-   ('q0', 's0', 'nv1', 'Graz100', 'FooH', 'fp09', 'lmu4', 'typ', 'lucerne') 0.2754
-   ('q0', 's0', 'nv2', 'Graz0', 'FooL', 'fp02', 'lmu2', 'typ', 'annual') 376.0256
-   ('q0', 's0', 'nv2', 'Graz0', 'FooL', 'fp02', 'lmu4', 'typ', 'lucerne') 11.5820
-   ('q0', 's0', 'nv2', 'Graz0', 'FooL', 'fp03', 'lmu0', 'typ', 'annual') 4.4431
-   ('q0', 's0', 'nv2', 'Graz0', 'FooL', 'fp03', 'lmu1', 'typ', 'annual') 8.8862
-   ('q0', 's0', 'nv2', 'Graz0', 'FooL', 'fp07', 'lmu4', 'typ', 'lucerne') 10.3914
-   ('q0', 's0', 'nv2', 'Graz0', 'FooL', 'fp08', 'lmu4', 'typ', 'lucerne') 10.3269
-   ('q0', 's0', 'nv2', 'Graz0', 'FooM', 'fp01', 'lmu2', 'typ', 'annual') 154.4521
-   ('q0', 's0', 'nv2', 'Graz0', 'FooM', 'fp02', 'lmu4', 'typ', 'lucerne') 1.0279
-   ('q0', 's0', 'nv2', 'Graz0', 'FooM', 'fp05', 'lmu4', 'typ', 'lucerne') 3.8497
-   ('q0', 's0', 'nv2', 'Graz0', 'FooH', 'fp01', 'lmu4', 'typ', 'annual') 0.8354
-   ('q0', 's0', 'nv2', 'Graz0', 'FooH', 'fp02', 'lmu2', 'typ', 'annual') 23.9744
-   ('q0', 's0', 'nv2', 'Graz0', 'FooH', 'fp02', 'lmu4', 'typ', 'annual') 0.4266
-   ('q0', 's0', 'nv2', 'Graz0', 'FooH', 'fp04', 'lmu2', 'typ', 'annual') 4.6324
-   ('q0', 's0', 'nv2', 'Graz0', 'FooH', 'fp04', 'lmu4', 'typ', 'annual') 0.3522
-   ('q0', 's0', 'nv2', 'Graz0', 'FooH', 'fp04', 'lmu4', 'typ', 'lucerne') 4.0244
-   ('q0', 's0', 'nv2', 'Graz0', 'FooH', 'fp05', 'lmu1', 'typ', 'annual') 36.2479
-   ('q0', 's0', 'nv2', 'Graz0', 'FooH', 'fp05', 'lmu2', 'typ', 'annual') 75.8378
-   ('q0', 's0', 'nv2', 'Graz25', 'FooL', 'fp03', 'lmu0', 'typ', 'annual') 7.4054
-   ('q0', 's0', 'nv2', 'Graz25', 'FooM', 'fp01', 'lmu0', 'typ', 'annual') 41.3124
-   ('q0', 's0', 'nv2', 'Graz25', 'FooH', 'fp04', 'lmu2', 'typ', 'annual') 2.6631
-   ('q0', 's0', 'nv2', 'Graz25', 'FooH', 'fp05', 'lmu2', 'typ', 'annual') 0.6796
-   ('q0', 's0', 'nv2', 'Graz50', 'FooM', 'fp03', 'lmu4', 'typ', 'annual') 0.8453
-   ('q0', 's0', 'nv2', 'Graz50', 'FooH', 'fp03', 'lmu2', 'typ', 'annual') 100.4192
-   ('q0', 's0', 'nv2', 'Graz50', 'FooH', 'fp06', 'lmu4', 'typ', 'lucerne') 7.9654
-   ('q0', 's0', 'nv2', 'Graz100', 'FooH', 'fp01', 'lmu1', 'typ', 'annual') 1.3189
-   ('q0', 's0', 'nv3', 'Graz0', 'FooL', 'fp00', 'lmu4', 'typ', 'lucerne') 0.0946
-   ('q0', 's0', 'nv3', 'Graz0', 'FooL', 'fp02', 'lmu0', 'typ', 'annual') 50.0000
-   ('q0', 's0', 'nv3', 'Graz0', 'FooL', 'fp02', 'lmu1', 'typ', 'annual') 100.0000
-   ('q0', 's0', 'nv3', 'Graz0', 'FooM', 'fp04', 'lmu0', 'typ', 'annual') 50.0000
-   ('q0', 's0', 'nv3', 'Graz0', 'FooM', 'fp04', 'lmu1', 'typ', 'annual') 42.5625
-   ('q0', 's0', 'nv3', 'Graz0', 'FooM', 'fp04', 'lmu4', 'typ', 'lucerne') 6.0636
-   ('q0', 's0', 'nv3', 'Graz0', 'FooH', 'fp05', 'lmu4', 'typ', 'lucerne') 6.2382
+   ('q0', 's0', 'nv0', 'Graz0', 'FooL', 'fp00', 'lmu1', 'typ', 'lucerne') 0.0915
+   ('q0', 's0', 'nv0', 'Graz0', 'FooL', 'fp01', 'lmu1', 'typ', 'lucerne') 1.7890
+   ('q0', 's0', 'nv0', 'Graz0', 'FooL', 'fp02', 'lmu0', 'typ', 'annual') 39.8398
+   ('q0', 's0', 'nv0', 'Graz0', 'FooL', 'fp02', 'lmu1', 'typ', 'annual') 84.6143
+   ('q0', 's0', 'nv0', 'Graz0', 'FooL', 'fp02', 'lmu1', 'typ', 'lucerne') 8.9069
+   ('q0', 's0', 'nv0', 'Graz0', 'FooL', 'fp02', 'lmu2', 'typ', 'annual') 400.0000
+   ('q0', 's0', 'nv0', 'Graz0', 'FooL', 'fp03', 'lmu0', 'typ', 'annual') 18.1528
+   ('q0', 's0', 'nv0', 'Graz0', 'FooL', 'fp03', 'lmu1', 'typ', 'annual') 17.9867
+   ('q0', 's0', 'nv0', 'Graz0', 'FooL', 'fp07', 'lmu1', 'typ', 'lucerne') 7.7103
+   ('q0', 's0', 'nv0', 'Graz0', 'FooL', 'fp08', 'lmu1', 'typ', 'lucerne') 9.3154
+   ('q0', 's0', 'nv0', 'Graz0', 'FooM', 'fp01', 'lmu0', 'typ', 'annual') 27.9546
+   ('q0', 's0', 'nv0', 'Graz0', 'FooM', 'fp04', 'lmu0', 'typ', 'annual') 39.8398
+   ('q0', 's0', 'nv0', 'Graz0', 'FooM', 'fp04', 'lmu1', 'typ', 'annual') 75.5402
+   ('q0', 's0', 'nv0', 'Graz0', 'FooM', 'fp04', 'lmu1', 'typ', 'lucerne') 5.1786
+   ('q0', 's0', 'nv0', 'Graz0', 'FooM', 'fp05', 'lmu1', 'typ', 'annual') 6.2639
+   ('q0', 's0', 'nv0', 'Graz0', 'FooM', 'fp05', 'lmu1', 'typ', 'lucerne') 2.7602
+   ('q0', 's0', 'nv0', 'Graz0', 'FooH', 'fp04', 'lmu1', 'typ', 'lucerne') 2.3654
+   ('q0', 's0', 'nv0', 'Graz0', 'FooH', 'fp04', 'lmu2', 'typ', 'annual') 1.5629
+   ('q0', 's0', 'nv0', 'Graz0', 'FooH', 'fp05', 'lmu0', 'typ', 'annual') 20.1395
+   ('q0', 's0', 'nv0', 'Graz0', 'FooH', 'fp05', 'lmu1', 'typ', 'annual') 40.1606
+   ('q0', 's0', 'nv0', 'Graz0', 'FooH', 'fp05', 'lmu1', 'typ', 'lucerne') 4.7837
+   ('q0', 's0', 'nv0', 'Graz0', 'FooH', 'fp05', 'lmu2', 'typ', 'annual') 73.1888
+   ('q0', 's0', 'nv0', 'Graz25', 'FooL', 'fp01', 'lmu1', 'typ', 'lucerne') 6.7461
+   ('q0', 's0', 'nv0', 'Graz25', 'FooL', 'fp03', 'lmu1', 'typ', 'lucerne') 1.3124
+   ('q0', 's0', 'nv0', 'Graz25', 'FooL', 'fp06', 'lmu1', 'typ', 'lucerne') 1.3064
+   ('q0', 's0', 'nv0', 'Graz25', 'FooM', 'fp01', 'lmu1', 'typ', 'lucerne') 0.8948
+   ('q0', 's0', 'nv0', 'Graz25', 'FooM', 'fp04', 'lmu1', 'typ', 'annual') 8.9749
+   ('q0', 's0', 'nv0', 'Graz25', 'FooM', 'fp04', 'lmu2', 'typ', 'annual') 396.0536
+   ('q0', 's0', 'nv0', 'Graz25', 'FooM', 'fp05', 'lmu0', 'typ', 'annual') 19.7004
+   ('q0', 's0', 'nv0', 'Graz25', 'FooM', 'fp05', 'lmu2', 'typ', 'annual') 188.2417
+   ('q0', 's0', 'nv0', 'Graz50', 'FooM', 'fp03', 'lmu1', 'typ', 'lucerne') 2.7693
+   ('q0', 's0', 'nv0', 'Graz100', 'FooH', 'fp09', 'lmu1', 'typ', 'lucerne') 1.0212
+   ('q0', 's0', 'nv1', 'Graz25', 'FooL', 'fp03', 'lmu1', 'typ', 'annual') 20.1884
+   ('q0', 's0', 'nv1', 'Graz25', 'FooL', 'fp03', 'lmu1', 'typ', 'lucerne') 4.2705
+   ('q0', 's0', 'nv1', 'Graz25', 'FooL', 'fp03', 'lmu2', 'typ', 'annual') 130.3717
+   ('q0', 's0', 'nv1', 'Graz25', 'FooM', 'fp01', 'lmu2', 'typ', 'annual') 330.4991
+   ('q0', 's0', 'nv1', 'Graz25', 'FooM', 'fp05', 'lmu1', 'typ', 'annual') 38.0906
+   ('q0', 's0', 'nv1', 'Graz25', 'FooM', 'fp05', 'lmu2', 'typ', 'annual') 119.1370
+   ('q0', 's0', 'nv1', 'Graz25', 'FooH', 'fp05', 'lmu2', 'typ', 'annual') 18.5672
+   ('q0', 's0', 'nv1', 'Graz50', 'FooM', 'fp03', 'lmu0', 'typ', 'annual') 18.0497
+   ('q0', 's0', 'nv1', 'Graz50', 'FooM', 'fp03', 'lmu1', 'typ', 'annual') 36.4764
+   ('q0', 's0', 'nv1', 'Graz50', 'FooM', 'fp03', 'lmu2', 'typ', 'annual') 124.5827
+   ('q0', 's0', 'nv1', 'Graz50', 'FooH', 'fp01', 'lmu1', 'typ', 'annual') 19.9173
+   ('q0', 's0', 'nv1', 'Graz50', 'FooH', 'fp07', 'lmu1', 'typ', 'lucerne') 1.7196
+   ('q0', 's0', 'nv1', 'Graz100', 'FooH', 'fp01', 'lmu1', 'typ', 'annual') 1.4231
+   ('q0', 's0', 'nv1', 'Graz100', 'FooH', 'fp09', 'lmu1', 'typ', 'lucerne') 0.2633
+   ('q0', 's0', 'nv2', 'Graz25', 'FooL', 'fp03', 'lmu1', 'typ', 'annual') 7.1811
+   ('q0', 's0', 'nv2', 'Graz25', 'FooM', 'fp05', 'lmu2', 'typ', 'annual') 0.5191
+   ('q0', 's0', 'nv2', 'Graz25', 'FooH', 'fp04', 'lmu2', 'typ', 'annual') 2.3835
+   ('q0', 's0', 'nv2', 'Graz25', 'FooH', 'fp05', 'lmu2', 'typ', 'annual') 0.3462
+   ('q0', 's0', 'nv2', 'Graz50', 'FooM', 'fp01', 'lmu2', 'typ', 'annual') 3.3897
+   ('q0', 's0', 'nv2', 'Graz50', 'FooM', 'fp03', 'lmu2', 'typ', 'annual') 90.5763
+   ('q0', 's0', 'nv2', 'Graz50', 'FooH', 'fp01', 'lmu1', 'typ', 'annual') 63.2739
+   ('q0', 's0', 'nv2', 'Graz50', 'FooH', 'fp06', 'lmu1', 'typ', 'lucerne') 6.2375
 Variable v_drypas_consumed
-   ('q0', 's0', 'nv0', 'DryH', 'fp00', 'typ', 'lmu0', 'annual') 3.8255
-   ('q0', 's0', 'nv0', 'DryH', 'fp00', 'typ', 'lmu1', 'annual') 5.5846
-   ('q0', 's0', 'nv0', 'DryH', 'fp00', 'typ', 'lmu2', 'annual') 30.3506
-   ('q0', 's0', 'nv0', 'DryH', 'fp06', 'typ', 'lmu2', 'annual') 12.3593
-   ('q0', 's0', 'nv0', 'DryH', 'fp06', 'typ', 'lmu4', 'annual') 1.0614
-   ('q0', 's0', 'nv0', 'DryH', 'fp07', 'typ', 'lmu2', 'annual') 53.4578
-   ('q0', 's0', 'nv0', 'DryH', 'fp07', 'typ', 'lmu4', 'lucerne') 0.1417
-   ('q0', 's0', 'nv0', 'DryH', 'fp08', 'typ', 'lmu4', 'lucerne') 1.1627
-   ('q0', 's0', 'nv1', 'DryH', 'fp00', 'typ', 'lmu2', 'annual') 0.2530
-   ('q0', 's0', 'nv1', 'DryH', 'fp06', 'typ', 'lmu0', 'annual') 58.6231
-   ('q0', 's0', 'nv1', 'DryH', 'fp06', 'typ', 'lmu1', 'annual') 72.3449
-   ('q0', 's0', 'nv1', 'DryH', 'fp06', 'typ', 'lmu2', 'annual') 226.6161
-   ('q0', 's0', 'nv1', 'DryH', 'fp07', 'typ', 'lmu1', 'annual') 53.2591
-   ('q0', 's0', 'nv1', 'DryH', 'fp09', 'typ', 'lmu4', 'lucerne') 1.9557
+   ('q0', 's0', 'nv0', 'DryH', 'fp00', 'typ', 'lmu0', 'annual') 3.0481
+   ('q0', 's0', 'nv0', 'DryH', 'fp00', 'typ', 'lmu1', 'annual') 1.9344
+   ('q0', 's0', 'nv0', 'DryH', 'fp00', 'typ', 'lmu2', 'annual') 30.6037
+   ('q0', 's0', 'nv0', 'DryH', 'fp06', 'typ', 'lmu1', 'annual') 12.0760
+   ('q0', 's0', 'nv0', 'DryH', 'fp07', 'typ', 'lmu1', 'lucerne') 0.0801
+   ('q0', 's0', 'nv0', 'DryH', 'fp07', 'typ', 'lmu2', 'annual') 56.8723
+   ('q0', 's0', 'nv0', 'DryH', 'fp08', 'typ', 'lmu1', 'lucerne') 0.8627
+   ('q0', 's0', 'nv1', 'DryH', 'fp00', 'typ', 'lmu1', 'annual') 0.2265
+   ('q0', 's0', 'nv1', 'DryH', 'fp06', 'typ', 'lmu1', 'annual') 127.5668
+   ('q0', 's0', 'nv1', 'DryH', 'fp06', 'typ', 'lmu2', 'annual') 192.5541
+   ('q0', 's0', 'nv1', 'DryH', 'fp07', 'typ', 'lmu0', 'annual') 36.9624
+   ('q0', 's0', 'nv1', 'DryH', 'fp07', 'typ', 'lmu2', 'annual') 37.6346
+   ('q0', 's0', 'nv1', 'DryH', 'fp09', 'typ', 'lmu1', 'lucerne') 1.7641
+   ('q0', 's0', 'nv2', 'DryH', 'fp06', 'typ', 'lmu1', 'annual') 1.7385
+   ('q0', 's0', 'nv2', 'DryH', 'fp07', 'typ', 'lmu0', 'annual') 3.0546
 Variable v_drypas_transfer
-   ('q0', 's0', 'DryL', 'fp00', 'typ', 'lmu0', 'annual') 47.5059
-   ('q0', 's0', 'DryL', 'fp00', 'typ', 'lmu1', 'annual') 60.1743
-   ('q0', 's0', 'DryL', 'fp00', 'typ', 'lmu2', 'annual') 189.9664
-   ('q0', 's0', 'DryL', 'fp00', 'typ', 'lmu4', 'annual') 0.7065
-   ('q0', 's0', 'DryL', 'fp00', 'typ', 'lmu4', 'lucerne') 12.5270
-   ('q0', 's0', 'DryL', 'fp06', 'typ', 'lmu0', 'annual') 90.5721
-   ('q0', 's0', 'DryL', 'fp06', 'typ', 'lmu1', 'annual') 119.1732
-   ('q0', 's0', 'DryL', 'fp06', 'typ', 'lmu2', 'annual') 362.1790
-   ('q0', 's0', 'DryL', 'fp06', 'typ', 'lmu4', 'annual') 1.4988
-   ('q0', 's0', 'DryL', 'fp07', 'typ', 'lmu0', 'annual') 78.7175
-   ('q0', 's0', 'DryL', 'fp07', 'typ', 'lmu1', 'annual') 103.5751
-   ('q0', 's0', 'DryL', 'fp07', 'typ', 'lmu2', 'annual') 314.7749
-   ('q0', 's0', 'DryL', 'fp07', 'typ', 'lmu4', 'annual') 1.3026
-   ('q0', 's0', 'DryL', 'fp07', 'typ', 'lmu4', 'lucerne') 2.6183
-   ('q0', 's0', 'DryL', 'fp08', 'typ', 'lmu0', 'annual') 66.5217
-   ('q0', 's0', 'DryL', 'fp08', 'typ', 'lmu1', 'annual') 87.5281
-   ('q0', 's0', 'DryL', 'fp08', 'typ', 'lmu2', 'annual') 266.0065
-   ('q0', 's0', 'DryL', 'fp08', 'typ', 'lmu4', 'annual') 1.1008
-   ('q0', 's0', 'DryL', 'fp08', 'typ', 'lmu4', 'lucerne') 13.1863
-   ('q0', 's0', 'DryL', 'fp09', 'typ', 'lmu0', 'annual') 54.6602
-   ('q0', 's0', 'DryL', 'fp09', 'typ', 'lmu1', 'annual') 71.9209
-   ('q0', 's0', 'DryL', 'fp09', 'typ', 'lmu2', 'annual') 218.5747
-   ('q0', 's0', 'DryL', 'fp09', 'typ', 'lmu4', 'annual') 0.9045
-   ('q0', 's0', 'DryL', 'fp09', 'typ', 'lmu4', 'lucerne') 15.1596
-   ('q0', 's0', 'DryH', 'fp00', 'typ', 'lmu0', 'annual') 2.4941
-   ('q0', 's0', 'DryH', 'fp00', 'typ', 'lmu1', 'annual') 39.8257
-   ('q0', 's0', 'DryH', 'fp00', 'typ', 'lmu2', 'annual') 210.0336
-   ('q0', 's0', 'DryH', 'fp00', 'typ', 'lmu4', 'annual') 0.2147
-   ('q0', 's0', 'DryH', 'fp00', 'typ', 'lmu4', 'lucerne') 0.0502
-   ('q0', 's0', 'DryH', 'fp06', 'typ', 'lmu0', 'annual') 12.9906
-   ('q0', 's0', 'DryH', 'fp06', 'typ', 'lmu1', 'annual') 161.2187
-   ('q0', 's0', 'DryH', 'fp06', 'typ', 'lmu2', 'annual') 539.8625
-   ('q0', 's0', 'DryH', 'fp06', 'typ', 'lmu4', 'annual') 0.4093
-   ('q0', 's0', 'DryH', 'fp06', 'typ', 'lmu4', 'lucerne') 0.0159
-   ('q0', 's0', 'DryH', 'fp07', 'typ', 'lmu0', 'annual') 11.2903
-   ('q0', 's0', 'DryH', 'fp07', 'typ', 'lmu1', 'annual') 76.4405
-   ('q0', 's0', 'DryH', 'fp07', 'typ', 'lmu2', 'annual') 405.2876
-   ('q0', 's0', 'DryH', 'fp07', 'typ', 'lmu4', 'annual') 0.3557
-   ('q0', 's0', 'DryH', 'fp08', 'typ', 'lmu0', 'annual') 9.5411
-   ('q0', 's0', 'DryH', 'fp08', 'typ', 'lmu1', 'annual') 64.5975
-   ('q0', 's0', 'DryH', 'fp08', 'typ', 'lmu2', 'annual') 342.4961
-   ('q0', 's0', 'DryH', 'fp08', 'typ', 'lmu4', 'annual') 0.3006
-   ('q0', 's0', 'DryH', 'fp09', 'typ', 'lmu0', 'annual') 7.8398
-   ('q0', 's0', 'DryH', 'fp09', 'typ', 'lmu1', 'annual') 53.0791
-   ('q0', 's0', 'DryH', 'fp09', 'typ', 'lmu2', 'annual') 281.4253
-   ('q0', 's0', 'DryH', 'fp09', 'typ', 'lmu4', 'annual') 0.2470
+   ('q0', 's0', 'DryL', 'fp00', 'typ', 'lmu0', 'annual') 37.8526
+   ('q0', 's0', 'DryL', 'fp00', 'typ', 'lmu1', 'annual') 61.7505
+   ('q0', 's0', 'DryL', 'fp00', 'typ', 'lmu1', 'lucerne') 9.3519
+   ('q0', 's0', 'DryL', 'fp00', 'typ', 'lmu2', 'annual') 188.0395
+   ('q0', 's0', 'DryL', 'fp06', 'typ', 'lmu0', 'annual') 72.1676
+   ('q0', 's0', 'DryL', 'fp06', 'typ', 'lmu1', 'annual') 117.7300
+   ('q0', 's0', 'DryL', 'fp06', 'typ', 'lmu2', 'annual') 358.5054
+   ('q0', 's0', 'DryL', 'fp07', 'typ', 'lmu0', 'annual') 62.7219
+   ('q0', 's0', 'DryL', 'fp07', 'typ', 'lmu1', 'annual') 102.3208
+   ('q0', 's0', 'DryL', 'fp07', 'typ', 'lmu1', 'lucerne') 1.2129
+   ('q0', 's0', 'DryL', 'fp07', 'typ', 'lmu2', 'annual') 311.5821
+   ('q0', 's0', 'DryL', 'fp08', 'typ', 'lmu0', 'annual') 53.0043
+   ('q0', 's0', 'DryL', 'fp08', 'typ', 'lmu1', 'annual') 86.4681
+   ('q0', 's0', 'DryL', 'fp08', 'typ', 'lmu1', 'lucerne') 9.1107
+   ('q0', 's0', 'DryL', 'fp08', 'typ', 'lmu2', 'annual') 263.3084
+   ('q0', 's0', 'DryL', 'fp09', 'typ', 'lmu0', 'annual') 43.5531
+   ('q0', 's0', 'DryL', 'fp09', 'typ', 'lmu1', 'annual') 71.0499
+   ('q0', 's0', 'DryL', 'fp09', 'typ', 'lmu1', 'lucerne') 11.2285
+   ('q0', 's0', 'DryL', 'fp09', 'typ', 'lmu2', 'annual') 216.3577
+   ('q0', 's0', 'DryH', 'fp00', 'typ', 'lmu0', 'annual') 1.9873
+   ('q0', 's0', 'DryH', 'fp00', 'typ', 'lmu1', 'annual') 22.8638
+   ('q0', 's0', 'DryH', 'fp00', 'typ', 'lmu1', 'lucerne') 0.0465
+   ('q0', 's0', 'DryH', 'fp00', 'typ', 'lmu2', 'annual') 211.9605
+   ('q0', 's0', 'DryH', 'fp06', 'typ', 'lmu0', 'annual') 65.4007
+   ('q0', 's0', 'DryH', 'fp06', 'typ', 'lmu1', 'annual') 57.5278
+   ('q0', 's0', 'DryH', 'fp06', 'typ', 'lmu2', 'annual') 600.0059
+   ('q0', 's0', 'DryH', 'fp07', 'typ', 'lmu0', 'annual') 8.9961
+   ('q0', 's0', 'DryH', 'fp07', 'typ', 'lmu1', 'annual') 49.9982
+   ('q0', 's0', 'DryH', 'fp07', 'typ', 'lmu2', 'annual') 408.4804
+   ('q0', 's0', 'DryH', 'fp08', 'typ', 'lmu0', 'annual') 7.6023
+   ('q0', 's0', 'DryH', 'fp08', 'typ', 'lmu1', 'annual') 42.2519
+   ('q0', 's0', 'DryH', 'fp08', 'typ', 'lmu2', 'annual') 345.1942
+   ('q0', 's0', 'DryH', 'fp09', 'typ', 'lmu0', 'annual') 6.2467
+   ('q0', 's0', 'DryH', 'fp09', 'typ', 'lmu1', 'annual') 34.7179
+   ('q0', 's0', 'DryH', 'fp09', 'typ', 'lmu2', 'annual') 283.6423
 Variable v_nap_consumed
-   ('q0', 's0', 'nv1', 'DryL', 'fp06', 'typ', 'annual') 0.0533
+   ('q0', 's0', 'nv0', 'DryL', 'fp06', 'typ', 'annual') 0.0295
+   ('q0', 's0', 'nv1', 'DryL', 'fp06', 'typ', 'annual') 0.0895
 Variable v_nap_transfer
 Variable v_poc
-   ('q0', 's0', 'nv0', 'fp01', 'lmu3', 'typ') 38.5449
-   ('q0', 's0', 'nv1', 'fp01', 'lmu4', 'typ') 26.4682
+   ('q0', 's0', 'nv0', 'fp01', 'lmu0', 'typ') 0.0120
+   ('q0', 's0', 'nv0', 'fp01', 'lmu1', 'typ') 0.0614
+   ('q0', 's0', 'nv0', 'fp01', 'lmu3', 'typ') 38.4750
+   ('q0', 's0', 'nv0', 'fp01', 'lmu4', 'typ') 26.4267
 Variable v_buy_product
-   ('q0', 's0', 'zm0', 'typ', 'l', 'Harv') 13.6882
+   ('q0', 's0', 'zm0', 'typ', 'l', 'Harv') 12.2711
 Variable v_sup_con
-   ('q0', 's0', 'typ', 'b', 'nv0', 'fp00') 50.8595
-   ('q0', 's0', 'typ', 'b', 'nv0', 'fp01') 98.6297
-   ('q0', 's0', 'typ', 'b', 'nv1', 'fp00') 1.3197
-   ('q0', 's0', 'typ', 'b', 'nv1', 'fp01') 55.3111
-   ('q0', 's0', 'typ', 'b', 'nv2', 'fp01') 22.5007
-   ('q0', 's0', 'typ', 'b', 'nv2', 'fp06') 0.2709
-   ('q0', 's0', 'typ', 'b', 'nv3', 'fp08') 5.5685
-   ('q0', 's0', 'typ', 'l', 'nv3', 'fp02') 13.6882
+   ('q0', 's0', 'typ', 'b', 'nv0', 'fp00') 45.5197
+   ('q0', 's0', 'typ', 'b', 'nv0', 'fp01') 53.0343
+   ('q0', 's0', 'typ', 'b', 'nv1', 'fp00') 1.1811
+   ('q0', 's0', 'typ', 'b', 'nv1', 'fp01') 73.7329
+   ('q0', 's0', 'typ', 'b', 'nv2', 'fp01') 9.6955
+   ('q0', 's0', 'typ', 'b', 'nv2', 'fp06') 1.9056
+   ('q0', 's0', 'typ', 'b', 'nv3', 'fp08') 4.9839
+   ('q0', 's0', 'typ', 'l', 'nv3', 'fp02') 12.2711
 Variable v_tonnes_crop_consumed
-   ('q0', 's0', 'nv0', 'b', 'fp01', 'P01', 'typ', 'lmu4') 0.6277
-   ('q0', 's0', 'nv0', 'b', 'fp01', 'P02', 'typ', 'lmu4') 0.7849
-   ('q0', 's0', 'nv0', 'b', 'fp02', 'P01', 'typ', 'lmu4') 13.3100
-   ('q0', 's0', 'nv0', 'bd', 'fp01', 'P00', 'typ', 'lmu4') 9.4323
-   ('q0', 's0', 'nv0', 'bd', 'fp02', 'P00', 'typ', 'lmu4') 49.8287
-   ('q0', 's0', 'nv0', 'l', 'fp01', 'P01', 'typ', 'lmu3') 0.6651
-   ('q0', 's0', 'nv0', 'l', 'fp01', 'P01', 'typ', 'lmu4') 2.1910
-   ('q0', 's0', 'nv0', 'l', 'fp02', 'P01', 'typ', 'lmu4') 4.8769
-   ('q0', 's0', 'nv0', 'rd', 'fp01', 'P00', 'typ', 'lmu3') 6.1487
-   ('q0', 's0', 'nv0', 'rd', 'fp01', 'P00', 'typ', 'lmu4') 3.0932
-   ('q0', 's0', 'nv0', 'w', 'fp01', 'P02', 'typ', 'lmu4') 0.1817
-   ('q0', 's0', 'nv0', 'z', 'fp01', 'P01', 'typ', 'lmu4') 0.0531
-   ('q0', 's0', 'nv1', 'b', 'fp01', 'P02', 'typ', 'lmu3') 1.6461
-   ('q0', 's0', 'nv1', 'b', 'fp02', 'P02', 'typ', 'lmu3') 120.0749
-   ('q0', 's0', 'nv1', 'b', 'fp02', 'P02', 'typ', 'lmu4') 8.5172
-   ('q0', 's0', 'nv1', 'l', 'fp02', 'P01', 'typ', 'lmu3') 14.1040
-   ('q0', 's0', 'nv1', 'l', 'fp02', 'P01', 'typ', 'lmu4') 41.5818
-   ('q0', 's0', 'nv1', 'rd', 'fp01', 'P00', 'typ', 'lmu3') 1.1213
-   ('q0', 's0', 'nv2', 'b', 'fp01', 'P02', 'typ', 'lmu4') 0.5288
-   ('q0', 's0', 'nv2', 'b', 'fp02', 'P02', 'typ', 'lmu4') 62.8902
-   ('q0', 's0', 'nv2', 'w', 'fp02', 'P02', 'typ', 'lmu4') 9.8787
+   ('q0', 's0', 'nv0', 'b', 'fp02', 'P01', 'typ', 'lmu4') 22.9310
+   ('q0', 's0', 'nv0', 'bd', 'fp01', 'P00', 'typ', 'lmu1') 0.7953
+   ('q0', 's0', 'nv0', 'bd', 'fp01', 'P00', 'typ', 'lmu4') 4.5359
+   ('q0', 's0', 'nv0', 'l', 'fp01', 'P01', 'typ', 'lmu4') 1.4136
+   ('q0', 's0', 'nv0', 'l', 'fp02', 'P01', 'typ', 'lmu4') 37.8880
+   ('q0', 's0', 'nv0', 'rd', 'fp01', 'P00', 'typ', 'lmu3') 8.2090
+   ('q0', 's0', 'nv0', 'rd', 'fp01', 'P00', 'typ', 'lmu4') 3.3686
+   ('q0', 's0', 'nv0', 'z', 'fp01', 'P01', 'typ', 'lmu1') 0.0385
+   ('q0', 's0', 'nv1', 'b', 'fp01', 'P01', 'typ', 'lmu4') 1.0814
+   ('q0', 's0', 'nv1', 'b', 'fp01', 'P02', 'typ', 'lmu3') 2.0230
+   ('q0', 's0', 'nv1', 'b', 'fp02', 'P01', 'typ', 'lmu0') 2.3014
+   ('q0', 's0', 'nv1', 'b', 'fp02', 'P02', 'typ', 'lmu3') 74.2354
+   ('q0', 's0', 'nv1', 'b', 'fp02', 'P02', 'typ', 'lmu4') 70.0856
+   ('q0', 's0', 'nv1', 'l', 'fp01', 'P01', 'typ', 'lmu4') 0.7228
+   ('q0', 's0', 'nv1', 'l', 'fp02', 'P01', 'typ', 'lmu4') 5.3081
+   ('q0', 's0', 'nv1', 'w', 'fp01', 'P02', 'typ', 'lmu1') 0.0146
+   ('q0', 's0', 'nv1', 'w', 'fp02', 'P02', 'typ', 'lmu1') 0.7909
+   ('q0', 's0', 'nv1', 'w', 'fp02', 'P02', 'typ', 'lmu4') 11.8904
+   ('q0', 's0', 'nv2', 'b', 'fp02', 'P02', 'typ', 'lmu3') 45.4627
    ('q0', 's0', 'nv2', 'w', 'fp02', 'P03', 'typ', 'lmu3') 111.1871
    ('q0', 's0', 'nv2', 'w', 'fp02', 'P03', 'typ', 'lmu4') 75.6175
-   ('q0', 's0', 'nv3', 'bd', 'fp02', 'P00', 'typ', 'lmu4') 91.8404
+   ('q0', 's0', 'nv3', 'bd', 'fp02', 'P00', 'typ', 'lmu1') 11.9456
+   ('q0', 's0', 'nv3', 'bd', 'fp02', 'P00', 'typ', 'lmu4') 68.1272
+   ('q0', 's0', 'nv3', 'l', 'fp02', 'P01', 'typ', 'lmu4') 2.1059
 Variable v_tonnes_crop_transfer
-   ('q0', 's0', 'b', 'fp01', 'P02', 'typ', 'lmu3') 0.6142
+   ('q0', 's0', 'b', 'fp01', 'P01', 'typ', 'lmu0') 0.1152
+   ('q0', 's0', 'b', 'fp01', 'P02', 'typ', 'lmu3') 0.1954
+   ('q0', 's0', 'b', 'fp01', 'P02', 'typ', 'lmu4') 1.4067
+   ('q0', 's0', 'w', 'fp01', 'P02', 'typ', 'lmu4') 0.2387
 Variable v_slp_ha
 Variable v_tonnes_sb_consumed
 Variable v_tonnes_sb_transfer
 Variable v_stub_con
-   ('q0', 's0', 'typ', 'fp06', 'nv2', 'rd', 'a', 'Harv') 11.2593
-   ('q0', 's0', 'typ', 'fp07', 'nv0', 'b', 'e', 'Harv') 12.6926
-   ('q0', 's0', 'typ', 'fp07', 'nv0', 'b', 'f', 'Harv') 15.4070
-   ('q0', 's0', 'typ', 'fp07', 'nv0', 'b', 'g', 'Harv') 10.2400
-   ('q0', 's0', 'typ', 'fp07', 'nv1', 'b', 'c', 'Harv') 35.6174
-   ('q0', 's0', 'typ', 'fp07', 'nv1', 'b', 'd', 'Harv') 28.1782
-   ('q0', 's0', 'typ', 'fp07', 'nv2', 'b', 'b', 'Harv') 34.9750
-   ('q0', 's0', 'typ', 'fp07', 'nv2', 'b', 'e', 'Harv') 4.1958
-   ('q0', 's0', 'typ', 'fp07', 'nv3', 'b', 'a', 'Harv') 34.1657
-   ('q0', 's0', 'typ', 'fp07', 'nv3', 'b', 'g', 'Harv') 1.2444
-   ('q0', 's0', 'typ', 'fp07', 'nv1', 'l', 'b', 'Graz') 15.5598
-   ('q0', 's0', 'typ', 'fp07', 'nv1', 'l', 'c', 'Graz') 2.6161
-   ('q0', 's0', 'typ', 'fp07', 'nv1', 'l', 'd', 'Graz') 1.1249
-   ('q0', 's0', 'typ', 'fp07', 'nv2', 'l', 'b', 'Graz') 80.6202
-   ('q0', 's0', 'typ', 'fp07', 'nv3', 'l', 'a', 'Graz') 1.9354
-   ('q0', 's0', 'typ', 'fp07', 'nv0', 'rd', 'e', 'Harv') 2.9349
-   ('q0', 's0', 'typ', 'fp07', 'nv0', 'rd', 'f', 'Harv') 2.5517
-   ('q0', 's0', 'typ', 'fp07', 'nv1', 'rd', 'c', 'Harv') 4.8630
-   ('q0', 's0', 'typ', 'fp07', 'nv1', 'rd', 'd', 'Harv') 2.2682
-   ('q0', 's0', 'typ', 'fp07', 'nv2', 'rd', 'b', 'Harv') 4.8288
-   ('q0', 's0', 'typ', 'fp07', 'nv3', 'rd', 'g', 'Harv') 2.1697
-   ('q0', 's0', 'typ', 'fp07', 'nv0', 'w', 'e', 'Harv') 6.2491
-   ('q0', 's0', 'typ', 'fp07', 'nv0', 'w', 'f', 'Harv') 6.3024
-   ('q0', 's0', 'typ', 'fp07', 'nv0', 'w', 'g', 'Harv') 5.3359
-   ('q0', 's0', 'typ', 'fp07', 'nv1', 'w', 'c', 'Harv') 9.1860
-   ('q0', 's0', 'typ', 'fp07', 'nv1', 'w', 'd', 'Harv') 5.3410
-   ('q0', 's0', 'typ', 'fp07', 'nv2', 'w', 'b', 'Harv') 9.5993
-   ('q0', 's0', 'typ', 'fp07', 'nv3', 'w', 'a', 'Harv') 42.7905
-   ('q0', 's0', 'typ', 'fp08', 'nv0', 'b', 'e', 'Harv') 13.9372
-   ('q0', 's0', 'typ', 'fp08', 'nv0', 'b', 'f', 'Harv') 12.7146
-   ('q0', 's0', 'typ', 'fp08', 'nv1', 'b', 'g', 'Harv') 9.4776
-   ('q0', 's0', 'typ', 'fp08', 'nv0', 'l', 'd', 'Graz') 2.2862
-   ('q0', 's0', 'typ', 'fp08', 'nv0', 'l', 'e', 'Graz') 27.9171
-   ('q0', 's0', 'typ', 'fp08', 'nv0', 'l', 'f', 'Graz') 27.7337
-   ('q0', 's0', 'typ', 'fp08', 'nv0', 'l', 'g', 'Graz') 3.6378
-   ('q0', 's0', 'typ', 'fp08', 'nv1', 'l', 'c', 'Graz') 154.4280
-   ('q0', 's0', 'typ', 'fp08', 'nv1', 'l', 'd', 'Graz') 27.2881
-   ('q0', 's0', 'typ', 'fp08', 'nv1', 'l', 'g', 'Graz') 4.1371
-   ('q0', 's0', 'typ', 'fp08', 'nv2', 'l', 'b', 'Graz') 15.9539
-   ('q0', 's0', 'typ', 'fp08', 'nv3', 'l', 'a', 'Graz') 0.8326
-   ('q0', 's0', 'typ', 'fp08', 'nv0', 'rd', 'd', 'Harv') 4.5432
-   ('q0', 's0', 'typ', 'fp08', 'nv0', 'rd', 'e', 'Harv') 5.8787
-   ('q0', 's0', 'typ', 'fp08', 'nv0', 'rd', 'f', 'Harv') 5.1110
-   ('q0', 's0', 'typ', 'fp08', 'nv1', 'rd', 'c', 'Harv') 9.7407
-   ('q0', 's0', 'typ', 'fp08', 'nv1', 'rd', 'g', 'Harv') 3.5240
-   ('q0', 's0', 'typ', 'fp08', 'nv2', 'rd', 'a', 'Harv') 21.3018
-   ('q0', 's0', 'typ', 'fp08', 'nv2', 'rd', 'b', 'Harv') 9.6722
-   ('q0', 's0', 'typ', 'fp08', 'nv2', 'rd', 'g', 'Harv') 0.8220
-   ('q0', 's0', 'typ', 'fp08', 'nv0', 'w', 'd', 'Harv') 3.6035
-   ('q0', 's0', 'typ', 'fp08', 'nv0', 'w', 'e', 'Harv') 4.2162
-   ('q0', 's0', 'typ', 'fp08', 'nv0', 'w', 'f', 'Harv') 4.2522
-   ('q0', 's0', 'typ', 'fp08', 'nv1', 'w', 'c', 'Harv') 6.1977
-   ('q0', 's0', 'typ', 'fp08', 'nv1', 'w', 'g', 'Harv') 3.6001
-   ('q0', 's0', 'typ', 'fp08', 'nv2', 'w', 'a', 'Harv') 2.9185
-   ('q0', 's0', 'typ', 'fp08', 'nv2', 'w', 'b', 'Harv') 6.4765
-   ('q0', 's0', 'typ', 'fp08', 'nv3', 'w', 'a', 'Harv') 25.9517
-   ('q0', 's0', 'typ', 'fp08', 'nv0', 'z', 'd', 'Harv') 0.0464
-   ('q0', 's0', 'typ', 'fp08', 'nv0', 'z', 'e', 'Harv') 0.0601
-   ('q0', 's0', 'typ', 'fp08', 'nv0', 'z', 'f', 'Harv') 0.0523
-   ('q0', 's0', 'typ', 'fp08', 'nv1', 'z', 'c', 'Harv') 0.0996
-   ('q0', 's0', 'typ', 'fp08', 'nv2', 'z', 'a', 'Harv') 0.2178
-   ('q0', 's0', 'typ', 'fp08', 'nv2', 'z', 'b', 'Harv') 0.0989
-   ('q0', 's0', 'typ', 'fp08', 'nv2', 'z', 'g', 'Harv') 0.0444
-   ('q0', 's0', 'typ', 'fp09', 'nv0', 'l', 'a', 'Graz') 0.2670
-   ('q0', 's0', 'typ', 'fp09', 'nv0', 'l', 'd', 'Graz') 57.6720
-   ('q0', 's0', 'typ', 'fp09', 'nv0', 'l', 'e', 'Graz') 52.6134
-   ('q0', 's0', 'typ', 'fp09', 'nv0', 'l', 'f', 'Graz') 52.2677
-   ('q0', 's0', 'typ', 'fp09', 'nv0', 'l', 'g', 'Graz') 4.3971
-   ('q0', 's0', 'typ', 'fp09', 'nv1', 'l', 'b', 'Graz') 36.6405
-   ('q0', 's0', 'typ', 'fp09', 'nv1', 'l', 'c', 'Graz') 55.3762
-   ('q0', 's0', 'typ', 'fp09', 'nv1', 'l', 'g', 'Graz') 7.0411
+   ('q0', 's0', 'typ', 'fp06', 'nv2', 'rd', 'a', 'Harv') 9.4357
+   ('q0', 's0', 'typ', 'fp07', 'nv0', 'b', 'f', 'Harv') 2.7013
+   ('q0', 's0', 'typ', 'fp07', 'nv0', 'b', 'g', 'Harv') 2.0135
+   ('q0', 's0', 'typ', 'fp07', 'nv0', 'b', 'h', 'Harv') 1.0967
+   ('q0', 's0', 'typ', 'fp07', 'nv1', 'b', 'a', 'Harv') 12.5350
+   ('q0', 's0', 'typ', 'fp07', 'nv1', 'b', 'c', 'Harv') 3.2799
+   ('q0', 's0', 'typ', 'fp07', 'nv1', 'b', 'd', 'Harv') 2.5948
+   ('q0', 's0', 'typ', 'fp07', 'nv2', 'b', 'b', 'Harv') 12.8320
+   ('q0', 's0', 'typ', 'fp07', 'nv3', 'b', 'e', 'Harv') 2.9610
+   ('q0', 's0', 'typ', 'fp07', 'nv1', 'l', 'a', 'Graz') 1.5813
+   ('q0', 's0', 'typ', 'fp07', 'nv2', 'l', 'b', 'Graz') 78.5844
+   ('q0', 's0', 'typ', 'fp07', 'nv0', 'rd', 'e', 'Harv') 5.1038
+   ('q0', 's0', 'typ', 'fp07', 'nv0', 'rd', 'f', 'Harv') 4.4374
+   ('q0', 's0', 'typ', 'fp07', 'nv0', 'rd', 'g', 'Harv') 3.7731
+   ('q0', 's0', 'typ', 'fp07', 'nv1', 'rd', 'a', 'Harv') 9.5817
+   ('q0', 's0', 'typ', 'fp07', 'nv1', 'rd', 'c', 'Harv') 8.4568
+   ('q0', 's0', 'typ', 'fp07', 'nv1', 'rd', 'd', 'Harv') 3.9443
+   ('q0', 's0', 'typ', 'fp07', 'nv2', 'rd', 'b', 'Harv') 8.3973
+   ('q0', 's0', 'typ', 'fp07', 'nv0', 'w', 'e', 'Harv') 5.9387
+   ('q0', 's0', 'typ', 'fp07', 'nv0', 'w', 'f', 'Harv') 10.2616
+   ('q0', 's0', 'typ', 'fp07', 'nv0', 'w', 'g', 'Harv') 8.6879
+   ('q0', 's0', 'typ', 'fp07', 'nv0', 'w', 'h', 'Harv') 1.3560
+   ('q0', 's0', 'typ', 'fp07', 'nv1', 'w', 'a', 'Harv') 1.4275
+   ('q0', 's0', 'typ', 'fp07', 'nv1', 'w', 'c', 'Harv') 14.9567
+   ('q0', 's0', 'typ', 'fp07', 'nv1', 'w', 'd', 'Harv') 8.6963
+   ('q0', 's0', 'typ', 'fp07', 'nv2', 'w', 'b', 'Harv') 15.6296
+   ('q0', 's0', 'typ', 'fp07', 'nv2', 'w', 'e', 'Harv') 1.4604
+   ('q0', 's0', 'typ', 'fp07', 'nv3', 'w', 'a', 'Harv') 68.2440
+   ('q0', 's0', 'typ', 'fp07', 'nv3', 'w', 'e', 'Harv') 2.7758
+   ('q0', 's0', 'typ', 'fp07', 'nv0', 'z', 'e', 'Harv') 0.0309
+   ('q0', 's0', 'typ', 'fp07', 'nv0', 'z', 'f', 'Harv') 0.0268
+   ('q0', 's0', 'typ', 'fp07', 'nv0', 'z', 'g', 'Harv') 0.0228
+   ('q0', 's0', 'typ', 'fp07', 'nv1', 'z', 'a', 'Harv') 0.1119
+   ('q0', 's0', 'typ', 'fp07', 'nv1', 'z', 'c', 'Harv') 0.0511
+   ('q0', 's0', 'typ', 'fp07', 'nv1', 'z', 'd', 'Harv') 0.0239
+   ('q0', 's0', 'typ', 'fp07', 'nv2', 'z', 'b', 'Harv') 0.0508
+   ('q0', 's0', 'typ', 'fp08', 'nv0', 'b', 'e', 'Harv') 27.8872
+   ('q0', 's0', 'typ', 'fp08', 'nv0', 'b', 'f', 'Harv') 25.4411
+   ('q0', 's0', 'typ', 'fp08', 'nv0', 'b', 'g', 'Harv') 4.4744
+   ('q0', 's0', 'typ', 'fp08', 'nv1', 'b', 'c', 'Harv') 30.8904
+   ('q0', 's0', 'typ', 'fp08', 'nv1', 'b', 'd', 'Harv') 24.4385
+   ('q0', 's0', 'typ', 'fp08', 'nv1', 'b', 'g', 'Harv') 13.8161
+   ('q0', 's0', 'typ', 'fp08', 'nv2', 'b', 'a', 'Harv') 2.3834
+   ('q0', 's0', 'typ', 'fp08', 'nv2', 'b', 'b', 'Harv') 21.5588
+   ('q0', 's0', 'typ', 'fp08', 'nv2', 'b', 'g', 'Harv') 0.6734
+   ('q0', 's0', 'typ', 'fp08', 'nv3', 'b', 'a', 'Harv') 18.6765
+   ('q0', 's0', 'typ', 'fp08', 'nv0', 'l', 'd', 'Graz') 8.4946
+   ('q0', 's0', 'typ', 'fp08', 'nv0', 'l', 'e', 'Graz') 12.2775
+   ('q0', 's0', 'typ', 'fp08', 'nv0', 'l', 'f', 'Graz') 12.1968
+   ('q0', 's0', 'typ', 'fp08', 'nv1', 'l', 'c', 'Graz') 108.4270
+   ('q0', 's0', 'typ', 'fp08', 'nv1', 'l', 'd', 'Graz') 4.9634
+   ('q0', 's0', 'typ', 'fp08', 'nv1', 'l', 'g', 'Graz') 3.4193
+   ('q0', 's0', 'typ', 'fp08', 'nv3', 'l', 'a', 'Graz') 0.7181
+   ('q0', 's0', 'typ', 'fp08', 'nv0', 'rd', 'd', 'Harv') 3.7880
+   ('q0', 's0', 'typ', 'fp08', 'nv0', 'rd', 'e', 'Harv') 4.9015
+   ('q0', 's0', 'typ', 'fp08', 'nv0', 'rd', 'f', 'Harv') 4.2615
+   ('q0', 's0', 'typ', 'fp08', 'nv1', 'rd', 'c', 'Harv') 8.1216
+   ('q0', 's0', 'typ', 'fp08', 'nv2', 'rd', 'a', 'Harv') 17.7610
+   ('q0', 's0', 'typ', 'fp08', 'nv2', 'rd', 'b', 'Harv') 8.0644
+   ('q0', 's0', 'typ', 'fp08', 'nv0', 'w', 'd', 'Harv') 0.5714
+   ('q0', 's0', 'typ', 'fp08', 'nv0', 'w', 'e', 'Harv') 0.6685
+   ('q0', 's0', 'typ', 'fp08', 'nv0', 'w', 'f', 'Harv') 0.6742
+   ('q0', 's0', 'typ', 'fp08', 'nv1', 'w', 'c', 'Harv') 0.9827
+   ('q0', 's0', 'typ', 'fp08', 'nv1', 'w', 'g', 'Harv') 0.5708
+   ('q0', 's0', 'typ', 'fp08', 'nv2', 'w', 'b', 'Harv') 1.0269
+   ('q0', 's0', 'typ', 'fp08', 'nv3', 'w', 'a', 'Harv') 4.5776
+   ('q0', 's0', 'typ', 'fp09', 'nv0', 'l', 'd', 'Graz') 51.8117
+   ('q0', 's0', 'typ', 'fp09', 'nv0', 'l', 'e', 'Graz') 47.2670
+   ('q0', 's0', 'typ', 'fp09', 'nv0', 'l', 'f', 'Graz') 46.9565
+   ('q0', 's0', 'typ', 'fp09', 'nv0', 'l', 'g', 'Graz') 3.5777
+   ('q0', 's0', 'typ', 'fp09', 'nv1', 'l', 'b', 'Graz') 32.8065
+   ('q0', 's0', 'typ', 'fp09', 'nv1', 'l', 'c', 'Graz') 49.5818
+   ('q0', 's0', 'typ', 'fp09', 'nv1', 'l', 'g', 'Graz') 6.2519
 Variable v_stub_transfer
-   ('q0', 's0', 'typ', 'fp06', 'b', 'a', 'Harv') 35.8627
-   ('q0', 's0', 'typ', 'fp06', 'l', 'a', 'Graz') 3.3194
-   ('q0', 's0', 'typ', 'fp06', 'rd', 'a', 'Harv') 24.7345
-   ('q0', 's0', 'typ', 'fp06', 'rd', 'b', 'Harv') 5.1153
-   ('q0', 's0', 'typ', 'fp06', 'w', 'a', 'Harv') 78.2228
-   ('q0', 's0', 'typ', 'fp06', 'z', 'a', 'Harv') 0.2529
-   ('q0', 's0', 'typ', 'fp07', 'b', 'e', 'Harv') 15.2870
-   ('q0', 's0', 'typ', 'fp07', 'l', 'a', 'Graz') 1.2306
-   ('q0', 's0', 'typ', 'fp07', 'l', 'c', 'Graz') 147.4142
-   ('q0', 's0', 'typ', 'fp07', 'l', 'e', 'Graz') 1.0398
-   ('q0', 's0', 'typ', 'fp07', 'rd', 'a', 'Harv') 23.3628
-   ('q0', 's0', 'typ', 'fp07', 'w', 'a', 'Harv') 31.7144
-   ('q0', 's0', 'typ', 'fp07', 'z', 'a', 'Harv') 0.2388
-   ('q0', 's0', 'typ', 'fp08', 'l', 'a', 'Graz') 0.2905
-   ('q0', 's0', 'typ', 'fp08', 'l', 'b', 'Graz') 25.9558
-   ('q0', 's0', 'typ', 'fp08', 'l', 'd', 'Graz') 37.3558
+   ('q0', 's0', 'typ', 'fp06', 'b', 'a', 'Harv') 37.3718
+   ('q0', 's0', 'typ', 'fp06', 'l', 'a', 'Graz') 2.4830
+   ('q0', 's0', 'typ', 'fp06', 'rd', 'a', 'Harv') 30.7802
+   ('q0', 's0', 'typ', 'fp06', 'rd', 'b', 'Harv') 4.2867
+   ('q0', 's0', 'typ', 'fp06', 'w', 'a', 'Harv') 78.5084
+   ('q0', 's0', 'typ', 'fp06', 'z', 'a', 'Harv') 0.1186
+   ('q0', 's0', 'typ', 'fp07', 'b', 'a', 'Harv') 23.1013
+   ('q0', 's0', 'typ', 'fp07', 'b', 'c', 'Harv') 9.8024
+   ('q0', 's0', 'typ', 'fp07', 'l', 'a', 'Graz') 0.7869
+   ('q0', 's0', 'typ', 'fp07', 'l', 'c', 'Graz') 122.6530
+   ('q0', 's0', 'typ', 'fp07', 'rd', 'a', 'Harv') 19.4794
+   ('q0', 's0', 'typ', 'fp07', 'w', 'a', 'Harv') 5.0286
+   ('q0', 's0', 'typ', 'fp08', 'l', 'b', 'Graz') 36.4323
+   ('q0', 's0', 'typ', 'fp08', 'l', 'd', 'Graz') 33.6393
 Variable v_sire
-   ('q0', 's0', 'B') 23.4967
+   ('q0', 's0', 'B') 21.0297
 Variable v_dams
-   ('q0', 's0', 'NM-0', 't0', 'dv03', 'aStd', 'n0', 'w000', 'typ', 'Spr', 'yStd', 'BBB') 513.1930
-   ('q0', 's0', 'NM-0', 't0', 'dv03', 'aStd', 'n0', 'w001', 'typ', 'Spr', 'yStd', 'BBB') 387.2632
-   ('q0', 's0', 'NM-0', 't2', 'dv00', 'aStd', 'n0', 'w000', 'typ', 'Spr', 'yStd', 'BBB') 1258.7234
-   ('q0', 's0', 'NM-0', 't2', 'dv00', 'aStd', 'n0', 'w001', 'typ', 'Spr', 'yStd', 'BBB') 406.9632
-   ('q0', 's0', 'NM-0', 't2', 'dv00', 'aStd', 'n0', 'w002', 'typ', 'Spr', 'yStd', 'BBB') 387.8397
-   ('q0', 's0', 'NM-0', 't2', 'dv01', 'aStd', 'n0', 'w000', 'typ', 'Spr', 'yStd', 'BBB') 1237.5573
-   ('q0', 's0', 'NM-0', 't2', 'dv01', 'aStd', 'n0', 'w001', 'typ', 'Spr', 'yStd', 'BBB') 400.9763
-   ('q0', 's0', 'NM-0', 't2', 'dv01', 'aStd', 'n0', 'w002', 'typ', 'Spr', 'yStd', 'BBB') 379.8114
-   ('q0', 's0', 'NM-0', 't2', 'dv02', 'aStd', 'n0', 'w000', 'typ', 'Spr', 'yStd', 'BBB') 1205.0904
-   ('q0', 's0', 'NM-0', 't2', 'dv02', 'aStd', 'n0', 'w001', 'typ', 'Spr', 'yStd', 'BBB') 391.4039
-   ('q0', 's0', 'NM-0', 't2', 'dv02', 'aStd', 'n0', 'w002', 'typ', 'Spr', 'yStd', 'BBB') 368.6254
-   ('q0', 's0', 'NM-0', 't2', 'dv03', 'aStd', 'n0', 'w000', 'typ', 'Spr', 'yStd', 'BBB') 679.2043
-   ('q0', 's0', 'NM-0', 't2', 'dv03', 'aStd', 'n0', 'w002', 'typ', 'Spr', 'yStd', 'BBB') 364.8149
-   ('q0', 's0', '00-0', 't1', 'dv14', 'aStd', 'n0', 'w000', 'typ', 'Spr', 'yStd', 'BBB') 10.4705
-   ('q0', 's0', '00-0', 't1', 'dv14', 'aStd', 'n0', 'w001', 'typ', 'Spr', 'yStd', 'BBB') 3.6175
-   ('q0', 's0', '00-0', 't1', 'dv14', 'aStd', 'n0', 'w002', 'typ', 'Spr', 'yStd', 'BBB') 6.6963
-   ('q0', 's0', '00-0', 't2', 'dv05', 'aStd', 'n0', 'w000', 'typ', 'Spr', 'yStd', 'BBB') 10.6882
-   ('q0', 's0', '00-0', 't2', 'dv05', 'aStd', 'n0', 'w002', 'typ', 'Spr', 'yStd', 'BBB') 5.9148
-   ('q0', 's0', '00-0', 't2', 'dv06', 'aStd', 'n0', 'w000', 'typ', 'Spr', 'yStd', 'BBB') 10.5875
-   ('q0', 's0', '00-0', 't2', 'dv06', 'aStd', 'n0', 'w002', 'typ', 'Spr', 'yStd', 'BBB') 5.8591
-   ('q0', 's0', '00-0', 't2', 'dv08', 'aStd', 'n0', 'w000', 'typ', 'Spr', 'yStd', 'BBB') 13.7021
-   ('q0', 's0', '00-0', 't2', 'dv08', 'aStd', 'n0', 'w001', 'typ', 'Spr', 'yStd', 'BBB') 6.0353
-   ('q0', 's0', '00-0', 't2', 'dv08', 'aStd', 'n0', 'w002', 'typ', 'Spr', 'yStd', 'BBB') 10.9210
-   ('q0', 's0', '00-0', 't2', 'dv09', 'aStd', 'n0', 'w000', 'typ', 'Spr', 'yStd', 'BBB') 13.5677
-   ('q0', 's0', '00-0', 't2', 'dv09', 'aStd', 'n0', 'w001', 'typ', 'Spr', 'yStd', 'BBB') 5.9765
-   ('q0', 's0', '00-0', 't2', 'dv09', 'aStd', 'n0', 'w002', 'typ', 'Spr', 'yStd', 'BBB') 10.8130
-   ('q0', 's0', '00-0', 't2', 'dv11', 'aStd', 'n0', 'w000', 'typ', 'Spr', 'yStd', 'BBB') 12.1574
-   ('q0', 's0', '00-0', 't2', 'dv11', 'aStd', 'n0', 'w001', 'typ', 'Spr', 'yStd', 'BBB') 4.2541
-   ('q0', 's0', '00-0', 't2', 'dv11', 'aStd', 'n0', 'w002', 'typ', 'Spr', 'yStd', 'BBB') 7.6550
-   ('q0', 's0', '00-0', 't2', 'dv12', 'aStd', 'n0', 'w000', 'typ', 'Spr', 'yStd', 'BBB') 12.0413
-   ('q0', 's0', '00-0', 't2', 'dv12', 'aStd', 'n0', 'w001', 'typ', 'Spr', 'yStd', 'BBB') 4.2136
-   ('q0', 's0', '00-0', 't2', 'dv12', 'aStd', 'n0', 'w002', 'typ', 'Spr', 'yStd', 'BBB') 7.5814
-   ('q0', 's0', '11-0', 't0', 'dv15', 'aStd', 'n0', 'w000', 'typ', 'Spr', 'yStd', 'BBB') 388.0583
-   ('q0', 's0', '11-0', 't0', 'dv15', 'aStd', 'n0', 'w001', 'typ', 'Spr', 'yStd', 'BBB') 147.5246
-   ('q0', 's0', '11-0', 't0', 'dv15', 'aStd', 'n0', 'w002', 'typ', 'Spr', 'yStd', 'BBB') 218.3373
-   ('q0', 's0', '11-0', 't2', 'dv04', 'aStd', 'n0', 'w000', 'typ', 'Spr', 'yStd', 'BBB') 669.5004
-   ('q0', 's0', '11-0', 't2', 'dv04', 'aStd', 'n0', 'w002', 'typ', 'Spr', 'yStd', 'BBB') 359.6053
-   ('q0', 's0', '11-0', 't2', 'dv05', 'aStd', 'n0', 'w000', 'typ', 'Spr', 'yStd', 'BBB') 654.2019
-   ('q0', 's0', '11-0', 't2', 'dv05', 'aStd', 'n0', 'w002', 'typ', 'Spr', 'yStd', 'BBB') 351.1913
-   ('q0', 's0', '11-0', 't2', 'dv06', 'aStd', 'n0', 'w000', 'typ', 'Spr', 'yStd', 'BBB') 631.7934
-   ('q0', 's0', '11-0', 't2', 'dv06', 'aStd', 'n0', 'w002', 'typ', 'Spr', 'yStd', 'BBB') 339.2449
-   ('q0', 's0', '11-0', 't2', 'dv07', 'aStd', 'n0', 'w000', 'typ', 'Spr', 'yStd', 'BBB') 442.0196
-   ('q0', 's0', '11-0', 't2', 'dv07', 'aStd', 'n0', 'w001', 'typ', 'Spr', 'yStd', 'BBB') 214.7320
-   ('q0', 's0', '11-0', 't2', 'dv07', 'aStd', 'n0', 'w002', 'typ', 'Spr', 'yStd', 'BBB') 316.3288
-   ('q0', 's0', '11-0', 't2', 'dv08', 'aStd', 'n0', 'w000', 'typ', 'Spr', 'yStd', 'BBB') 425.0038
-   ('q0', 's0', '11-0', 't2', 'dv08', 'aStd', 'n0', 'w001', 'typ', 'Spr', 'yStd', 'BBB') 207.1484
-   ('q0', 's0', '11-0', 't2', 'dv08', 'aStd', 'n0', 'w002', 'typ', 'Spr', 'yStd', 'BBB') 302.9309
-   ('q0', 's0', '11-0', 't2', 'dv09', 'aStd', 'n0', 'w000', 'typ', 'Spr', 'yStd', 'BBB') 405.8655
-   ('q0', 's0', '11-0', 't2', 'dv09', 'aStd', 'n0', 'w001', 'typ', 'Spr', 'yStd', 'BBB') 197.4727
-   ('q0', 's0', '11-0', 't2', 'dv09', 'aStd', 'n0', 'w002', 'typ', 'Spr', 'yStd', 'BBB') 289.7705
-   ('q0', 's0', '11-0', 't2', 'dv10', 'aStd', 'n0', 'w000', 'typ', 'Spr', 'yStd', 'BBB') 470.1392
-   ('q0', 's0', '11-0', 't2', 'dv10', 'aStd', 'n0', 'w001', 'typ', 'Spr', 'yStd', 'BBB') 181.7075
-   ('q0', 's0', '11-0', 't2', 'dv10', 'aStd', 'n0', 'w002', 'typ', 'Spr', 'yStd', 'BBB') 257.9379
-   ('q0', 's0', '11-0', 't2', 'dv11', 'aStd', 'n0', 'w000', 'typ', 'Spr', 'yStd', 'BBB') 454.7293
-   ('q0', 's0', '11-0', 't2', 'dv11', 'aStd', 'n0', 'w001', 'typ', 'Spr', 'yStd', 'BBB') 176.2316
-   ('q0', 's0', '11-0', 't2', 'dv11', 'aStd', 'n0', 'w002', 'typ', 'Spr', 'yStd', 'BBB') 248.4177
-   ('q0', 's0', '11-0', 't2', 'dv12', 'aStd', 'n0', 'w000', 'typ', 'Spr', 'yStd', 'BBB') 428.3624
-   ('q0', 's0', '11-0', 't2', 'dv12', 'aStd', 'n0', 'w001', 'typ', 'Spr', 'yStd', 'BBB') 165.6043
-   ('q0', 's0', '11-0', 't2', 'dv12', 'aStd', 'n0', 'w002', 'typ', 'Spr', 'yStd', 'BBB') 234.6527
-   ('q0', 's0', '11-0', 't2', 'dv13', 'aStd', 'n0', 'w000', 'typ', 'Spr', 'yStd', 'BBB') 432.1973
-   ('q0', 's0', '11-0', 't2', 'dv13', 'aStd', 'n0', 'w001', 'typ', 'Spr', 'yStd', 'BBB') 164.4049
-   ('q0', 's0', '11-0', 't2', 'dv13', 'aStd', 'n0', 'w002', 'typ', 'Spr', 'yStd', 'BBB') 243.2019
-   ('q0', 's0', '11-0', 't2', 'dv14', 'aStd', 'n0', 'w000', 'typ', 'Spr', 'yStd', 'BBB') 418.8351
-   ('q0', 's0', '11-0', 't2', 'dv14', 'aStd', 'n0', 'w001', 'typ', 'Spr', 'yStd', 'BBB') 159.7098
-   ('q0', 's0', '11-0', 't2', 'dv14', 'aStd', 'n0', 'w002', 'typ', 'Spr', 'yStd', 'BBB') 234.8245
+   ('q0', 's0', 'NM-0', 't0', 'dv03', 'aStd', 'n0', 'w000', 'typ', 'Spr', 'yStd', 'BBB') 459.3120
+   ('q0', 's0', 'NM-0', 't0', 'dv03', 'aStd', 'n0', 'w001', 'typ', 'Spr', 'yStd', 'BBB') 346.6038
+   ('q0', 's0', 'NM-0', 't2', 'dv00', 'aStd', 'n0', 'w000', 'typ', 'Spr', 'yStd', 'BBB') 1126.5680
+   ('q0', 's0', 'NM-0', 't2', 'dv00', 'aStd', 'n0', 'w001', 'typ', 'Spr', 'yStd', 'BBB') 364.2355
+   ('q0', 's0', 'NM-0', 't2', 'dv00', 'aStd', 'n0', 'w002', 'typ', 'Spr', 'yStd', 'BBB') 347.1198
+   ('q0', 's0', 'NM-0', 't2', 'dv01', 'aStd', 'n0', 'w000', 'typ', 'Spr', 'yStd', 'BBB') 1107.6241
+   ('q0', 's0', 'NM-0', 't2', 'dv01', 'aStd', 'n0', 'w001', 'typ', 'Spr', 'yStd', 'BBB') 358.8772
+   ('q0', 's0', 'NM-0', 't2', 'dv01', 'aStd', 'n0', 'w002', 'typ', 'Spr', 'yStd', 'BBB') 339.9344
+   ('q0', 's0', 'NM-0', 't2', 'dv02', 'aStd', 'n0', 'w000', 'typ', 'Spr', 'yStd', 'BBB') 1078.5659
+   ('q0', 's0', 'NM-0', 't2', 'dv02', 'aStd', 'n0', 'w001', 'typ', 'Spr', 'yStd', 'BBB') 350.3097
+   ('q0', 's0', 'NM-0', 't2', 'dv02', 'aStd', 'n0', 'w002', 'typ', 'Spr', 'yStd', 'BBB') 329.9228
+   ('q0', 's0', 'NM-0', 't2', 'dv03', 'aStd', 'n0', 'w000', 'typ', 'Spr', 'yStd', 'BBB') 607.8935
+   ('q0', 's0', 'NM-0', 't2', 'dv03', 'aStd', 'n0', 'w002', 'typ', 'Spr', 'yStd', 'BBB') 326.5124
+   ('q0', 's0', '00-0', 't1', 'dv14', 'aStd', 'n0', 'w000', 'typ', 'Spr', 'yStd', 'BBB') 9.3712
+   ('q0', 's0', '00-0', 't1', 'dv14', 'aStd', 'n0', 'w001', 'typ', 'Spr', 'yStd', 'BBB') 3.2377
+   ('q0', 's0', '00-0', 't1', 'dv14', 'aStd', 'n0', 'w002', 'typ', 'Spr', 'yStd', 'BBB') 5.9933
+   ('q0', 's0', '00-0', 't2', 'dv05', 'aStd', 'n0', 'w000', 'typ', 'Spr', 'yStd', 'BBB') 9.5660
+   ('q0', 's0', '00-0', 't2', 'dv05', 'aStd', 'n0', 'w002', 'typ', 'Spr', 'yStd', 'BBB') 5.2938
+   ('q0', 's0', '00-0', 't2', 'dv06', 'aStd', 'n0', 'w000', 'typ', 'Spr', 'yStd', 'BBB') 9.4759
+   ('q0', 's0', '00-0', 't2', 'dv06', 'aStd', 'n0', 'w002', 'typ', 'Spr', 'yStd', 'BBB') 5.2439
+   ('q0', 's0', '00-0', 't2', 'dv08', 'aStd', 'n0', 'w000', 'typ', 'Spr', 'yStd', 'BBB') 12.2635
+   ('q0', 's0', '00-0', 't2', 'dv08', 'aStd', 'n0', 'w001', 'typ', 'Spr', 'yStd', 'BBB') 5.4016
+   ('q0', 's0', '00-0', 't2', 'dv08', 'aStd', 'n0', 'w002', 'typ', 'Spr', 'yStd', 'BBB') 9.7744
+   ('q0', 's0', '00-0', 't2', 'dv09', 'aStd', 'n0', 'w000', 'typ', 'Spr', 'yStd', 'BBB') 12.1432
+   ('q0', 's0', '00-0', 't2', 'dv09', 'aStd', 'n0', 'w001', 'typ', 'Spr', 'yStd', 'BBB') 5.3490
+   ('q0', 's0', '00-0', 't2', 'dv09', 'aStd', 'n0', 'w002', 'typ', 'Spr', 'yStd', 'BBB') 9.6777
+   ('q0', 's0', '00-0', 't2', 'dv11', 'aStd', 'n0', 'w000', 'typ', 'Spr', 'yStd', 'BBB') 10.8810
+   ('q0', 's0', '00-0', 't2', 'dv11', 'aStd', 'n0', 'w001', 'typ', 'Spr', 'yStd', 'BBB') 3.8074
+   ('q0', 's0', '00-0', 't2', 'dv11', 'aStd', 'n0', 'w002', 'typ', 'Spr', 'yStd', 'BBB') 6.8513
+   ('q0', 's0', '00-0', 't2', 'dv12', 'aStd', 'n0', 'w000', 'typ', 'Spr', 'yStd', 'BBB') 10.7770
+   ('q0', 's0', '00-0', 't2', 'dv12', 'aStd', 'n0', 'w001', 'typ', 'Spr', 'yStd', 'BBB') 3.7712
+   ('q0', 's0', '00-0', 't2', 'dv12', 'aStd', 'n0', 'w002', 'typ', 'Spr', 'yStd', 'BBB') 6.7854
+   ('q0', 's0', '11-0', 't0', 'dv15', 'aStd', 'n0', 'w000', 'typ', 'Spr', 'yStd', 'BBB') 347.3154
+   ('q0', 's0', '11-0', 't0', 'dv15', 'aStd', 'n0', 'w001', 'typ', 'Spr', 'yStd', 'BBB') 132.0358
+   ('q0', 's0', '11-0', 't0', 'dv15', 'aStd', 'n0', 'w002', 'typ', 'Spr', 'yStd', 'BBB') 195.4137
+   ('q0', 's0', '11-0', 't2', 'dv04', 'aStd', 'n0', 'w000', 'typ', 'Spr', 'yStd', 'BBB') 599.2084
+   ('q0', 's0', '11-0', 't2', 'dv04', 'aStd', 'n0', 'w002', 'typ', 'Spr', 'yStd', 'BBB') 321.8498
+   ('q0', 's0', '11-0', 't2', 'dv05', 'aStd', 'n0', 'w000', 'typ', 'Spr', 'yStd', 'BBB') 585.5161
+   ('q0', 's0', '11-0', 't2', 'dv05', 'aStd', 'n0', 'w002', 'typ', 'Spr', 'yStd', 'BBB') 314.3192
+   ('q0', 's0', '11-0', 't2', 'dv06', 'aStd', 'n0', 'w000', 'typ', 'Spr', 'yStd', 'BBB') 565.4603
+   ('q0', 's0', '11-0', 't2', 'dv06', 'aStd', 'n0', 'w002', 'typ', 'Spr', 'yStd', 'BBB') 303.6270
+   ('q0', 's0', '11-0', 't2', 'dv07', 'aStd', 'n0', 'w000', 'typ', 'Spr', 'yStd', 'BBB') 395.6113
+   ('q0', 's0', '11-0', 't2', 'dv07', 'aStd', 'n0', 'w001', 'typ', 'Spr', 'yStd', 'BBB') 192.1869
+   ('q0', 's0', '11-0', 't2', 'dv07', 'aStd', 'n0', 'w002', 'typ', 'Spr', 'yStd', 'BBB') 283.1169
+   ('q0', 's0', '11-0', 't2', 'dv08', 'aStd', 'n0', 'w000', 'typ', 'Spr', 'yStd', 'BBB') 380.3820
+   ('q0', 's0', '11-0', 't2', 'dv08', 'aStd', 'n0', 'w001', 'typ', 'Spr', 'yStd', 'BBB') 185.3995
+   ('q0', 's0', '11-0', 't2', 'dv08', 'aStd', 'n0', 'w002', 'typ', 'Spr', 'yStd', 'BBB') 271.1257
+   ('q0', 's0', '11-0', 't2', 'dv09', 'aStd', 'n0', 'w000', 'typ', 'Spr', 'yStd', 'BBB') 363.2530
+   ('q0', 's0', '11-0', 't2', 'dv09', 'aStd', 'n0', 'w001', 'typ', 'Spr', 'yStd', 'BBB') 176.7397
+   ('q0', 's0', '11-0', 't2', 'dv09', 'aStd', 'n0', 'w002', 'typ', 'Spr', 'yStd', 'BBB') 259.3470
+   ('q0', 's0', '11-0', 't2', 'dv10', 'aStd', 'n0', 'w000', 'typ', 'Spr', 'yStd', 'BBB') 420.7785
+   ('q0', 's0', '11-0', 't2', 'dv10', 'aStd', 'n0', 'w001', 'typ', 'Spr', 'yStd', 'BBB') 162.6297
+   ('q0', 's0', '11-0', 't2', 'dv10', 'aStd', 'n0', 'w002', 'typ', 'Spr', 'yStd', 'BBB') 230.8565
+   ('q0', 's0', '11-0', 't2', 'dv11', 'aStd', 'n0', 'w000', 'typ', 'Spr', 'yStd', 'BBB') 406.9865
+   ('q0', 's0', '11-0', 't2', 'dv11', 'aStd', 'n0', 'w001', 'typ', 'Spr', 'yStd', 'BBB') 157.7288
+   ('q0', 's0', '11-0', 't2', 'dv11', 'aStd', 'n0', 'w002', 'typ', 'Spr', 'yStd', 'BBB') 222.3359
+   ('q0', 's0', '11-0', 't2', 'dv12', 'aStd', 'n0', 'w000', 'typ', 'Spr', 'yStd', 'BBB') 383.3879
+   ('q0', 's0', '11-0', 't2', 'dv12', 'aStd', 'n0', 'w001', 'typ', 'Spr', 'yStd', 'BBB') 148.2173
+   ('q0', 's0', '11-0', 't2', 'dv12', 'aStd', 'n0', 'w002', 'typ', 'Spr', 'yStd', 'BBB') 210.0162
+   ('q0', 's0', '11-0', 't2', 'dv13', 'aStd', 'n0', 'w000', 'typ', 'Spr', 'yStd', 'BBB') 386.8202
+   ('q0', 's0', '11-0', 't2', 'dv13', 'aStd', 'n0', 'w001', 'typ', 'Spr', 'yStd', 'BBB') 147.1438
+   ('q0', 's0', '11-0', 't2', 'dv13', 'aStd', 'n0', 'w002', 'typ', 'Spr', 'yStd', 'BBB') 217.6678
+   ('q0', 's0', '11-0', 't2', 'dv14', 'aStd', 'n0', 'w000', 'typ', 'Spr', 'yStd', 'BBB') 374.8609
+   ('q0', 's0', '11-0', 't2', 'dv14', 'aStd', 'n0', 'w001', 'typ', 'Spr', 'yStd', 'BBB') 142.9416
+   ('q0', 's0', '11-0', 't2', 'dv14', 'aStd', 'n0', 'w002', 'typ', 'Spr', 'yStd', 'BBB') 210.1699
 Variable v_offs
-   ('q0', 's0', 'Mdn', '11-0', 't0', 'dv00', 'n0', 'w000', 'typ', 'Spr', 'aStd', 'C', 'yStd', 'BBB') 502.1554
-   ('q0', 's0', 'Mdn', '11-0', 't0', 'dv00', 'n0', 'w001', 'typ', 'Spr', 'aStd', 'C', 'yStd', 'BBB') 56.9962
-   ('q0', 's0', 'Mdn', '11-0', 't0', 'dv00', 'n0', 'w002', 'typ', 'Spr', 'aStd', 'C', 'yStd', 'BBB') 35.8894
-   ('q0', 's0', 'Mdn', '11-0', 't3', 'dv01', 'n0', 'w000', 'typ', 'Spr', 'aStd', 'C', 'yStd', 'BBB') 497.1776
-   ('q0', 's0', 'Mdn', '11-0', 't3', 'dv01', 'n0', 'w001', 'typ', 'Spr', 'aStd', 'C', 'yStd', 'BBB') 56.4650
-   ('q0', 's0', 'Mdn', '11-0', 't3', 'dv01', 'n0', 'w002', 'typ', 'Spr', 'aStd', 'C', 'yStd', 'BBB') 35.4112
-   ('q0', 's0', 'Adt', '11-0', 't0', 'dv00', 'n0', 'w000', 'typ', 'Spr', 'aStd', 'C', 'yStd', 'BBB') 1220.0199
-   ('q0', 's0', 'Adt', '11-0', 't0', 'dv00', 'n0', 'w001', 'typ', 'Spr', 'aStd', 'C', 'yStd', 'BBB') 186.8595
-   ('q0', 's0', 'Adt', '11-0', 't0', 'dv00', 'n0', 'w002', 'typ', 'Spr', 'aStd', 'C', 'yStd', 'BBB') 54.0995
-   ('q0', 's0', 'Adt', '11-0', 't3', 'dv01', 'n0', 'w000', 'typ', 'Spr', 'aStd', 'C', 'yStd', 'BBB') 1207.8670
-   ('q0', 's0', 'Adt', '11-0', 't3', 'dv01', 'n0', 'w001', 'typ', 'Spr', 'aStd', 'C', 'yStd', 'BBB') 185.1134
-   ('q0', 's0', 'Adt', '11-0', 't3', 'dv01', 'n0', 'w002', 'typ', 'Spr', 'aStd', 'C', 'yStd', 'BBB') 53.3710
+   ('q0', 's0', 'Mdn', '11-0', 't0', 'dv00', 'n0', 'w000', 'typ', 'Spr', 'aStd', 'C', 'yStd', 'BBB') 449.4333
+   ('q0', 's0', 'Mdn', '11-0', 't0', 'dv00', 'n0', 'w001', 'typ', 'Spr', 'aStd', 'C', 'yStd', 'BBB') 51.0121
+   ('q0', 's0', 'Mdn', '11-0', 't0', 'dv00', 'n0', 'w002', 'typ', 'Spr', 'aStd', 'C', 'yStd', 'BBB') 32.1213
+   ('q0', 's0', 'Mdn', '11-0', 't3', 'dv01', 'n0', 'w000', 'typ', 'Spr', 'aStd', 'C', 'yStd', 'BBB') 444.9781
+   ('q0', 's0', 'Mdn', '11-0', 't3', 'dv01', 'n0', 'w001', 'typ', 'Spr', 'aStd', 'C', 'yStd', 'BBB') 50.5367
+   ('q0', 's0', 'Mdn', '11-0', 't3', 'dv01', 'n0', 'w002', 'typ', 'Spr', 'aStd', 'C', 'yStd', 'BBB') 31.6933
+   ('q0', 's0', 'Adt', '11-0', 't0', 'dv00', 'n0', 'w000', 'typ', 'Spr', 'aStd', 'C', 'yStd', 'BBB') 1091.9280
+   ('q0', 's0', 'Adt', '11-0', 't0', 'dv00', 'n0', 'w001', 'typ', 'Spr', 'aStd', 'C', 'yStd', 'BBB') 167.2408
+   ('q0', 's0', 'Adt', '11-0', 't0', 'dv00', 'n0', 'w002', 'typ', 'Spr', 'aStd', 'C', 'yStd', 'BBB') 48.4195
+   ('q0', 's0', 'Adt', '11-0', 't3', 'dv01', 'n0', 'w000', 'typ', 'Spr', 'aStd', 'C', 'yStd', 'BBB') 1081.0510
+   ('q0', 's0', 'Adt', '11-0', 't3', 'dv01', 'n0', 'w001', 'typ', 'Spr', 'aStd', 'C', 'yStd', 'BBB') 165.6781
+   ('q0', 's0', 'Adt', '11-0', 't3', 'dv01', 'n0', 'w002', 'typ', 'Spr', 'aStd', 'C', 'yStd', 'BBB') 47.7675
 Variable v_prog
-   ('q0', 's0', 'Mdn', '11-0', 't1', 'w000', 'typ', 'Spr', 'aStd', 'F', 'BBB') 207.2004
-   ('q0', 's0', 'Mdn', '11-0', 't1', 'w005', 'typ', 'Spr', 'aStd', 'F', 'BBB') 387.3039
-   ('q0', 's0', 'Mdn', '11-0', 't2', 'w000', 'typ', 'Spr', 'aStd', 'C', 'BBB') 207.3888
-   ('q0', 's0', 'Mdn', '11-0', 't2', 'w005', 'typ', 'Spr', 'aStd', 'C', 'BBB') 387.6522
-   ('q0', 's0', 'Adt', '11-0', 't1', 'w000', 'typ', 'Spr', 'aStd', 'F', 'BBB') 431.5969
-   ('q0', 's0', 'Adt', '11-0', 't1', 'w005', 'typ', 'Spr', 'aStd', 'F', 'BBB') 722.8649
-   ('q0', 's0', 'Adt', '11-0', 't1', 'w009', 'typ', 'Spr', 'aStd', 'F', 'BBB') 305.1643
-   ('q0', 's0', 'Adt', '11-0', 't2', 'w000', 'typ', 'Spr', 'aStd', 'C', 'BBB') 432.0159
-   ('q0', 's0', 'Adt', '11-0', 't2', 'w005', 'typ', 'Spr', 'aStd', 'C', 'BBB') 723.5242
-   ('q0', 's0', 'Adt', '11-0', 't2', 'w009', 'typ', 'Spr', 'aStd', 'C', 'BBB') 305.4387
+   ('q0', 's0', 'Mdn', '11-0', 't1', 'w000', 'typ', 'Spr', 'aStd', 'F', 'BBB') 185.4461
+   ('q0', 's0', 'Mdn', '11-0', 't1', 'w005', 'typ', 'Spr', 'aStd', 'F', 'BBB') 346.6402
+   ('q0', 's0', 'Mdn', '11-0', 't2', 'w000', 'typ', 'Spr', 'aStd', 'C', 'BBB') 185.6147
+   ('q0', 's0', 'Mdn', '11-0', 't2', 'w005', 'typ', 'Spr', 'aStd', 'C', 'BBB') 346.9519
+   ('q0', 's0', 'Adt', '11-0', 't1', 'w000', 'typ', 'Spr', 'aStd', 'F', 'BBB') 386.2829
+   ('q0', 's0', 'Adt', '11-0', 't1', 'w005', 'typ', 'Spr', 'aStd', 'F', 'BBB') 646.9701
+   ('q0', 's0', 'Adt', '11-0', 't1', 'w009', 'typ', 'Spr', 'aStd', 'F', 'BBB') 273.1246
+   ('q0', 's0', 'Adt', '11-0', 't2', 'w000', 'typ', 'Spr', 'aStd', 'C', 'BBB') 386.6578
+   ('q0', 's0', 'Adt', '11-0', 't2', 'w005', 'typ', 'Spr', 'aStd', 'C', 'BBB') 647.5602
+   ('q0', 's0', 'Adt', '11-0', 't2', 'w009', 'typ', 'Spr', 'aStd', 'C', 'BBB') 273.3702
 Variable v_tradevalue
 Variable v_purchase_dams
 Variable v_purchase_offs
 Variable v_mvf
 Variable v_utility_points
-   ('q0', 's0', 'typ', 'c1_0', 'u8') 0.7978
-   ('q0', 's0', 'typ', 'c1_0', 'u17') 0.2022
+   ('q0', 's0', 'typ', 'c1_0', 'u8') 0.5589
+   ('q0', 's0', 'typ', 'c1_0', 'u15') 0.4411
