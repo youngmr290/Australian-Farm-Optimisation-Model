@@ -2730,9 +2730,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     adja_cfw_initial_d_pa1e1b1nwzida0e0b0xyg0 = ce_cpsire[12, ...] * cfw_initial_wzida0e0b0xyg0 / sfw_initial_pa1e1b1nwzida0e0b0xyg0
     adja_cfw_initial_d_pa1e1b1nwzida0e0b0xyg1 = ce_cpdams[12, ...] * cfw_initial_wzida0e0b0xyg1 / sfw_initial_pa1e1b1nwzida0e0b0xyg1
     adja_cfw_initial_d_pa1e1b1nwzida0e0b0xyg3 = ce_d_cpoffs[12, ...] * cfw_initial_wzida0e0b0xyg3 / sfw_initial_pa1e1b1nwzida0e0b0xyg3
-    adja_lw_initial_d_pa1e1b1nwzida0e0b0xyg0 = ce_cpsire[13, ...]   #ce[13] averaged across d
-    adja_lw_initial_d_pa1e1b1nwzida0e0b0xyg1 = ce_cpdams[13, ...]   #ce[13] averaged across d
-    adja_lw_initial_d_pa1e1b1nwzida0e0b0xyg3 = ce_d_cpoffs[13, ...]   #ce[13] active d
+    adja_fd_initial_d_pa1e1b1nwzida0e0b0xyg0 = ce_cpsire[13, ...]   #ce[13] averaged across d
+    adja_fd_initial_d_pa1e1b1nwzida0e0b0xyg1 = ce_cpdams[13, ...]   #ce[13] averaged across d
+    adja_fd_initial_d_pa1e1b1nwzida0e0b0xyg3 = ce_d_cpoffs[13, ...]   #ce[13] active d
     adja_fl_initial_d_pa1e1b1nwzida0e0b0xyg0 = ce_cpsire[12, ...] * fl_initial_wzida0e0b0xyg0 / sfw_initial_pa1e1b1nwzida0e0b0xyg0 #more understandable to think of the eqn as being fl_initial * ce[0]: fl initial * (cfw adj due to dam age / sfw)
     adja_fl_initial_d_pa1e1b1nwzida0e0b0xyg1 = ce_cpdams[12, ...] * fl_initial_wzida0e0b0xyg1 / sfw_initial_pa1e1b1nwzida0e0b0xyg1
     adja_fl_initial_d_pa1e1b1nwzida0e0b0xyg3 = ce_d_cpoffs[12, ...] * fl_initial_wzida0e0b0xyg3 / sfw_initial_pa1e1b1nwzida0e0b0xyg3
@@ -2763,11 +2763,11 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     cfw_initial_pa1e1b1nwzida0e0b0xyg3 = (cfw_initial_wzida0e0b0xyg3 * (1 + adjp_cfw_initial_a_a0e0b0xyg3)
                + adja_cfw_initial_x_pa1e1b1nwzida0e0b0xyg3 + adja_cfw_initial_d_pa1e1b1nwzida0e0b0xyg3 + adja_cfw_initial_b0_pa1e1b1nwzida0e0b0xyg3)
     fd_initial_pa1e1b1nwzida0e0b0xyg0 = (fd_initial_wzida0e0b0xyg0 * (1 + adjp_fd_initial_a_a0e0b0xyg0)
-               + adja_fd_initial_x_pa1e1b1nwzida0e0b0xyg0 + adja_lw_initial_d_pa1e1b1nwzida0e0b0xyg0 + adja_fd_initial_b0_pa1e1b1nwzida0e0b0xyg0)
+               + adja_fd_initial_x_pa1e1b1nwzida0e0b0xyg0 + adja_fd_initial_d_pa1e1b1nwzida0e0b0xyg0 + adja_fd_initial_b0_pa1e1b1nwzida0e0b0xyg0)
     fd_initial_pa1e1b1nwzida0e0b0xyg1 = (fd_initial_wzida0e0b0xyg1 * (1 + adjp_fd_initial_a_a0e0b0xyg1)
-               + adja_fd_initial_x_pa1e1b1nwzida0e0b0xyg1 + adja_lw_initial_d_pa1e1b1nwzida0e0b0xyg1 + adja_fd_initial_b0_pa1e1b1nwzida0e0b0xyg1)
+               + adja_fd_initial_x_pa1e1b1nwzida0e0b0xyg1 + adja_fd_initial_d_pa1e1b1nwzida0e0b0xyg1 + adja_fd_initial_b0_pa1e1b1nwzida0e0b0xyg1)
     fd_initial_pa1e1b1nwzida0e0b0xyg3 = (fd_initial_wzida0e0b0xyg3 * (1 + adjp_fd_initial_a_a0e0b0xyg3)
-               + adja_fd_initial_x_pa1e1b1nwzida0e0b0xyg3 + adja_lw_initial_d_pa1e1b1nwzida0e0b0xyg3 + adja_fd_initial_b0_pa1e1b1nwzida0e0b0xyg3)
+               + adja_fd_initial_x_pa1e1b1nwzida0e0b0xyg3 + adja_fd_initial_d_pa1e1b1nwzida0e0b0xyg3 + adja_fd_initial_b0_pa1e1b1nwzida0e0b0xyg3)
     fl_initial_pa1e1b1nwzida0e0b0xyg0 = (fl_initial_wzida0e0b0xyg0 * (1 + adjp_fl_initial_a_a0e0b0xyg0)
                + adja_fl_initial_x_pa1e1b1nwzida0e0b0xyg0 + adja_fl_initial_d_pa1e1b1nwzida0e0b0xyg0 + adja_fl_initial_b0_pa1e1b1nwzida0e0b0xyg0)
     fl_initial_pa1e1b1nwzida0e0b0xyg1 = (fl_initial_wzida0e0b0xyg1 * (1 + adjp_fl_initial_a_a0e0b0xyg1)
