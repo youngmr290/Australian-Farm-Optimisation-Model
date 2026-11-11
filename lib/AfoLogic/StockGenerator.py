@@ -456,7 +456,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         ### Need to set sav['calib_offs'] to True if an offspring trait (e.g. WLW) is included in the calibration.
         ### Offspring are always included when reporting so that TraitValues.xlsx has real values.
         ###Limitations: the LTW loop is not run (loop_ltw_len = 1) so the offspring don't get the lifetime wool adjustment,
-        ### and the offspring start weight is from i_lw_initial (not the yatf weaning weight), so calibrating wWT or milk
+        ### and the offspring start weight is from i_ffcfw_initial (not the yatf weaning weight), so calibrating wWT or milk
         ### production doesn't flow through to the offspring traits.
         calibrate_offs = o_trait_values is not None or bool(fun.f_sa(False, sen.sav['calib_offs'], 5))
         logger.debug(f"Offspring included in the generator: {calibrate_offs}")
@@ -2044,8 +2044,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                 , uinp.parameters['i_srw_y'], a_c2_c0, i_g3_inc) #fat content of an adult at the SRW
     muscle_target_female_yg0, muscle_target_female_yg1, muscle_target_female_yg2, muscle_target_female_yg3 = sfun.f1_c2g(uinp.parameters['i_muscle_target_c2']
                                 , uinp.parameters['i_muscle_target_y'], a_c2_c0, i_g3_inc)
-    lw_initial_yg0, lw_initial_yg1, lw_initial_yatf, lw_initial_yg3 = sfun.f1_c2g(uinp.parameters['i_lw_initial_c2']
-                                , uinp.parameters['i_lw_initial_y'], a_c2_c0, i_g3_inc)
+    ffcfw_initial_yg0, ffcfw_initial_yg1, ffcfw_initial_yatf, ffcfw_initial_yg3 = sfun.f1_c2g(uinp.parameters['i_ffcfw_initial_c2']
+                                , uinp.parameters['i_ffcfw_initial_y'], a_c2_c0, i_g3_inc)
     ####Fleece
     sfd_yg0, sfd_yg1, sfd_yg2, sfd_yg3 = sfun.f1_c2g(uinp.parameters['i_sfd_c2']
                                 , uinp.parameters['i_sfd_y'], a_c2_c0, i_g3_inc)
@@ -2665,10 +2665,10 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     step_w3 = len_w3/w_start_len3
 
     ##convert i_adjp to adjp - add necessary axes for 'a' and 'w'
-    adjp_lw_initial_a0e0b0xyg = fun.f_expand(pinp.sheep['i_adjp_lw_initial_a'], a0_pos, condition=pinp.sheep['i_mask_a'], axis=a0_pos)
-    adjp_lw_initial_wzida0e0b0xyg0 = fun.f_expand(sinp.structuralsa['i_adjp_lw_initial_w0'], w_pos)
-    adjp_lw_initial_wzida0e0b0xyg1 = fun.f_expand(sinp.structuralsa['i_adjp_lw_initial_w1'][np.trunc(index_w1/step_w1).astype(int)], w_pos)
-    adjp_lw_initial_wzida0e0b0xyg3 = fun.f_expand(sinp.structuralsa['i_adjp_lw_initial_w3'][np.trunc(index_w3/step_w3).astype(int)], w_pos)
+    adjp_ffcfw_initial_a0e0b0xyg = fun.f_expand(pinp.sheep['i_adjp_lw_initial_a'], a0_pos, condition=pinp.sheep['i_mask_a'], axis=a0_pos)
+    adjp_ffcfw_initial_wzida0e0b0xyg0 = fun.f_expand(sinp.structuralsa['i_adjp_lw_initial_w0'], w_pos)
+    adjp_ffcfw_initial_wzida0e0b0xyg1 = fun.f_expand(sinp.structuralsa['i_adjp_lw_initial_w1'][np.trunc(index_w1/step_w1).astype(int)], w_pos)
+    adjp_ffcfw_initial_wzida0e0b0xyg3 = fun.f_expand(sinp.structuralsa['i_adjp_lw_initial_w3'][np.trunc(index_w3/step_w3).astype(int)], w_pos)
     adjp_cfw_initial_a0e0b0xyg = fun.f_expand(pinp.sheep['i_adjp_cfw_initial_a'], a0_pos, condition=pinp.sheep['i_mask_a'], axis=a0_pos)
     adjp_cfw_initial_wzida0e0b0xyg0 = fun.f_expand(sinp.structuralsa['i_adjp_cfw_initial_w0'], w_pos)
     adjp_cfw_initial_wzida0e0b0xyg1 = fun.f_expand(sinp.structuralsa['i_adjp_cfw_initial_w1'][np.trunc(index_w1/step_w1).astype(int)], w_pos)
@@ -2682,12 +2682,13 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     adjp_fl_initial_wzida0e0b0xyg1 = fun.f_expand(sinp.structuralsa['i_adjp_fl_initial_w1'][np.trunc(index_w1/step_w1).astype(int)], w_pos)
     adjp_fl_initial_wzida0e0b0xyg3 = fun.f_expand(sinp.structuralsa['i_adjp_fl_initial_w3'][np.trunc(index_w3/step_w3).astype(int)], w_pos)
 
-    ###Calculate lw_initial from the initial lw input which is a proportion of srw
+    ###Calculate ffcfw_initial from the initial ffcfw input which is a proportion of srw (fleece free, consistent with SRW
+    ### and normal weight, so the input is the ffcfw at weaning of a single born female of an adult dam / SRW).
     ### Uses srw_b0xyg so may cause randomness when using a RR SA (because BTRT alters SRW, changing the starting animal)
     ### Uses the female SRW at weaning (including srw_p11 for the age stage at weaning). Gender, dam age & BTRT are additive adjustments below.
-    lw_initial_pa1e1b1nwzida0e0b0xyg0 = (lw_initial_yg0 * (1 + adjp_lw_initial_wzida0e0b0xyg0)) * srw_female_wean_pa1e1b1nwzida0e0b0xyg0
-    lw_initial_pa1e1b1nwzida0e0b0xyg1 = (lw_initial_yg1 * (1 + adjp_lw_initial_wzida0e0b0xyg1)) * srw_female_wean_pa1e1b1nwzida0e0b0xyg1
-    lw_initial_pa1e1b1nwzida0e0b0xyg3 = (lw_initial_yg3 * (1 + adjp_lw_initial_wzida0e0b0xyg3)) * srw_female_wean_pa1e1b1nwzida0e0b0xyg3
+    ffcfw_initial_pa1e1b1nwzida0e0b0xyg0 = (ffcfw_initial_yg0 * (1 + adjp_ffcfw_initial_wzida0e0b0xyg0)) * srw_female_wean_pa1e1b1nwzida0e0b0xyg0
+    ffcfw_initial_pa1e1b1nwzida0e0b0xyg1 = (ffcfw_initial_yg1 * (1 + adjp_ffcfw_initial_wzida0e0b0xyg1)) * srw_female_wean_pa1e1b1nwzida0e0b0xyg1
+    ffcfw_initial_pa1e1b1nwzida0e0b0xyg3 = (ffcfw_initial_yg3 * (1 + adjp_ffcfw_initial_wzida0e0b0xyg3)) * srw_female_wean_pa1e1b1nwzida0e0b0xyg3
     ###the initial cfw input is a proportion of sfw
     cfw_initial_wzida0e0b0xyg0 = (cfw_initial_yg0 * (1 + adjp_cfw_initial_wzida0e0b0xyg0)) * sfw_yg0   #sfw w/o saa_p11
     cfw_initial_wzida0e0b0xyg1 = (cfw_initial_yg1 * (1 + adjp_cfw_initial_wzida0e0b0xyg1)) * sfw_yg1   #sfw w/o saa_p11
@@ -2700,9 +2701,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     fl_initial_wzida0e0b0xyg3 = fl_initial_yg3 * (1 + adjp_fl_initial_wzida0e0b0xyg3)
 
     ##adjustment for weaning age
-    adjp_lw_initial_a_a0e0b0xyg0 = adjp_lw_initial_a0e0b0xyg[0:1,...]
-    adjp_lw_initial_a_a0e0b0xyg1 = adjp_lw_initial_a0e0b0xyg[0:1,...]
-    adjp_lw_initial_a_a0e0b0xyg3 = adjp_lw_initial_a0e0b0xyg
+    adjp_ffcfw_initial_a_a0e0b0xyg0 = adjp_ffcfw_initial_a0e0b0xyg[0:1,...]
+    adjp_ffcfw_initial_a_a0e0b0xyg1 = adjp_ffcfw_initial_a0e0b0xyg[0:1,...]
+    adjp_ffcfw_initial_a_a0e0b0xyg3 = adjp_ffcfw_initial_a0e0b0xyg
     adjp_cfw_initial_a_a0e0b0xyg0 = adjp_cfw_initial_a0e0b0xyg[0:1,...]
     adjp_cfw_initial_a_a0e0b0xyg1 = adjp_cfw_initial_a0e0b0xyg[0:1,...]
     adjp_cfw_initial_a_a0e0b0xyg3 = adjp_cfw_initial_a0e0b0xyg
@@ -2714,9 +2715,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     adjp_fl_initial_a_a0e0b0xyg3 = adjp_fl_initial_a0e0b0xyg
     ##adjustment for gender. Note cfw changes throughout the year therefore the adjustment factor will not be the same all yr hence divide by std_fw (same for fl)
     ### e.g. the impact of gender on cfw will be much less if only a short growth period (the parameter is a yearly factor e.g. male sheep have 0.02 kg more wool each yr)
-    adja_lw_initial_x_pa1e1b1nwzida0e0b0xyg0 = fun.f_slice(cx_cpsire[17], {x_pos: [0,1]}) #17 is the weaning wt parameter, 0:1 is the sire gender slice (retaining the axis).
-    adja_lw_initial_x_pa1e1b1nwzida0e0b0xyg1 = fun.f_slice(cx_cpdams[17], {x_pos: [1,2]})
-    adja_lw_initial_x_pa1e1b1nwzida0e0b0xyg3 = fun.f_slice(cx_cpoffs[17], {x_pos: mask_x})
+    adja_ffcfw_initial_x_pa1e1b1nwzida0e0b0xyg0 = fun.f_slice(cx_cpsire[17], {x_pos: [0,1]}) #17 is the weaning wt parameter, 0:1 is the sire gender slice (retaining the axis).
+    adja_ffcfw_initial_x_pa1e1b1nwzida0e0b0xyg1 = fun.f_slice(cx_cpdams[17], {x_pos: [1,2]})
+    adja_ffcfw_initial_x_pa1e1b1nwzida0e0b0xyg3 = fun.f_slice(cx_cpoffs[17], {x_pos: mask_x})
     adja_cfw_initial_x_pa1e1b1nwzida0e0b0xyg0 = (fun.f_slice(cx_cpsire[12], {x_pos: [0,1]})
                                                  * cfw_initial_wzida0e0b0xyg0 / sfw_initial_pa1e1b1nwzida0e0b0xyg0)
     adja_cfw_initial_x_pa1e1b1nwzida0e0b0xyg1 = (fun.f_slice(cx_cpdams[12], {x_pos: [1,2]})
@@ -2730,9 +2731,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     adja_fl_initial_x_pa1e1b1nwzida0e0b0xyg1 = fun.f_slice(cx_cpdams[12], {x_pos: [1,2]}) * fl_initial_wzida0e0b0xyg1 / sfw_initial_pa1e1b1nwzida0e0b0xyg1
     adja_fl_initial_x_pa1e1b1nwzida0e0b0xyg3 = fun.f_slice(cx_cpoffs[12], {x_pos: mask_x}) * fl_initial_wzida0e0b0xyg3 / sfw_initial_pa1e1b1nwzida0e0b0xyg3
     ##adjust for dam age. Note cfw & fl accumulate during the year therefore the adjustment factor is divided by std_fw because the full effect is only realised after a full wool growth cycle (whereas a fibre diameter difference is expressed every day)
-    adja_lw_initial_d_pa1e1b1nwzida0e0b0xyg0 = ce_cpsire[17, ...]   #ce[17] averaged across d
-    adja_lw_initial_d_pa1e1b1nwzida0e0b0xyg1 = ce_cpdams[17, ...]   #ce[17] averaged across d
-    adja_lw_initial_d_pa1e1b1nwzida0e0b0xyg3 = ce_d_cpoffs[17, ...]   #ce[17] active d
+    adja_ffcfw_initial_d_pa1e1b1nwzida0e0b0xyg0 = ce_cpsire[17, ...]   #ce[17] averaged across d
+    adja_ffcfw_initial_d_pa1e1b1nwzida0e0b0xyg1 = ce_cpdams[17, ...]   #ce[17] averaged across d
+    adja_ffcfw_initial_d_pa1e1b1nwzida0e0b0xyg3 = ce_d_cpoffs[17, ...]   #ce[17] active d
     adja_cfw_initial_d_pa1e1b1nwzida0e0b0xyg0 = ce_cpsire[12, ...] * cfw_initial_wzida0e0b0xyg0 / sfw_initial_pa1e1b1nwzida0e0b0xyg0
     adja_cfw_initial_d_pa1e1b1nwzida0e0b0xyg1 = ce_cpdams[12, ...] * cfw_initial_wzida0e0b0xyg1 / sfw_initial_pa1e1b1nwzida0e0b0xyg1
     adja_cfw_initial_d_pa1e1b1nwzida0e0b0xyg3 = ce_d_cpoffs[12, ...] * cfw_initial_wzida0e0b0xyg3 / sfw_initial_pa1e1b1nwzida0e0b0xyg3
@@ -2743,9 +2744,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     adja_fl_initial_d_pa1e1b1nwzida0e0b0xyg1 = ce_cpdams[12, ...] * fl_initial_wzida0e0b0xyg1 / sfw_initial_pa1e1b1nwzida0e0b0xyg1
     adja_fl_initial_d_pa1e1b1nwzida0e0b0xyg3 = ce_d_cpoffs[12, ...] * fl_initial_wzida0e0b0xyg3 / sfw_initial_pa1e1b1nwzida0e0b0xyg3
     ##adjust for btrt. Note cfw changes throughout the year therefore the adjustment factor will not be the same all yr hence divide by std_fw (same for fl) e.g. the impact of gender on cfw will be much less after only a short time (the parameter is a yearly factor e.g. male sheep have 0.02 kg more wool each yr)
-    adja_lw_initial_b0_pa1e1b1nwzida0e0b0xyg0 = np.sum(cb0_cpsire[17, ...] * btrt_propn_b0xyg0, axis=b0_pos) #b0 axis lost when summing
-    adja_lw_initial_b0_pa1e1b1nwzida0e0b0xyg1 = np.sum(cb0_cpdams[17, ...] * btrt_propn_b0xyg1, axis=b0_pos)
-    adja_lw_initial_b0_pa1e1b1nwzida0e0b0xyg3 = cb0_cpoffs[17, ...]
+    adja_ffcfw_initial_b0_pa1e1b1nwzida0e0b0xyg0 = np.sum(cb0_cpsire[17, ...] * btrt_propn_b0xyg0, axis=b0_pos) #b0 axis lost when summing
+    adja_ffcfw_initial_b0_pa1e1b1nwzida0e0b0xyg1 = np.sum(cb0_cpdams[17, ...] * btrt_propn_b0xyg1, axis=b0_pos)
+    adja_ffcfw_initial_b0_pa1e1b1nwzida0e0b0xyg3 = cb0_cpoffs[17, ...]
     adja_cfw_initial_b0_pa1e1b1nwzida0e0b0xyg0 = np.sum(cb0_cpsire[12, ...] * cfw_initial_wzida0e0b0xyg0 / sfw_initial_pa1e1b1nwzida0e0b0xyg0 * btrt_propn_b0xyg0, axis=b0_pos, keepdims=True)
     adja_cfw_initial_b0_pa1e1b1nwzida0e0b0xyg1 = np.sum(cb0_cpdams[12, ...] * cfw_initial_wzida0e0b0xyg1 / sfw_initial_pa1e1b1nwzida0e0b0xyg1 * btrt_propn_b0xyg1, axis=b0_pos, keepdims=True)
     adja_cfw_initial_b0_pa1e1b1nwzida0e0b0xyg3 = cb0_cpoffs[12, ...] * cfw_initial_wzida0e0b0xyg3 / sfw_initial_pa1e1b1nwzida0e0b0xyg3
@@ -2756,12 +2757,12 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     adja_fl_initial_b0_pa1e1b1nwzida0e0b0xyg1 = np.sum(cb0_cpdams[12, ...] * fl_initial_wzida0e0b0xyg1 / sfw_initial_pa1e1b1nwzida0e0b0xyg1 * btrt_propn_b0xyg1, axis=b0_pos, keepdims=True)
     adja_fl_initial_b0_pa1e1b1nwzida0e0b0xyg3 = cb0_cpoffs[12, ...] * fl_initial_wzida0e0b0xyg3 / sfw_initial_pa1e1b1nwzida0e0b0xyg3
     ##apply adjustments to initial variables
-    lw_initial_pa1e1b1nwzida0e0b0xyg0 = (lw_initial_pa1e1b1nwzida0e0b0xyg0 * (1 + adjp_lw_initial_a_a0e0b0xyg0)
-               + adja_lw_initial_x_pa1e1b1nwzida0e0b0xyg0 + adja_lw_initial_d_pa1e1b1nwzida0e0b0xyg0 + adja_lw_initial_b0_pa1e1b1nwzida0e0b0xyg0)
-    lw_initial_pa1e1b1nwzida0e0b0xyg1 = (lw_initial_pa1e1b1nwzida0e0b0xyg1 * (1 + adjp_lw_initial_a_a0e0b0xyg1)
-               + adja_lw_initial_x_pa1e1b1nwzida0e0b0xyg1 + adja_lw_initial_d_pa1e1b1nwzida0e0b0xyg1 + adja_lw_initial_b0_pa1e1b1nwzida0e0b0xyg1)
-    lw_initial_pa1e1b1nwzida0e0b0xyg3 = (lw_initial_pa1e1b1nwzida0e0b0xyg3 * (1 + adjp_lw_initial_a_a0e0b0xyg3)
-               + adja_lw_initial_x_pa1e1b1nwzida0e0b0xyg3 + adja_lw_initial_d_pa1e1b1nwzida0e0b0xyg3 + adja_lw_initial_b0_pa1e1b1nwzida0e0b0xyg3)
+    ffcfw_initial_pa1e1b1nwzida0e0b0xyg0 = (ffcfw_initial_pa1e1b1nwzida0e0b0xyg0 * (1 + adjp_ffcfw_initial_a_a0e0b0xyg0)
+               + adja_ffcfw_initial_x_pa1e1b1nwzida0e0b0xyg0 + adja_ffcfw_initial_d_pa1e1b1nwzida0e0b0xyg0 + adja_ffcfw_initial_b0_pa1e1b1nwzida0e0b0xyg0)
+    ffcfw_initial_pa1e1b1nwzida0e0b0xyg1 = (ffcfw_initial_pa1e1b1nwzida0e0b0xyg1 * (1 + adjp_ffcfw_initial_a_a0e0b0xyg1)
+               + adja_ffcfw_initial_x_pa1e1b1nwzida0e0b0xyg1 + adja_ffcfw_initial_d_pa1e1b1nwzida0e0b0xyg1 + adja_ffcfw_initial_b0_pa1e1b1nwzida0e0b0xyg1)
+    ffcfw_initial_pa1e1b1nwzida0e0b0xyg3 = (ffcfw_initial_pa1e1b1nwzida0e0b0xyg3 * (1 + adjp_ffcfw_initial_a_a0e0b0xyg3)
+               + adja_ffcfw_initial_x_pa1e1b1nwzida0e0b0xyg3 + adja_ffcfw_initial_d_pa1e1b1nwzida0e0b0xyg3 + adja_ffcfw_initial_b0_pa1e1b1nwzida0e0b0xyg3)
     cfw_initial_pa1e1b1nwzida0e0b0xyg0 = (cfw_initial_wzida0e0b0xyg0 * (1 + adjp_cfw_initial_a_a0e0b0xyg0)
                + adja_cfw_initial_x_pa1e1b1nwzida0e0b0xyg0 + adja_cfw_initial_d_pa1e1b1nwzida0e0b0xyg0 + adja_cfw_initial_b0_pa1e1b1nwzida0e0b0xyg0)
     cfw_initial_pa1e1b1nwzida0e0b0xyg1 = (cfw_initial_wzida0e0b0xyg1 * (1 + adjp_cfw_initial_a_a0e0b0xyg1)
@@ -2782,22 +2783,20 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                + adja_fl_initial_x_pa1e1b1nwzida0e0b0xyg3 + adja_fl_initial_d_pa1e1b1nwzida0e0b0xyg3 + adja_fl_initial_b0_pa1e1b1nwzida0e0b0xyg3)
 
     ##if generating for stubble update initial params to reflect paddock trial
+    ### stubble['lw'] is the liveweight of the paddock trial so the fleece is removed to give ffcfw
     if stubble:
-        lw_initial_pa1e1b1nwzida0e0b0xyg1[...] = stubble['lw'][stubble['p_start']]
-        lw_initial_pa1e1b1nwzida0e0b0xyg3[...] = stubble['lw'][stubble['p_start']]
         cfw_initial_pa1e1b1nwzida0e0b0xyg1[...] = stubble['i_gfw'] * cw_cpdams[3, ...]
         cfw_initial_pa1e1b1nwzida0e0b0xyg3[...] = stubble['i_gfw'] * cw_cpoffs[3, ...]
+        ffcfw_initial_pa1e1b1nwzida0e0b0xyg1 = (np.full_like(ffcfw_initial_pa1e1b1nwzida0e0b0xyg1, stubble['lw'][stubble['p_start']])
+                                              - cfw_initial_pa1e1b1nwzida0e0b0xyg1 / cw_cpdams[3, ...])
+        ffcfw_initial_pa1e1b1nwzida0e0b0xyg3 = (np.full_like(ffcfw_initial_pa1e1b1nwzida0e0b0xyg3, stubble['lw'][stubble['p_start']])
+                                              - cfw_initial_pa1e1b1nwzida0e0b0xyg3 / cw_cpoffs[3, ...])
         fd_initial_pa1e1b1nwzida0e0b0xyg1[...] = stubble['i_fd']
         fd_initial_pa1e1b1nwzida0e0b0xyg3[...] = stubble['i_fd']
         fl_initial_pa1e1b1nwzida0e0b0xyg1[...] = stubble['i_fl']
         fl_initial_pa1e1b1nwzida0e0b0xyg3[...] = stubble['i_fl']
 
-    ##calc initial ffcfw
-    ffcfw_initial_pa1e1b1nwzida0e0b0xyg0 = lw_initial_pa1e1b1nwzida0e0b0xyg0 - cfw_initial_pa1e1b1nwzida0e0b0xyg0 / cw_cpsire[3, ...]
-    ffcfw_initial_pa1e1b1nwzida0e0b0xyg1 = lw_initial_pa1e1b1nwzida0e0b0xyg1 - cfw_initial_pa1e1b1nwzida0e0b0xyg1 / cw_cpdams[3, ...]
-    ffcfw_initial_pa1e1b1nwzida0e0b0xyg3 = lw_initial_pa1e1b1nwzida0e0b0xyg3 - cfw_initial_pa1e1b1nwzida0e0b0xyg3 / cw_cpoffs[3, ...]
-
-    ##calc initial ebw - uses the SRW at weaning to be consistent with lw_initial
+    ##calc initial ebw - uses the SRW at weaning to be consistent with ffcfw_initial
     ebw_initial_pa1e1b1nwzida0e0b0xyg0 = sfun.f1_ffcfw2ebw(cg_cpsire, cn_cpsire, ffcfw_initial_pa1e1b1nwzida0e0b0xyg0
                                             , srw_female_wean_pa1e1b1nwzida0e0b0xyg0, eqn_system = eqn_used_g0_q1p[7,0])
     ebw_initial_pa1e1b1nwzida0e0b0xyg1 = sfun.f1_ffcfw2ebw(cg_cpdams, cn_cpdams, ffcfw_initial_pa1e1b1nwzida0e0b0xyg1
@@ -2807,16 +2806,16 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
 
     ##calc fat, muscle and viscera weight using the composition at weaning that is consistent with the EVG parameters. See [Growth curve & partitioning.xlsx]
-    ### Composition is calculated at the standard initial relative size (lw_initial) and the BW of a single (cb0[15] b0 slice 0)
+    ### Composition is calculated at the standard initial relative size (ffcfw_initial) and the BW of a single (cb0[15] b0 slice 0)
     ### so it is the same for all animals in the group. todo option 2: use each animal's initial relative size (and possibly the BW of twins & triplets)
     ### todo the composition uses cg_cp (cg8 & cg9 without saa['evg_p11']) so the initial Fat% doesn't change with evg_p11. Change to use cg8 & cg9
-    ### including evg_p11 at weaning (as for srw_female_wean used for lw_initial) so it is consistent with the EVG of the age stage at weaning.
+    ### including evg_p11 at weaning (as for srw_female_wean used for ffcfw_initial) so it is consistent with the EVG of the age stage at weaning.
     ###Note:the EVG parameters cg_cp???? are the values prior to adding the saa_p11.
-    fat_propn_wean_yg0, muscle_propn_wean_yg0, viscera_propn_wean_yg0 = sfun.f1_fat_propn_initial(cg_cpsire, cb0_cpsire, lw_initial_yg0
+    fat_propn_wean_yg0, muscle_propn_wean_yg0, viscera_propn_wean_yg0 = sfun.f1_fat_propn_initial(cg_cpsire, cb0_cpsire, ffcfw_initial_yg0
                                             , fat_propn_birth_yg0)
-    fat_propn_wean_yg1, muscle_propn_wean_yg1, viscera_propn_wean_yg1 = sfun.f1_fat_propn_initial(cg_cpdams, cb0_cpdams, lw_initial_yg1
+    fat_propn_wean_yg1, muscle_propn_wean_yg1, viscera_propn_wean_yg1 = sfun.f1_fat_propn_initial(cg_cpdams, cb0_cpdams, ffcfw_initial_yg1
                                             , fat_propn_birth_yg1)
-    fat_propn_wean_yg3, muscle_propn_wean_yg3, viscera_propn_wean_yg3 = sfun.f1_fat_propn_initial(cg_cpoffs, cb0_cpoffs, lw_initial_yg3
+    fat_propn_wean_yg3, muscle_propn_wean_yg3, viscera_propn_wean_yg3 = sfun.f1_fat_propn_initial(cg_cpoffs, cb0_cpoffs, ffcfw_initial_yg3
                                             , fat_propn_birth_yg3)
     ###Sire
     fat_initial_pa1e1b1nwzida0e0b0xyg0 = fat_propn_wean_yg0 * ebw_initial_pa1e1b1nwzida0e0b0xyg0
@@ -3828,7 +3827,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         ##yatf
         d_cfw_history_start_p2g2[...] = np.nan
         #todo the yatf start weights (nw_start_yatf & ebw_start_yatf below) use srw_female averaged over the life of the animal. Change to the SRW at birth
-        # (including srw_p11 for the age stage at birth, as for lw_initial) when the system for calculating the value of a breeding value for birth weight is sorted out.
+        # (including srw_p11 for the age stage at birth, as for ffcfw_initial) when the system for calculating the value of a breeding value for birth weight is sorted out.
         nw_start_yatf = 0.1 * srw_female_pa1e1b1nwzida0e0b0xyg2   #srw_female because p axis is averaged
         rc_start_yatf = 1.0
         relsize_start_yatf = 0.1   #birth weight is approx 10% of SRW. Requires a value to stop div0 error
@@ -7401,7 +7400,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
                     pointers_sire, index_unique_w_sire = sfun.f1_collapse_pointers(p, ebw_sire, numbers_end_sire, n_startw_unique_next,
                                                               False, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2],
-                                                              lw_initial_pa1e1b1nwzida0e0b0xyg0)
+                                                              ffcfw_initial_pa1e1b1nwzida0e0b0xyg0)
                 else:
                     pointers_sire = np.array([np.nan]) #empty array so f_start_prod still works in the early periods.
                     index_unique_w_sire = np.array([np.nan]) #empty array so f_start_prod still works in the early periods.
@@ -7421,7 +7420,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     pointers_dams, index_unique_w_dams = sfun.f1_collapse_pointers(p, ebw_dams, numbers_end_dams
                                                 , n_startw_unique_next, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                                 , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2]
-                                                , lw_initial_pa1e1b1nwzida0e0b0xyg1
+                                                , ffcfw_initial_pa1e1b1nwzida0e0b0xyg1
                                                 , period_is_prejoin=period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                                   * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                                 , prejoin_tup=prejoin_tup, prejoin_1to1=calibration_prejoin_1to1)
@@ -7449,7 +7448,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     pointers_offs, index_unique_w_offs = sfun.f1_collapse_pointers(p, ebw_offs, numbers_end_offs, n_startw_unique_next_offs
                                                         , period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1:p+2]
                                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2]
-                                                        , lw_initial_pa1e1b1nwzida0e0b0xyg3)
+                                                        , ffcfw_initial_pa1e1b1nwzida0e0b0xyg3)
 
                     #store for lw dist
                     o_ebw_lw_dist_tpoffs[:, p:p+1] = sfun.f1_collapse(pointers_offs, index_unique_w_offs, ebw_offs, numbers_end_offs,
@@ -8135,8 +8134,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     if calibration_code_inc or report_lp_traits:
         ##assign values to the p slices and ranges for the age stages. See
         ###WT slices
-        b_wt_slc = {p_pos: [135,292,52], b1_pos: 2, x_pos: [0,2]}     #1st cycle single born female & castrate yatf of 2 tooth and adult ewes at birth, annually
-        w_wt_slc = {p_pos: [147,304,52], b1_pos: 2, x_pos: [0,2]}     #1st cycle single born female & castrate yatf of 2 tooth and adult ewes at weaning, annually
+        x_female_yatf = np.count_nonzero(mask_x[:1])  #position of the female slice in the masked yatf x axis
+        b_wt_slc = {p_pos: [135,292,52], b1_pos: 2, x_pos: x_female_yatf}     #1st cycle single born female yatf of 2 tooth and adult ewes at birth, annually
+        w_wt_slc = {p_pos: [147,304,52], b1_pos: 2, x_pos: x_female_yatf}     #1st cycle single born female yatf of 2 tooth and adult ewes at weaning, annually
         p_wt_slc = {p_pos: 63, b1_pos: 0}     #NM ewes mid point of p age stage
         y_wt_slc = {p_pos: 84, b1_pos: 0}     #NM ewes mid point of y age stage
         h_wt_slc = {p_pos: 110, b1_pos: 0}    #NM ewes prior to prejoining for 2yo lambing

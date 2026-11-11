@@ -3558,7 +3558,7 @@ def f1_season_wa(numbers, var, season, mask_min_lw_wz, mask_min_wa_lw_w, mask_ma
     return var
 
 def f1_collapse_pointers(p, ebw, numbers, n_startw_unique_next, period_is_condense, period_is_seasonstart,
-                lw_initial_a1e1b1nwzida0e0b0xyg, period_is_prejoin=False, prejoin_tup=(), inc_mask=True,
+                ffcfw_initial, period_is_prejoin=False, prejoin_tup=(), inc_mask=True,
                 prejoin_1to1=False):
     '''
     This function is called when axes need collapsing from one period to the next.
@@ -3606,7 +3606,7 @@ def f1_collapse_pointers(p, ebw, numbers, n_startw_unique_next, period_is_conden
     params ebw: ebw array with ineligible animals (mortality > threshold) set to nan
     params numbers: the estimated number of animals (numbers_end) used to weight the percentiles
     params n_startw_unique_next: the number of unique w in the next period. Note: unique w is reduced when condensing w.
-    lw_initial_a1e1b1nwzida0e0b0xyg: the target order of the weights when condensing w.
+    ffcfw_initial: the target order of the weights when condensing w.
 
     Output:
     membership: the weighting (0 to 1) of each animal in each target/collapsed animal. The shape is ebw.shape with a
@@ -3759,7 +3759,7 @@ def f1_collapse_pointers(p, ebw, numbers, n_startw_unique_next, period_is_conden
 
         ##Arrange the percentiles in the order required for the w axis
         ##There are 2 options:
-        # 1. w has been collapsed because period_is_condense & order is determined by lw_initial from Structural.xls
+        # 1. w has been collapsed because period_is_condense & order is determined by ffcfw_initial from Structural.xls
         # 2. w not collapse & order determined by the existing order of ebw across the w axis
         ebw_season = np.average(ebw, axis=z_pos, keepdims=True)
         ebw_prejoin = np.average(ebw, axis=prejoin_tup, keepdims=True)
@@ -3768,7 +3768,7 @@ def f1_collapse_pointers(p, ebw, numbers, n_startw_unique_next, period_is_conden
         order_season = np.argsort(ebw_season, w_pos, )
         order_prejoin = np.argsort(ebw_prejoin, w_pos)
         order_prejoinseason = np.argsort(ebw_prejoinseason, w_pos)
-        order_condensed = np.argsort(lw_initial_a1e1b1nwzida0e0b0xyg, w_pos)  # this needs an axis length that aligns with target_percentile(w_pos)
+        order_condensed = np.argsort(ffcfw_initial, w_pos)  # this needs an axis length that aligns with target_percentile(w_pos)
 
         order = fun.f_update(order_season, order_prejoin, period_is_prejoin)
         order = fun.f_update(order, order_prejoinseason, np.logical_and(period_is_prejoin, period_is_seasonstart))
