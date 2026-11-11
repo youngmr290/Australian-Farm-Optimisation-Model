@@ -98,6 +98,12 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     if report_lp_traits:
         calibration_targets_p = np.zeros(0)    #no targets: every target is reported as nan
         calibration_weights_p = np.zeros(0)
+    ##Prejoining 1:1 pass of the dams (see f1_collapse_pointers). Only for calibration & trait reporting because it
+    ### changes the regrouping at prejoining, so an LP solved with it would differ from the standard model.
+    calibration_prejoin_1to1 = bool(fun.f_sa(False, sen.sav['calibration_prejoin_1to1'], 5))
+    if calibration_prejoin_1to1 and not (calibration_code_inc or report_lp_traits):
+        raise ValueError("sav['calibration_prejoin_1to1'] is only for calibration runs (SheepCalibration or sav['report_trait_values'])."
+                         " It changes the regrouping of the dams at prejoining, so it can't be used in a trial that solves the LP.")
     if calibration_code_inc:
         # print(coefficients_c)   #only useful for debugging when not multiprocessing (workers=1, and not multiprocessing teams)
         n_coeff = np.size(coefficients_c)
@@ -7418,7 +7424,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                                 , lw_initial_pa1e1b1nwzida0e0b0xyg1
                                                 , period_is_prejoin=period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                                   * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
-                                                , prejoin_tup=prejoin_tup)
+                                                , prejoin_tup=prejoin_tup, prejoin_1to1=calibration_prejoin_1to1)
 
                     #store for lw dist
                     o_ebw_lw_dist_tpdams[:, p:p+1] = sfun.f1_collapse(pointers_dams, index_unique_w_dams, ebw_dams

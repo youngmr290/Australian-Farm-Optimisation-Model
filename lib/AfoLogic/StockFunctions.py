@@ -3558,7 +3558,8 @@ def f1_season_wa(numbers, var, season, mask_min_lw_wz, mask_min_wa_lw_w, mask_ma
     return var
 
 def f1_collapse_pointers(p, ebw, numbers, n_startw_unique_next, period_is_condense, period_is_seasonstart,
-                lw_initial_a1e1b1nwzida0e0b0xyg, period_is_prejoin=False, prejoin_tup=(), inc_mask=True):
+                lw_initial_a1e1b1nwzida0e0b0xyg, period_is_prejoin=False, prejoin_tup=(), inc_mask=True,
+                prejoin_1to1=False):
     '''
     This function is called when axes need collapsing from one period to the next.
     The periods that require collapsing and the axes to collapse are:
@@ -3614,6 +3615,9 @@ def f1_collapse_pointers(p, ebw, numbers, n_startw_unique_next, period_is_conden
               0 for the others (all 0 if the animal is not contributing to a target animal). The continuous method is
               1 within the tolerance of the target percentile and tapers to 0 outside it (see f1_collapse_membership).
     index_unique_wzida0e0b0xyg: the first w of the block of each w (used to expand the collapsed animals to all the w).
+    params prejoin_1to1: (sav['calibration_prejoin_1to1'], calibration only) at prejoining, if the number of w is
+              the same in this period and the next, pass the animals 1:1 on the w axis. f1_collapse then averages
+              across the prejoin axes (a1, e1 & b1) within each w, weighted by numbers.
     '''
 
     ##Settings for a continuous collapse ([Structural.xlsx]Stock). h=0 is the discrete method.
@@ -3648,6 +3652,13 @@ def f1_collapse_pointers(p, ebw, numbers, n_startw_unique_next, period_is_conden
     n_groups = fun.f_update(n_groups, n_groups_prejoin, period_is_prejoin)
     n_groups = fun.f_update(n_groups, n_groups_prejoinseason, np.logical_and(period_is_prejoin, period_is_seasonstart))
     n_groups_collapsed = np.maximum(n_startw_unique_next, n_groups)  # number of groups collapsed can't be less than the number groups next period
+    ##Calibration option (sav['calibration_prejoin_1to1']): at prejoining, if the number of w doesn't change, the animals
+    ### are passed 1:1 on w (the bypass below) and f1_collapse averages across a1, e1 & b1 within each w (numbers weighted).
+    ### Without it the start animal of each w is selected by percentile from across w, a1, e1 & b1, so each start w
+    ### isn't a separate path and with a single start w the target (max - end_gap) is biased to the heavy animals.
+    if prejoin_1to1:
+        bypass_prejoin = np.logical_and(period_is_prejoin, n_startw_unique_next == len_w)
+        n_groups_collapsed = fun.f_update(n_groups_collapsed, n_startw_unique_next, bypass_prejoin)
 
     # The pointers are 1:1 if there is only 1 group contributing to each start animal of the next period
     ## this occurs when there are equal numbers of groups collapsed and starting next period i.e. only singletons in collapse axes
