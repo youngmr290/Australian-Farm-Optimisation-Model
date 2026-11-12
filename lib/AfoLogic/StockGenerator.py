@@ -88,6 +88,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     ### Set outside the calibration code (with the energy values for the debug report) because it is used in the trait report.
     energy_calibrated = False
     energy_p11 = energy_k_evg = energy_k_pi = None
+    ##Flag that the weaning weight coefficient (w_wt) is active in the coefficient block (see below), with the values for the debug report.
+    wwt_calibrated = False
+    w_wt = k_cl0 = k_srw = None
     calibration_code_inc = calibrate_trait_values or o_trait_values is not None
     ##A trial initiated in RunAfoRaw can report its trait values (sav['report_trait_values'])
     ### using the debug report of the calibration traits. This is included so the genotype production levels
@@ -213,17 +216,24 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         sen.saa['era_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         #Standard reference weight coefficient adjustments can be linked to target LW or to an estimate of SRW from ALW & Fat %
-        ##WT at younger ages can be calibrated by SRW age stage coefficients or by adjusting milk yield and the growth constant
+        ##WWT can be calibrated using srw_p11, milk_yield or a combination of both (w_wt).
+        ###If doing the combination then the fixed coefficients, k_srw & k_cl0, allocate w_wt to the 2 component coefficients.
+        ##WT at younger ages can be calibrated by SRW age stage coefficients or by adjusting the growth constant
         w = p = y = h = a = None
         # sen.saa['birth_weight'] = coefficients_c[j]; j += 1    #Birth weight no method to calibrate, #todo still to decide how to control BWT
         w = np.nan  #wwt is changed with a separate coefficient
         sen.saa['milk_yield'] = coefficients_c[j]; j += 1    #Weaning weight, cl_yatf[0] parameter which alters milk production, lamb milk intake and ewe PI during lactation
+        w_wt = coefficients_c[j]; wwt_calibrated = True; j += 1
+        k_srw = coefficients_c[j]; j += 1   #fixed coefficient: change in the SRW (kg) of the weaning age stage (srw_p11[w]) per unit of w_wt
+        k_cl0 = coefficients_c[j]; j += 1   #fixed coefficient: change in cl[0] (saa['milk_yield']) per unit of w_wt
         p = coefficients_c[j]; j += 1
         y = coefficients_c[j]; j += 1   #ywt can be changed using the growth constant
         sen.saa['growth_constant'] = coefficients_c[j]; j += 1    #Yearling weight, cn_dams[1] parameter which alters the growth path
         h = coefficients_c[j]; j += 1
         a = coefficients_c[j]; j += 1
         sen.saa['srw_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
+        sen.saa['milk_yield'] = sen.saa['milk_yield'] + k_cl0 * w_wt
+        sen.saa['srw_p11'] = sen.saa['srw_p11'] + sfun.f1_create_saa_param_p11(b=np.nan, w=k_srw * w_wt)
 
         #Potential intake to calibrate Carcase fatness & WBE, ci[1] parameter
         w = p = y = h = a = None
@@ -8669,9 +8679,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             logger.debug(f"YERA twins target {yera2_target} this {yera2} with ({sen.saa['era_p11'][y]})")
             logger.debug(f"AERA twins target {aera2_target} this {aera2} with ({sen.saa['era_p11'][a]})")
             logger.debug(f"2yo={a2era2} 3yo={a3era2} 4yo={a4era2} 5yo={a5era2}")
-            ##EVG & PI below are the total saa including the energy (k_evg & k_pi x energy) when the energy coefficient is active
-            if energy_calibrated:
-                logger.debug(f"Energy {energy_p11[a]} (k_evg={energy_k_evg}, k_pi={energy_k_pi})")
+            ##srw_p11[w] & milk_scalar in the WWT line below are the totals including k_srw & k_cl0 x w_wt when w_wt is active
+            if wwt_calibrated:
+                logger.debug(f"Weaning weight coefficient w_wt {w_wt} (k_cl0={k_cl0}, k_srw={k_srw})")
             logger.debug(f"BWT target {bwt_target} this {bwt} with (srw_p11={sen.saa['srw_p11'][b]})")
             logger.debug(f"WWT target {wwt_target} this {wwt} with (srw_p11={sen.saa['srw_p11'][w]} & milk_scalar={sen.saa['milk_yield']})")
             logger.debug(f"Initial ffcfw% {ffcfw_initial_parameter} (proportion of SRW at weaning, from the wWT target when calibrating)")
@@ -8691,6 +8701,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             logger.debug(f"HCS target {hcs_target} this {hcs} with (PI={sen.saa['pi_p11'][h]})")
             logger.debug(f"ACS target {acs_target} this {acs} with (PI={sen.saa['pi_p11'][a]})")
             logger.debug(f"2yo={a2cs} 3yo={a3cs} 4yo={a4cs} 5yo={a5cs}")
+            ##EVG & PI below are the total saa including the energy (k_evg & k_pi x energy) when the energy coefficient is active
+            if energy_calibrated:
+                logger.debug(f"Energy {energy_p11[a]} (k_evg={energy_k_evg}, k_pi={energy_k_pi})")
             logger.debug(f"PWBE target {pwbe_target} this {pwbe} with (EVG={sen.saa['evg_p11'][p]} & PI={sen.saa['pi_p11'][p]})")
             logger.debug(f"YWBE target {ywbe_target} this {ywbe} with (EVG={sen.saa['evg_p11'][y]} & PI={sen.saa['pi_p11'][y]})")
             logger.debug(f"HWBE target {hwbe_target} this {hwbe} with (EVG={sen.saa['evg_p11'][h]} & PI={sen.saa['pi_p11'][h]})")
