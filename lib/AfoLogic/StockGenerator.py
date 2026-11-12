@@ -2523,7 +2523,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     con_btrt_g1 = fun.f_sa(np.array([0.0]), sen.sav['btrt_con_g1'][mask_dams_inc_g1], 5).astype(float)
     ls_btrt_g1 = fun.f_sa(np.array([0.0]), sen.sav['btrt_ls_g1'][mask_dams_inc_g1], 5).astype(float)
     era_btrt_g1 = fun.f_sa(np.array([0.0]), sen.sav['btrt_era_g1'][mask_dams_inc_g1], 5).astype(float)
-    if not (calibration_code_inc or report_lp_traits) and np.any(con_btrt_g1 + ls_btrt_g1 + era_btrt_g1 != 0):
+    if not (calibration_code_inc or report_lp_traits
+            or (np.all(con_btrt_g1 == 0) and np.all(ls_btrt_g1 == 0) and np.all(era_btrt_g1 == 0))):
         dstwtr_l0yg1 = sfun.f1_dstwtr_adj(dstwtr_l0yg1, con_btrt_g1, ls_btrt_g1)
         dstwtr_l0yg3 = sfun.f1_dstwtr_adj(dstwtr_l0yg3, con_btrt_g1, ls_btrt_g1)
         pss_std_yg1, pstw_std_yg1, pstr_std_yg1 = sfun.f1_lamb_survival_adj(pss_std_yg1, pstw_std_yg1, pstr_std_yg1
