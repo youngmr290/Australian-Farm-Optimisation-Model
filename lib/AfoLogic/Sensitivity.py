@@ -538,6 +538,7 @@ def create_sa():
     #####################
     ##SAV
     sav['srw_c2'] = np.full(uinp.parameters['i_srw_c2'].shape, '-', dtype=object)  #SA value for srw of each c2 genotype.
+    sav['ffcfw_initial_c2'] = np.full(uinp.parameters['i_ffcfw_initial_c2'].shape, '-', dtype=object)  #SA value for the initial ffcfw (proportion of SRW at weaning) of each c2 genotype. A calibrated genotype uses FFCFW_initial reported by the calibration.
     sav['sfw_c2'] = np.full(uinp.parameters['i_sfw_c2'].shape, '-', dtype=object)  #std fleece weight genotype params
     sav['sfd_c2'] = np.full(uinp.parameters['i_sfd_c2'].shape, '-', dtype=object)  #std fibre diameter genotype params
     sav['cn_c1c2'] = np.full(uinp.parameters['i_cn_c2'].shape, '-', dtype=object)  #normal growth params for genotypes

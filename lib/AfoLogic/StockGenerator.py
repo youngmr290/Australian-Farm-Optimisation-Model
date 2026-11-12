@@ -373,6 +373,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         ywt_target = f1_target('yWT')
         hwt_target = f1_target('hWT')
         awt_target = f1_target('aWT')
+        ffcfw_initial_target = f1_target('FFCFW_initial')    #the initial ffcfw input (proportion of SRW at weaning) used. For reporting rather than a calibration trait (weight 0). Calculated from the wWT target when calibrating, use it for sav['ffcfw_initial_c2'] in exp.xlsx
         srw_input_target = f1_target('SRW_input')    # the SRW used, it is for reporting rather than as a calibration trait
         srw_result_target = f1_target('SRW_result')    #srw_result can be a target to fit cg8 for the standard genotype
         pfat_target = f1_target('pFAT')
@@ -447,7 +448,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         wlw11_target = f1_target('WLW11')
         wlw12_target = f1_target('WLW12')
         wlw13_target = f1_target('WLW13')
-        ##check the targets read match the traits in [Calibration_control.xlsx]Targets & Weights
+    ##check the targets read match the traits in [Calibration_control.xlsx]Targets & Weights
     if calibration_code_inc:
         f1_check_trait_names(target_names, 'targets read')
         assert len(target_names) == calibration_targets_p.size == n_traits, f"{len(target_names)} calibration targets are read in the generator but Calibration_control.xlsx has {calibration_targets_p.size} targets and {n_traits} weights"
@@ -478,6 +479,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         trait_weight = dict(zip(target_names, calibration_weights_p.ravel()))
         if trait_weight['SRW_input'] != 0:
             raise ValueError("SRW_input is the SRW used and is report only. Set its weight to 0 in [Calibration_control.xlsx]Weights (weight SRW_result to fit EVG to the SRW)")
+        if trait_weight['FFCFW_initial'] != 0:
+            raise ValueError("FFCFW_initial is the initial ffcfw input used (calculated from the wWT target when calibrating) and is report only. Set its weight to 0 in [Calibration_control.xlsx]Weights")
         if adult_evg is not None and energy_calibrated:
             logger.debug("The energy coefficient is being calibrated so SRW is not endogenous (SRW is the input value plus srw_p11)")
         elif adult_evg is not None and trait_weight['SRW_result'] != 0:
@@ -2683,13 +2686,6 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     adjp_fl_initial_wzida0e0b0xyg1 = fun.f_expand(sinp.structuralsa['i_adjp_fl_initial_w1'][np.trunc(index_w1/step_w1).astype(int)], w_pos)
     adjp_fl_initial_wzida0e0b0xyg3 = fun.f_expand(sinp.structuralsa['i_adjp_fl_initial_w3'][np.trunc(index_w3/step_w3).astype(int)], w_pos)
 
-    ###Calculate ffcfw_initial from the initial ffcfw input which is a proportion of srw (fleece free, consistent with SRW
-    ### and normal weight, so the input is the ffcfw at weaning of a single born female of an adult dam / SRW).
-    ### Uses srw_b0xyg so may cause randomness when using a RR SA (because BTRT alters SRW, changing the starting animal)
-    ### Uses the female SRW at weaning (including srw_p11 for the age stage at weaning). Gender, dam age & BTRT are additive adjustments below.
-    ffcfw_initial_pa1e1b1nwzida0e0b0xyg0 = (ffcfw_initial_yg0 * (1 + adjp_ffcfw_initial_wzida0e0b0xyg0)) * srw_female_wean_pa1e1b1nwzida0e0b0xyg0
-    ffcfw_initial_pa1e1b1nwzida0e0b0xyg1 = (ffcfw_initial_yg1 * (1 + adjp_ffcfw_initial_wzida0e0b0xyg1)) * srw_female_wean_pa1e1b1nwzida0e0b0xyg1
-    ffcfw_initial_pa1e1b1nwzida0e0b0xyg3 = (ffcfw_initial_yg3 * (1 + adjp_ffcfw_initial_wzida0e0b0xyg3)) * srw_female_wean_pa1e1b1nwzida0e0b0xyg3
     ###the initial cfw input is a proportion of sfw
     cfw_initial_wzida0e0b0xyg0 = (cfw_initial_yg0 * (1 + adjp_cfw_initial_wzida0e0b0xyg0)) * sfw_yg0   #sfw w/o saa_p11
     cfw_initial_wzida0e0b0xyg1 = (cfw_initial_yg1 * (1 + adjp_cfw_initial_wzida0e0b0xyg1)) * sfw_yg1   #sfw w/o saa_p11
@@ -2757,6 +2753,25 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     adja_fl_initial_b0_pa1e1b1nwzida0e0b0xyg0 = np.sum(cb0_cpsire[12, ...] * fl_initial_wzida0e0b0xyg0 / sfw_initial_pa1e1b1nwzida0e0b0xyg0 * btrt_propn_b0xyg0, axis=b0_pos, keepdims=True) #Should be fl_initial / sfw  So more understandable to think of the eqn as being fl_initial * cx[0] (cfw adj due to gender) / sfw
     adja_fl_initial_b0_pa1e1b1nwzida0e0b0xyg1 = np.sum(cb0_cpdams[12, ...] * fl_initial_wzida0e0b0xyg1 / sfw_initial_pa1e1b1nwzida0e0b0xyg1 * btrt_propn_b0xyg1, axis=b0_pos, keepdims=True)
     adja_fl_initial_b0_pa1e1b1nwzida0e0b0xyg3 = cb0_cpoffs[12, ...] * fl_initial_wzida0e0b0xyg3 / sfw_initial_pa1e1b1nwzida0e0b0xyg3
+    ###Calibration: the initial ffcfw input of the calibrated genotype is calculated so that the initial animal is the wWT target.
+    ### It is recalculated each evaluation, so it uses the SRW at weaning (srw_c2 & srw_p11) of the current coefficients.
+    ### wWT is the ffcfw at weaning of a single born (b0[0]) female (x[1]) from adult dams (d[2:]) with the standard weaning age (a[0]).
+    ### The coefficient (the % of SRW at weaning) is set so the initial ffcfw (w[0]) equals the target.
+    ### Note: The adjustments that are applied later have been defined to be zero (b0, x, d, & a axes)
+    ### The value is reported later as FFCFW_initial and is a component of the calibrated genotype
+    ### It is reported in TraitValues.xlsx rather than with the calibration coefficients.
+    ### Implement it with sav['ffcfw_initial_c2'].
+    if calibration_code_inc and np.isfinite(wwt_target):
+        ffcfw_initial_wwt = wwt_target / srw_female_wean_pa1e1b1nwzida0e0b0xyg1.flat[0]
+        ffcfw_initial_yg1[...] = ffcfw_initial_yg3[...] = ffcfw_initial_wwt
+    ffcfw_initial_parameter = ffcfw_initial_yg1.flat[0]   #handles an active y or g1 axis
+
+    ###Calculate ffcfw_initial from the initial ffcfw input which is a proportion of srw (fleece free, consistent with SRW
+    ### and normal weight, so the input is the ffcfw at weaning of a single born female of an adult dam / SRW).
+    ### Uses the female SRW at weaning (including srw_p11 for the age stage at weaning). Gender, dam age & BTRT are additive adjustments below.
+    ffcfw_initial_pa1e1b1nwzida0e0b0xyg0 = (ffcfw_initial_yg0 * (1 + adjp_ffcfw_initial_wzida0e0b0xyg0)) * srw_female_wean_pa1e1b1nwzida0e0b0xyg0
+    ffcfw_initial_pa1e1b1nwzida0e0b0xyg1 = (ffcfw_initial_yg1 * (1 + adjp_ffcfw_initial_wzida0e0b0xyg1)) * srw_female_wean_pa1e1b1nwzida0e0b0xyg1
+    ffcfw_initial_pa1e1b1nwzida0e0b0xyg3 = (ffcfw_initial_yg3 * (1 + adjp_ffcfw_initial_wzida0e0b0xyg3)) * srw_female_wean_pa1e1b1nwzida0e0b0xyg3
     ##apply adjustments to initial variables
     ffcfw_initial_pa1e1b1nwzida0e0b0xyg0 = (ffcfw_initial_pa1e1b1nwzida0e0b0xyg0 * (1 + adjp_ffcfw_initial_a_a0e0b0xyg0)
                + adja_ffcfw_initial_x_pa1e1b1nwzida0e0b0xyg0 + adja_ffcfw_initial_d_pa1e1b1nwzida0e0b0xyg0 + adja_ffcfw_initial_b0_pa1e1b1nwzida0e0b0xyg0)
@@ -8136,8 +8151,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         ##assign values to the p slices and ranges for the age stages. See
         ###WT slices
         x_female_yatf = np.count_nonzero(mask_x[:1])  #position of the female slice in the masked yatf x axis
-        b_wt_slc = {p_pos: [135,292,52], b1_pos: 2, x_pos: x_female_yatf}     #1st cycle single born female yatf of 2 tooth and adult ewes at birth, annually
-        w_wt_slc = {p_pos: [147,304,52], b1_pos: 2, x_pos: x_female_yatf}     #1st cycle single born female yatf of 2 tooth and adult ewes at weaning, annually
+        b_wt_slc = {p_pos: [187,292,52], b1_pos: 2, x_pos: x_female_yatf}     #1st cycle single born female yatf of adult ewes at birth, annually
+        w_wt_slc = {p_pos: [199,304,52], b1_pos: 2, x_pos: x_female_yatf}     #1st cycle single born female yatf of adult ewes at weaning, annually
         p_wt_slc = {p_pos: 63, b1_pos: 0}     #NM ewes mid point of p age stage
         y_wt_slc = {p_pos: 84, b1_pos: 0}     #NM ewes mid point of y age stage
         h_wt_slc = {p_pos: 110, b1_pos: 0}    #NM ewes prior to prejoining for 2yo lambing
@@ -8515,6 +8530,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             ('yWT', ywt),
             ('hWT', hwt),
             ('aWT', awt),
+            ('FFCFW_initial', ffcfw_initial_parameter),   # the initial ffcfw input (proportion of SRW at weaning) used. Calculated from the wWT target when calibrating. Use this value for sav['ffcfw_initial_c2'] in exp.xlsx
             ('SRW_input', srw_parameter),   # the SRW used excluding srw_p11 (endogenous if calculated from the targets). When calculated endogenously use this value for sav['srw_c2'] in exp.xlsx
             ('SRW_result', srw_from_fat),   # the SRW estimated from the simulated adult LW & Fat%. EVG can be fitted to it
             ('pFAT', pfat),
@@ -8599,7 +8615,6 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         for i, (name, value) in enumerate(trait_values):
             trait_values_p[i] = value
 
-        #if calibrate_trait_values:
         ### Handle the multi-trait calibration using an a-priority method
         ###Option 1 A linear scalarising method using calibration_weights from [Calibration_control.xlsx]TargetWeightings!
         ### The weighting is a subjective weight multiplied by the inverse of the target trait value.
@@ -8659,6 +8674,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 logger.debug(f"Energy {energy_p11[a]} (k_evg={energy_k_evg}, k_pi={energy_k_pi})")
             logger.debug(f"BWT target {bwt_target} this {bwt} with (srw_p11={sen.saa['srw_p11'][b]})")
             logger.debug(f"WWT target {wwt_target} this {wwt} with (srw_p11={sen.saa['srw_p11'][w]} & milk_scalar={sen.saa['milk_yield']})")
+            logger.debug(f"Initial ffcfw% {ffcfw_initial_parameter} (proportion of SRW at weaning, from the wWT target when calibrating)")
             logger.debug(f"PWT target {pwt_target} this {pwt} with (srw_p11={sen.saa['srw_p11'][p]})")
             logger.debug(f"YWT target {ywt_target} this {ywt} with (srw_p11={sen.saa['srw_p11'][y]}, k={sen.saa['growth_constant']} & PI={sen.saa['pi_p11'][y]})")
             logger.debug(f"HWT target {hwt_target} this {hwt} with (srw_p11={sen.saa['srw_p11'][h]})")
