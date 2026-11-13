@@ -220,20 +220,21 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         ###If doing the combination then the fixed coefficients, k_srw & k_cl0, allocate w_wt to the 2 component coefficients.
         ##WT at younger ages can be calibrated by SRW age stage coefficients or by adjusting the growth constant
         w = p = y = h = a = None
-        # sen.saa['birth_weight'] = coefficients_c[j]; j += 1    #Birth weight no method to calibrate, #todo still to decide how to control BWT
-        w = np.nan  #wwt is changed with a separate coefficient
+        # sen.saa['birth_weight'] = coefficients_c[j]; j += 1    #Birth weight, #todo still to decide how to control BWT
+        b = np.nan  #bwt is changed with a separate coefficient
+        w = np.nan  #wwt can be changed with separate coefficients
         sen.saa['milk_yield'] = coefficients_c[j]; j += 1    #Weaning weight, cl_yatf[0] parameter which alters milk production, lamb milk intake and ewe PI during lactation
         w_wt = coefficients_c[j]; wwt_calibrated = True; j += 1
         k_srw = coefficients_c[j]; j += 1   #fixed coefficient: change in the SRW (kg) of the weaning age stage (srw_p11[w]) per unit of w_wt
         k_cl0 = coefficients_c[j]; j += 1   #fixed coefficient: change in cl[0] (saa['milk_yield']) per unit of w_wt
+        w = k_srw * w_wt
         p = coefficients_c[j]; j += 1
         y = coefficients_c[j]; j += 1   #ywt can be changed using the growth constant
         sen.saa['growth_constant'] = coefficients_c[j]; j += 1    #Yearling weight, cn_dams[1] parameter which alters the growth path
         h = coefficients_c[j]; j += 1
         a = coefficients_c[j]; j += 1
-        sen.saa['srw_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
+        sen.saa['srw_p11'] = sfun.f1_create_saa_param_p11(b=b, w=w, p=p, y=y, h=h, a=a)   #b & w passed so srw_p11[p] doesn't cascade to [w] and w_wt doesn't cascade to [b]
         sen.saa['milk_yield'] = sen.saa['milk_yield'] + k_cl0 * w_wt
-        sen.saa['srw_p11'] = sen.saa['srw_p11'] + sfun.f1_create_saa_param_p11(b=np.nan, w=k_srw * w_wt)
 
         #Potential intake to calibrate Carcase fatness & WBE, ci[1] parameter
         w = p = y = h = a = None
@@ -247,10 +248,10 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
         #EVG to calibrate Whole body energy, cg[8&9] parameters
         w = p = y = h = a = None
-        # w = np.nan   # no method to calibrate
-        # p = np.nan   # no method to calibrate
-        # y = np.nan  #WBE is currently only an adult trait, but hogget is also changed.
-        h = np.nan  #hogget is changed if HWT is not in the BO objective.
+        # w = np.nan    # no method to calibrate
+        # p = np.nan    # no method to calibrate
+        # y = np.nan # Changes to cg8 & 9 are done whole of life unless this line is uncommented
+        h = np.nan  #cg8 & 9 are only altered for adults, the impacts on the younger age stages are not included and the endogenous SRW change will be largely offset by srw_p11 adjusting to calibrate the younger weights.
         a = coefficients_c[j]; adult_evg = cg8 + a; j += 1  #  assign a value to adult EVG for endogenous calculation of SRW.
         sen.saa['evg_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
