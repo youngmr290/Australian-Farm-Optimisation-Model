@@ -229,8 +229,16 @@ def check_calibration_control(df_targets_tp, df_weights_p, df_bestbet_tc, df_bnd
         for desc, mask in [("Low > High", lo > up), ("BestBet outside Low/High", (bestbet < lo) | (bestbet > up))]:
             for t, c in zip(*np.nonzero(mask)):
                 problems.append(f"{desc}: team row {t} ({df_targets_tp.index[t]}), coefficient {df_bestbet_tc.columns[c]}.")
+        ##a coefficient that is fixed (Low = High) for every team (e.g. the energy k values) must have the same value for every
+        ## team, because the teams must describe the same model and the Jacobian at the Standard is measured at team 0's value.
+        ## (A coefficient fixed for some teams only, e.g. 0 for a team that doesn't calibrate it, can differ.)
+        fixed_all = np.all(lo == up, axis=0)
+        for c in np.flatnonzero(fixed_all & np.any(lo != lo[0], axis=0)):
+            problems.append(f"Fixed coefficient {df_bestbet_tc.columns[c]} (Low = High for every team) differs between teams:"
+                            f" {sorted(set(lo[:, c].tolist()))}.")
     ##the biological limits must be valid (Low/High may go past them: DE's range is clipped to them). A BestBet outside
-    ## them is only a warning: the calibration starts from the BestBet clipped to the limits.
+    ## them is only a warning: the calibration starts from the BestBet clipped to the limits. Except for a fixed coefficient
+    ## (Low = High), which is an error because clipping would silently change its value.
     if not problems and df_lim_c is not None:
         if list(df_lim_c.index[:2].str.lower()) != ['lower', 'upper']:
             problems.append(f"cLimits rows must be Lower and Upper, not {list(df_lim_c.index)}.")
@@ -238,7 +246,11 @@ def check_calibration_control(df_targets_tp, df_weights_p, df_bestbet_tc, df_bnd
             lim_lo, lim_up = f1_limits(df_lim_c)
             for c in np.flatnonzero(lim_lo > lim_up):
                 problems.append(f"cLimits Lower > Upper: coefficient {df_bestbet_tc.columns[c]}.")
-            for t, c in zip(*np.nonzero((bestbet < lim_lo) | (bestbet > lim_up))):
+            outside = (bestbet < lim_lo) | (bestbet > lim_up)
+            for t, c in zip(*np.nonzero(outside & (lo == up))):
+                problems.append(f"Fixed coefficient (Low = High) outside cLimits: team row {t} ({df_targets_tp.index[t]}), coefficient"
+                                f" {df_bestbet_tc.columns[c]}: {bestbet[t, c]:g} is not in [{lim_lo[c]:g}, {lim_up[c]:g}].")
+            for t, c in zip(*np.nonzero(outside & (lo != up))):
                 print(f"Warning: BestBet outside cLimits, team row {t} ({df_targets_tp.index[t]}), coefficient"
                       f" {df_bestbet_tc.columns[c]}: {bestbet[t, c]:g} is clipped to [{lim_lo[c]:g}, {lim_up[c]:g}].")
     if problems:
@@ -501,17 +513,22 @@ def f1_standard_traits_worker(x):
 
 
 def f_standard_jacobian(context, n_processes):
-    """Jacobian of the trait values at the Standard (all coefficients 0, because they are adjustments to the standard
-    values), by central differences with steps of 2 x LSQ_STEP of team 0's half-ranges. Measured once and shared by
-    the teams as the starting Jacobian for lsq. The 2 x n_coef evaluations are spread over the processes.
-    A step that would cross a cLimit is shortened on that side (an uneven central difference)."""
+    """Jacobian of the trait values at the Standard, by central differences with steps of 2 x LSQ_STEP of team 0's
+    half-ranges. Measured once and shared by the teams as the starting Jacobian for lsq. The 2 x n_coef evaluations are
+    spread over the processes. A step that would cross a cLimit is shortened on that side (an uneven central difference).
+    The Standard (the base of the steps) has the free coefficients at 0, because they are adjustments to the standard
+    values, and the fixed coefficients (Low = High, e.g. the energy k values) at team 0's value. Every other coefficient
+    is held at the base while one is stepped."""
     lo, up = context["bnd_lo_tc"][0], context["bnd_up_tc"][0]
+    base = np.where(up > lo, 0.0, lo)
+    if np.any(base != 0):
+        print(f"Jacobian at the Standard: fixed coefficients at {dict((j, base[j]) for j in np.flatnonzero(base != 0))} (by position)")
     h = 2 * LSQ_STEP * (up - lo) / 2
     hp, hm = h.copy(), h.copy()
     if context.get("lim_lo_c") is not None:
-        hp, hm = np.clip(context["lim_up_c"], 0, h), np.clip(-context["lim_lo_c"], 0, h)
+        hp, hm = np.clip(context["lim_up_c"] - base, 0, h), np.clip(base - context["lim_lo_c"], 0, h)
     free = np.flatnonzero((h > 0) & (hp + hm > 0))
-    points = [(hp[j] if s == 1 else -hm[j]) * np.eye(h.size)[j] for j in free for s in (1, -1)]
+    points = [base + (hp[j] if s == 1 else -hm[j]) * np.eye(h.size)[j] for j in free for s in (1, -1)]
     if n_processes > 1:
         with mp.Pool(processes=n_processes, initializer=init_worker, initargs=(context.copy(),)) as pool:
             traits = pool.map(f1_standard_traits_worker, points, chunksize=1)

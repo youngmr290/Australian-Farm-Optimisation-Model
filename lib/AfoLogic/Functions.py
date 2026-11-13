@@ -301,6 +301,103 @@ def f1_percentile_weighted(values, weights, axes):
     percentile = np.moveaxis(percentile, range(values.ndim - k, values.ndim), axes)
 
     return percentile
+
+def f1_unique_count_smooth(a, axes, weights, threshold, h):
+    """
+    Number of unique values along the given axes that is a continuous function of the values and the weights (an
+    alternative to f1_unique_count, used by f1_collapse_pointers when i_collapse_rank_h > 0).
+
+    f1_unique_count counts a value once if it is within atol of another (in the same atol bin) and excludes values with a
+    relative weight < threshold, so the count steps when two values pass each other or a weight crosses the threshold.
+    Here each value counts 1 / (the number of values that are the same as it), with values within about h counting as
+    partly the same, and the weight crossing the threshold is a ramp:
+        count = sum_i(v_i / sum_j(v_j * exp(-((a_i - a_j) / h) ** 2))),  v_i = min(1, relative weight_i / threshold)
+    For values that are equal or further than about 2h apart (and weights above the threshold) the count is the
+    number of unique values.
+
+    Returns the count (float) with the shape of a and the collapsed axes size 1. Values that are nan are excluded.
+    """
+    a = np.asarray(a, dtype=float)
+    axes = tuple(ax % a.ndim for ax in np.atleast_1d(axes))
+    k = len(axes)
+    weights = np.broadcast_to(weights, a.shape).astype(float)
+    denom = np.sum(weights, axis=axes, keepdims=True)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        rel_w = np.where(denom != 0, weights / denom, 0.0)
+    v = np.minimum(1.0, rel_w / threshold) if threshold > 0 else (rel_w > 0) * 1.0
+    v = np.where(np.isnan(a), 0.0, v)
+    ##move the axes to the end and flatten them
+    a_moved = np.moveaxis(np.where(np.isnan(a), 0.0, a), axes, range(a.ndim - k, a.ndim))
+    v_moved = np.moveaxis(v, axes, range(a.ndim - k, a.ndim))
+    rest_shape = a_moved.shape[:-k]
+    n = int(np.prod(a_moved.shape[-k:]))
+    a_flat = a_moved.reshape(*rest_shape, n)
+    v_flat = v_moved.reshape(*rest_shape, n)
+    ##pairwise similarity in chunks (about 20 million elements per chunk)
+    same = np.empty_like(a_flat)
+    chunk = max(1, int(2e7 // max(1, int(np.prod(rest_shape)) * n)))
+    for i0 in range(0, n, chunk):
+        i1 = min(n, i0 + chunk)
+        s = np.exp(-((a_flat[..., i0:i1, na] - a_flat[..., na, :]) / h) ** 2)
+        same[..., i0:i1] = np.sum(s * v_flat[..., na, :], axis=-1)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        counts = np.sum(np.where(v_flat > 0, v_flat / same, 0.0), axis=-1)
+    for ax in sorted(axes):
+        counts = np.expand_dims(counts, axis=ax)
+    return counts
+
+def f1_percentile_smooth(values, weights, axes, h):
+    """
+    Weighted percentile rank within slices defined by the `axes` tuple that is a continuous function of the values and
+    the weights (an alternative to f1_percentile_weighted, used by f1_collapse_pointers when i_collapse_rank_h > 0).
+
+    The rank of value i is the weighted proportion of values below it, with each comparison smoothed over a width h:
+        100 * sum_j(weight_j * S((value_i - value_j) / h)) / sum_j(weight_j),  S(x) = (1 + tanh(x)) / 2
+    S(0) = 0.5, so the value's own weight counts half (the centre of its weighting, as in f1_percentile_weighted) and
+    equal values get equal ranks. As h -> 0 the rank becomes f1_percentile_weighted without its tie breaker.
+    The sorted rank of f1_percentile_weighted jumps when two values swap order (and with the tie breaker when the
+    weights of equal values swap order), which makes anything selected on the rank a step function of the inputs.
+
+    Parameters
+    ----------
+    values : array_like: Input array to rank. nan values are excluded (zero weight) and return nan.
+    weights : array_like: Weights corresponding to each value (broadcastable to values)
+    axes : int or tuple of ints: Axis or axes along which to compute percentile ranks (the axes being collapsed plus w)
+    h : float: the width of the smoothing (units of values)
+
+    Returns
+    -------
+    percentile : ndarray[float]  Same shape as values (nan if the value is nan or the total weight is 0).
+    """
+    values = np.asarray(values, dtype=float)
+    weights = np.broadcast_to(weights, values.shape).astype(float)
+    axes = tuple(a % values.ndim for a in np.atleast_1d(axes))
+    k = len(axes)
+    ##move the ranked axes to the end and flatten them
+    values_moved = np.moveaxis(values, axes, range(values.ndim - k, values.ndim))
+    weights_moved = np.moveaxis(weights, axes, range(values.ndim - k, values.ndim))
+    rest_shape = values_moved.shape[:-k]
+    packed_shape = values_moved.shape[-k:]
+    n = int(np.prod(packed_shape))
+    values_flat = values_moved.reshape(*rest_shape, n)
+    weights_flat = weights_moved.reshape(*rest_shape, n)
+    valid = ~np.isnan(values_flat)
+    weights_flat = np.where(valid, weights_flat, 0.0)
+    values_flat = np.where(valid, values_flat, 0.0)
+    total = np.sum(weights_flat, axis=-1, keepdims=True)
+    ##pairwise comparison, in chunks of the ranked values to limit the memory (about 20 million elements per chunk)
+    below = np.empty_like(values_flat)
+    chunk = max(1, int(2e7 // max(1, int(np.prod(rest_shape)) * n)))
+    for i0 in range(0, n, chunk):
+        i1 = min(n, i0 + chunk)
+        s = 0.5 * (1 + np.tanh((values_flat[..., i0:i1, na] - values_flat[..., na, :]) / h))
+        below[..., i0:i1] = np.sum(s * weights_flat[..., na, :], axis=-1)
+    with np.errstate(divide='ignore', invalid='ignore'):
+        percentile_flat = np.where(valid & (total > 0), below / total * 100.0, np.nan)
+    ##reshape and move the axes back to their original positions
+    percentile = percentile_flat.reshape(*rest_shape, *packed_shape)
+    percentile = np.moveaxis(percentile, range(values.ndim - k, values.ndim), axes)
+    return percentile
 #
 def f_expand(array, left_pos=0, swap=False, ax1=0, ax2=1, right_pos=0, left_pos2=0, right_pos2=0
                      , left_pos3=0, right_pos3=0, condition = None, axis = 0, swap2=False, ax1_2=1, ax2_2=2,

@@ -448,6 +448,7 @@ def create_sa():
     sav['adjp_fd_initial_w3'] = np.full(sinp.structuralsa['i_adjp_fd_initial_w3'].shape, '-', dtype=object)      #initial fd adjustment offs
     sav['adjp_fl_initial_w3'] = np.full(sinp.structuralsa['i_adjp_fl_initial_w3'].shape, '-', dtype=object)      #initial fl adjustment offs
     sav['firstprejoin_averaged'] = False #do the a, e & b axes get averaged at the first prejoining (ewe lambs). If the value is False the mate/not mate decision is made at the previous weaning (then at prejoining nm passes to nm and mated passes to mated). This means DSP loses some flexibility (cant feed up animal then not mate). But this is not a huge limitation because mating decision is made over summer when little info about upcoming season is known.
+    sav['calibration_prejoin_1to1'] = False  #Calibration only (error if the LP is solved). At prejoining, if the number of w doesn't change, pass the dams 1:1 on w (averaged across a1, e1 & b1) rather than regrouping by percentile across w, a1, e1 & b1. Keeps each start w a separate path and removes the heavy bias of a single start w.
     sav['condense_at_seasonstart'] = '-'  # SA to alter if condensing occurs at season start. Default is False except in the MP model when this can be set to True so that core fvps can be masked out and just the season nodes for fvps.
     sav['user_fvp_date_dams_iu'] = np.full(sinp.structuralsa['i_dams_user_fvp_date_iu'].shape, '-', dtype=object)      #SA to control user fvp dates.
     sav['user_fvp_date_dams_yiu'] = np.full((len_y,)+sinp.structuralsa['i_dams_user_fvp_date_iu'].shape, '-', dtype=object)      #SA to control user fvp dates.
@@ -537,6 +538,7 @@ def create_sa():
     #####################
     ##SAV
     sav['srw_c2'] = np.full(uinp.parameters['i_srw_c2'].shape, '-', dtype=object)  #SA value for srw of each c2 genotype.
+    sav['ffcfw_initial_c2'] = np.full(uinp.parameters['i_ffcfw_initial_c2'].shape, '-', dtype=object)  #SA value for the initial ffcfw (proportion of SRW at weaning) of each c2 genotype. A calibrated genotype uses FFCFW_initial reported by the calibration.
     sav['sfw_c2'] = np.full(uinp.parameters['i_sfw_c2'].shape, '-', dtype=object)  #std fleece weight genotype params
     sav['sfd_c2'] = np.full(uinp.parameters['i_sfd_c2'].shape, '-', dtype=object)  #std fibre diameter genotype params
     sav['cn_c1c2'] = np.full(uinp.parameters['i_cn_c2'].shape, '-', dtype=object)  #normal growth params for genotypes

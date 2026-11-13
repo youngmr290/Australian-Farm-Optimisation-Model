@@ -84,6 +84,13 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     genotype = pinp.sheep['a_c2_c0'][0].copy()  #2 is CFS for MLP & GEPEP traditional, 3 is GFS for GEPEP
     srw_parameter = uinp.parameters['i_srw_c2'][genotype].copy()  #set a value in case whole section is commented out
     calibrate_offs = True   #the offspring are generated unless calibrating without sav['calib_offs'] (see below)
+    ##Flag that the energy coefficient is active in the coefficient block (see below). If so SRW is not endogenous.
+    ### Set outside the calibration code (with the energy values for the debug report) because it is used in the trait report.
+    energy_calibrated = False
+    energy_p11 = energy_k_evg = energy_k_pi = None
+    ##Flag that the weaning weight coefficient (w_wt) is active in the coefficient block (see below), with the values for the debug report.
+    wwt_calibrated = False
+    w_wt = k_cl0 = k_srw = None
     calibration_code_inc = calibrate_trait_values or o_trait_values is not None
     ##A trial initiated in RunAfoRaw can report its trait values (sav['report_trait_values'])
     ### using the debug report of the calibration traits. This is included so the genotype production levels
@@ -94,6 +101,12 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     if report_lp_traits:
         calibration_targets_p = np.zeros(0)    #no targets: every target is reported as nan
         calibration_weights_p = np.zeros(0)
+    ##Prejoining 1:1 pass of the dams (see f1_collapse_pointers). Only for calibration & trait reporting because it
+    ### changes the regrouping at prejoining, so an LP solved with it would differ from the standard model.
+    calibration_prejoin_1to1 = bool(fun.f_sa(False, sen.sav['calibration_prejoin_1to1'], 5))
+    if calibration_prejoin_1to1 and not (calibration_code_inc or report_lp_traits):
+        raise ValueError("sav['calibration_prejoin_1to1'] is only for calibration runs (SheepCalibration or sav['report_trait_values'])."
+                         " It changes the regrouping of the dams at prejoining, so it can't be used in a trial that solves the LP.")
     if calibration_code_inc:
         # print(coefficients_c)   #only useful for debugging when not multiprocessing (workers=1, and not multiprocessing teams)
         n_coeff = np.size(coefficients_c)
@@ -121,7 +134,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         sen.saa['milk_yield'] = 0.0
         sen.saa['growth_constant'] = 0.0
         sen.saa['pi_z_constant'] = 0.0
-        sen.sav['srw_c2'][...] = '-'
+        sen.sav['srw_c2'][...] = '-'   #Used when SRW is calculated endogenously
 
         ##Set default value for adult_evg which is used as a flag for endogenous calculation of SRW
         adult_evg = None
@@ -203,17 +216,24 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         sen.saa['era_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         #Standard reference weight coefficient adjustments can be linked to target LW or to an estimate of SRW from ALW & Fat %
-        ##WT at younger ages can be calibrated by SRW age stage coefficients or by adjusting milk yield and the growth constant
+        ##WWT can be calibrated using srw_p11, milk_yield or a combination of both (w_wt).
+        ###If doing the combination then the fixed coefficients, k_srw & k_cl0, allocate w_wt to the 2 component coefficients.
+        ##WT at younger ages can be calibrated by SRW age stage coefficients or by adjusting the growth constant
         w = p = y = h = a = None
         # sen.saa['birth_weight'] = coefficients_c[j]; j += 1    #Birth weight, #todo still to decide how to control BWT
         w = np.nan  #wwt is changed with a separate coefficient
         sen.saa['milk_yield'] = coefficients_c[j]; j += 1    #Weaning weight, cl_yatf[0] parameter which alters milk production, lamb milk intake and ewe PI during lactation
+        w_wt = coefficients_c[j]; wwt_calibrated = True; j += 1
+        k_srw = coefficients_c[j]; j += 1   #fixed coefficient: change in the SRW (kg) of the weaning age stage (srw_p11[w]) per unit of w_wt
+        k_cl0 = coefficients_c[j]; j += 1   #fixed coefficient: change in cl[0] (saa['milk_yield']) per unit of w_wt
         p = coefficients_c[j]; j += 1
         y = coefficients_c[j]; j += 1   #ywt can be changed using the growth constant
         # sen.saa['growth_constant'] = coefficients_c[j]; j += 1    #Yearling weight, cn_dams[1] parameter which alters the growth path
         h = coefficients_c[j]; j += 1
         # a = coefficients_c[j]; j += 1
         sen.saa['srw_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
+        sen.saa['milk_yield'] = sen.saa['milk_yield'] + k_cl0 * w_wt
+        sen.saa['srw_p11'] = sen.saa['srw_p11'] + sfun.f1_create_saa_param_p11(b=np.nan, w=k_srw * w_wt)
 
         #Potential intake to calibrate Carcase fatness & WBE, ci[1] parameter
         w = p = y = h = a = None
@@ -233,6 +253,22 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         h = np.nan  #cg8 & 9 are only altered for adults, the impacts on the younger age stages are not included and the endogenous SRW change will be largely offset by srw_p11 adjusting to calibrate the younger weights.
         a = coefficients_c[j]; adult_evg = cg8 + a; j += 1  #  assign a value to adult EVG for endogenous calculation of SRW.
         sen.saa['evg_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
+
+        #Energy to calibrate fatness at the same weight (e.g. aWBE, with aWT calibrated by SRW): changes EVG (cg[8] & cg[9])
+        ## and PI (ci[1] & ci[21]) together in the proportion k_evg : k_pi. The energy is added to saa['evg_p11'] & saa['pi_p11']
+        ## (so it must follow their assignment above), therefore the energy is only included in the LP trials via the
+        ## evg_p11 & pi_p11 values exported from CalibrationResults.xlsx (a_cg + k_evg x a_energy & a_ci + k_pi x a_energy).
+        ## k_evg & k_pi are fixed coefficients (Low = High in Calibration_control.xlsx, the same for all teams) so they can only
+        ## be changed by rerunning the calibration and they are reported with the results. The 3 lines are active (or commented) together.
+        ## If the coefficient is active the SRW is not endogenous (SRW is the input value plus srw_p11).
+        w = p = y = h = a = None
+        h = np.nan  #adult only (not cascaded to the younger age stages)
+        a = coefficients_c[j]; energy_calibrated = True; j += 1
+        energy_p11 = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
+        energy_k_evg = coefficients_c[j]; j += 1   #fixed coefficient: change in EVG (cg[8] & cg[9], the same absolute change) per unit of energy
+        energy_k_pi = coefficients_c[j]; j += 1    #fixed coefficient: change in PI (ci[1] & ci[21]) per unit of energy
+        sen.saa['evg_p11'] = sen.saa['evg_p11'] + energy_k_evg * energy_p11
+        sen.saa['pi_p11'] = sen.saa['pi_p11'] + energy_k_pi * energy_p11
 
         #Basal survival, cd[1] parameter
         w = p = y = h = a = None
@@ -347,6 +383,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         ywt_target = f1_target('yWT')
         hwt_target = f1_target('hWT')
         awt_target = f1_target('aWT')
+        ffcfw_initial_target = f1_target('FFCFW_initial')    #the initial ffcfw input (proportion of SRW at weaning) used. For reporting rather than a calibration trait (weight 0). Calculated from the wWT target when calibrating, use it for sav['ffcfw_initial_c2'] in exp.xlsx
         srw_input_target = f1_target('SRW_input')    # the SRW used, it is for reporting rather than as a calibration trait
         srw_result_target = f1_target('SRW_result')    #srw_result can be a target to fit cg8 for the standard genotype
         pfat_target = f1_target('pFAT')
@@ -421,7 +458,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         wlw11_target = f1_target('WLW11')
         wlw12_target = f1_target('WLW12')
         wlw13_target = f1_target('WLW13')
-        ##check the targets read match the traits in [Calibration_control.xlsx]Targets & Weights
+    ##check the targets read match the traits in [Calibration_control.xlsx]Targets & Weights
     if calibration_code_inc:
         f1_check_trait_names(target_names, 'targets read')
         assert len(target_names) == calibration_targets_p.size == n_traits, f"{len(target_names)} calibration targets are read in the generator but Calibration_control.xlsx has {calibration_targets_p.size} targets and {n_traits} weights"
@@ -430,37 +467,49 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         ### Need to set sav['calib_offs'] to True if an offspring trait (e.g. WLW) is included in the calibration.
         ### Offspring are always included when reporting so that TraitValues.xlsx has real values.
         ###Limitations: the LTW loop is not run (loop_ltw_len = 1) so the offspring don't get the lifetime wool adjustment,
-        ### and the offspring start weight is from i_lw_initial (not the yatf weaning weight), so calibrating wWT or milk
+        ### and the offspring start weight is from i_ffcfw_initial (not the yatf weaning weight), so calibrating wWT or milk
         ### production doesn't flow through to the offspring traits.
         calibrate_offs = o_trait_values is not None or bool(fun.f_sa(False, sen.sav['calib_offs'], 5))
         logger.debug(f"Offspring included in the generator: {calibrate_offs}")
 
         ###Calculate SRW if it is being endogenously fitted from the target adult weight & fatness and EVG
-        ###A test for endogenous calculation is that saa[adult EVG] coefficient has a value and SRW_result is not a weighted trait.
-        ### If SRW_result is weighted the SRW is the input value (plus srw_p11) and EVG is fitted so that the SRW estimated from
-        ### the simulated adult weight & fatness (srw_from_fat) matches the SRW_result target.
-        ### SRW_input (the SRW used in the simulation) is for reporting only, and should not be weighted.
-        ###Estimating SRW as LW at 25% fat based on ALW and Fat% of adult ewes prior to prejoining
-        ###The calculation is based on the fat & lean changing based on the proportion determined by cg8 (EVG) (see W18:99 & W19:32)
+        ###A test for endogenous calculation is that:
+        ### i. saa[adult EVG] coefficient has a value,
+        ### ii. the energy coefficient is not being calibrated and
+        ### iii. SRW_result is not a weighted trait.
+        ### The above are linked to three scenarios for calibrating % fat when adul_evg <> 0:
+        ### 1. Energy coefficient active: SRW is an input value, aWT is calibrated with srw_p11 and fatness with the energy coefficient.
+        ### 2. SRW_result weighted: SRW is the input value (plus srw_p11) and EVG is fitted so that the SRW estimated from
+        ###   the simulated adult weight & fatness (srw_from_fat) matches the SRW input (srw_result_target).
+        ### 3. SRW is endogenous: calculated from the adult targets (WT & WBE/Fat%/FatMass) and EVG.
+        ### If calculating endogenously, SRW_input (the SRW used in the simulation) is for reporting only, and
+        ### should not be weighted.
+        ### The endogenous calculation estimates SRW as LW at 25% fat and the calculation is based on the fat & lean
+        ### changing based on the proportion determined by cg8 (EVG) (see W18:99 & W19:32)
         trait_weight = dict(zip(target_names, calibration_weights_p.ravel()))
         if trait_weight['SRW_input'] != 0:
             raise ValueError("SRW_input is the SRW used and is report only. Set its weight to 0 in [Calibration_control.xlsx]Weights (weight SRW_result to fit EVG to the SRW)")
-        if adult_evg is not None and trait_weight['SRW_result'] != 0:
+        if trait_weight['FFCFW_initial'] != 0:
+            raise ValueError("FFCFW_initial is the initial ffcfw input used (calculated from the wWT target when calibrating) and is report only. Set its weight to 0 in [Calibration_control.xlsx]Weights")
+        if adult_evg is not None and energy_calibrated:
+            logger.debug("The energy coefficient is being calibrated so SRW is not endogenous (SRW is the input value plus srw_p11)")
+        elif adult_evg is not None and trait_weight['SRW_result'] != 0:
             logger.debug("SRW_result is a weighted trait so EVG is being fitted to the SRW_result target")
-        if adult_evg is not None and trait_weight['SRW_result'] == 0:
-            ###The adult weight & fatness are from the adult fatness target that is weighted in the objective. Only one can be weighted:
-            ### aFat% - ALW is aWT
-            ### aWBE - ALW is aWT and Fat% is calculated from WBE and EBW (aWT / cg[18])
-            ### aFatMass & aLeanMass - ALW is (FatMass + LeanMass) * cg[18] and Fat% is FatMass / (FatMass + LeanMass)
+
+        ### If calibrating adult fatness test that only 2 target traits are set to define weight and fat content
+        if adult_evg is not None and trait_weight['SRW_result'] == 0 or energy_calibrated:
             fatness_traits = {'aWT': trait_weight['aWT'] != 0
                             , 'aFat%': trait_weight['aFat%'] != 0
                             , 'aWBE': trait_weight['aWBE'] != 0
                             , 'aFatMass': trait_weight['aFatMass'] != 0
                             , 'aLeanMass': trait_weight['aLeanMass'] != 0}
-            if sum(fatness_traits.values()) != 2:
+            if sum(fatness_traits.values()) != 2:   #note: the calibration can still fail if the 2 traits are aFat% and aWBE
                 raise ValueError(f"Endogenous SRW (adult EVG is being calibrated) requires two adult traits to be weighted"
                                  f" [Calibration_control.xlsx]Weights: aWT, aFat%, aWBE, aFatMass & aLeanMass. Weights are"
                                  f" {({name: trait_weight[name] for name in ['aWT', 'aFat%', 'aWBE', 'aFatMass', 'aLeanMass']})}")
+
+        ### Calculate the endogenous SRW to use for the trial
+        if adult_evg is not None and trait_weight['SRW_result'] == 0 and not energy_calibrated:
             cg_c2 = uinp.parameters['i_cg_c2'][:, genotype]   #scalar for each parameter (genotype of the base model)
             lw_ebw = cg_c2[18]   #ratio of LW to EBW
             if fatness_traits['aFatMass'] and fatness_traits['aLeanMass']:
@@ -488,8 +537,10 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                          f"target: ALW={srw_awt}, Fat%={srw_afatper}, EVG={adult_evg}, cg11={cg_c2[11]}, cg16={cg_c2[16]}")
             # srw_from_fat = awt * (1 - afatper) / (1 - srwfat_yg1)   #alternative formula that assumes lean mass is constant eg Hutton's model.
 
-        ###Apply the SAA for genotype calibration coefficients that exclude the p11 axis
+        ###Apply the endogenous SRW. Note: If it wasn't calculated above then sav['srw_cw'] is '-'
         uinp.parameters['i_srw_c2'] = fun.f_sa(uinp.parameters['i_srw_c2'].astype(float), sen.sav['srw_c2'], 5)
+
+        ###Apply the SAA for genotype calibration coefficients that exclude the p11 axis
         idx = fun.f_slice_idx(uinp.parameters['i_cw_c2'], {0: [25]})
         uinp.parameters['i_cw_c2'][idx] = fun.f_sa(uinp.parameters['i_cw_c2'][idx], sen.saa['ycfw_scalar'], 2)
         idx = fun.f_slice_idx(uinp.parameters['i_cw_c2'], {0: [26]})
@@ -2006,8 +2057,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                 , uinp.parameters['i_srw_y'], a_c2_c0, i_g3_inc) #fat content of an adult at the SRW
     muscle_target_female_yg0, muscle_target_female_yg1, muscle_target_female_yg2, muscle_target_female_yg3 = sfun.f1_c2g(uinp.parameters['i_muscle_target_c2']
                                 , uinp.parameters['i_muscle_target_y'], a_c2_c0, i_g3_inc)
-    lw_initial_yg0, lw_initial_yg1, lw_initial_yatf, lw_initial_yg3 = sfun.f1_c2g(uinp.parameters['i_lw_initial_c2']
-                                , uinp.parameters['i_lw_initial_y'], a_c2_c0, i_g3_inc)
+    ffcfw_initial_yg0, ffcfw_initial_yg1, ffcfw_initial_yatf, ffcfw_initial_yg3 = sfun.f1_c2g(uinp.parameters['i_ffcfw_initial_c2']
+                                , uinp.parameters['i_ffcfw_initial_y'], a_c2_c0, i_g3_inc)
     ####Fleece
     sfd_yg0, sfd_yg1, sfd_yg2, sfd_yg3 = sfun.f1_c2g(uinp.parameters['i_sfd_c2']
                                 , uinp.parameters['i_sfd_y'], a_c2_c0, i_g3_inc)
@@ -2267,7 +2318,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     # cl_p_cpyatf = np.broadcast_to(cl_cpyatf, target_shape).copy()
     # cl_p_cpyatf[0] += saa
 
-    ##ci[1] - potential intake
+    ##ci[1] & ci[21] - potential intake (pi_p11 includes k_pi x energy when calibrating)
     #todo some pre-loop calcs use ci_cp and haven't been updated to ci_p_cp (non-essential). See W18 p46 for vars to update
     ###sire
     saa = sfun.f1_saa_p11_to_p(sen.saa['pi_p11'], scalar_psirep11)
@@ -2294,7 +2345,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     ci_p_cpoffs[1] += saa
     ci_p_cpoffs[21] += saa
 
-    ##cg[8 & 9] - energy value of gain
+    ##cg[8 & 9] - energy value of gain (evg_p11 includes k_evg x energy when calibrating. The same absolute change in cg[8] & cg[9])
     #todo some pre-loop calcs use cg_cp and haven't been updated to cg_p_cp (non-essential). See W18 p46 for vars to update
     ###sire
     saa = sfun.f1_saa_p11_to_p(sen.saa['evg_p11'], scalar_psirep11)
@@ -2485,7 +2536,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     con_btrt_g1 = fun.f_sa(np.array([0.0]), sen.sav['btrt_con_g1'][mask_dams_inc_g1], 5).astype(float)
     ls_btrt_g1 = fun.f_sa(np.array([0.0]), sen.sav['btrt_ls_g1'][mask_dams_inc_g1], 5).astype(float)
     era_btrt_g1 = fun.f_sa(np.array([0.0]), sen.sav['btrt_era_g1'][mask_dams_inc_g1], 5).astype(float)
-    if not (calibration_code_inc or report_lp_traits) and np.any(con_btrt_g1 + ls_btrt_g1 + era_btrt_g1 != 0):
+    if not (calibration_code_inc or report_lp_traits
+            or (np.all(con_btrt_g1 == 0) and np.all(ls_btrt_g1 == 0) and np.all(era_btrt_g1 == 0))):
         dstwtr_l0yg1 = sfun.f1_dstwtr_adj(dstwtr_l0yg1, con_btrt_g1, ls_btrt_g1)
         dstwtr_l0yg3 = sfun.f1_dstwtr_adj(dstwtr_l0yg3, con_btrt_g1, ls_btrt_g1)
         pss_std_yg1, pstw_std_yg1, pstr_std_yg1 = sfun.f1_lamb_survival_adj(pss_std_yg1, pstw_std_yg1, pstr_std_yg1
@@ -2627,10 +2679,10 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     step_w3 = len_w3/w_start_len3
 
     ##convert i_adjp to adjp - add necessary axes for 'a' and 'w'
-    adjp_lw_initial_a0e0b0xyg = fun.f_expand(pinp.sheep['i_adjp_lw_initial_a'], a0_pos, condition=pinp.sheep['i_mask_a'], axis=a0_pos)
-    adjp_lw_initial_wzida0e0b0xyg0 = fun.f_expand(sinp.structuralsa['i_adjp_lw_initial_w0'], w_pos)
-    adjp_lw_initial_wzida0e0b0xyg1 = fun.f_expand(sinp.structuralsa['i_adjp_lw_initial_w1'][np.trunc(index_w1/step_w1).astype(int)], w_pos)
-    adjp_lw_initial_wzida0e0b0xyg3 = fun.f_expand(sinp.structuralsa['i_adjp_lw_initial_w3'][np.trunc(index_w3/step_w3).astype(int)], w_pos)
+    adjp_ffcfw_initial_a0e0b0xyg = fun.f_expand(pinp.sheep['i_adjp_lw_initial_a'], a0_pos, condition=pinp.sheep['i_mask_a'], axis=a0_pos)
+    adjp_ffcfw_initial_wzida0e0b0xyg0 = fun.f_expand(sinp.structuralsa['i_adjp_lw_initial_w0'], w_pos)
+    adjp_ffcfw_initial_wzida0e0b0xyg1 = fun.f_expand(sinp.structuralsa['i_adjp_lw_initial_w1'][np.trunc(index_w1/step_w1).astype(int)], w_pos)
+    adjp_ffcfw_initial_wzida0e0b0xyg3 = fun.f_expand(sinp.structuralsa['i_adjp_lw_initial_w3'][np.trunc(index_w3/step_w3).astype(int)], w_pos)
     adjp_cfw_initial_a0e0b0xyg = fun.f_expand(pinp.sheep['i_adjp_cfw_initial_a'], a0_pos, condition=pinp.sheep['i_mask_a'], axis=a0_pos)
     adjp_cfw_initial_wzida0e0b0xyg0 = fun.f_expand(sinp.structuralsa['i_adjp_cfw_initial_w0'], w_pos)
     adjp_cfw_initial_wzida0e0b0xyg1 = fun.f_expand(sinp.structuralsa['i_adjp_cfw_initial_w1'][np.trunc(index_w1/step_w1).astype(int)], w_pos)
@@ -2644,12 +2696,6 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     adjp_fl_initial_wzida0e0b0xyg1 = fun.f_expand(sinp.structuralsa['i_adjp_fl_initial_w1'][np.trunc(index_w1/step_w1).astype(int)], w_pos)
     adjp_fl_initial_wzida0e0b0xyg3 = fun.f_expand(sinp.structuralsa['i_adjp_fl_initial_w3'][np.trunc(index_w3/step_w3).astype(int)], w_pos)
 
-    ###Calculate lw_initial from the initial lw input which is a proportion of srw
-    ### Uses srw_b0xyg so may cause randomness when using a RR SA (because BTRT alters SRW, changing the starting animal)
-    ### Uses the female SRW at weaning (including srw_p11 for the age stage at weaning). Gender, dam age & BTRT are additive adjustments below.
-    lw_initial_pa1e1b1nwzida0e0b0xyg0 = (lw_initial_yg0 * (1 + adjp_lw_initial_wzida0e0b0xyg0)) * srw_female_wean_pa1e1b1nwzida0e0b0xyg0
-    lw_initial_pa1e1b1nwzida0e0b0xyg1 = (lw_initial_yg1 * (1 + adjp_lw_initial_wzida0e0b0xyg1)) * srw_female_wean_pa1e1b1nwzida0e0b0xyg1
-    lw_initial_pa1e1b1nwzida0e0b0xyg3 = (lw_initial_yg3 * (1 + adjp_lw_initial_wzida0e0b0xyg3)) * srw_female_wean_pa1e1b1nwzida0e0b0xyg3
     ###the initial cfw input is a proportion of sfw
     cfw_initial_wzida0e0b0xyg0 = (cfw_initial_yg0 * (1 + adjp_cfw_initial_wzida0e0b0xyg0)) * sfw_yg0   #sfw w/o saa_p11
     cfw_initial_wzida0e0b0xyg1 = (cfw_initial_yg1 * (1 + adjp_cfw_initial_wzida0e0b0xyg1)) * sfw_yg1   #sfw w/o saa_p11
@@ -2662,9 +2708,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     fl_initial_wzida0e0b0xyg3 = fl_initial_yg3 * (1 + adjp_fl_initial_wzida0e0b0xyg3)
 
     ##adjustment for weaning age
-    adjp_lw_initial_a_a0e0b0xyg0 = adjp_lw_initial_a0e0b0xyg[0:1,...]
-    adjp_lw_initial_a_a0e0b0xyg1 = adjp_lw_initial_a0e0b0xyg[0:1,...]
-    adjp_lw_initial_a_a0e0b0xyg3 = adjp_lw_initial_a0e0b0xyg
+    adjp_ffcfw_initial_a_a0e0b0xyg0 = adjp_ffcfw_initial_a0e0b0xyg[0:1,...]
+    adjp_ffcfw_initial_a_a0e0b0xyg1 = adjp_ffcfw_initial_a0e0b0xyg[0:1,...]
+    adjp_ffcfw_initial_a_a0e0b0xyg3 = adjp_ffcfw_initial_a0e0b0xyg
     adjp_cfw_initial_a_a0e0b0xyg0 = adjp_cfw_initial_a0e0b0xyg[0:1,...]
     adjp_cfw_initial_a_a0e0b0xyg1 = adjp_cfw_initial_a0e0b0xyg[0:1,...]
     adjp_cfw_initial_a_a0e0b0xyg3 = adjp_cfw_initial_a0e0b0xyg
@@ -2676,9 +2722,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     adjp_fl_initial_a_a0e0b0xyg3 = adjp_fl_initial_a0e0b0xyg
     ##adjustment for gender. Note cfw changes throughout the year therefore the adjustment factor will not be the same all yr hence divide by std_fw (same for fl)
     ### e.g. the impact of gender on cfw will be much less if only a short growth period (the parameter is a yearly factor e.g. male sheep have 0.02 kg more wool each yr)
-    adja_lw_initial_x_pa1e1b1nwzida0e0b0xyg0 = fun.f_slice(cx_cpsire[17], {x_pos: [0,1]}) #17 is the weaning wt parameter, 0:1 is the sire gender slice (retaining the axis).
-    adja_lw_initial_x_pa1e1b1nwzida0e0b0xyg1 = fun.f_slice(cx_cpdams[17], {x_pos: [1,2]})
-    adja_lw_initial_x_pa1e1b1nwzida0e0b0xyg3 = fun.f_slice(cx_cpoffs[17], {x_pos: mask_x})
+    adja_ffcfw_initial_x_pa1e1b1nwzida0e0b0xyg0 = fun.f_slice(cx_cpsire[17], {x_pos: [0,1]}) #17 is the weaning wt parameter, 0:1 is the sire gender slice (retaining the axis).
+    adja_ffcfw_initial_x_pa1e1b1nwzida0e0b0xyg1 = fun.f_slice(cx_cpdams[17], {x_pos: [1,2]})
+    adja_ffcfw_initial_x_pa1e1b1nwzida0e0b0xyg3 = fun.f_slice(cx_cpoffs[17], {x_pos: mask_x})
     adja_cfw_initial_x_pa1e1b1nwzida0e0b0xyg0 = (fun.f_slice(cx_cpsire[12], {x_pos: [0,1]})
                                                  * cfw_initial_wzida0e0b0xyg0 / sfw_initial_pa1e1b1nwzida0e0b0xyg0)
     adja_cfw_initial_x_pa1e1b1nwzida0e0b0xyg1 = (fun.f_slice(cx_cpdams[12], {x_pos: [1,2]})
@@ -2692,22 +2738,22 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     adja_fl_initial_x_pa1e1b1nwzida0e0b0xyg1 = fun.f_slice(cx_cpdams[12], {x_pos: [1,2]}) * fl_initial_wzida0e0b0xyg1 / sfw_initial_pa1e1b1nwzida0e0b0xyg1
     adja_fl_initial_x_pa1e1b1nwzida0e0b0xyg3 = fun.f_slice(cx_cpoffs[12], {x_pos: mask_x}) * fl_initial_wzida0e0b0xyg3 / sfw_initial_pa1e1b1nwzida0e0b0xyg3
     ##adjust for dam age. Note cfw & fl accumulate during the year therefore the adjustment factor is divided by std_fw because the full effect is only realised after a full wool growth cycle (whereas a fibre diameter difference is expressed every day)
-    adja_lw_initial_d_pa1e1b1nwzida0e0b0xyg0 = ce_cpsire[17, ...]   #ce[17] averaged across d
-    adja_lw_initial_d_pa1e1b1nwzida0e0b0xyg1 = ce_cpdams[17, ...]   #ce[17] averaged across d
-    adja_lw_initial_d_pa1e1b1nwzida0e0b0xyg3 = ce_d_cpoffs[17, ...]   #ce[17] active d
+    adja_ffcfw_initial_d_pa1e1b1nwzida0e0b0xyg0 = ce_cpsire[17, ...]   #ce[17] averaged across d
+    adja_ffcfw_initial_d_pa1e1b1nwzida0e0b0xyg1 = ce_cpdams[17, ...]   #ce[17] averaged across d
+    adja_ffcfw_initial_d_pa1e1b1nwzida0e0b0xyg3 = ce_d_cpoffs[17, ...]   #ce[17] active d
     adja_cfw_initial_d_pa1e1b1nwzida0e0b0xyg0 = ce_cpsire[12, ...] * cfw_initial_wzida0e0b0xyg0 / sfw_initial_pa1e1b1nwzida0e0b0xyg0
     adja_cfw_initial_d_pa1e1b1nwzida0e0b0xyg1 = ce_cpdams[12, ...] * cfw_initial_wzida0e0b0xyg1 / sfw_initial_pa1e1b1nwzida0e0b0xyg1
     adja_cfw_initial_d_pa1e1b1nwzida0e0b0xyg3 = ce_d_cpoffs[12, ...] * cfw_initial_wzida0e0b0xyg3 / sfw_initial_pa1e1b1nwzida0e0b0xyg3
-    adja_lw_initial_d_pa1e1b1nwzida0e0b0xyg0 = ce_cpsire[13, ...]   #ce[13] averaged across d
-    adja_lw_initial_d_pa1e1b1nwzida0e0b0xyg1 = ce_cpdams[13, ...]   #ce[13] averaged across d
-    adja_lw_initial_d_pa1e1b1nwzida0e0b0xyg3 = ce_d_cpoffs[13, ...]   #ce[13] active d
+    adja_fd_initial_d_pa1e1b1nwzida0e0b0xyg0 = ce_cpsire[13, ...]   #ce[13] averaged across d
+    adja_fd_initial_d_pa1e1b1nwzida0e0b0xyg1 = ce_cpdams[13, ...]   #ce[13] averaged across d
+    adja_fd_initial_d_pa1e1b1nwzida0e0b0xyg3 = ce_d_cpoffs[13, ...]   #ce[13] active d
     adja_fl_initial_d_pa1e1b1nwzida0e0b0xyg0 = ce_cpsire[12, ...] * fl_initial_wzida0e0b0xyg0 / sfw_initial_pa1e1b1nwzida0e0b0xyg0 #more understandable to think of the eqn as being fl_initial * ce[0]: fl initial * (cfw adj due to dam age / sfw)
     adja_fl_initial_d_pa1e1b1nwzida0e0b0xyg1 = ce_cpdams[12, ...] * fl_initial_wzida0e0b0xyg1 / sfw_initial_pa1e1b1nwzida0e0b0xyg1
     adja_fl_initial_d_pa1e1b1nwzida0e0b0xyg3 = ce_d_cpoffs[12, ...] * fl_initial_wzida0e0b0xyg3 / sfw_initial_pa1e1b1nwzida0e0b0xyg3
     ##adjust for btrt. Note cfw changes throughout the year therefore the adjustment factor will not be the same all yr hence divide by std_fw (same for fl) e.g. the impact of gender on cfw will be much less after only a short time (the parameter is a yearly factor e.g. male sheep have 0.02 kg more wool each yr)
-    adja_lw_initial_b0_pa1e1b1nwzida0e0b0xyg0 = np.sum(cb0_cpsire[17, ...] * btrt_propn_b0xyg0, axis=b0_pos) #b0 axis lost when summing
-    adja_lw_initial_b0_pa1e1b1nwzida0e0b0xyg1 = np.sum(cb0_cpdams[17, ...] * btrt_propn_b0xyg1, axis=b0_pos)
-    adja_lw_initial_b0_pa1e1b1nwzida0e0b0xyg3 = cb0_cpoffs[17, ...]
+    adja_ffcfw_initial_b0_pa1e1b1nwzida0e0b0xyg0 = np.sum(cb0_cpsire[17, ...] * btrt_propn_b0xyg0, axis=b0_pos) #b0 axis lost when summing
+    adja_ffcfw_initial_b0_pa1e1b1nwzida0e0b0xyg1 = np.sum(cb0_cpdams[17, ...] * btrt_propn_b0xyg1, axis=b0_pos)
+    adja_ffcfw_initial_b0_pa1e1b1nwzida0e0b0xyg3 = cb0_cpoffs[17, ...]
     adja_cfw_initial_b0_pa1e1b1nwzida0e0b0xyg0 = np.sum(cb0_cpsire[12, ...] * cfw_initial_wzida0e0b0xyg0 / sfw_initial_pa1e1b1nwzida0e0b0xyg0 * btrt_propn_b0xyg0, axis=b0_pos, keepdims=True)
     adja_cfw_initial_b0_pa1e1b1nwzida0e0b0xyg1 = np.sum(cb0_cpdams[12, ...] * cfw_initial_wzida0e0b0xyg1 / sfw_initial_pa1e1b1nwzida0e0b0xyg1 * btrt_propn_b0xyg1, axis=b0_pos, keepdims=True)
     adja_cfw_initial_b0_pa1e1b1nwzida0e0b0xyg3 = cb0_cpoffs[12, ...] * cfw_initial_wzida0e0b0xyg3 / sfw_initial_pa1e1b1nwzida0e0b0xyg3
@@ -2717,13 +2763,32 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     adja_fl_initial_b0_pa1e1b1nwzida0e0b0xyg0 = np.sum(cb0_cpsire[12, ...] * fl_initial_wzida0e0b0xyg0 / sfw_initial_pa1e1b1nwzida0e0b0xyg0 * btrt_propn_b0xyg0, axis=b0_pos, keepdims=True) #Should be fl_initial / sfw  So more understandable to think of the eqn as being fl_initial * cx[0] (cfw adj due to gender) / sfw
     adja_fl_initial_b0_pa1e1b1nwzida0e0b0xyg1 = np.sum(cb0_cpdams[12, ...] * fl_initial_wzida0e0b0xyg1 / sfw_initial_pa1e1b1nwzida0e0b0xyg1 * btrt_propn_b0xyg1, axis=b0_pos, keepdims=True)
     adja_fl_initial_b0_pa1e1b1nwzida0e0b0xyg3 = cb0_cpoffs[12, ...] * fl_initial_wzida0e0b0xyg3 / sfw_initial_pa1e1b1nwzida0e0b0xyg3
+    ###Calibration: the initial ffcfw input of the calibrated genotype is calculated so that the initial animal is the wWT target.
+    ### It is recalculated each evaluation, so it uses the SRW at weaning (srw_c2 & srw_p11) of the current coefficients.
+    ### wWT is the ffcfw at weaning of a single born (b0[0]) female (x[1]) from adult dams (d[2:]) with the standard weaning age (a[0]).
+    ### The coefficient (the % of SRW at weaning) is set so the initial ffcfw (w[0]) equals the target.
+    ### Note: The adjustments that are applied later have been defined to be zero (b0, x, d, & a axes)
+    ### The value is reported later as FFCFW_initial and is a component of the calibrated genotype
+    ### It is reported in TraitValues.xlsx rather than with the calibration coefficients.
+    ### Implement it with sav['ffcfw_initial_c2'].
+    if calibration_code_inc and np.isfinite(wwt_target):
+        ffcfw_initial_wwt = wwt_target / srw_female_wean_pa1e1b1nwzida0e0b0xyg1.flat[0]
+        ffcfw_initial_yg1[...] = ffcfw_initial_yg3[...] = ffcfw_initial_wwt
+    ffcfw_initial_parameter = ffcfw_initial_yg1.flat[0]   #handles an active y or g1 axis
+
+    ###Calculate ffcfw_initial from the initial ffcfw input which is a proportion of srw (fleece free, consistent with SRW
+    ### and normal weight, so the input is the ffcfw at weaning of a single born female of an adult dam / SRW).
+    ### Uses the female SRW at weaning (including srw_p11 for the age stage at weaning). Gender, dam age & BTRT are additive adjustments below.
+    ffcfw_initial_pa1e1b1nwzida0e0b0xyg0 = (ffcfw_initial_yg0 * (1 + adjp_ffcfw_initial_wzida0e0b0xyg0)) * srw_female_wean_pa1e1b1nwzida0e0b0xyg0
+    ffcfw_initial_pa1e1b1nwzida0e0b0xyg1 = (ffcfw_initial_yg1 * (1 + adjp_ffcfw_initial_wzida0e0b0xyg1)) * srw_female_wean_pa1e1b1nwzida0e0b0xyg1
+    ffcfw_initial_pa1e1b1nwzida0e0b0xyg3 = (ffcfw_initial_yg3 * (1 + adjp_ffcfw_initial_wzida0e0b0xyg3)) * srw_female_wean_pa1e1b1nwzida0e0b0xyg3
     ##apply adjustments to initial variables
-    lw_initial_pa1e1b1nwzida0e0b0xyg0 = (lw_initial_pa1e1b1nwzida0e0b0xyg0 * (1 + adjp_lw_initial_a_a0e0b0xyg0)
-               + adja_lw_initial_x_pa1e1b1nwzida0e0b0xyg0 + adja_lw_initial_d_pa1e1b1nwzida0e0b0xyg0 + adja_lw_initial_b0_pa1e1b1nwzida0e0b0xyg0)
-    lw_initial_pa1e1b1nwzida0e0b0xyg1 = (lw_initial_pa1e1b1nwzida0e0b0xyg1 * (1 + adjp_lw_initial_a_a0e0b0xyg1)
-               + adja_lw_initial_x_pa1e1b1nwzida0e0b0xyg1 + adja_lw_initial_d_pa1e1b1nwzida0e0b0xyg1 + adja_lw_initial_b0_pa1e1b1nwzida0e0b0xyg1)
-    lw_initial_pa1e1b1nwzida0e0b0xyg3 = (lw_initial_pa1e1b1nwzida0e0b0xyg3 * (1 + adjp_lw_initial_a_a0e0b0xyg3)
-               + adja_lw_initial_x_pa1e1b1nwzida0e0b0xyg3 + adja_lw_initial_d_pa1e1b1nwzida0e0b0xyg3 + adja_lw_initial_b0_pa1e1b1nwzida0e0b0xyg3)
+    ffcfw_initial_pa1e1b1nwzida0e0b0xyg0 = (ffcfw_initial_pa1e1b1nwzida0e0b0xyg0 * (1 + adjp_ffcfw_initial_a_a0e0b0xyg0)
+               + adja_ffcfw_initial_x_pa1e1b1nwzida0e0b0xyg0 + adja_ffcfw_initial_d_pa1e1b1nwzida0e0b0xyg0 + adja_ffcfw_initial_b0_pa1e1b1nwzida0e0b0xyg0)
+    ffcfw_initial_pa1e1b1nwzida0e0b0xyg1 = (ffcfw_initial_pa1e1b1nwzida0e0b0xyg1 * (1 + adjp_ffcfw_initial_a_a0e0b0xyg1)
+               + adja_ffcfw_initial_x_pa1e1b1nwzida0e0b0xyg1 + adja_ffcfw_initial_d_pa1e1b1nwzida0e0b0xyg1 + adja_ffcfw_initial_b0_pa1e1b1nwzida0e0b0xyg1)
+    ffcfw_initial_pa1e1b1nwzida0e0b0xyg3 = (ffcfw_initial_pa1e1b1nwzida0e0b0xyg3 * (1 + adjp_ffcfw_initial_a_a0e0b0xyg3)
+               + adja_ffcfw_initial_x_pa1e1b1nwzida0e0b0xyg3 + adja_ffcfw_initial_d_pa1e1b1nwzida0e0b0xyg3 + adja_ffcfw_initial_b0_pa1e1b1nwzida0e0b0xyg3)
     cfw_initial_pa1e1b1nwzida0e0b0xyg0 = (cfw_initial_wzida0e0b0xyg0 * (1 + adjp_cfw_initial_a_a0e0b0xyg0)
                + adja_cfw_initial_x_pa1e1b1nwzida0e0b0xyg0 + adja_cfw_initial_d_pa1e1b1nwzida0e0b0xyg0 + adja_cfw_initial_b0_pa1e1b1nwzida0e0b0xyg0)
     cfw_initial_pa1e1b1nwzida0e0b0xyg1 = (cfw_initial_wzida0e0b0xyg1 * (1 + adjp_cfw_initial_a_a0e0b0xyg1)
@@ -2731,11 +2796,11 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     cfw_initial_pa1e1b1nwzida0e0b0xyg3 = (cfw_initial_wzida0e0b0xyg3 * (1 + adjp_cfw_initial_a_a0e0b0xyg3)
                + adja_cfw_initial_x_pa1e1b1nwzida0e0b0xyg3 + adja_cfw_initial_d_pa1e1b1nwzida0e0b0xyg3 + adja_cfw_initial_b0_pa1e1b1nwzida0e0b0xyg3)
     fd_initial_pa1e1b1nwzida0e0b0xyg0 = (fd_initial_wzida0e0b0xyg0 * (1 + adjp_fd_initial_a_a0e0b0xyg0)
-               + adja_fd_initial_x_pa1e1b1nwzida0e0b0xyg0 + adja_lw_initial_d_pa1e1b1nwzida0e0b0xyg0 + adja_fd_initial_b0_pa1e1b1nwzida0e0b0xyg0)
+               + adja_fd_initial_x_pa1e1b1nwzida0e0b0xyg0 + adja_fd_initial_d_pa1e1b1nwzida0e0b0xyg0 + adja_fd_initial_b0_pa1e1b1nwzida0e0b0xyg0)
     fd_initial_pa1e1b1nwzida0e0b0xyg1 = (fd_initial_wzida0e0b0xyg1 * (1 + adjp_fd_initial_a_a0e0b0xyg1)
-               + adja_fd_initial_x_pa1e1b1nwzida0e0b0xyg1 + adja_lw_initial_d_pa1e1b1nwzida0e0b0xyg1 + adja_fd_initial_b0_pa1e1b1nwzida0e0b0xyg1)
+               + adja_fd_initial_x_pa1e1b1nwzida0e0b0xyg1 + adja_fd_initial_d_pa1e1b1nwzida0e0b0xyg1 + adja_fd_initial_b0_pa1e1b1nwzida0e0b0xyg1)
     fd_initial_pa1e1b1nwzida0e0b0xyg3 = (fd_initial_wzida0e0b0xyg3 * (1 + adjp_fd_initial_a_a0e0b0xyg3)
-               + adja_fd_initial_x_pa1e1b1nwzida0e0b0xyg3 + adja_lw_initial_d_pa1e1b1nwzida0e0b0xyg3 + adja_fd_initial_b0_pa1e1b1nwzida0e0b0xyg3)
+               + adja_fd_initial_x_pa1e1b1nwzida0e0b0xyg3 + adja_fd_initial_d_pa1e1b1nwzida0e0b0xyg3 + adja_fd_initial_b0_pa1e1b1nwzida0e0b0xyg3)
     fl_initial_pa1e1b1nwzida0e0b0xyg0 = (fl_initial_wzida0e0b0xyg0 * (1 + adjp_fl_initial_a_a0e0b0xyg0)
                + adja_fl_initial_x_pa1e1b1nwzida0e0b0xyg0 + adja_fl_initial_d_pa1e1b1nwzida0e0b0xyg0 + adja_fl_initial_b0_pa1e1b1nwzida0e0b0xyg0)
     fl_initial_pa1e1b1nwzida0e0b0xyg1 = (fl_initial_wzida0e0b0xyg1 * (1 + adjp_fl_initial_a_a0e0b0xyg1)
@@ -2744,22 +2809,20 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                + adja_fl_initial_x_pa1e1b1nwzida0e0b0xyg3 + adja_fl_initial_d_pa1e1b1nwzida0e0b0xyg3 + adja_fl_initial_b0_pa1e1b1nwzida0e0b0xyg3)
 
     ##if generating for stubble update initial params to reflect paddock trial
+    ### stubble['lw'] is the liveweight of the paddock trial so the fleece is removed to give ffcfw
     if stubble:
-        lw_initial_pa1e1b1nwzida0e0b0xyg1[...] = stubble['lw'][stubble['p_start']]
-        lw_initial_pa1e1b1nwzida0e0b0xyg3[...] = stubble['lw'][stubble['p_start']]
         cfw_initial_pa1e1b1nwzida0e0b0xyg1[...] = stubble['i_gfw'] * cw_cpdams[3, ...]
         cfw_initial_pa1e1b1nwzida0e0b0xyg3[...] = stubble['i_gfw'] * cw_cpoffs[3, ...]
+        ffcfw_initial_pa1e1b1nwzida0e0b0xyg1 = (np.full_like(ffcfw_initial_pa1e1b1nwzida0e0b0xyg1, stubble['lw'][stubble['p_start']])
+                                              - cfw_initial_pa1e1b1nwzida0e0b0xyg1 / cw_cpdams[3, ...])
+        ffcfw_initial_pa1e1b1nwzida0e0b0xyg3 = (np.full_like(ffcfw_initial_pa1e1b1nwzida0e0b0xyg3, stubble['lw'][stubble['p_start']])
+                                              - cfw_initial_pa1e1b1nwzida0e0b0xyg3 / cw_cpoffs[3, ...])
         fd_initial_pa1e1b1nwzida0e0b0xyg1[...] = stubble['i_fd']
         fd_initial_pa1e1b1nwzida0e0b0xyg3[...] = stubble['i_fd']
         fl_initial_pa1e1b1nwzida0e0b0xyg1[...] = stubble['i_fl']
         fl_initial_pa1e1b1nwzida0e0b0xyg3[...] = stubble['i_fl']
 
-    ##calc initial ffcfw
-    ffcfw_initial_pa1e1b1nwzida0e0b0xyg0 = lw_initial_pa1e1b1nwzida0e0b0xyg0 - cfw_initial_pa1e1b1nwzida0e0b0xyg0 / cw_cpsire[3, ...]
-    ffcfw_initial_pa1e1b1nwzida0e0b0xyg1 = lw_initial_pa1e1b1nwzida0e0b0xyg1 - cfw_initial_pa1e1b1nwzida0e0b0xyg1 / cw_cpdams[3, ...]
-    ffcfw_initial_pa1e1b1nwzida0e0b0xyg3 = lw_initial_pa1e1b1nwzida0e0b0xyg3 - cfw_initial_pa1e1b1nwzida0e0b0xyg3 / cw_cpoffs[3, ...]
-
-    ##calc initial ebw - uses the SRW at weaning to be consistent with lw_initial
+    ##calc initial ebw - uses the SRW at weaning to be consistent with ffcfw_initial
     ebw_initial_pa1e1b1nwzida0e0b0xyg0 = sfun.f1_ffcfw2ebw(cg_cpsire, cn_cpsire, ffcfw_initial_pa1e1b1nwzida0e0b0xyg0
                                             , srw_female_wean_pa1e1b1nwzida0e0b0xyg0, eqn_system = eqn_used_g0_q1p[7,0])
     ebw_initial_pa1e1b1nwzida0e0b0xyg1 = sfun.f1_ffcfw2ebw(cg_cpdams, cn_cpdams, ffcfw_initial_pa1e1b1nwzida0e0b0xyg1
@@ -2769,16 +2832,16 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
 
     ##calc fat, muscle and viscera weight using the composition at weaning that is consistent with the EVG parameters. See [Growth curve & partitioning.xlsx]
-    ### Composition is calculated at the standard initial relative size (lw_initial) and the BW of a single (cb0[15] b0 slice 0)
+    ### Composition is calculated at the standard initial relative size (ffcfw_initial) and the BW of a single (cb0[15] b0 slice 0)
     ### so it is the same for all animals in the group. todo option 2: use each animal's initial relative size (and possibly the BW of twins & triplets)
     ### todo the composition uses cg_cp (cg8 & cg9 without saa['evg_p11']) so the initial Fat% doesn't change with evg_p11. Change to use cg8 & cg9
-    ### including evg_p11 at weaning (as for srw_female_wean used for lw_initial) so it is consistent with the EVG of the age stage at weaning.
+    ### including evg_p11 at weaning (as for srw_female_wean used for ffcfw_initial) so it is consistent with the EVG of the age stage at weaning.
     ###Note:the EVG parameters cg_cp???? are the values prior to adding the saa_p11.
-    fat_propn_wean_yg0, muscle_propn_wean_yg0, viscera_propn_wean_yg0 = sfun.f1_fat_propn_initial(cg_cpsire, cb0_cpsire, lw_initial_yg0
+    fat_propn_wean_yg0, muscle_propn_wean_yg0, viscera_propn_wean_yg0 = sfun.f1_fat_propn_initial(cg_cpsire, cb0_cpsire, ffcfw_initial_yg0
                                             , fat_propn_birth_yg0)
-    fat_propn_wean_yg1, muscle_propn_wean_yg1, viscera_propn_wean_yg1 = sfun.f1_fat_propn_initial(cg_cpdams, cb0_cpdams, lw_initial_yg1
+    fat_propn_wean_yg1, muscle_propn_wean_yg1, viscera_propn_wean_yg1 = sfun.f1_fat_propn_initial(cg_cpdams, cb0_cpdams, ffcfw_initial_yg1
                                             , fat_propn_birth_yg1)
-    fat_propn_wean_yg3, muscle_propn_wean_yg3, viscera_propn_wean_yg3 = sfun.f1_fat_propn_initial(cg_cpoffs, cb0_cpoffs, lw_initial_yg3
+    fat_propn_wean_yg3, muscle_propn_wean_yg3, viscera_propn_wean_yg3 = sfun.f1_fat_propn_initial(cg_cpoffs, cb0_cpoffs, ffcfw_initial_yg3
                                             , fat_propn_birth_yg3)
     ###Sire
     fat_initial_pa1e1b1nwzida0e0b0xyg0 = fat_propn_wean_yg0 * ebw_initial_pa1e1b1nwzida0e0b0xyg0
@@ -3225,24 +3288,25 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     w_b_exp_pa1e1b1nwzida0e0b0xyg3 = w_b_std_b0_pa1e1b1nwzida0e0b0xyg3 * ce_d_relsize_cpoffs[15, ...]   #ce[15] with active d axis
 
     ##Normal weight max (if animal is well-fed)
-    ###Use a temporary variable and ensure that nw_max does not reduce, which could occur when SRW is adjusted for REVs at an age stage
-    t_nw_max_pa1e1b1nwzida0e0b0xyg0 = (srw_p_pa1e1b1nwzida0e0b0xyg0 * (1 - srw_age_pa1e1b1nwzida0e0b0xyg0)
-                                       + w_b_exp_pa1e1b1nwzida0e0b0xyg0 * srw_age_pa1e1b1nwzida0e0b0xyg0)
-    nw_max_pa1e1b1nwzida0e0b0xyg0 = np.maximum.accumulate(t_nw_max_pa1e1b1nwzida0e0b0xyg0, axis=0)
-    t_nw_max_pa1e1b1nwzida0e0b0xyg1 = (srw_p_pa1e1b1nwzida0e0b0xyg1 * (1 - srw_age_pa1e1b1nwzida0e0b0xyg1)
-                                       + w_b_exp_pa1e1b1nwzida0e0b0xyg1 * srw_age_pa1e1b1nwzida0e0b0xyg1)
-    nw_max_pa1e1b1nwzida0e0b0xyg1 = np.maximum.accumulate(t_nw_max_pa1e1b1nwzida0e0b0xyg1, axis=0)
-    t_nw_max_pa1e1b1nwzida0e0b0xyg3 = (srw_p_pa1e1b1nwzida0e0b0xyg3 * (1 - srw_age_pa1e1b1nwzida0e0b0xyg3)
-                                       + w_b_exp_pa1e1b1nwzida0e0b0xyg3 * srw_age_pa1e1b1nwzida0e0b0xyg3)
-    nw_max_pa1e1b1nwzida0e0b0xyg3 = np.maximum.accumulate(t_nw_max_pa1e1b1nwzida0e0b0xyg3, axis=0)
+    ###Calculated from the SRW of the current period, so if SRW changes between age stages (srw_p11 or the REV srw) nw_max follows the
+    ###growth curve of the current SRW. If SRW decreases, nw_max reduces and normal weight reverts (nw is capped by nw_max in the loop),
+    ###so an SRW increase in an earlier age stage does not raise normal weight later in life.
+    ###With a constant SRW nw_max increases with age, so this is the same as the previous cumulative maximum if srw_p11 and the REV srw are 0.
+    nw_max_pa1e1b1nwzida0e0b0xyg0 = (srw_p_pa1e1b1nwzida0e0b0xyg0 * (1 - srw_age_pa1e1b1nwzida0e0b0xyg0)
+                                     + w_b_exp_pa1e1b1nwzida0e0b0xyg0 * srw_age_pa1e1b1nwzida0e0b0xyg0)
+    nw_max_pa1e1b1nwzida0e0b0xyg1 = (srw_p_pa1e1b1nwzida0e0b0xyg1 * (1 - srw_age_pa1e1b1nwzida0e0b0xyg1)
+                                     + w_b_exp_pa1e1b1nwzida0e0b0xyg1 * srw_age_pa1e1b1nwzida0e0b0xyg1)
+    nw_max_pa1e1b1nwzida0e0b0xyg3 = (srw_p_pa1e1b1nwzida0e0b0xyg3 * (1 - srw_age_pa1e1b1nwzida0e0b0xyg3)
+                                     + w_b_exp_pa1e1b1nwzida0e0b0xyg3 * srw_age_pa1e1b1nwzida0e0b0xyg3)
 
     ##Change in normal weight max - the last period will be 0 by default but this is okay because nw hits an asymptote so change in will be 0 in the last period.
+    ###Not less than 0, because nw_max reduces if SRW decreases between age stages and the expected gain used in the mortality functions is not negative.
     d_nw_max_pa1e1b1nwzida0e0b0xyg0 = np.zeros_like(nw_max_pa1e1b1nwzida0e0b0xyg0)
-    d_nw_max_pa1e1b1nwzida0e0b0xyg0[0:-1, ...] = (nw_max_pa1e1b1nwzida0e0b0xyg0[1:, ...] - nw_max_pa1e1b1nwzida0e0b0xyg0[0:-1, ...]) / np.maximum(1,days_period_pa1e1b1nwzida0e0b0xyg0[0:-1, ...]) #np max to stop div/0
+    d_nw_max_pa1e1b1nwzida0e0b0xyg0[0:-1, ...] = np.maximum(0, nw_max_pa1e1b1nwzida0e0b0xyg0[1:, ...] - nw_max_pa1e1b1nwzida0e0b0xyg0[0:-1, ...]) / np.maximum(1,days_period_pa1e1b1nwzida0e0b0xyg0[0:-1, ...]) #np max to stop div/0
     d_nw_max_pa1e1b1nwzida0e0b0xyg1 = np.zeros_like(nw_max_pa1e1b1nwzida0e0b0xyg1)
-    d_nw_max_pa1e1b1nwzida0e0b0xyg1[0:-1, ...] = (nw_max_pa1e1b1nwzida0e0b0xyg1[1:, ...] - nw_max_pa1e1b1nwzida0e0b0xyg1[0:-1, ...]) / np.maximum(1,days_period_pa1e1b1nwzida0e0b0xyg1[0:-1, ...]) #np max to stop div/0
+    d_nw_max_pa1e1b1nwzida0e0b0xyg1[0:-1, ...] = np.maximum(0, nw_max_pa1e1b1nwzida0e0b0xyg1[1:, ...] - nw_max_pa1e1b1nwzida0e0b0xyg1[0:-1, ...]) / np.maximum(1,days_period_pa1e1b1nwzida0e0b0xyg1[0:-1, ...]) #np max to stop div/0
     d_nw_max_pa1e1b1nwzida0e0b0xyg3 = np.zeros_like(nw_max_pa1e1b1nwzida0e0b0xyg3)
-    d_nw_max_pa1e1b1nwzida0e0b0xyg3[0:-1, ...] = (nw_max_pa1e1b1nwzida0e0b0xyg3[1:, ...] - nw_max_pa1e1b1nwzida0e0b0xyg3[0:-1, ...]) / np.maximum(1,days_period_cut_pa1e1b1nwzida0e0b0xyg3[0:-1, ...]) #np max to stop div/0
+    d_nw_max_pa1e1b1nwzida0e0b0xyg3[0:-1, ...] = np.maximum(0, nw_max_pa1e1b1nwzida0e0b0xyg3[1:, ...] - nw_max_pa1e1b1nwzida0e0b0xyg3[0:-1, ...]) / np.maximum(1,days_period_cut_pa1e1b1nwzida0e0b0xyg3[0:-1, ...]) #np max to stop div/0
 
 
     #########################
@@ -3789,7 +3853,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         ##yatf
         d_cfw_history_start_p2g2[...] = np.nan
         #todo the yatf start weights (nw_start_yatf & ebw_start_yatf below) use srw_female averaged over the life of the animal. Change to the SRW at birth
-        # (including srw_p11 for the age stage at birth, as for lw_initial) when the system for calculating the value of a breeding value for birth weight is sorted out.
+        # (including srw_p11 for the age stage at birth, as for ffcfw_initial) when the system for calculating the value of a breeding value for birth weight is sorted out.
         nw_start_yatf = 0.1 * srw_female_pa1e1b1nwzida0e0b0xyg2   #srw_female because p axis is averaged
         rc_start_yatf = 1.0
         relsize_start_yatf = 0.1   #birth weight is approx 10% of SRW. Requires a value to stop div0 error
@@ -7362,7 +7426,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
                     pointers_sire, index_unique_w_sire = sfun.f1_collapse_pointers(p, ebw_sire, numbers_end_sire, n_startw_unique_next,
                                                               False, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2],
-                                                              lw_initial_pa1e1b1nwzida0e0b0xyg0)
+                                                              ffcfw_initial_pa1e1b1nwzida0e0b0xyg0)
                 else:
                     pointers_sire = np.array([np.nan]) #empty array so f_start_prod still works in the early periods.
                     index_unique_w_sire = np.array([np.nan]) #empty array so f_start_prod still works in the early periods.
@@ -7382,10 +7446,10 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     pointers_dams, index_unique_w_dams = sfun.f1_collapse_pointers(p, ebw_dams, numbers_end_dams
                                                 , n_startw_unique_next, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                                 , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2]
-                                                , lw_initial_pa1e1b1nwzida0e0b0xyg1
+                                                , ffcfw_initial_pa1e1b1nwzida0e0b0xyg1
                                                 , period_is_prejoin=period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
                                                   * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]
-                                                , prejoin_tup=prejoin_tup)
+                                                , prejoin_tup=prejoin_tup, prejoin_1to1=calibration_prejoin_1to1)
 
                     #store for lw dist
                     o_ebw_lw_dist_tpdams[:, p:p+1] = sfun.f1_collapse(pointers_dams, index_unique_w_dams, ebw_dams
@@ -7410,7 +7474,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     pointers_offs, index_unique_w_offs = sfun.f1_collapse_pointers(p, ebw_offs, numbers_end_offs, n_startw_unique_next_offs
                                                         , period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1:p+2]
                                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2]
-                                                        , lw_initial_pa1e1b1nwzida0e0b0xyg3)
+                                                        , ffcfw_initial_pa1e1b1nwzida0e0b0xyg3)
 
                     #store for lw dist
                     o_ebw_lw_dist_tpoffs[:, p:p+1] = sfun.f1_collapse(pointers_offs, index_unique_w_offs, ebw_offs, numbers_end_offs,
@@ -7630,13 +7694,13 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
                                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2], update=update_start_dams)
                 ###Dam mortality carryover (running tally of coeff * dam LW change during pregnancy)
-                cf_mort_start_damsp1p2 = sfun.f1_period_start_prod2(pointers_dams[...,na,na], index_unique_w_dams[...,na,na], cf_mort_damsp1p2
+                cf_mort_start_damsp1p2 = sfun.f1_period_start_prod2(pointers_dams[...,na,na,:], index_unique_w_dams[...,na,na], cf_mort_damsp1p2
                                         , numbers_end_dams[...,na,na], p_pos-2, w_pos-2, z_pos-2, tuple(x-2 for x in prejoin_tup)
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2,...,na,na], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2,...,na,na]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1:p+2,...,na,na] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1:p+2,...,na,na]
                                         , stub_lw_idx=stub_lw_idx_dams[...,na,na], len_gen_t=len_gen_t1, a_t_g=a_t_g1[...,na,na]
                                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1:p+2,...,na,na], update=update_start_dams)
-                cf_lact_start_damsp1p2 = sfun.f1_period_start_prod2(pointers_dams[...,na,na], index_unique_w_dams[...,na,na], cf_lact_damsp1p2
+                cf_lact_start_damsp1p2 = sfun.f1_period_start_prod2(pointers_dams[...,na,na,:], index_unique_w_dams[...,na,na], cf_lact_damsp1p2
                                         , numbers_end_dams[...,na,na], p_pos-2, w_pos-2, z_pos-2, tuple(x-2 for x in prejoin_tup)
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1:p+2,...,na,na], period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2,...,na,na]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1:p+2,...,na,na] * include_prejoin_average_pa1e1b1nwzida0e0b0xyg1[p+1:p+2,...,na,na]
@@ -7880,8 +7944,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     if np.any(period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1:p+2]): #using p+1 because this is being calculated at the end of the loop for next period.
                         ###slice the w axis just for the starting w slices.
                         pkl_ebw_condensed_dams = pkl_condensed_values['dams'][p]['ebw_dams']
-                        if not sinp.structuralsa['i_generate_with_t']:
-                            pkl_ebw_condensed_dams = np.take_along_axis(pkl_ebw_condensed_dams, a_t_tpg1[:,0,...], axis=p_pos)
+                        ###take the retained t slice if generating without t & align the axes with the current trial (with or without a singleton p axis)
+                        pkl_ebw_condensed_dams = sfun.f1_pkl_condensed_align(pkl_ebw_condensed_dams, ebw_start_dams,
+                                                                             sinp.structuralsa['i_generate_with_t'], a_t_g1)
 
                         pkl_ebw_condensed_dams = fun.f_slice(pkl_ebw_condensed_dams, {w_pos: [0, None
                                                 , int(pkl_ebw_condensed_dams.shape[w_pos] / w_start_len1)]})
@@ -7908,8 +7973,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     if np.any(period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1:p+2]):
                         ###slice the w axis just for the starting w slices.
                         pkl_ebw_condensed_offs = pkl_condensed_values['offs'][p]['ebw_offs']
-                        if not sinp.structuralsa['i_generate_with_t']:
-                            pkl_ebw_condensed_offs=pkl_ebw_condensed_offs[0:1,...]
+                        ###take the retained t slice if generating without t & align the axes with the current trial (with or without a singleton p axis)
+                        pkl_ebw_condensed_offs = sfun.f1_pkl_condensed_align(pkl_ebw_condensed_offs, ebw_start_offs,
+                                                                             sinp.structuralsa['i_generate_with_t'], a_t_g3)
                         pkl_ebw_condensed_offs = fun.f_slice(pkl_ebw_condensed_offs, {w_pos: [0, None
                                                         , int(pkl_ebw_condensed_offs.shape[w_pos] / w_start_len3)]})
                         t_fs_w_reallocation_tpa1e1b1nw8zida0e0b0xyg3s9 = sfun.f1_lw_distribution(pkl_ebw_condensed_offs,
@@ -8094,8 +8160,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     if calibration_code_inc or report_lp_traits:
         ##assign values to the p slices and ranges for the age stages. See
         ###WT slices
-        b_wt_slc = {p_pos: [135,292,52], b1_pos: 2, x_pos: [0,2]}     #1st cycle single born female & castrate yatf of 2 tooth and adult ewes at birth, annually
-        w_wt_slc = {p_pos: [147,304,52], b1_pos: 2, x_pos: [0,2]}     #1st cycle single born female & castrate yatf of 2 tooth and adult ewes at weaning, annually
+        x_female_yatf = np.count_nonzero(mask_x[:1])  #position of the female slice in the masked yatf x axis
+        b_wt_slc = {p_pos: [187,292,52], b1_pos: 2, x_pos: x_female_yatf}     #1st cycle single born female yatf of adult ewes at birth, annually
+        w_wt_slc = {p_pos: [199,304,52], b1_pos: 2, x_pos: x_female_yatf}     #1st cycle single born female yatf of adult ewes at weaning, annually
         p_wt_slc = {p_pos: 63, b1_pos: 0}     #NM ewes mid point of p age stage
         y_wt_slc = {p_pos: 84, b1_pos: 0}     #NM ewes mid point of y age stage
         h_wt_slc = {p_pos: 110, b1_pos: 0}    #NM ewes prior to prejoining for 2yo lambing
@@ -8473,7 +8540,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             ('yWT', ywt),
             ('hWT', hwt),
             ('aWT', awt),
-            ('SRW_input', srw_parameter),   # the SRW used excluding srw_p11 (endogenous if calculated from the targets). The value for sav['srw_c2'] in exp.xlsx
+            ('FFCFW_initial', ffcfw_initial_parameter),   # the initial ffcfw input (proportion of SRW at weaning) used. Calculated from the wWT target when calibrating. Use this value for sav['ffcfw_initial_c2'] in exp.xlsx
+            ('SRW_input', srw_parameter),   # the SRW used excluding srw_p11 (endogenous if calculated from the targets). When calculated endogenously use this value for sav['srw_c2'] in exp.xlsx
             ('SRW_result', srw_from_fat),   # the SRW estimated from the simulated adult LW & Fat%. EVG can be fitted to it
             ('pFAT', pfat),
             ('yFAT', yfat),
@@ -8557,7 +8625,6 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         for i, (name, value) in enumerate(trait_values):
             trait_values_p[i] = value
 
-        #if calibrate_trait_values:
         ### Handle the multi-trait calibration using an a-priority method
         ###Option 1 A linear scalarising method using calibration_weights from [Calibration_control.xlsx]TargetWeightings!
         ### The weighting is a subjective weight multiplied by the inverse of the target trait value.
@@ -8612,8 +8679,12 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             logger.debug(f"YERA twins target {yera2_target} this {yera2} with ({sen.saa['era_p11'][y]})")
             logger.debug(f"AERA twins target {aera2_target} this {aera2} with ({sen.saa['era_p11'][a]})")
             logger.debug(f"2yo={a2era2} 3yo={a3era2} 4yo={a4era2} 5yo={a5era2}")
+            ##srw_p11[w] & milk_scalar in the WWT line below are the totals including k_srw & k_cl0 x w_wt when w_wt is active
+            if wwt_calibrated:
+                logger.debug(f"Weaning weight coefficient w_wt {w_wt} (k_cl0={k_cl0}, k_srw={k_srw})")
             logger.debug(f"BWT target {bwt_target} this {bwt} with (srw_p11={sen.saa['srw_p11'][b]})")
             logger.debug(f"WWT target {wwt_target} this {wwt} with (srw_p11={sen.saa['srw_p11'][w]} & milk_scalar={sen.saa['milk_yield']})")
+            logger.debug(f"Initial ffcfw% {ffcfw_initial_parameter} (proportion of SRW at weaning, from the wWT target when calibrating)")
             logger.debug(f"PWT target {pwt_target} this {pwt} with (srw_p11={sen.saa['srw_p11'][p]})")
             logger.debug(f"YWT target {ywt_target} this {ywt} with (srw_p11={sen.saa['srw_p11'][y]}, k={sen.saa['growth_constant']} & PI={sen.saa['pi_p11'][y]})")
             logger.debug(f"HWT target {hwt_target} this {hwt} with (srw_p11={sen.saa['srw_p11'][h]})")
@@ -8630,6 +8701,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             logger.debug(f"HCS target {hcs_target} this {hcs} with (PI={sen.saa['pi_p11'][h]})")
             logger.debug(f"ACS target {acs_target} this {acs} with (PI={sen.saa['pi_p11'][a]})")
             logger.debug(f"2yo={a2cs} 3yo={a3cs} 4yo={a4cs} 5yo={a5cs}")
+            ##EVG & PI below are the total saa including the energy (k_evg & k_pi x energy) when the energy coefficient is active
+            if energy_calibrated:
+                logger.debug(f"Energy {energy_p11[a]} (k_evg={energy_k_evg}, k_pi={energy_k_pi})")
             logger.debug(f"PWBE target {pwbe_target} this {pwbe} with (EVG={sen.saa['evg_p11'][p]} & PI={sen.saa['pi_p11'][p]})")
             logger.debug(f"YWBE target {ywbe_target} this {ywbe} with (EVG={sen.saa['evg_p11'][y]} & PI={sen.saa['pi_p11'][y]})")
             logger.debug(f"HWBE target {hwbe_target} this {hwbe} with (EVG={sen.saa['evg_p11'][h]} & PI={sen.saa['pi_p11'][h]})")
