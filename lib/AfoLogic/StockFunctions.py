@@ -1023,10 +1023,10 @@ def f1_efficiency_cs(ck, md_solid, i_md_supp, md_herb, lgf_eff, dlf_eff, sam_kg=
 
 def f1_efficiency_mu(ck, md_solid, km):
     ##Partial efficiency of energy use. This differs from CS version because HAF above maintenance is included in MR
-    ##Lactation
+    ##Lactation. Note: coefficients are efficiency (using CSIRO values).
     kl =  (ck[5, ...] + ck[6, ...] * md_solid) / km
-    ##Wool growth
-    kw =  (ck[37, ...] + ck[38, ...] * md_solid) / km
+    ##Wool growth. Note: coefficients are partial efficiency in Universal.xlsx
+    kw =  (ck[37, ...] + ck[38, ...] * md_solid)
     return kl, kw
 
 
@@ -1334,7 +1334,6 @@ def f_energy_mu(cx, cm, lw, lean
     hp_mei = bmei * mei
     ##Equivalent of meme from CSIRO feeding standards. Estimate of MEI for a non-reproducing animals when RE==0
     meme_cs = (emetab + egraze + omer) / km
-    ##Calculate hp_maint for comparison with the new feeding standards which include HP for MEI above maintenance
     return neme, hp_mei, meme_cs
 
 
@@ -1731,10 +1730,11 @@ def f_fibre_mu(cw_g, cc_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_p
             , rev_trait_value, nec_g1=0, kc_g1=1, nel_g1=0, kl_g1=1, gest_propn_g1=0, lact_propn_g1=0, sam_pi=1):
     ##Wool growth is a copy of CSIRO but with different calculation of energy stored and heat production
     ##Uses terminology of wool base as used in the IWTO testing standards.
-    ## WB is clean dry fibre (no residual dirt or grease). CFW includes moisture and residual grease and dirt.
-    ##Energy content of wool is specified as MJ/kg of wool base (following Young 2024)
+    ## WB is clean dry fibre (no residual dirt or grease). CFW includes moisture (16% regain)
+    ### Note: residual grease and dirt as included in Schlumberger dry yield is not included.
+    ##Energy content of wool is specified as MJ/kg of wool base (following Young et al. 2026)
     ##adjust wge, cfw_ave, new_min & sfd for the LTW adjustments (CFW is a scalar and FD is an addition)
-    wbge_a0e0b0xyg = wge_a0e0b0xyg * sfw_ltwadj_g / cw_g[22, ...]
+    wbge_a0e0b0xyg = wge_a0e0b0xyg * cw_g[20, ...] * sfw_ltwadj_g
     d_cfw_ave_g = d_cfw_ave_g * sfw_ltwadj_g
     new_min_g = new_min_g * sfw_ltwadj_g
     sfd_a0e0b0xyg = sfd_a0e0b0xyg + sfd_ltwadj_g
@@ -1758,9 +1758,9 @@ def f_fibre_mu(cw_g, cc_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_p
     d_wb_g = d_cfw_g / cw_g[22, ...]
     ##Net energy required for wool (above basal growth rate converted to WB)
     ###can be negative because mem assumes 4g of clean wool is grown. If less is grown then new 'returns' the energy.
-    new_g = cw_g[0, ...] * (d_wb_g - cw_g[2, ...] * relsize_start_g / cw_g[22, ...])
-    ##Convert wool base to CFW (using Schlumberger Dry factor)
-    d_cfw_g = d_wb_g * cw_g[22, ...]
+    new_g = cw_g[0, ...] * (d_wb_g - cw_g[2, ...] * relsize_start_g * cw_g[20, ...])
+    ##Convert wool base to CFW (using DM content of wool)
+    d_cfw_g = d_wb_g / cw_g[20, ...]
     ##Fibre diameter for the days growth (um)
     ###Average daily CFW is scaled by af_fd which is the age factor related to number of follicles.
     ###When af_cfw & af_fd are the same the FD doesn't change with age.
@@ -1979,7 +1979,8 @@ def f_heatloss_nfs(cc, ffcfw_start, rc_start, sl_start, temp_ave, temp_max, temp
     return total_heat_loss_m0p1
 
 
-def f_lwc_cs(cg, rc_start, mei, mem, new, zf1, zf2, kg, kw, age, rev_trait_value, nec = 0, kc = 1, nel = 0, kl = 1
+def f_lwc_cs(cg, rc_start, mei, mem, new, zf1
+             , zf2, kg, kw, age, rev_trait_value, nec = 0, kc = 1, nel = 0, kl = 1
              , gest_propn = 0, lact_propn = 0, days_per_period=7, b_mask = 1, ebw_start = None):
     ##Note: The energy components of rev_trait_value are not active in this function. Have to be using f_lwc_nfs
     ##ebw_start is only required for EVG at the mid-period rc (sav['lwc_mid_rc'])
