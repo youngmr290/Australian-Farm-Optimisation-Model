@@ -2672,9 +2672,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     ##Note: MU feeding standards are calculated later because they are a partial efficiency (PE). PEw = kw / km
     kc_cs_pa1e1b1nwzida0e0b0xyg1 = ck_cpdams[8,...]
 
-    ####################
-    #initial conditions#
-    ####################
+    #######################
+    #initial conditions 1 #
+    #######################
     ##step - used to expand start lw adjustment to all lw patterns
     step_w1 = len_w1/w_start_len1
     step_w3 = len_w3/w_start_len3
@@ -2831,61 +2831,6 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     ebw_initial_pa1e1b1nwzida0e0b0xyg3 = sfun.f1_ffcfw2ebw(cg_cpoffs, cn_cpoffs, ffcfw_initial_pa1e1b1nwzida0e0b0xyg3
                                             , srw_female_wean_pa1e1b1nwzida0e0b0xyg3, eqn_system = eqn_used_g3_q1p[7,0])
 
-
-    ##calc fat, muscle and viscera weight using the composition at weaning that is consistent with the EVG parameters. See [Growth curve & partitioning.xlsx]
-    ### Composition is calculated at the standard initial relative size (ffcfw_initial) and the BW of a single (cb0[15] b0 slice 0)
-    ### so it is the same for all animals in the group. todo option 2: use each animal's initial relative size (and possibly the BW of twins & triplets)
-    ### todo the composition uses cg_cp (cg8 & cg9 without saa['evg_p11']) so the initial Fat% doesn't change with evg_p11. Change to use cg8 & cg9
-    ### including evg_p11 at weaning (as for srw_female_wean used for ffcfw_initial) so it is consistent with the EVG of the age stage at weaning.
-    ###Note:the EVG parameters cg_cp???? are the values prior to adding the saa_p11.
-    fat_propn_wean_yg0, muscle_propn_wean_yg0, viscera_propn_wean_yg0 = sfun.f1_fat_propn_initial(cg_cpsire, cb0_cpsire, ffcfw_initial_yg0
-                                            , fat_propn_birth_yg0)
-    fat_propn_wean_yg1, muscle_propn_wean_yg1, viscera_propn_wean_yg1 = sfun.f1_fat_propn_initial(cg_cpdams, cb0_cpdams, ffcfw_initial_yg1
-                                            , fat_propn_birth_yg1)
-    fat_propn_wean_yg3, muscle_propn_wean_yg3, viscera_propn_wean_yg3 = sfun.f1_fat_propn_initial(cg_cpoffs, cb0_cpoffs, ffcfw_initial_yg3
-                                            , fat_propn_birth_yg3)
-    ###Sire
-    fat_initial_pa1e1b1nwzida0e0b0xyg0 = fat_propn_wean_yg0 * ebw_initial_pa1e1b1nwzida0e0b0xyg0
-    muscle_initial_pa1e1b1nwzida0e0b0xyg0  = muscle_propn_wean_yg0 * ebw_initial_pa1e1b1nwzida0e0b0xyg0
-    viscera_initial_pa1e1b1nwzida0e0b0xyg0 = viscera_propn_wean_yg0 * ebw_initial_pa1e1b1nwzida0e0b0xyg0
-    ###Dams
-    fat_initial_pa1e1b1nwzida0e0b0xyg1 = fat_propn_wean_yg1 * ebw_initial_pa1e1b1nwzida0e0b0xyg1
-    muscle_initial_pa1e1b1nwzida0e0b0xyg1  = muscle_propn_wean_yg1 * ebw_initial_pa1e1b1nwzida0e0b0xyg1
-    viscera_initial_pa1e1b1nwzida0e0b0xyg1 = viscera_propn_wean_yg1 * ebw_initial_pa1e1b1nwzida0e0b0xyg1
-    ###Offs
-    fat_initial_pa1e1b1nwzida0e0b0xyg3 = fat_propn_wean_yg3 * ebw_initial_pa1e1b1nwzida0e0b0xyg3
-    muscle_initial_pa1e1b1nwzida0e0b0xyg3  = muscle_propn_wean_yg3 * ebw_initial_pa1e1b1nwzida0e0b0xyg3
-    viscera_initial_pa1e1b1nwzida0e0b0xyg3 = viscera_propn_wean_yg3 * ebw_initial_pa1e1b1nwzida0e0b0xyg3
-
-    # ##calc fat, muscle and viscera weight using f1_body_composition() based on Oddy [Sheep calcs.xlsx] relationships.
-    # ### No b axis on srw so that initial doesn't have a random effect from RR SA.
-    # fat_initial_pa1e1b1nwzida0e0b0xyg0, muscle_initial_pa1e1b1nwzida0e0b0xyg0, viscera_initial_pa1e1b1nwzida0e0b0xyg0 \
-    #     = sfun.f1_body_composition(cg_cpsire, cn_cpsire, fun.f_slice(cx_cpsire, {x_pos: [0,1]})
-    #                                , ebw_initial_pa1e1b1nwzida0e0b0xyg0, srw_female_pa1e1b1nwzida0e0b0xyg0
-    #                                , eqn_system = eqn_used_g0_q1p[7,0])
-    # fat_initial_pa1e1b1nwzida0e0b0xyg1, muscle_initial_pa1e1b1nwzida0e0b0xyg1, viscera_initial_pa1e1b1nwzida0e0b0xyg1 \
-    #     = sfun.f1_body_composition(cg_cpdams, cn_cpdams, fun.f_slice(cx_cpdams, {x_pos: [1,2]})
-    #                                , ebw_initial_pa1e1b1nwzida0e0b0xyg1, srw_female_pa1e1b1nwzida0e0b0xyg1
-    #                                , eqn_system = eqn_used_g1_q1p[7,0])
-    # fat_initial_pa1e1b1nwzida0e0b0xyg3, muscle_initial_pa1e1b1nwzida0e0b0xyg3, viscera_initial_pa1e1b1nwzida0e0b0xyg3 \
-    #     = sfun.f1_body_composition(cg_cpoffs, cn_cpoffs, fun.f_slice(cx_cpoffs, {x_pos: mask_x})
-    #                                , ebw_initial_pa1e1b1nwzida0e0b0xyg3, srw_female_pa1e1b1nwzida0e0b0xyg3
-    #                                , eqn_system = eqn_used_g3_q1p[7,0])
-
-    ##if stubble update fat, muscle and viscera weight   Stubble is using the same functions but with a custom m/d and b axis on srw
-    if stubble:
-        fat_initial_pa1e1b1nwzida0e0b0xyg0, muscle_initial_pa1e1b1nwzida0e0b0xyg0, viscera_initial_pa1e1b1nwzida0e0b0xyg0 \
-            = sfun.f1_body_composition(cg_cpsire, cn_cpsire, fun.f_slice(cx_cpsire, {x_pos: [0,1]})
-                                       , ebw_initial_pa1e1b1nwzida0e0b0xyg0, srw_female_pa1e1b1nwzida0e0b0xyg0
-                                       , stubble['i_md'], eqn_system = eqn_used_g0_q1p[7,0])
-        fat_initial_pa1e1b1nwzida0e0b0xyg1, muscle_initial_pa1e1b1nwzida0e0b0xyg1, viscera_initial_pa1e1b1nwzida0e0b0xyg1 \
-            = sfun.f1_body_composition(cg_cpdams, cn_cpdams, fun.f_slice(cx_cpdams, {x_pos: [1,2]})
-                                       , ebw_initial_pa1e1b1nwzida0e0b0xyg1, srw_female_pa1e1b1nwzida0e0b0xyg1
-                                       , stubble['i_md'], eqn_system = eqn_used_g1_q1p[7,0])
-        fat_initial_pa1e1b1nwzida0e0b0xyg3, muscle_initial_pa1e1b1nwzida0e0b0xyg3, viscera_initial_pa1e1b1nwzida0e0b0xyg3 \
-            = sfun.f1_body_composition(cg_cpoffs, cn_cpoffs, fun.f_slice(cx_cpoffs, {x_pos: mask_x})
-                                       , ebw_initial_pa1e1b1nwzida0e0b0xyg3, srw_female_pa1e1b1nwzida0e0b0xyg3
-                                       , stubble['i_md'], eqn_system = eqn_used_g3_q1p[7,0])
 
     ##numbers
     ###Distribution of initial numbers across the a1 axis
@@ -3308,6 +3253,108 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     d_nw_max_pa1e1b1nwzida0e0b0xyg1[0:-1, ...] = np.maximum(0, nw_max_pa1e1b1nwzida0e0b0xyg1[1:, ...] - nw_max_pa1e1b1nwzida0e0b0xyg1[0:-1, ...]) / np.maximum(1,days_period_pa1e1b1nwzida0e0b0xyg1[0:-1, ...]) #np max to stop div/0
     d_nw_max_pa1e1b1nwzida0e0b0xyg3 = np.zeros_like(nw_max_pa1e1b1nwzida0e0b0xyg3)
     d_nw_max_pa1e1b1nwzida0e0b0xyg3[0:-1, ...] = np.maximum(0, nw_max_pa1e1b1nwzida0e0b0xyg3[1:, ...] - nw_max_pa1e1b1nwzida0e0b0xyg3[0:-1, ...]) / np.maximum(1,days_period_cut_pa1e1b1nwzida0e0b0xyg3[0:-1, ...]) #np max to stop div/0
+
+    #######################################
+    #Composition and initial conditions 2 #
+    #######################################
+    #The updated method requires nw_max so this is separate from #initial conditions 1#
+    ##Initial composition is at the reference composition at its initial nw & rc consistent with the EVG parameters
+    ##and the calculations in [Growth curve & partitioning.xlsx]
+    ### The reference composition at each animal's initial state includes initial FFCFW with the w, x, d & b0 adjustments
+    ### b0 is active for offs, sire & dams (no active b0 axis) use the average weighted by the BTRT proportions (as w_b_std).
+    ### Lambs with a lower birth weight have a higher level of feeding on the standard path.
+    ###Note:the EVG parameters cg_cp???? are the values prior to adding the saa_p11.
+    ###todo the composition uses cg_cp (cg8 & cg9 without saa['evg_p11']) so the initial Fat% doesn't change with evg_p11.
+    ### Change to use cg8 & cg9 including evg_p11 (as for ffcfw_initial which uses srw_female_wean)
+    ### so it is consistent with the EVG of the age stage at weaning.
+
+    ##Composition term of EVG: the rate of reversion (only dams & offs revert, the composition of sire & yatf is not
+    ## altered).
+    evg_comp_k = fun.f_sa(0.0, sen.sav['evg_comp_k'], 5)
+
+    ###The composition is from the normal growth path with the level of feeding declining as relative size increases (cg40 &
+    ### cg41), the same path as the reference composition of the EVG composition term (sav['evg_comp_k']) so the animal starts
+    ### at the reference. The exponent of the level of feeding is cg41 / cx1 so it varies with the growth rate of the sex.
+    level_power_yg0 = cg_cpsire[41, ...] / fun.f_slice(cx_cpsire[1, ...], {x_pos: [0,1]})
+    level_power_yg1 = cg_cpdams[41, ...] / fun.f_slice(cx_cpdams[1, ...], {x_pos: [1,2]})
+    level_power_yg3 = cg_cpoffs[41, ...] / fun.f_slice(cx_cpoffs[1, ...], {x_pos: mask_x})
+    ### Size at birth relative to the SRW of the sex (cx15 / cx11) because z on the path is nw / SRW of the sex
+    relsize_birth_yg0 = (np.sum(cb0_cpsire[15, ...] * btrt_propn_b0xyg0, axis = b0_pos, keepdims=True)
+                        * fun.f_slice(cx_cpsire[15, ...] / cx_cpsire[11, ...], {x_pos: [0,1]}))
+    relsize_birth_yg1 = (np.sum(cb0_cpdams[15, ...] * btrt_propn_b0xyg1, axis = b0_pos, keepdims=True)
+                        * fun.f_slice(cx_cpdams[15, ...] / cx_cpdams[11, ...], {x_pos: [1,2]}))
+    relsize_birth_yg3 = cb0_cpoffs[15, ...] * fun.f_slice(cx_cpoffs[15, ...] / cx_cpoffs[11, ...], {x_pos: mask_x})
+    ### Initial normal weight, relative size & condition as in the first period of the loop
+    ### nw start = ffcfw + cn3 x (nw_max - ffcfw) (capped at nw_max).
+    ### Note: The weaning index is clipped separately for srw_p (p is a singleton if the p11 saa are not active) & nw_max (full p axis).
+    def f_initial_state(cg, cn, ffcfw, srw_p, nw_max_p, date_weaned_idx):
+        srw_wean = np.take_along_axis(srw_p, np.clip(date_weaned_idx, 0, srw_p.shape[p_pos] - 1), axis=p_pos)
+        nw_max_wean = np.take_along_axis(nw_max_p, np.clip(date_weaned_idx, 0, nw_max_p.shape[p_pos] - 1), axis=p_pos)
+        nw = np.minimum(nw_max_wean, ffcfw + cn[3, ...] * (nw_max_wean - ffcfw))
+        relsize1 = np.minimum(ffcfw, nw_max_wean) / srw_wean
+        zf2 = np.clip((relsize1 - cg[6, ...]) / (cg[7, ...] - cg[6, ...]), 0, 1)
+        return nw / srw_wean, fun.f_divide(ffcfw, nw), zf2
+    relsize_initial_yg0, relcond_initial_yg0, zf2_initial_yg0 = f_initial_state(cg_cpsire, cn_cpsire
+                                        , ffcfw_initial_pa1e1b1nwzida0e0b0xyg0, srw_p_pa1e1b1nwzida0e0b0xyg0
+                                        , nw_max_pa1e1b1nwzida0e0b0xyg0, date_weaned_idx_i_pa1e1b1nwzida0e0b0xyg0)
+    relsize_initial_yg1, relcond_initial_yg1, zf2_initial_yg1 = f_initial_state(cg_cpdams, cn_cpdams
+                                        , ffcfw_initial_pa1e1b1nwzida0e0b0xyg1, srw_p_pa1e1b1nwzida0e0b0xyg1
+                                        , nw_max_pa1e1b1nwzida0e0b0xyg1, date_weaned_idx_i_pa1e1b1nwzida0e0b0xyg1)
+    relsize_initial_yg3, relcond_initial_yg3, zf2_initial_yg3 = f_initial_state(cg_cpoffs, cn_cpoffs
+                                        , ffcfw_initial_pa1e1b1nwzida0e0b0xyg3, srw_p_pa1e1b1nwzida0e0b0xyg3
+                                        , nw_max_pa1e1b1nwzida0e0b0xyg3, date_weaned_idx_i_pa1e1b1nwzida0e0b0xyg3)
+    fat_propn_wean_yg0, muscle_propn_wean_yg0, viscera_propn_wean_yg0 = sfun.f1_fat_propn(cg_cpsire, relsize_birth_yg0
+                                            , relsize_initial_yg0, relcond_initial_yg0, zf2_initial_yg0
+                                            , fat_propn_birth_yg0, level_power_yg0)
+    fat_propn_wean_yg1, muscle_propn_wean_yg1, viscera_propn_wean_yg1 = sfun.f1_fat_propn(cg_cpdams, relsize_birth_yg1
+                                            , relsize_initial_yg1, relcond_initial_yg1, zf2_initial_yg1
+                                            , fat_propn_birth_yg1, level_power_yg1)
+    fat_propn_wean_yg3, muscle_propn_wean_yg3, viscera_propn_wean_yg3 = sfun.f1_fat_propn(cg_cpoffs, relsize_birth_yg3
+                                            , relsize_initial_yg3, relcond_initial_yg3, zf2_initial_yg3
+                                            , fat_propn_birth_yg3, level_power_yg3)
+    ###Sire
+    fat_initial_pa1e1b1nwzida0e0b0xyg0 = fat_propn_wean_yg0 * ebw_initial_pa1e1b1nwzida0e0b0xyg0
+    muscle_initial_pa1e1b1nwzida0e0b0xyg0  = muscle_propn_wean_yg0 * ebw_initial_pa1e1b1nwzida0e0b0xyg0
+    viscera_initial_pa1e1b1nwzida0e0b0xyg0 = viscera_propn_wean_yg0 * ebw_initial_pa1e1b1nwzida0e0b0xyg0
+    ###Dams
+    fat_initial_pa1e1b1nwzida0e0b0xyg1 = fat_propn_wean_yg1 * ebw_initial_pa1e1b1nwzida0e0b0xyg1
+    muscle_initial_pa1e1b1nwzida0e0b0xyg1  = muscle_propn_wean_yg1 * ebw_initial_pa1e1b1nwzida0e0b0xyg1
+    viscera_initial_pa1e1b1nwzida0e0b0xyg1 = viscera_propn_wean_yg1 * ebw_initial_pa1e1b1nwzida0e0b0xyg1
+    ###Offs
+    fat_initial_pa1e1b1nwzida0e0b0xyg3 = fat_propn_wean_yg3 * ebw_initial_pa1e1b1nwzida0e0b0xyg3
+    muscle_initial_pa1e1b1nwzida0e0b0xyg3  = muscle_propn_wean_yg3 * ebw_initial_pa1e1b1nwzida0e0b0xyg3
+    viscera_initial_pa1e1b1nwzida0e0b0xyg3 = viscera_propn_wean_yg3 * ebw_initial_pa1e1b1nwzida0e0b0xyg3
+
+    # ##calc fat, muscle and viscera weight using f1_body_composition() based on Oddy [Sheep calcs.xlsx] relationships.
+    # ### No b axis on srw so that initial doesn't have a random effect from RR SA.
+    # fat_initial_pa1e1b1nwzida0e0b0xyg0, muscle_initial_pa1e1b1nwzida0e0b0xyg0, viscera_initial_pa1e1b1nwzida0e0b0xyg0 \
+    #     = sfun.f1_body_composition(cg_cpsire, cn_cpsire, fun.f_slice(cx_cpsire, {x_pos: [0,1]})
+    #                                , ebw_initial_pa1e1b1nwzida0e0b0xyg0, srw_female_pa1e1b1nwzida0e0b0xyg0
+    #                                , eqn_system = eqn_used_g0_q1p[7,0])
+    # fat_initial_pa1e1b1nwzida0e0b0xyg1, muscle_initial_pa1e1b1nwzida0e0b0xyg1, viscera_initial_pa1e1b1nwzida0e0b0xyg1 \
+    #     = sfun.f1_body_composition(cg_cpdams, cn_cpdams, fun.f_slice(cx_cpdams, {x_pos: [1,2]})
+    #                                , ebw_initial_pa1e1b1nwzida0e0b0xyg1, srw_female_pa1e1b1nwzida0e0b0xyg1
+    #                                , eqn_system = eqn_used_g1_q1p[7,0])
+    # fat_initial_pa1e1b1nwzida0e0b0xyg3, muscle_initial_pa1e1b1nwzida0e0b0xyg3, viscera_initial_pa1e1b1nwzida0e0b0xyg3 \
+    #     = sfun.f1_body_composition(cg_cpoffs, cn_cpoffs, fun.f_slice(cx_cpoffs, {x_pos: mask_x})
+    #                                , ebw_initial_pa1e1b1nwzida0e0b0xyg3, srw_female_pa1e1b1nwzida0e0b0xyg3
+    #                                , eqn_system = eqn_used_g3_q1p[7,0])
+
+    ##if stubble update fat, muscle and viscera weight   Stubble is using the same functions but with a custom m/d and b axis on srw
+    if stubble:
+        fat_initial_pa1e1b1nwzida0e0b0xyg0, muscle_initial_pa1e1b1nwzida0e0b0xyg0, viscera_initial_pa1e1b1nwzida0e0b0xyg0 \
+            = sfun.f1_body_composition(cg_cpsire, cn_cpsire, fun.f_slice(cx_cpsire, {x_pos: [0,1]})
+                                       , ebw_initial_pa1e1b1nwzida0e0b0xyg0, srw_female_pa1e1b1nwzida0e0b0xyg0
+                                       , stubble['i_md'], eqn_system = eqn_used_g0_q1p[7,0])
+        fat_initial_pa1e1b1nwzida0e0b0xyg1, muscle_initial_pa1e1b1nwzida0e0b0xyg1, viscera_initial_pa1e1b1nwzida0e0b0xyg1 \
+            = sfun.f1_body_composition(cg_cpdams, cn_cpdams, fun.f_slice(cx_cpdams, {x_pos: [1,2]})
+                                       , ebw_initial_pa1e1b1nwzida0e0b0xyg1, srw_female_pa1e1b1nwzida0e0b0xyg1
+                                       , stubble['i_md'], eqn_system = eqn_used_g1_q1p[7,0])
+        fat_initial_pa1e1b1nwzida0e0b0xyg3, muscle_initial_pa1e1b1nwzida0e0b0xyg3, viscera_initial_pa1e1b1nwzida0e0b0xyg3 \
+            = sfun.f1_body_composition(cg_cpoffs, cn_cpoffs, fun.f_slice(cx_cpoffs, {x_pos: mask_x})
+                                       , ebw_initial_pa1e1b1nwzida0e0b0xyg3, srw_female_pa1e1b1nwzida0e0b0xyg3
+                                       , stubble['i_md'], eqn_system = eqn_used_g3_q1p[7,0])
+
 
 
     #########################
@@ -5341,7 +5388,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                 , ck_cpsire, rc_start_sire, mei_sire, neme_mu_sire, km_sire, hp_mei_mu_sire, new_sire
                                 , kw_mu_yg0, zf1_sire, zf2_sire, heat_loss_sirem0p1, age_pa1e1b1nwzida0e0b0xyg0[p:p+1]
                                 , rev_trait_values['sire'][p], days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1], sam_kg=sam_kg_sire
-                                , ebw_start=ebw_start_sire)
+                                , ebw_start=ebw_start_sire, fat=fat_start_sire, muscle=muscle_start_sire, viscera=viscera_start_sire
+                                , relsize=relsize_start_sire, relsize_birth=relsize_birth_yg0
+                                , fat_propn_birth=fat_propn_birth_yg0)
                         #use this version of hp_total in f_templc_nfs() in next function call
                         hp_total_mu_sire = temp6
                         if eqn_used:
@@ -5382,7 +5431,11 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                 , kw_mu_yg1, zf1_dams, zf2_dams, heat_loss_damsm0p1, age_pa1e1b1nwzida0e0b0xyg1[p:p+1]
                                 , rev_trait_values['dams'][p], days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1], nec=nec_dams
                                 , kc=kc_mu_pa1e1b1nwzida0e0b0xyg1, nel=nel_dams, kl=kl_mu_dams, gest_propn=gest_propn_pa1e1b1nwzida0e0b0xyg1[p:p+1]
-                                , lact_propn=lact_propn_pa1e1b1nwzida0e0b0xyg1[p:p+1], sam_kg=sam_kg_dams, ebw_start=ebw_start_dams)
+                                , lact_propn=lact_propn_pa1e1b1nwzida0e0b0xyg1[p:p+1], sam_kg=sam_kg_dams, ebw_start=ebw_start_dams
+                                , fat=fat_start_dams, muscle=muscle_start_dams, viscera=viscera_start_dams
+                                , relsize=relsize_start_dams, relsize_birth=relsize_birth_yg1
+                                , fat_propn_birth=fat_propn_birth_yg1
+                                , level_power=level_power_yg1, k_comp=evg_comp_k)
                         #use this version of hp_total in f_templc_nfs() in next function call. It excludes chill increment
                         hp_total_mu_dams = temp6
                         if eqn_used:
@@ -5423,7 +5476,10 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                 , ck_cpoffs, rc_start_offs, mei_offs, neme_mu_offs, km_offs, hp_mei_mu_offs, new_offs
                                 , kw_mu_yg3, zf1_offs, zf2_offs, heat_loss_offsm0p1, age_cut_pa1e1b1nwzida0e0b0xyg3[p:p+1]
                                 , rev_trait_values['offs'][p], days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1], sam_kg=sam_kg_offs
-                                , ebw_start=ebw_start_offs)
+                                , ebw_start=ebw_start_offs, fat=fat_start_offs, muscle=muscle_start_offs, viscera=viscera_start_offs
+                                , relsize=relsize_start_offs, relsize_birth=relsize_birth_yg3
+                                , fat_propn_birth=fat_propn_birth_yg3
+                                , level_power=level_power_yg3, k_comp=evg_comp_k)
                         #use this version of hp_total in f_templc_nfs() in next function call
                         hp_total_mu_offs = temp6
                         if eqn_used:

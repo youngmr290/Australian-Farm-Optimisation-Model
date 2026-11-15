@@ -1144,46 +1144,101 @@ def f1_evg_mid_rc(cg, evg_start, wbec, zf2, rc_start, ebw_start, days):
     q = slope * (1 + sen.sap['evg']) * fun.f_divide(rc_start, ebw_start) * days / 2
     return (evg_start + np.sqrt(np.maximum(evg_start ** 2 + 4 * q * wbec, 0))) / 2
 
-def f1_fat_propn_initial(cg, cb0, relsize, fat_propn_birth):
+def f1_level_normal_path(relsize, level_0, p):
     '''
-    Proportion of fat in the empty body (by wet weight) at a given relative size, consistent with the EVG parameters.
-    Whole body energy is accumulated from birth by integrating EVG over relative size, assuming a constant level of
-    feeding and rc <= 1 (so zf2 = 0). zf1 is logistic so the integral has a closed form (see [Growth curve & partitioning.xlsx]).
-    EVG is floored at the energy content of lean (as in f1_evg_bound) for the small relative sizes where zf1 is high.
-    Values are per kg of EBW at SRW, so the SRW and the EBW/LW ratio cancel.
+    Level of feeding assumed on the normal growth path. Used for the composition of the initial animal and the
+    reference composition (f1_wbe_reference)
+        L(z) = level_0 * (1 - z) ^ p
+    L is MEI / maintenance - 1, so maintenance = 0 and 1 = twice maintenance - as defined in the CSIRO EVG formula.
+    relsize is nw / SRW,
+    level_0 is cg40 the level of feeding at z = 0 and
+    p is the exponent that controls how quickly L declines towards maintenance as the animal approaches mature size.
+    p = cg41 / cx1 (level_power_yg in the generator) so it varies with the growth rate of the sexes and litter size.
+    Assumes that smaller young animals are being fed more and adults are approaching maintenance.
+    '''
+    return level_0 * np.maximum(1 - relsize, 0) ** p
+
+def f1_wbe_normal_path(cg, cg8, cg9, relsize, relsize_birth, wbe_birth, level_power, n_nodes=20):
+    '''
+    Whole body energy per kg of EBW (MJ/kg) of an animal at a given relsize that has grown from birth along the
+    normal growth path (rc = 1) with the EVG parameters cg8 & cg9 and a level of feeding that declines as relative size
+    increases (see f1_level_normal_path, parameters cg40 & cg41).
+
+    EVG on the path is cg8 - zf1(z) * (cg9 - cg10 * (L(z) - 1)) clipped to lean & fat energy per kg
+    WBE per kg EBW at z_n is w_n = (z_b * wbe_birth + integral_{z_b}^{z_n} EVG(z) dz) / z_n
+    The integral has no closed form (logistic x power of (1 - z)) so it uses Gauss-Legendre quadrature (n_nodes).
+    Values are per kg of EBW at normal weight so NW and the EBW/LW ratio cancel.
+
+    :param cg: sim parameters - weight change (cg4, cg5, cg10, cg40 & the tissue energy contents).
+    :param cg8, cg9: EVG parameters to use (e.g. including saa evg_p11 and the REV).
+    :param relsize: relative size at normal weight (nw / SRW) at which the composition is required.
+    :param relsize_birth: relative size at birth.
+    :param wbe_birth: whole body energy per kg EBW at birth (MJ/kg).
+    :param level_power: exponent of the level of feeding on the path (cg41 / cx1, f1_level_power).
+    :return: w_n (MJ/kg EBW), the level of feeding at relsize and zf1 at relsize.
+    '''
+    fat_energy, lean_energy = f1_tissue_energy(cg)
+    z_b = np.asarray(relsize_birth)
+    z_n = np.maximum(relsize, z_b)
+    x, wt = np.polynomial.legendre.leggauss(n_nodes)
+    half = (z_n - z_b) / 2
+    z = ((z_n + z_b) / 2)[..., na] + half[..., na] * x
+    level_0, p = cg[40, ...], np.asarray(level_power)
+    level = f1_level_normal_path(z, level_0[..., na], p[..., na])
+    zf1 = fun.f_back_transform(-cg[4, ...][..., na] * (z - cg[5, ...][..., na]))
+    evg = np.clip(np.asarray(cg8)[..., na] - zf1 * (np.asarray(cg9)[..., na] - cg[10, ...][..., na] * (level - 1))
+                  , lean_energy[..., na], fat_energy[..., na])
+    integral = half * np.sum(wt * evg, axis=-1)
+    w_n = (z_b * wbe_birth + integral) / z_n
+    level_n = f1_level_normal_path(z_n, level_0, p)
+    zf1_n = fun.f_back_transform(-cg[4, ...] * (z_n - cg[5, ...]))
+    return w_n, level_n, zf1_n
+
+def f1_wbe_reference(cg, cg8, cg9, relsize, relcond, zf2
+                     , relsize_birth, fat_propn_birth, level_power):
+    '''
+    Reference whole body energy per kg of EBW (MJ/kg) which includes current rc (assumning that it is a recent change in rc)
+    When activated (with sav['evg_comp_k']>0) it is the target for the reversion of WBE/kg (by adjusting EVG).
+    This function calls f1_wbe_normal_path (WBE/kg if rc=1) and then adjusts based on actual rc by
+    integrating the tissue gained (or lost) between normal weight and the current weight:
+        w_ref = (w_n + B * (rc - 1) + zf2 * (cg11 * (rc - 1)^2 / 2 + cg16 * max(rc - 1, 0)^3 / 3)) / rc
+    where B = cg8 - zf1(z_n) * (cg9 - cg10 * (L(z_n) - 1)) is the EVG at rc 1. Clipped to the energy content of lean & adipose.
+    Note: valuing the tissue above (below) normal weight at the current B assumes the deviation from normal weight is
+    recent (gain missed during a restriction, or catch-up gain). Valuing it at w_n for immature animals (zf2 = 0) was
+    tested (14 Nov 2026) and gave larger errors (offs -1.5 to +0.8 MJ/kg) because deviations from rc 1 are mostly recent.
+    '''
+    fat_energy, lean_energy = f1_tissue_energy(cg)
+    wbe_birth = lean_energy + fat_propn_birth * (fat_energy - lean_energy)
+    w_n, level_n, zf1_n = f1_wbe_normal_path(cg, cg8, cg9, relsize, relsize_birth, wbe_birth, level_power)
+    b = cg8 - zf1_n * (cg9 - cg[10, ...] * (level_n - 1))
+    d_rc = relcond - 1
+    d_rc_above = np.maximum(d_rc, 0)
+    w_ref = (w_n + b * d_rc + zf2 * (cg[11, ...] * d_rc ** 2 / 2 + cg[16, ...] * d_rc_above ** 3 / 3)) / relcond
+    return np.clip(w_ref, lean_energy, fat_energy)
+
+def f1_fat_propn(cg, relsize_birth, relsize, relcond, zf2, fat_propn_birth, level_power):
+    '''
+    Proportion of fat, muscle & viscera in the empty body (by wet weight), consistent with the EVG parameters:
+    Returns the reference composition (proportion of fat, muscle and viscera) for the current NW & relative condition.
+    Used to define the initial animal (dams & offs).
+    The reference is the composition of an animal that has grown from birth along the normal growth path
+    plus the tissue between normal weight and the current weight (f1_wbe_reference).
 
     :param cg: Numpy array, sim parameters - weight change.
-    :param cb0: Numpy array, sim parameters - birth type. cb0[15] is the relative size at birth (BW/SRW).
-    :param relsize: Numpy array, relative size (LW/SRW) at which the composition is required, e.g. at weaning.
+    :param relsize_birth: Numpy array, relative size at birth (cb0[15] x cx15 / cx11, b0 active for offs, BTRT weighted for sire & dams).
+    :param relsize: Numpy array, relative size at the initial normal weight (nw_initial / SRW of the sex & BTRT at weaning).
+    :param relcond: Numpy array, initial relative condition (ffcfw_initial / nw_initial).
+    :param zf2: Numpy array, EVG size factor of the initial animal.
     :param fat_propn_birth: Numpy array, proportion of fat in the empty body at birth.
-    :return: proportion of fat, muscle and viscera in the empty body at relsize.
+    :param level_power: Numpy array, exponent of the level of feeding on the path (cg41 / cx1).
+    :return: proportion of fat, muscle and viscera in the empty body of the initial animal.
     '''
-    ##Level of feeding assumed for growth from birth to relsize
-    level = 1.5
-    ##Relative size at birth. Uses the BW of a single (b0 slice 0) so the composition is the same for all animals in the group
-    relsize_birth = fun.f_slice(cb0[15, ...], {sinp.stock['i_b0_pos']: 0})
-    ##Energy content (MJ/kg wet) of adipose tissue & lean tissue (muscle & viscera weighted by the proportion of viscera in lean)
+    ##Energy content (MJ/kg wet) of adipose tissue & lean tissue
     fat_energy, lean_energy = f1_tissue_energy(cg)
-    ##Energy content per kg of EBW at birth
-    wbe_birth = lean_energy + fat_propn_birth * (fat_energy - lean_energy)
-    ##Integral of zf1 with respect to relative size. zf1 = 1 / (1 + exp(cg4 * (z - cg5)))
-    def f_zf1_integral(z):
-        return z - np.logaddexp(0, cg[4, ...] * (z - cg[5, ...])) / cg[4, ...]
-    ##Relative size below which EVG = cg8 - zf1 * evg_slope is less than lean_energy (zf1 > zf1_floor) so EVG is floored.
-    ### If zf1_floor >= 1 EVG is never below the floor; if zf1_floor <= 0 it is always below the floor.
-    ### If evg_slope <= 0 (unrealistic) EVG is treated as always below the floor if cg8 < lean_energy, otherwise never.
-    evg_slope = cg[9, ...] - cg[10, ...] * (level - 1)
-    with np.errstate(divide='ignore', invalid='ignore'):
-        zf1_floor = (cg[8, ...] - lean_energy) / evg_slope
-        relsize_floor = cg[5, ...] + np.log(1 / zf1_floor - 1) / cg[4, ...]
-    relsize_floor = np.where(zf1_floor >= 1, -np.inf, np.where(zf1_floor <= 0, np.inf, relsize_floor))
-    relsize_floor = np.where(evg_slope <= 0, np.where(cg[8, ...] < lean_energy, np.inf, -np.inf), relsize_floor)
-    relsize_floor = np.clip(relsize_floor, relsize_birth, relsize)
-    ##Whole body energy at relsize (MJ per kg of EBW at SRW). Lean only up to relsize_floor then EVG = cg8 - zf1 * evg_slope
-    wbe = (relsize_birth * wbe_birth + lean_energy * (relsize_floor - relsize_birth) + cg[8, ...] * (relsize - relsize_floor)
-           - evg_slope * (f_zf1_integral(relsize) - f_zf1_integral(relsize_floor)))
+    ##Energy content per kg of EBW of the initial animal (the reference at the initial nw & rc)
+    w = f1_wbe_reference(cg, cg[8, ...], cg[9, ...], relsize, relcond, zf2, relsize_birth, fat_propn_birth, level_power)
     ##Proportion of fat from mass & energy balance, remainder is lean which is split to muscle & viscera
-    fat_propn = np.clip((wbe / relsize - lean_energy) / (fat_energy - lean_energy), 0, 1)
+    fat_propn = np.clip((w - lean_energy) / (fat_energy - lean_energy), 0, 1)
     muscle_propn = (1 - fat_propn) * (1 - cg[39, ...])
     viscera_propn = (1 - fat_propn) * cg[39, ...]
     return fat_propn, muscle_propn, viscera_propn
@@ -2138,10 +2193,15 @@ def f1_back_calculate_mei(ck, cg, nem_ee, nefat, nemuscle, neviscera, hp_wcl, ne
 
 def f_lwc_mu(cg, ck, rc_start, mei_initial, nem_ee, km, hp_mei, new, kw, zf1, zf2, heat_loss_m0p1, age, rev_trait_value
     , days_period, b_mask = 1, nec = 0, kc = 1, nel = 0, kl = 1, gest_propn = 0, lact_propn = 0, mei_propn_milk = 0, sam_kg=1, scenario='-'
-    , ebw_start = None):
+    , ebw_start = None, fat = None, muscle = None, viscera = None, relsize = None, relsize_birth = None
+    , fat_propn_birth = None, level_power = None, k_comp = 0):
     #Calculate LW change from energy surplus to maintenance. Uses energy & efficiency approach like CSIRO
     #but separates kf & kp and calculates proportion of fat & protein from mass and energy balance.
     #ebw_start is only required for EVG at the mid-period rc (sav['lwc_mid_rc'])
+    #k_comp is the rate of reversion of the composition term of EVG (sav['evg_comp_k'], passed from sgen for the groups
+    # whose composition reverts; default 0 = off, e.g. sire & yatf).
+    #fat, muscle, viscera (kg at the start of the period), relsize (nw / srw at the start), relsize_birth, fat_propn_birth &
+    # level_power are only required for the composition term (k_comp > 0). If fat is None the term is not included.
 
     ##Calculate me for conceptus growth, milk production & wool growth
     hp_dc = nec * (fun.f_divide(1, kc) - 1)
@@ -2164,6 +2224,24 @@ def f_lwc_mu(cg, ck, rc_start, mei_initial, nem_ee, km, hp_mei, new, kw, zf1, zf
     cg8 = f1_rev_sa(cg[8, ...], sen.saa['rev_evg'], age, sa_type=2)
     cg9 = f1_rev_sa(cg[9, ...], sen.saa['rev_evg'], age, sa_type=2)
     evg = cg8 - zf1 * (cg9 - cg[10, ...] * (level - 1)) + f1_evg_rc_term(cg, rc_start, zf2)
+
+    ## When the p11 age stages perturb composition early in life the perturbation carries through to later in life
+    ###and this causes problems when adult composition is a trait with a target.
+    ### The next section is to revert the composition toward a long term target value. The target WBE/kg is
+    ### determined from the integral of EVG over life to the current relative size and relative condition.
+    ###Inclusion of the target is controlled by k_comp (sav['evg_comp_k'], default is 0 = off), larger value = quicker reversion.
+    ###Reversion changes EVG: EVG += s * k * (w_ref - w)
+    ###where w is the whole-body energy per kg of EBW
+    ###      w_ref the reference WBE/kg (f1_wbe_reference): the composition on the normal growth path.
+    ###      s is the sign of the energy surplus/(deficit)
+    ###An animal fatter than the reference (w > w_ref) has a leaner gain and a fatter loss, and its composition
+    ###reverts towards the reference. A leaner animal the reverse.
+    if k_comp != 0 and fat is not None:
+        wbe = (f1_weight_energy_conversion(cg, 0, weight=fat) + f1_weight_energy_conversion(cg, 1, weight=muscle)
+               + f1_weight_energy_conversion(cg, 2, weight=viscera))
+        w = fun.f_divide(wbe, fat + muscle + viscera)
+        w_ref = f1_wbe_reference(cg, cg8, cg9, relsize, rc_start, zf2, relsize_birth, fat_propn_birth, level_power)
+        evg = evg + np.sign(surplus_energy_ee) * k_comp * (w_ref - w)
     ## SA on EVG based on zf2. zf2 increases from 0 to 1 as z increases from 0.9 to 0.97
     evg_prior = fun.f_sa(evg, sen.sap['evg'], 1)     # * zf2, 1)
     ## Limit EVG to the range between all lean & all adipose (so the proportion of fat in the gain is between 0 & 1)

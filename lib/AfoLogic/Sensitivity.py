@@ -411,8 +411,9 @@ def create_sa():
     sav['force_ebg_scalar'] = False  #SA to force scaling of energy components to ebg (active if components are the REV target traits)
     sav['age_max'] = '-'  #SA on length of the generator for dams (years)
     sav['age_max_offs'] = '-'    #SA on length of the generator for offspring (years)
-    sav['eqn_compare']      = '-'                  #SA to alter if the different equation systems in the sheep sim are run and compared
-    sav['lwc_mid_rc']       = '-'                  #SA to calculate EVG at the mid-period rc rather than the rc at the start of the period (default False). Removes the drift in fat over cycles of gain & loss (CS & MU LWC equations)
+    sav['eqn_compare']      = '-'        #SA to alter if the different equation systems in the sheep sim are run and compared
+    sav['lwc_mid_rc']       = '-'        #SA to calculate EVG at the mid-period rc rather than the rc at the start of the period (default False). Removes the drift in fat over cycles of gain & loss (CS & MU LWC equations)
+    sav['evg_comp_k']       = '-'        #SA for the composition term of EVG (MU LWC equations): EVG += sign(energy surplus) x k x (reference - actual whole body energy per kg EBW), so a change in composition reverts towards the composition the current EVG parameters give on the normal growth path. Default 0 (off). The level of feeding on the normal growth path for the reference is cg40 & cg41 (Universal)
     sav['eqn_used_g0_q1p7'] = np.full(uinp.sheep['i_eqn_used_g0_q1p7'].shape, '-', dtype=object) #SA value for which equation system to use
     sav['eqn_used_g1_q1p7'] = np.full(uinp.sheep['i_eqn_used_g1_q1p7'].shape, '-', dtype=object) #SA value for which equation system to use
     sav['eqn_used_g2_q1p7'] = np.full(uinp.sheep['i_eqn_used_g2_q1p7'].shape, '-', dtype=object) #SA value for which equation system to use
