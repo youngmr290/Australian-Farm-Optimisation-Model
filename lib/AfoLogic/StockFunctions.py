@@ -835,7 +835,7 @@ def f1_rev_update(trait_name, trait_value, rev_trait_value, scenario = '-'):
         if sinp.structuralsa['i_rev_update']:
             rev_trait_value[trait_name][scenario] = trait_value.copy() #have to copy so that traits (e.g. mort) that are added to using += do not also update the rev value
         else:
-            trait_value = rev_trait_value[trait_name][scenario]
+            trait_value = rev_trait_value[trait_name][scenario].copy()
     return trait_value
 
 
@@ -1216,6 +1216,81 @@ def f1_wbe_reference(cg, cg8, cg9, relsize, relcond, zf2
     w_ref = (w_n + b * d_rc + zf2 * (cg[11, ...] * d_rc ** 2 / 2 + cg[16, ...] * d_rc_above ** 3 / 3)) / relcond
     return np.clip(w_ref, lean_energy, fat_energy)
 
+def f1_evg_reversion(cg, cg8, cg9, surplus_energy, k_comp, fat, muscle, viscera, relsize, rc_start, zf2
+                     , relsize_birth, fat_propn_birth, level_power):
+    '''
+    Reversion of EVG toward the reference on the normal growth path, used by the CSIRO (f_lwc_cs) & Murdoch (f_lwc_mu) LWC equations.
+    Rate of reversion is controlled by k_comp (sav['evg_comp_k'], default is 0 = off), larger value = quicker reversion.
+    In both the CSIRO & MU energy systems EVG only sets the composition of the tissue currently being gained or lost
+    without reference to the existing composition.
+
+    If a saa_p11 age stage perturbs composition early in life the perturbation carries through to later in life
+    and this causes problems if adult composition is a trait with a target. This term reverts the composition toward
+    a long term target value. The target WBE/kg is determined from the integral of EVG over life to the current
+    relative size and relative condition.
+    Reversion changes EVG: EVG += s * k * (w_ref - w)
+    where w is the whole-body energy per kg of EBW
+          w_ref the reference WBE/kg (f1_wbe_reference): the composition on the normal growth path with the current
+                EVG parameters (cg8 & cg9 including saa evg_p11, so a change in the EVG parameters changes the reference).
+          s is the sign of the energy surplus/(deficit)
+          k is the rate of reversion (k_comp), larger value = quicker reversion.
+    An animal fatter than the reference (w > w_ref) has a leaner gain and a fatter loss, and its composition
+    reverts towards the reference. A leaner animal the reverse.
+
+    :param surplus_energy: energy surplus to maintenance (only the sign is used).
+    :param fat, muscle, viscera: weight of the tissues at the start of the period (kg).
+    :param relsize: relative size at the start of the period (nw / srw).
+    :return: the change in EVG (MJ/kg EBW).
+    '''
+    wbe = (f1_weight_energy_conversion(cg, 0, weight=fat) + f1_weight_energy_conversion(cg, 1, weight=muscle)
+           + f1_weight_energy_conversion(cg, 2, weight=viscera))
+    w = fun.f_divide(wbe, fat + muscle + viscera)
+    w_ref = f1_wbe_reference(cg, cg8, cg9, relsize, rc_start, zf2, relsize_birth, fat_propn_birth, level_power)
+    return np.sign(surplus_energy) * k_comp * (w_ref - w)
+
+def f1_evg(cg, zf1, zf2, level, rc_start, age, surplus_energy, rev_trait_value, energy_change=None, ebw_start=None
+           , days_period=7, k_comp=0, fat=None, muscle=None, viscera=None, relsize=None, relsize_birth=None
+           , fat_propn_birth=None, level_power=None):
+    '''
+    Energy value of gain (MJ/kg EBW). Used by the CSIRO (f_lwc_cs) & Murdoch (f_lwc_mu) LWC equations.
+    In the CSIRO energy system, EVG only alters the change in LW per unit of surplus energy because of the
+     energy density of fat vs lean.
+    In the MU energy system, EVG also alters the efficiency of energy gain and the change in composition alters the
+     future maintenance requirement.
+        EVG = cg8 - zf1 * (cg9 - cg10 * (L - 1)) + the rc term (f1_evg_rc_term)
+              + the composition term (f1_evg_reversion, if k_comp != 0 & the composition is passed)
+    then the SA (sap['evg']), the bound between all lean & all adipose (f1_evg_bound), EVG at the mid-period rc
+    (f1_evg_mid_rc, if sav['lwc_mid_rc'] and energy_change & ebw_start are passed) and the EVG REV update.
+
+    :param level: level of feeding (maintenance = 0) as defined for the equation system.
+    :param surplus_energy: energy surplus to maintenance (only the sign is used, for the composition term).
+    :param energy_change: change in whole body energy (MJ/d) used for the EVG at the mid-period rc. None = not
+                          included. f_lwc_mu doesn't pass it because the energy change depends on kg, which depends on
+                          the EVG at rc_start, so the mid-period rc is applied in f_lwc_mu after the energy change is known.
+    :param ebw_start: empty body weight at the start of the period (only required for the mid-period rc).
+    :param k_comp, fat, muscle, viscera, relsize, relsize_birth, fat_propn_birth, level_power: the composition term
+                          (see f1_evg_reversion). If k_comp is 0 or fat is None the term is not included.
+    :return: evg (after the REV update) and evg_prior (before the REV update).
+    '''
+    cg8 = f1_rev_sa(cg[8, ...], sen.saa['rev_evg'], age, sa_type=2)
+    cg9 = f1_rev_sa(cg[9, ...], sen.saa['rev_evg'], age, sa_type=2)
+    evg = cg8 - zf1 * (cg9 - cg[10, ...] * (level - 1)) + f1_evg_rc_term(cg, rc_start, zf2)
+    ###revert toward standard if selected
+    if k_comp != 0 and fat is not None:
+        evg = evg + f1_evg_reversion(cg, cg8, cg9, surplus_energy, k_comp, fat, muscle, viscera, relsize, rc_start, zf2
+                                     , relsize_birth, fat_propn_birth, level_power)
+    ## SA on EVG based on zf2. zf2 increases from 0 to 1 as z increases from 0.9 to 0.97
+    evg = fun.f_sa(evg, sen.sap['evg'], 1)     # * zf2, 1)
+    ## Limit EVG to the range between all lean & all adipose (so the proportion of fat in the gain is between 0 & 1)
+    evg = f1_evg_bound(cg, evg)
+    ## EVG at the mid-period rc rather than rc_start (if sav['lwc_mid_rc'])
+    if energy_change is not None and ebw_start is not None and fun.f_sa(True, sen.sav['lwc_mid_rc'], 5):
+        evg = f1_evg_bound(cg, f1_evg_mid_rc(cg, evg, energy_change, zf2, rc_start, ebw_start, days_period))
+    ##Process the EVG REV: if EVG is not the target trait overwrite trait value with value from the dictionary or update the REV dictionary
+    evg_prior = evg
+    evg = f1_rev_update('evg', evg, rev_trait_value)
+    return evg, evg_prior
+
 def f1_fat_propn(cg, relsize_birth, relsize, relcond, zf2, fat_propn_birth, level_power):
     '''
     Proportion of fat, muscle & viscera in the empty body (by wet weight), consistent with the EVG parameters:
@@ -1235,7 +1310,7 @@ def f1_fat_propn(cg, relsize_birth, relsize, relcond, zf2, fat_propn_birth, leve
     '''
     ##Energy content (MJ/kg wet) of adipose tissue & lean tissue
     fat_energy, lean_energy = f1_tissue_energy(cg)
-    ##Energy content per kg of EBW of the initial animal (the reference at the initial nw & rc)
+    ##Energy content per kg of EBW of the initial animal (the reference at the nw & rc)
     w = f1_wbe_reference(cg, cg[8, ...], cg[9, ...], relsize, relcond, zf2, relsize_birth, fat_propn_birth, level_power)
     ##Proportion of fat from mass & energy balance, remainder is lean which is split to muscle & viscera
     fat_propn = np.clip((w - lean_energy) / (fat_energy - lean_energy), 0, 1)
@@ -2036,10 +2111,20 @@ def f_heatloss_nfs(cc, ffcfw_start, rc_start, sl_start, temp_ave, temp_max, temp
 
 def f_lwc_cs(cg, rc_start, mei, mem, new, zf1
              , zf2, kg, kw, age, rev_trait_value, nec = 0, kc = 1, nel = 0, kl = 1
-             , gest_propn = 0, lact_propn = 0, days_per_period=7, b_mask = 1, ebw_start = None):
-    ##Note: The energy components of rev_trait_value are not active in this function. Have to be using f_lwc_nfs
-    ##ebw_start is only required for EVG at the mid-period rc (sav['lwc_mid_rc'])
-
+             , gest_propn = 0, lact_propn = 0, days_per_period=7, b_mask = 1, ebw_start = None
+             , fat = None, muscle = None, viscera = None, relsize = None, relsize_birth = None
+             , fat_propn_birth = None, level_power = None, k_comp = 0):
+    '''
+    ebw_start is only required for EVG at the mid-period rc (sav['lwc_mid_rc'])
+    k_comp is the rate of reversion of the composition term of EVG (sav['evg_comp_k'], passed from sgen for the groups
+    whose composition reverts; default 0 = off, e.g. sire & yatf). As in f_lwc_mu.
+    Only required for the composition term (k_comp > 0). If fat is None the term is not included.
+        fat, muscle, viscera (kg at the start of the period),
+        relsize (nw / srw at the start),
+        relsize_birth,
+        fat_propn_birth &
+        level_power
+    '''
     ##Calculate me for conceptus growth, milk production & wool growth
     mec = nec / kc
     mel = nel / kl
@@ -2055,19 +2140,11 @@ def f_lwc_cs(cg, rc_start, mei, mem, new, zf1
     surplus_energy = mei - maintenance
     ##Net energy gain (based on ME) Note: will be negative if losing weight
     neg = kg * surplus_energy
-    ##Energy Value of gain (MJ/kg EBW)
-    cg8 = f1_rev_sa(cg[8, ...], sen.saa['rev_evg'], age, sa_type=2)
-    cg9 = f1_rev_sa(cg[9, ...], sen.saa['rev_evg'], age, sa_type=2)
-    evg = cg8 - zf1 * (cg9 - cg[10, ...] * (level - 1)) + f1_evg_rc_term(cg, rc_start, zf2)
-    ## Scale based on zf2. zf2 increases from 0 to 1 as z increases from 0.9 to 0.97
-    evg = fun.f_sa(evg, sen.sap['evg'], 1)   # * zf2, 1)
-    ## Limit EVG to the range between all lean & all adipose (so the proportion of fat in the gain is between 0 & 1)
-    evg = f1_evg_bound(cg, evg)
-    ## EVG at the mid-period rc rather than rc_start (if sav['lwc_mid_rc'])
-    if ebw_start is not None and fun.f_sa(True, sen.sav['lwc_mid_rc'], 5):
-        evg = f1_evg_bound(cg, f1_evg_mid_rc(cg, evg, neg, zf2, rc_start, ebw_start, days_per_period))
-    # ##Process the EVG REV: if EVG is not the target trait overwrite trait value with value from the dictionary or update the REV dictionary
-    # evg = f1_rev_update('evg', evg, rev_trait_value)
+    ##Energy Value of Gain (MJ/kg EBW), including the EVG at the mid-period rc (energy change = neg) & the EVG REV update
+    evg, temp0 = f1_evg(cg, zf1, zf2, level, rc_start, age, surplus_energy, rev_trait_value, energy_change=neg
+                            , ebw_start=ebw_start, days_period=days_per_period, k_comp=k_comp, fat=fat, muscle=muscle
+                            , viscera=viscera, relsize=relsize, relsize_birth=relsize_birth
+                            , fat_propn_birth=fat_propn_birth, level_power=level_power)
     #Protein content of gain (kg/kg EBW) (some uncertainty for sign associated with zf2.
     ## GrazFeed documentation had +ve however, this implies that PCG increases when BC > 1. So changed to -ve
     # #todo check this equation when converting to a heat production based model.
@@ -2084,18 +2161,6 @@ def f_lwc_cs(cg, rc_start, mei, mem, new, zf1
     ##Allocate total protein gain to muscle and viscera using rule of thumb that Viscera is approx 13% of lean weight (10% of total protein energy)
     d_muscle = (1 - cg[39, ...]) * d_lean
     d_viscera = cg[39, ...] * d_lean
-
-    # ##Protein gain (protein MJ)   #todo Delete protein code when fully tested
-    # pg = f1_weight_energy_conversion(cg, 1, weight=pcg * ebg)
-    # ##Allocate total protein gain to muscle and viscera using rule of thumb that 10% of total protein energy is viscera (Viscera is 13% of wet weight of protein)
-    # mg = 0.9 * pg  (1 - cg[38, ...]) * pg
-    # vg = 0.1 * pg       cg[38, ...] * pg
-    # ##fat gain (fat MJ)
-    # fg = (neg - pg)
-    # ## Fat, Muscle & Viscera wet weight
-    # d_fat = f1_weight_energy_conversion(cg, 0, energy=fg)
-    # d_muscle = f1_weight_energy_conversion(cg, 1, energy=mg)
-    # d_viscera = f1_weight_energy_conversion(cg, 2, energy=vg)
 
     ##Process the Liveweight REV: if LW is not the target trait overwrite trait value with value from the dictionary or update the REV dictionary
     ###Note: In the CSIRO feeding standards, holding the LW trait constant is also holding the energy content of the
@@ -2195,14 +2260,19 @@ def f_lwc_mu(cg, ck, rc_start, mei_initial, nem_ee, km, hp_mei, new, kw, zf1, zf
     , days_period, b_mask = 1, nec = 0, kc = 1, nel = 0, kl = 1, gest_propn = 0, lact_propn = 0, mei_propn_milk = 0, sam_kg=1, scenario='-'
     , ebw_start = None, fat = None, muscle = None, viscera = None, relsize = None, relsize_birth = None
     , fat_propn_birth = None, level_power = None, k_comp = 0):
-    #Calculate LW change from energy surplus to maintenance. Uses energy & efficiency approach like CSIRO
-    #but separates kf & kp and calculates proportion of fat & protein from mass and energy balance.
-    #ebw_start is only required for EVG at the mid-period rc (sav['lwc_mid_rc'])
-    #k_comp is the rate of reversion of the composition term of EVG (sav['evg_comp_k'], passed from sgen for the groups
-    # whose composition reverts; default 0 = off, e.g. sire & yatf).
-    #fat, muscle, viscera (kg at the start of the period), relsize (nw / srw at the start), relsize_birth, fat_propn_birth &
-    # level_power are only required for the composition term (k_comp > 0). If fat is None the term is not included.
-
+    '''
+    Calculate LW change from energy surplus to maintenance. Uses energy & efficiency approach like CSIRO
+    but separates kf & kp and calculates proportion of fat & protein from mass and energy balance.
+    ebw_start is only required for EVG at the mid-period rc (sav['lwc_mid_rc'])
+    k_comp is the rate of reversion of the composition term of EVG (sav['evg_comp_k'], passed from sgen for the groups
+    whose composition reverts; default 0 = off, e.g. sire & yatf).
+    Only required for the composition term (k_comp > 0). If fat is None the term is not included.
+        fat, muscle, viscera (kg at the start of the period),
+        relsize (nw / srw at the start),
+        relsize_birth,
+        fat_propn_birth &
+        level_power
+    '''
     ##Calculate me for conceptus growth, milk production & wool growth
     hp_dc = nec * (fun.f_divide(1, kc) - 1)
     hp_dl = nel * (fun.f_divide(1, kl) - 1)
@@ -2220,34 +2290,11 @@ def f_lwc_mu(cg, ck, rc_start, mei_initial, nem_ee, km, hp_mei, new, kw, zf1, zf
     ##Level of feeding relative to level that would maintain maternal body tissue (maint = 0)
     ### Note: level is calculated elsewhere (differently) for use in Blaxter & Clapperton equations
     level = fun.f_divide(mei_initial, maintenance) - 1
-    ##Energy Value of gain as calculated.
-    cg8 = f1_rev_sa(cg[8, ...], sen.saa['rev_evg'], age, sa_type=2)
-    cg9 = f1_rev_sa(cg[9, ...], sen.saa['rev_evg'], age, sa_type=2)
-    evg = cg8 - zf1 * (cg9 - cg[10, ...] * (level - 1)) + f1_evg_rc_term(cg, rc_start, zf2)
-
-    ## When the p11 age stages perturb composition early in life the perturbation carries through to later in life
-    ###and this causes problems when adult composition is a trait with a target.
-    ### The next section is to revert the composition toward a long term target value. The target WBE/kg is
-    ### determined from the integral of EVG over life to the current relative size and relative condition.
-    ###Inclusion of the target is controlled by k_comp (sav['evg_comp_k'], default is 0 = off), larger value = quicker reversion.
-    ###Reversion changes EVG: EVG += s * k * (w_ref - w)
-    ###where w is the whole-body energy per kg of EBW
-    ###      w_ref the reference WBE/kg (f1_wbe_reference): the composition on the normal growth path.
-    ###      s is the sign of the energy surplus/(deficit)
-    ###An animal fatter than the reference (w > w_ref) has a leaner gain and a fatter loss, and its composition
-    ###reverts towards the reference. A leaner animal the reverse.
-    if k_comp != 0 and fat is not None:
-        wbe = (f1_weight_energy_conversion(cg, 0, weight=fat) + f1_weight_energy_conversion(cg, 1, weight=muscle)
-               + f1_weight_energy_conversion(cg, 2, weight=viscera))
-        w = fun.f_divide(wbe, fat + muscle + viscera)
-        w_ref = f1_wbe_reference(cg, cg8, cg9, relsize, rc_start, zf2, relsize_birth, fat_propn_birth, level_power)
-        evg = evg + np.sign(surplus_energy_ee) * k_comp * (w_ref - w)
-    ## SA on EVG based on zf2. zf2 increases from 0 to 1 as z increases from 0.9 to 0.97
-    evg_prior = fun.f_sa(evg, sen.sap['evg'], 1)     # * zf2, 1)
-    ## Limit EVG to the range between all lean & all adipose (so the proportion of fat in the gain is between 0 & 1)
-    evg_prior = f1_evg_bound(cg, evg_prior)
-    ##Process the EVG REV: if EVG is not the target trait overwrite trait value with value from the dictionary or update the REV dictionary
-    evg = f1_rev_update('evg', evg_prior, rev_trait_value)
+    ##Energy Value of gain at rc_start (the mid-period rc is applied below, after the energy change is known, because
+    ## the energy change depends on kg which depends on the EVG).
+    evg, evg_prior = f1_evg(cg, zf1, zf2, level, rc_start, age, surplus_energy_ee, rev_trait_value, k_comp=k_comp, fat=fat
+                            , muscle=muscle, viscera=viscera, relsize=relsize, relsize_birth=relsize_birth
+                            , fat_propn_birth=fat_propn_birth, level_power=level_power)
     ## proportion of fat in EBW gain (% by wet weight)
     adipose_propn = f1_adipose_propn(cg, evg)
     ## proportion of fat in energy gain (% by energy)
@@ -2336,6 +2383,7 @@ def f_lwc_mu(cg, ck, rc_start, mei_initial, nem_ee, km, hp_mei, new, kw, zf1, zf
 
 def f_lwc_nfs(cg, ck, muscle, viscera, muscle_target, mei_initial, km, md, hp_maint, hp_mei, dw, heat_loss_m0p1, step
               , rev_trait_value, dc = 0, bc = 0, dl = 0, gest_propn = 0, lact_propn = 0, b_mask=1):
+    '''
     #todo Connect a back calculation function for nfs (or perhaps change the existing function to work for both mu & nfs)
     ##fat gain (MJ/d) is calculated using a formula derived from the Oddy etal 2023 paper (see Generator9:p16-17)
     ###The calculation is multistep because parameter values (bcm & bcf) depend on the sign of dm and df
@@ -2355,7 +2403,7 @@ def f_lwc_nfs(cg, ck, muscle, viscera, muscle_target, mei_initial, km, md, hp_ma
     ###10. Adjust values from REVs
     ###11. Back calculate MEI if values were changed in step 10
     ###12. Calculate parameters to compare with CSIRO equations
-
+    '''
     ## calculate hp for conceptus growth, milk production and wool growth
     hp_dc = dc * bc
     hp_dl = dl * ck[25, ...]
