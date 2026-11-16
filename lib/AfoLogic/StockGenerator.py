@@ -5344,7 +5344,11 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                 , age_pa1e1b1nwzida0e0b0xyg1[p:p+1], rev_trait_values['dams'][p]
                                 , nec_dams, kc_cs_pa1e1b1nwzida0e0b0xyg1, nel_dams, kl_cs_dams
                                 , gest_propn_pa1e1b1nwzida0e0b0xyg1[p:p+1], lact_propn_pa1e1b1nwzida0e0b0xyg1[p:p+1]
-                                , days_per_period=days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1], ebw_start=ebw_start_dams)
+                                , days_per_period=days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1], ebw_start=ebw_start_dams
+                                , fat=fat_start_dams, muscle=muscle_start_dams, viscera=viscera_start_dams
+                                , relsize=relsize_start_dams, relsize_birth=relsize_birth_yg1
+                                , fat_propn_birth=fat_propn_birth_yg1
+                                , level_power=level_power_yg1, k_comp=evg_comp_k)
                         if eqn_used:
                             ebg_dams = temp0
                             evg_dams = temp1
@@ -5364,7 +5368,11 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                         temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_lwc_cs(cg_cpoffs, rc_start_offs, mei_offs
                                 , mem_offs, new_offs, zf1_offs, zf2_offs, kg_offs, kw_cs_offs
                                 , age_cut_pa1e1b1nwzida0e0b0xyg3[p:p+1], rev_trait_values['offs'][p]
-                                , days_per_period=days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1], ebw_start=ebw_start_offs)
+                                , days_per_period=days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1], ebw_start=ebw_start_offs
+                                , fat=fat_start_offs, muscle=muscle_start_offs, viscera=viscera_start_offs
+                                , relsize=relsize_start_offs, relsize_birth=relsize_birth_yg3
+                                , fat_propn_birth=fat_propn_birth_yg3
+                                , level_power=level_power_yg3, k_comp=evg_comp_k)
                         if eqn_used:
                             ebg_offs = temp0
                             evg_offs = temp1
