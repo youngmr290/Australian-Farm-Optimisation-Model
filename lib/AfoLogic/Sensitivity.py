@@ -570,6 +570,7 @@ def create_sa():
     saa['srw_c2'] = 0.0              #std reference weight genotype params
     saa['bvcfw_c2'] = 0.0            #BV for clean fleece weight params
     saa['cg_c1c2'] = np.zeros(uinp.parameters['i_cg_c2'].shape, dtype='float64')  #SA value for weight gain params.
+    saa['cd_c1c2'] = np.zeros(uinp.parameters['i_cd_c2'].shape, dtype='float64')  #SA value for mortality params.
     saa['ck_c1c2'] = np.zeros(uinp.parameters['i_ck_c2'].shape, dtype='float64')  #SA value for energy efficiency params.
     saa['cl0_c1c2'] = np.zeros(uinp.parameters['i_cl0_c2'].shape, dtype='float64')  #SA value for litter size genotype params.
     saa['scan_std_c2'] = 0.0         #std scanning percentage of a genotype. Controls the MU repro, initial propn of sing/twin/trip prog required to replace the dams, the lifetime productivity of the dams as affected by their BTRT.
@@ -582,6 +583,9 @@ def create_sa():
     saa['milk_yield'] = 0.0          #Genotype calibration: Adjust cl_yatf[0] parameter which alters milk production, lamb milk intake and ewe PI during lactation
     saa['growth_constant'] = 0.0     #Genotype calibration: Adjust growth constant (k) param
     saa['pi_z_constant'] = 0.0       #Genotype calibration: Adjust c1[2] & c1[22] parameters, PI z scalar constant
+    saa['basal_mortality'] = 0.0     #Genotype calibration: Adjust cd_dams[1] parameter
+    saa['evg_adj'] = 0.0             #Genotype calibration: Adjust cg[8] & cg[9] parameters (energy value of gain), whole of life. k_evg x energy
+    saa['pi_adj'] = 0.0              #Genotype calibration: Adjust ci[1] & ci[21] parameters (potential intake), whole of life. k_pi x energy
     ##SAV controlling the differential evolution in SheepCalibration.py (default values are set in SheepCalibration.py)
     sav['calib_polish'] = '-'        #SA to control if the DE solution is polished (L-BFGS-B) in SheepCalibration.py
     sav['calib_tol'] = '-'           #SA to alter the DE relative convergence tolerance in SheepCalibration.py
