@@ -565,10 +565,14 @@ def create_sa():
     sam['muscle_target_c2'] = np.ones(uinp.parameters['i_muscle_target_c2'].shape, dtype='float64')   #std muscle mass target genotype params
     ##SAP
     ##SAA
-    saa['sfd_c2'] = 0.0              #std fibre diameter genotype params
+    saa['sfd_c2'] = np.zeros(uinp.parameters['i_sfd_c2'].shape, dtype='float64')  #std fibre diameter genotype params
     saa['sfw_c2'] = np.zeros(uinp.parameters['i_sfw_c2'].shape, dtype='float64')  #std fleece weight genotype params
-    saa['srw_c2'] = 0.0              #std reference weight genotype params
+    saa['srw_c2'] = np.zeros(uinp.parameters['i_srw_c2'].shape, dtype='float64')  #std reference weight genotype params
     saa['bvcfw_c2'] = 0.0            #BV for clean fleece weight params
+    saa['cn_c1c2'] = np.zeros(uinp.parameters['i_cn_c2'].shape, dtype='float64')  #SA value for normal growth params.
+    saa['ci_c1c2'] = np.zeros(uinp.parameters['i_ci_c2'].shape, dtype='float64')  #SA value for intake params.
+    saa['cl_c1c2'] = np.zeros(uinp.parameters['i_cl_c2'].shape, dtype='float64')  #SA value for lactation params.
+    saa['cw_c1c2'] = np.zeros(uinp.parameters['i_cw_c2'].shape, dtype='float64')  #SA value for wool growth params.
     saa['cg_c1c2'] = np.zeros(uinp.parameters['i_cg_c2'].shape, dtype='float64')  #SA value for weight gain params.
     saa['cd_c1c2'] = np.zeros(uinp.parameters['i_cd_c2'].shape, dtype='float64')  #SA value for mortality params.
     saa['ck_c1c2'] = np.zeros(uinp.parameters['i_ck_c2'].shape, dtype='float64')  #SA value for energy efficiency params.
@@ -578,14 +582,6 @@ def create_sa():
     saa['lss'] = 0.0                 #lamb survival of singles. This SA alters the BTRT of the initial animals, it does not alter the calculation of lamb mortality. Therefore, both need to be used.
     saa['lstw'] = 0.0                #lamb survival of twins. This SA alters the BTRT of the initial animals, it does not alter the calculation of lamb mortality. Therefore, both need to be used.
     saa['lstr'] = 0.0                #lamb survival of triplets. This SA alters the BTRT of the initial animals, it does not alter the calculation of lamb mortality. Therefore, both need to be used.
-    saa['ycfw_scalar'] = 0.0         #Genotype calibration: Adjust scalar for ycfw genotype params
-    saa['yfd_scalar'] = 0.0          #Genotype calibration: Adjust scalar for yfd genotype params
-    saa['milk_yield'] = 0.0          #Genotype calibration: Adjust cl_yatf[0] parameter which alters milk production, lamb milk intake and ewe PI during lactation
-    saa['growth_constant'] = 0.0     #Genotype calibration: Adjust growth constant (k) param
-    saa['pi_z_constant'] = 0.0       #Genotype calibration: Adjust c1[2] & c1[22] parameters, PI z scalar constant
-    saa['basal_mortality'] = 0.0     #Genotype calibration: Adjust cd_dams[1] parameter
-    saa['evg_adj'] = 0.0             #Genotype calibration: Adjust cg[8] & cg[9] parameters (energy value of gain), whole of life. k_evg x energy
-    saa['pi_adj'] = 0.0              #Genotype calibration: Adjust ci[1] & ci[21] parameters (potential intake), whole of life. k_pi x energy
     ##SAV controlling the differential evolution in SheepCalibration.py (default values are set in SheepCalibration.py)
     sav['calib_polish'] = '-'        #SA to control if the DE solution is polished (L-BFGS-B) in SheepCalibration.py
     sav['calib_tol'] = '-'           #SA to alter the DE relative convergence tolerance in SheepCalibration.py
