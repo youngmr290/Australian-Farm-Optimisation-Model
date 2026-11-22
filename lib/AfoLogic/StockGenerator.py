@@ -302,7 +302,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         # y = coefficients_c[j]; j += 1
         h = np.nan   # coefficients_c[j]; j += 1
         a = coefficients_c[j]; j += 1  #adult survival can also be represented in peri-natal survival
-        basal_mortality = coefficients_c[j]; j += 1    #basal survival, cd_dams[1] parameter
+        # basal_mortality = coefficients_c[j]; j += 1    #basal survival, cd_dams[1] parameter
         sen.saa['bsurv_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         #Peri-natal survival, cu2[23, -1] parameter
