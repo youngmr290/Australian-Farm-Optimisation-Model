@@ -259,10 +259,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         p = coefficients_c[j]; j += 1
         y = coefficients_c[j]; j += 1
         pi_z_constant = coefficients_c[j]; j += 1    #ci[22] parameter which alters the scaling of PI by z
-        h = np.nan  #no hfat
-        a = coefficients_c[j]; j += 1  #np.nan when SRW is an active calibration coefficient
-        sen.saa['pi_z_constant'] = coefficients_c[j]; j += 1    #ci[22] parameter which alters the scaling of PI by z
-        h = coefficients_c[j]; j += 1  #no hfat
+        h = np.nan     # h = coefficients_c[j]; j += 1  #no hfat
         a = coefficients_c[j]; j += 1  #np.nan when SRW is an active calibration coefficient
         sen.saa['pi_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
