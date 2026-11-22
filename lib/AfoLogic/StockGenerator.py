@@ -158,46 +158,46 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         ##CFW is calibrated for A for whole of life. Y is by the scalar
         w = p = y = h = a = None
         w = np.nan  #fleece growth prior to weaning is not carried forward to shearing
-        p = coefficients_c[j]; j += 1
-        y = coefficients_c[j]; j += 1
-        # ycfw_scalar = coefficients_c[j]; j += 1    #YCFW scalar, cw_dams[25] parameter which scales SFW
-        h = coefficients_c[j]; j += 1
-        a = coefficients_c[j]; j += 1
-        # sfw_coefficient = coefficients_c[j]; j += 1    #SFW (kg) for teams calibration
+        # p = coefficients_c[j]; j += 1
+        # y = coefficients_c[j]; j += 1
+        ycfw_scalar = coefficients_c[j]; j += 1    #YCFW scalar, cw_dams[25] parameter which scales SFW
+        # h = coefficients_c[j]; j += 1
+        # a = coefficients_c[j]; j += 1
+        sfw_coefficient = coefficients_c[j]; j += 1    #SFW (kg) for teams calibration
         sen.saa['bvcfw_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         #Standard fibre diameter, SFD parameter
         ##FD is calibrated for A for whole of life. Y is by the scalar
         w = p = y = h = a = None
         w = np.nan  #fleece growth prior to weaning is not carried forward to shearing
-        p = coefficients_c[j]; j += 1
-        y = coefficients_c[j]; j += 1
-        # yfd_scalar = coefficients_c[j]; j += 1    #YFD scalar, cw_dams[26] parameter which scales SFD
-        h = coefficients_c[j]; j += 1
-        a = coefficients_c[j]; j += 1
-        # sfd_coefficient = coefficients_c[j]; j += 1    #SFD (u) for teams calibration
+        # p = coefficients_c[j]; j += 1
+        # y = coefficients_c[j]; j += 1
+        yfd_scalar = coefficients_c[j]; j += 1    #YFD scalar, cw_dams[26] parameter which scales SFD
+        # h = coefficients_c[j]; j += 1
+        # a = coefficients_c[j]; j += 1
+        sfd_coefficient = coefficients_c[j]; j += 1    #SFD (u) for teams calibration
         sen.saa['sfd_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         #Intrinsic staple strength, cw[16] parameter
         ##SS is calibrated manually to reduce the number of coefficients in the DE. It does not interact with other traits.
         w = p = y = h = a = None
-        w = np.nan  #fleece growth prior to weaning is not carried forward to shearing
-        p = coefficients_c[j]; j += 1
-        y = coefficients_c[j]; j += 1
-        h = coefficients_c[j]; j += 1
-        a = coefficients_c[j]; j += 1
-        # ss_coefficient = coefficients_c[j]; j += 1    #SS (N/kTex) for teams calibration
+        # w = np.nan  #fleece growth prior to weaning is not carried forward to shearing
+        # p = coefficients_c[j]; j += 1
+        # y = coefficients_c[j]; j += 1
+        # h = coefficients_c[j]; j += 1
+        # a = coefficients_c[j]; j += 1
+        ss_coefficient = coefficients_c[j]; j += 1    #SS (N/kTex) for teams calibration
         sen.saa['iss_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         #Follicle number to calibrate staple length, cw[11] parameter
         ##SL is calibrated for A and carried back.
         w = p = y = h = a = None
-        w = np.nan  #fleece growth prior to weaning is not carried forward to shearing
-        p = coefficients_c[j]; j += 1
-        y = coefficients_c[j]; j += 1
-        h = coefficients_c[j]; j += 1
-        a = coefficients_c[j]; j += 1
-        # sl_coefficient = coefficients_c[j]; j += 1    #SL (mm) for teams calibration
+        # w = np.nan  #fleece growth prior to weaning is not carried forward to shearing
+        # p = coefficients_c[j]; j += 1
+        # y = coefficients_c[j]; j += 1
+        # h = coefficients_c[j]; j += 1
+        # a = coefficients_c[j]; j += 1
+        sl_coefficient = coefficients_c[j]; j += 1    #SL (mm) for teams calibration
         sen.saa['follicles_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         #Conception, cb1[24,25&26, 0:] parameter
@@ -236,30 +236,30 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         ##PWT or YWT can be calibrated by SRW age stage coefficients or by adjusting the growth constant (Note:only one target age stage).
         w = p = y = h = a = None
         # birth_weight = coefficients_c[j]; j += 1    #Birth weight, #todo still to decide how to control BWT
-        b = np.nan  #bwt is changed with a separate coefficient
-        w = np.nan  #wwt can be changed with separate coefficients
-        # milk_yield = coefficients_c[j]; j += 1    #Weaning weight, cl_yatf[0] parameter which alters milk production, lamb milk intake and ewe PI during lactation
-        w_wt = coefficients_c[j]; wwt_calibrated = True; j += 1
-        if wwt_calibrated:   #w_wt is active
-            k_srw = coefficients_c[j]; j += 1   #fixed coefficient: change in the SRW (kg) of the weaning age stage (srw_p11[w]) per unit of w_wt
-            k_cl0 = coefficients_c[j]; j += 1   #fixed coefficient: change in cl[0] (saa['milk_yield']) per unit of w_wt
-            w = k_srw * w_wt
-        p = coefficients_c[j]; j += 1
-        y = coefficients_c[j]; j += 1   #ywt can be changed using the growth constant
-        # sen.saa['growth_constant'] = coefficients_c[j]; j += 1    #Yearling weight, cn_dams[1] parameter which alters the growth path
-        h = coefficients_c[j]; j += 1
-        a = coefficients_c[j]; j += 1
-        # srw_coefficient = coefficients_c[j]; j += 1    #SRW (kg) for teams calibration
+        # b = np.nan  #bwt is changed with a separate coefficient
+        # w = np.nan  #wwt can be changed with separate coefficients
+        milk_yield = coefficients_c[j]; j += 1    #Weaning weight, cl_yatf[0] parameter which alters milk production, lamb milk intake and ewe PI during lactation
+        # w_wt = coefficients_c[j]; wwt_calibrated = True; j += 1
+        # if wwt_calibrated:   #w_wt is active
+        #     k_srw = coefficients_c[j]; j += 1   #fixed coefficient: change in the SRW (kg) of the weaning age stage (srw_p11[w]) per unit of w_wt
+        #     k_cl0 = coefficients_c[j]; j += 1   #fixed coefficient: change in cl[0] (saa['milk_yield']) per unit of w_wt
+        #     w = k_srw * w_wt
+        # p = coefficients_c[j]; j += 1
+        # y = coefficients_c[j]; j += 1   #ywt can be changed using the growth constant
+        growth_constant = coefficients_c[j]; j += 1    #Yearling weight, cn_dams[1] parameter which alters the growth path
+        # h = coefficients_c[j]; j += 1
+        # a = coefficients_c[j]; j += 1
+        srw_coefficient = coefficients_c[j]; j += 1    #SRW (kg) for teams calibration
         sen.saa['srw_p11'] = sfun.f1_create_saa_param_p11(b=b, w=w, p=p, y=y, h=h, a=a)   #b & w passed so srw_p11[p] doesn't cascade to [w] and w_wt doesn't cascade to [b]
         milk_yield = milk_yield + k_cl0 * w_wt
 
         #Potential intake to calibrate Carcase fatness & WBE, ci[1] parameter
         w = p = y = h = a = None
         w = np.nan  #intake pre-weaning is handled with the cl[0] parameter, which is intake of milk
-        p = coefficients_c[j]; j += 1
-        y = coefficients_c[j]; j += 1
-        # pi_z_constant = coefficients_c[j]; j += 1    #ci[22] parameter which alters the scaling of PI by z
-        h = np.nan  #no hfat
+        # p = coefficients_c[j]; j += 1
+        # y = coefficients_c[j]; j += 1
+        pi_z_constant = coefficients_c[j]; j += 1    #ci[22] parameter which alters the scaling of PI by z
+        # h = np.nan  #no hfat
         # a = coefficients_c[j]; j += 1  #np.nan when SRW is an active calibration coefficient
         sen.saa['pi_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
@@ -282,9 +282,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         w = p = y = h = a = None
         # h = np.nan  #adult only (not cascaded to the younger age stages)
         # a = coefficients_c[j]; energy_calibrated = True; j += 1
-        if energy_calibrated:
-            energy_k_evg = coefficients_c[j]; j += 1   #fixed coefficient: change in EVG (cg[8] & cg[9], the same absolute change) per unit of energy
-            energy_k_pi = coefficients_c[j]; j += 1    #fixed coefficient: change in PI (ci[21]) per unit of energy
+        # if energy_calibrated:
+        #     energy_k_evg = coefficients_c[j]; j += 1   #fixed coefficient: change in EVG (cg[8] & cg[9], the same absolute change) per unit of energy
+        #     energy_k_pi = coefficients_c[j]; j += 1    #fixed coefficient: change in PI (ci[21]) per unit of energy
         energy_p11 = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
         if energy_calibrated:
             ###EITHER: adult only (EV age stage calibrations) through the p11 saa. Exported folded into a_cg[8&9] & a_ci[21]
@@ -300,8 +300,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         w = np.nan  #survival of yatf is represented through ewe rearing ability (era)
         # p = coefficients_c[j]; j += 1
         # y = coefficients_c[j]; j += 1
-        h = np.nan   # coefficients_c[j]; j += 1
-        a = coefficients_c[j]; j += 1  #adult survival can also be represented in peri-natal survival
+        # h = np.nan   # coefficients_c[j]; j += 1
+        # a = coefficients_c[j]; j += 1  #adult survival can also be represented in peri-natal survival
         basal_mortality = coefficients_c[j]; j += 1    #basal survival, cd_dams[1] parameter
         sen.saa['bsurv_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
