@@ -305,24 +305,15 @@ def f_universal_inp_sa(uinp_defaults):
     parameters['i_srw_c2'] = fun.f_sa(parameters['i_srw_c2'].astype(float),sen.saa['srw_c2'], 2)
     parameters['i_sfw_c2'] = fun.f_sa(parameters['i_sfw_c2'].astype(float), sen.saa['sfw_c2'], 2) #genotype sfw
     parameters['i_bvcfw_c2'] = fun.f_sa(parameters['i_bvcfw_c2'].astype(float), sen.saa['bvcfw_c2'], 2) #genotype BV for cfw
+    parameters['i_cn_c2'] = fun.f_sa(parameters['i_cn_c2'].astype(float), sen.saa['cn_c1c2'], 2) #normal growth parameters
+    parameters['i_ci_c2'] = fun.f_sa(parameters['i_ci_c2'].astype(float), sen.saa['ci_c1c2'], 2) #potential intake parameters
+    parameters['i_cl_c2'] = fun.f_sa(parameters['i_cl_c2'].astype(float), sen.saa['cl_c1c2'], 2) #lactation parameters
+    parameters['i_cw_c2'] = fun.f_sa(parameters['i_cw_c2'].astype(float), sen.saa['cw_c1c2'], 2) #wool growth parameters
     parameters['i_cg_c2'] = fun.f_sa(parameters['i_cg_c2'].astype(float), sen.saa['cg_c1c2'], 2) #genotype growth params
+    parameters['i_cd_c2'] = fun.f_sa(parameters['i_cd_c2'].astype(float), sen.saa['cd_c1c2'], 2) #genotype mortality params
     parameters['i_ck_c2'] = fun.f_sa(parameters['i_ck_c2'].astype(float), sen.saa['ck_c1c2'], 2) #genotype efficiency params
     parameters['i_cl0_c2'] = fun.f_sa(parameters['i_cl0_c2'].astype(float), sen.saa['cl0_c1c2'], 2) #genotype litter size params
     parameters['i_scan_std_c2'] = fun.f_sa(parameters['i_scan_std_c2'].astype(float), sen.saa['scan_std_c2'], 2) #genotype scanning percent params
-    ###SAA for genotype calibration that exclude the p11 axis
-    idx = fun.f_slice_idx(parameters['i_cw_c2'], {0: [25]})
-    parameters['i_cw_c2'][idx] = fun.f_sa(parameters['i_cw_c2'][idx], sen.saa['ycfw_scalar'], 2)
-    idx = fun.f_slice_idx(parameters['i_cw_c2'], {0: [26]})
-    parameters['i_cw_c2'][idx] = fun.f_sa(parameters['i_cw_c2'][idx], sen.saa['yfd_scalar'], 2)
-    idx = fun.f_slice_idx(parameters['i_cl_c2'], {0: [0]})
-    parameters['i_cl_c2'][idx] = fun.f_sa(parameters['i_cl_c2'][idx], sen.saa['milk_yield'], 2)
-    idx = fun.f_slice_idx(parameters['i_cn_c2'], {0: [1]})
-    parameters['i_cn_c2'][idx] = fun.f_sa(parameters['i_cn_c2'][idx].astype(float), sen.saa['growth_constant'], 2)
-    idx = fun.f_slice_idx(parameters['i_ci_c2'], {0: [2]})  #slice 2 CFS coefficient
-    parameters['i_ci_c2'][idx] = fun.f_sa(parameters['i_ci_c2'][idx], sen.saa['pi_z_constant'], 2)
-    idx = fun.f_slice_idx(parameters['i_ci_c2'], {0: [22]})  #slice 22 GFS coefficient
-    parameters['i_ci_c2'][idx] = fun.f_sa(parameters['i_ci_c2'][idx], sen.saa['pi_z_constant'], 2)
-
     ###SAT
     parameters['i_cb0_c2'] = fun.f_sa(parameters['i_cb0_c2'].astype(float), sen.sat['cb0_c2'], 3, 1) #genotype BTRT params (sat -ve values allowed)
 

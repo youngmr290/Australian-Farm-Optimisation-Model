@@ -673,7 +673,7 @@ def build_context(targets_tp, weights_p, bestbet_tc, bnd_lo_tc, bnd_up_tc, n_coe
 
 
 def write_calibration_results(df_targets_tp, df_bnd_lo_tc, df_bnd_up_tc, keys_t, keys_c, results, n_teams_total=None
-                              , wait_if_open=True, df_weights_p=None):
+                              , wait_if_open=True, df_weights_p=None, results_name='CalibrationResults.xlsx'):
     n_teams = len(keys_t) if n_teams_total is None else n_teams_total
     n_coef = len(keys_c)
     coefficients_tc = np.zeros((n_teams, n_coef))
@@ -711,7 +711,7 @@ def write_calibration_results(df_targets_tp, df_bnd_lo_tc, df_bnd_up_tc, keys_t,
     ### Write to Excel
     ###if the file is open in Excel: the outcome depends on the flag 'wait if open'.
     ### skip if False (the next write includes all results so far), otherwise wait for the user to close Excel
-    calibration_path = relativeFile.findExcel('CalibrationResults.xlsx')
+    calibration_path = relativeFile.findExcel(results_name)
     writer = fun.f_excel_writer(calibration_path, wait_if_open)
     if writer is None:
         print(f"Warning: could not write {calibration_path} (probably open in Excel). It will be re-written when the next team finishes.")
@@ -744,6 +744,14 @@ def main():
             RUN_CALIBRATION = (sys.argv[3].lower() in ['true', '1', 'yes'])
     except:
         pass
+    ##name the output files by the experiment that created them (e.g. CalibrationResults_92000.xlsx & TraitValues_92000.xlsx).
+    ##Same parsing as LoadExp.f_read_exp; no suffix if an experiment number isn't given (QT trial)
+    try:
+        exp_suffix = f'_{int(sys.argv[1])}'
+    except (IndexError, ValueError):
+        exp_suffix = ''
+    results_name = f'CalibrationResults{exp_suffix}.xlsx'
+    traits_name = f'TraitValues{exp_suffix}.xlsx'
 
     ##load excel data and experiment data
     exp_data, exp_group_bool, trial_pinp = exp.f_read_exp()
@@ -832,7 +840,8 @@ def main():
                         for result in pool.imap_unordered(run_calibration_for_team_worker, teams, chunksize=1):
                             results.append(result)
                             write_calibration_results(df_targets_tp, df_bnd_lo_tc, df_bnd_up_tc, keys_t, keys_c
-                                                      , results, n_teams_total=n_teams, wait_if_open=False, df_weights_p=df_weights_p)
+                                                      , results, n_teams_total=n_teams, wait_if_open=False, df_weights_p=df_weights_p
+                                                      , results_name=results_name)
                     except KeyboardInterrupt:
                         print("\nKeyboardInterrupt received — terminating worker processes...")
                         pool.terminate()
@@ -848,10 +857,11 @@ def main():
                     time_list.append(timer())
                     print(f"Team {t} time {time_list[-1] - time_list[-2]:0.4f}secs")
                     write_calibration_results(df_targets_tp, df_bnd_lo_tc, df_bnd_up_tc, keys_t, keys_c
-                                              , results, n_teams_total=n_teams, wait_if_open=False, df_weights_p=df_weights_p)
+                                              , results, n_teams_total=n_teams, wait_if_open=False, df_weights_p=df_weights_p
+                                              , results_name=results_name)
 
             write_calibration_results(df_targets_tp, df_bnd_lo_tc, df_bnd_up_tc, keys_t, keys_c
-                                      , results, wait_if_open=True, df_weights_p=df_weights_p)
+                                      , results, wait_if_open=True, df_weights_p=df_weights_p, results_name=results_name)
 
             time_list.append(timer())
             time_elapsed = time_list[-1] - time_list[0]
@@ -897,7 +907,7 @@ def main():
 
         if data:
             traits_to_save = pd.DataFrame(data, index=df_targets_tp.columns).T   #trait names as the column headings
-            trait_file_path = relativeFile.find(__file__, "../../Output", "TraitValues.xlsx")
+            trait_file_path = relativeFile.find(__file__, "../../Output", traits_name)
             with fun.f_excel_writer(trait_file_path) as writer:
                 traits_to_save.to_excel(writer, sheet_name='Traits', index=True, header=True)
             print(f'Trait values written to {trait_file_path}. Note: Optimisation is not being carried out')

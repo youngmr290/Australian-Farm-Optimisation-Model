@@ -87,10 +87,29 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     ##Flag that the energy coefficient is active in the coefficient block (see below). If so SRW is not endogenous.
     ### Set outside the calibration code (with the energy values for the debug report) because it is used in the trait report.
     energy_calibrated = False
-    energy_p11 = energy_k_evg = energy_k_pi = None
+    energy_p11 = energy_k_evg = energy_k_pi = 0
     ##Flag that the weaning weight coefficient (w_wt) is active in the coefficient block (see below), with the values for the debug report.
     wwt_calibrated = False
-    w_wt = k_cl0 = k_srw = None
+    w_wt = k_cl0 = k_srw = 0
+    ##Set default values for the whole of life calibration coefficients.
+    ### Set outside the calibration code because they are used in the trait report.
+    ###Note: when the calibrated genotype is evaluated (from exp.xlsx) these calibration coefficients are applied to parameters in Universal.xlsx (not these variables)
+    sfw_coefficient = 0.0  #change SFW (kg, i_sfw_c2), whole of life. Only if the sfw coefficient is active
+    sfd_coefficient = 0.0  #change SFD (u, i_sfd_c2), whole of life.
+    ss_coefficient = 0.0  #change SS (N/kTex, i_cw_c2[16]), whole of life.
+    sl_coefficient = 0.0  #change SL (mm, i_cw_c2[11]), whole of life.
+    srw_coefficient = 0.0  #change SRW (kg, i_srw_c2), whole of life.
+    sav_srw = '-'  #Used when SRW is calculated endogenously
+    ycfw_scalar = 0.0
+    yfd_scalar = 0.0
+    birth_weight = 0.0
+    milk_yield = 0.0
+    growth_constant = 0.0
+    pi_z_constant = 0.0
+    basal_mortality = 0.0
+    evg_adj = 0.0
+    pi_adj = 0.0
+
     calibration_code_inc = calibrate_trait_values or o_trait_values is not None
     ##A trial initiated in RunAfoRaw can report its trait values (sav['report_trait_values'])
     ### using the debug report of the calibration traits. This is included so the genotype production levels
@@ -127,14 +146,6 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 raise ValueError(f"Calibration trait names ({description}) do not match [Calibration_control.xlsx]Targets:\n  "
                                  + "\n  ".join(mismatch[:10]) + (f"\n  ... and {len(mismatch) - 10} more" if len(mismatch) > 10 else ""))
 
-        ##set default values for variables that are used in the calibration
-        ### These can be sa passed from exp.xlsx, therefore reset here so not applied twice
-        sen.saa['ycfw_scalar'] = 0.0
-        sen.saa['yfd_scalar'] = 0.0
-        sen.saa['milk_yield'] = 0.0
-        sen.saa['growth_constant'] = 0.0
-        sen.saa['pi_z_constant'] = 0.0
-        sen.sav['srw_c2'][...] = '-'   #Used when SRW is calculated endogenously
 
         ##Set default value for adult_evg which is used as a flag for endogenous calculation of SRW
         adult_evg = None
@@ -149,9 +160,10 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         w = np.nan  #fleece growth prior to weaning is not carried forward to shearing
         p = coefficients_c[j]; j += 1
         y = coefficients_c[j]; j += 1
-        # sen.saa['ycfw_scalar'] = coefficients_c[j]; j += 1    #YCFW scalar, cw_dams[25] parameter which scales SFW
+        # ycfw_scalar = coefficients_c[j]; j += 1    #YCFW scalar, cw_dams[25] parameter which scales SFW
         h = coefficients_c[j]; j += 1
         a = coefficients_c[j]; j += 1
+        sfw_coefficient = coefficients_c[j]; j += 1    #SFW (kg) for teams calibration
         sen.saa['bvcfw_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         #Standard fibre diameter, SFD parameter
@@ -160,9 +172,10 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         w = np.nan  #fleece growth prior to weaning is not carried forward to shearing
         p = coefficients_c[j]; j += 1
         y = coefficients_c[j]; j += 1
-        # sen.saa['yfd_scalar'] = coefficients_c[j]; j += 1    #YFD scalar, cw_dams[26] parameter which scales SFD
+        # yfd_scalar = coefficients_c[j]; j += 1    #YFD scalar, cw_dams[26] parameter which scales SFD
         h = coefficients_c[j]; j += 1
         a = coefficients_c[j]; j += 1
+        sfd_coefficient = coefficients_c[j]; j += 1    #SFD (u) for teams calibration
         sen.saa['sfd_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         #Intrinsic staple strength, cw[16] parameter
@@ -173,6 +186,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         y = coefficients_c[j]; j += 1
         h = coefficients_c[j]; j += 1
         a = coefficients_c[j]; j += 1
+        ss_coefficient = coefficients_c[j]; j += 1    #SS (N/kTex) for teams calibration
         sen.saa['iss_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         #Follicle number to calibrate staple length, cw[11] parameter
@@ -183,6 +197,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         y = coefficients_c[j]; j += 1
         h = coefficients_c[j]; j += 1
         a = coefficients_c[j]; j += 1
+        sl_coefficient = coefficients_c[j]; j += 1    #SL (mm) for teams calibration
         sen.saa['follicles_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         #Conception, cb1[24,25&26, 0:] parameter
@@ -218,30 +233,32 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         #Standard reference weight coefficient adjustments can be linked to target LW or to an estimate of SRW from ALW & Fat %
         ##WWT can be calibrated using srw_p11, milk_yield or a combination of both (w_wt).
         ###If doing the combination then the fixed coefficients, k_srw & k_cl0, allocate w_wt to the 2 component coefficients.
-        ##WT at younger ages can be calibrated by SRW age stage coefficients or by adjusting the growth constant
+        ##PWT or YWT can be calibrated by SRW age stage coefficients or by adjusting the growth constant (Note:only one target age stage).
         w = p = y = h = a = None
-        # sen.saa['birth_weight'] = coefficients_c[j]; j += 1    #Birth weight, #todo still to decide how to control BWT
+        # birth_weight = coefficients_c[j]; j += 1    #Birth weight, #todo still to decide how to control BWT
         b = np.nan  #bwt is changed with a separate coefficient
         w = np.nan  #wwt can be changed with separate coefficients
-        # sen.saa['milk_yield'] = coefficients_c[j]; j += 1    #Weaning weight, cl_yatf[0] parameter which alters milk production, lamb milk intake and ewe PI during lactation
+        # milk_yield = coefficients_c[j]; j += 1    #Weaning weight, cl_yatf[0] parameter which alters milk production, lamb milk intake and ewe PI during lactation
         w_wt = coefficients_c[j]; wwt_calibrated = True; j += 1
-        k_srw = coefficients_c[j]; j += 1   #fixed coefficient: change in the SRW (kg) of the weaning age stage (srw_p11[w]) per unit of w_wt
-        k_cl0 = coefficients_c[j]; j += 1   #fixed coefficient: change in cl[0] (saa['milk_yield']) per unit of w_wt
-        w = k_srw * w_wt
+        if wwt_calibrated:   #w_wt is active
+            k_srw = coefficients_c[j]; j += 1   #fixed coefficient: change in the SRW (kg) of the weaning age stage (srw_p11[w]) per unit of w_wt
+            k_cl0 = coefficients_c[j]; j += 1   #fixed coefficient: change in cl[0] (saa['milk_yield']) per unit of w_wt
+            w = k_srw * w_wt
         p = coefficients_c[j]; j += 1
         y = coefficients_c[j]; j += 1   #ywt can be changed using the growth constant
         # sen.saa['growth_constant'] = coefficients_c[j]; j += 1    #Yearling weight, cn_dams[1] parameter which alters the growth path
         h = coefficients_c[j]; j += 1
         a = coefficients_c[j]; j += 1
+        # srw_coefficient = coefficients_c[j]; j += 1    #SRW (kg) for teams calibration
         sen.saa['srw_p11'] = sfun.f1_create_saa_param_p11(b=b, w=w, p=p, y=y, h=h, a=a)   #b & w passed so srw_p11[p] doesn't cascade to [w] and w_wt doesn't cascade to [b]
-        sen.saa['milk_yield'] = sen.saa['milk_yield'] + k_cl0 * w_wt
+        milk_yield = milk_yield + k_cl0 * w_wt
 
         #Potential intake to calibrate Carcase fatness & WBE, ci[1] parameter
         w = p = y = h = a = None
         w = np.nan  #intake pre-weaning is handled with the cl[0] parameter, which is intake of milk
         p = coefficients_c[j]; j += 1
         y = coefficients_c[j]; j += 1
-        # sen.saa['pi_z_constant'] = coefficients_c[j]; j += 1    #ci[22] parameter which alters the scaling of PI by z
+        # pi_z_constant = coefficients_c[j]; j += 1    #ci[22] parameter which alters the scaling of PI by z
         h = np.nan  #no hfat
         # a = coefficients_c[j]; j += 1  #np.nan when SRW is an active calibration coefficient
         sen.saa['pi_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
@@ -251,12 +268,12 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         # w = np.nan    # no method to calibrate
         # p = np.nan    # no method to calibrate
         # y = np.nan # Changes to cg8 & 9 are done whole of life unless this line is uncommented
-        # h = np.nan  #hogget is changed if HWT is not in the BO objective.
+        # h = np.nan  #cg8 & 9 are only altered for adults, the impacts on the younger age stages are not included and the endogenous SRW change will be largely offset by srw_p11 adjusting to calibrate the younger weights.
         # a = coefficients_c[j]; adult_evg = cg8 + a; j += 1  #  assign a value to adult EVG for endogenous calculation of SRW.
         sen.saa['evg_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         #Energy to calibrate fatness at the same weight (e.g. aWBE, with aWT calibrated by SRW): changes EVG (cg[8] & cg[9])
-        ## and PI (ci[1] & ci[21]) together in the proportion k_evg : k_pi. The energy is added to saa['evg_p11'] & saa['pi_p11']
+        ## and PI (ci[21]) together in the proportion k_evg : k_pi. The energy is added to saa['evg_p11'] & saa['pi_p11']
         ## (so it must follow their assignment above), therefore the energy is only included in the LP trials via the
         ## evg_p11 & pi_p11 values exported from CalibrationResults.xlsx (a_cg + k_evg x a_energy & a_ci + k_pi x a_energy).
         ## k_evg & k_pi are fixed coefficients (Low = High in Calibration_control.xlsx, the same for all teams) so they can only
@@ -265,19 +282,27 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         w = p = y = h = a = None
         # h = np.nan  #adult only (not cascaded to the younger age stages)
         # a = coefficients_c[j]; energy_calibrated = True; j += 1
-        # energy_p11 = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
-        # energy_k_evg = coefficients_c[j]; j += 1   #fixed coefficient: change in EVG (cg[8] & cg[9], the same absolute change) per unit of energy
-        # energy_k_pi = coefficients_c[j]; j += 1    #fixed coefficient: change in PI (ci[1] & ci[21]) per unit of energy
-        # sen.saa['evg_p11'] = sen.saa['evg_p11'] + energy_k_evg * energy_p11
-        # sen.saa['pi_p11'] = sen.saa['pi_p11'] + energy_k_pi * energy_p11
+        if energy_calibrated:
+            energy_k_evg = coefficients_c[j]; j += 1   #fixed coefficient: change in EVG (cg[8] & cg[9], the same absolute change) per unit of energy
+            energy_k_pi = coefficients_c[j]; j += 1    #fixed coefficient: change in PI (ci[21]) per unit of energy
+        energy_p11 = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
+        if energy_calibrated:
+            ###EITHER: adult only (EV age stage calibrations) through the p11 saa. Exported folded into a_cg[8&9] & a_ci[21]
+            sen.saa['evg_p11'] = sen.saa['evg_p11'] + energy_k_evg * energy_p11
+            sen.saa['pi_p11'] = sen.saa['pi_p11'] + energy_k_pi * energy_p11
+            ###OR: whole of life (Team calibrations) through the genotype parameters. Exported as saa evg_adj & pi_adj
+            ###Also changes the birth stage & the pre-loop calcs that use cg_cp & ci_cp (e.g. initial composition)
+            evg_adj = energy_k_evg * a
+            pi_adj = energy_k_pi * a
 
         #Basal survival, cd[1] parameter
         w = p = y = h = a = None
         w = np.nan  #survival of yatf is represented through ewe rearing ability (era)
         # p = coefficients_c[j]; j += 1
         # y = coefficients_c[j]; j += 1
-        h = np.nan    # adult survival does not cascade to younger ages. The EV of aSURV is only due to adults
+        h = np.nan   # coefficients_c[j]; j += 1
         a = coefficients_c[j]; j += 1  #adult survival can also be represented in peri-natal survival
+        basal_mortality = coefficients_c[j]; j += 1    #basal survival, cd_dams[1] parameter
         sen.saa['bsurv_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         #Peri-natal survival, cu2[23, -1] parameter
@@ -532,29 +557,40 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             marginal_fatper = sfun.f1_wbe2fat_propn(cg_c2, adult_evg, 1)   #the propn of fat in the marginal kg at SRW
             rc_slope = sfun.f1_wbe2fat_propn(cg_c2, adult_evg + cg_c2[11], 1) - marginal_fatper   #change in the marginal fat propn per unit of rc (from cg11)
             rc_curve = sfun.f1_wbe2fat_propn(cg_c2, adult_evg + cg_c2[16], 1) - marginal_fatper   #change in the marginal fat propn per unit of (rc - 1)^2 above rc 1 (from cg16)
-            sen.sav['srw_c2'][genotype] = srw_parameter = sfun.f1_srw_from_fat(srw_awt, srw_afatper, srwfat, marginal_fatper, rc_slope, rc_curve)
+            sav_srw = srw_parameter = sfun.f1_srw_from_fat(srw_awt, srw_afatper, srwfat, marginal_fatper, rc_slope, rc_curve)
             logger.debug(f"Endogenous SRW {srw_parameter} "
                          f"from {[k for k, v in fatness_traits.items() if v]} "
                          f"target: ALW={srw_awt}, Fat%={srw_afatper}, EVG={adult_evg}, cg11={cg_c2[11]}, cg16={cg_c2[16]}")
             # srw_from_fat = awt * (1 - afatper) / (1 - srwfat_yg1)   #alternative formula that assumes lean mass is constant eg Hutton's model.
 
-        ###Apply the endogenous SRW. Note: If it wasn't calculated above then sav['srw_cw'] is '-'
-        uinp.parameters['i_srw_c2'] = fun.f_sa(uinp.parameters['i_srw_c2'].astype(float), sen.sav['srw_c2'], 5)
+        ###Apply the endogenous SRW. Note: If it wasn't calculated above then sav_srw is '-'
+        uinp.parameters['i_srw_c2'] = fun.f_sa(uinp.parameters['i_srw_c2'].astype(float), sav_srw, 5)
 
         ###Apply the SAA for genotype calibration coefficients that exclude the p11 axis
+        uinp.parameters['i_sfw_c2'] = fun.f_sa(uinp.parameters['i_sfw_c2'], sfw_coefficient, 2)
+        uinp.parameters['i_sfd_c2'] = fun.f_sa(uinp.parameters['i_sfd_c2'], sfd_coefficient, 2)
+        uinp.parameters['i_srw_c2'] = fun.f_sa(uinp.parameters['i_srw_c2'], srw_coefficient, 2)
+        idx = fun.f_slice_idx(uinp.parameters['i_cw_c2'], {0: [11]})
+        uinp.parameters['i_cw_c2'][idx] = fun.f_sa(uinp.parameters['i_cw_c2'][idx], sl_coefficient, 2)
+        idx = fun.f_slice_idx(uinp.parameters['i_cw_c2'], {0: [16]})
+        uinp.parameters['i_cw_c2'][idx] = fun.f_sa(uinp.parameters['i_cw_c2'][idx], ss_coefficient, 2)
         idx = fun.f_slice_idx(uinp.parameters['i_cw_c2'], {0: [25]})
-        uinp.parameters['i_cw_c2'][idx] = fun.f_sa(uinp.parameters['i_cw_c2'][idx], sen.saa['ycfw_scalar'], 2)
+        uinp.parameters['i_cw_c2'][idx] = fun.f_sa(uinp.parameters['i_cw_c2'][idx], ycfw_scalar, 2)
         idx = fun.f_slice_idx(uinp.parameters['i_cw_c2'], {0: [26]})
-        uinp.parameters['i_cw_c2'][idx] = fun.f_sa(uinp.parameters['i_cw_c2'][idx], sen.saa['yfd_scalar'], 2)
+        uinp.parameters['i_cw_c2'][idx] = fun.f_sa(uinp.parameters['i_cw_c2'][idx], yfd_scalar, 2)
         idx = fun.f_slice_idx(uinp.parameters['i_cl_c2'], {0: [0]})
-        uinp.parameters['i_cl_c2'][idx] = fun.f_sa(uinp.parameters['i_cl_c2'][idx], sen.saa['milk_yield'], 2)
-        sen.sap['pi_yatf'] = fun.f_sa(sen.sap['pi_yatf'], sen.saa['milk_yield'], 2)  #increase yatf PI (pasture as well as milk)
+        uinp.parameters['i_cl_c2'][idx] = fun.f_sa(uinp.parameters['i_cl_c2'][idx], milk_yield, 2)
+        sen.sap['pi_yatf'] = fun.f_sa(sen.sap['pi_yatf'], milk_yield, 2)  #increase yatf PI (pasture as well as milk)
         idx = fun.f_slice_idx(uinp.parameters['i_cn_c2'], {0: [1]})
-        uinp.parameters['i_cn_c2'][idx] = fun.f_sa(uinp.parameters['i_cn_c2'][idx].astype(float), sen.saa['growth_constant'], 2)
-        idx = fun.f_slice_idx(uinp.parameters['i_ci_c2'], {0: [2]})   #slice 2 CFS coefficient
-        uinp.parameters['i_ci_c2'][idx] = fun.f_sa(uinp.parameters['i_ci_c2'][idx], sen.saa['pi_z_constant'], 2)
-        idx = fun.f_slice_idx(uinp.parameters['i_ci_c2'], {0: [22]})   #slice 22 GFS coefficient
-        uinp.parameters['i_ci_c2'][idx] = fun.f_sa(uinp.parameters['i_ci_c2'][idx], sen.saa['pi_z_constant'], 2)
+        uinp.parameters['i_cn_c2'][idx] = fun.f_sa(uinp.parameters['i_cn_c2'][idx].astype(float), growth_constant, 2)
+        idx = fun.f_slice_idx(uinp.parameters['i_ci_c2'], {0: [21]})
+        uinp.parameters['i_ci_c2'][idx] = fun.f_sa(uinp.parameters['i_ci_c2'][idx], pi_adj, 2)
+        idx = fun.f_slice_idx(uinp.parameters['i_ci_c2'], {0: [22]})
+        uinp.parameters['i_ci_c2'][idx] = fun.f_sa(uinp.parameters['i_ci_c2'][idx], pi_z_constant, 2)
+        idx = fun.f_slice_idx(uinp.parameters['i_cg_c2'], {0: [8, 10]})  #slices 8 & 9, the same absolute change
+        uinp.parameters['i_cg_c2'][idx] = fun.f_sa(uinp.parameters['i_cg_c2'][idx], evg_adj, 2)
+        idx = fun.f_slice_idx(uinp.parameters['i_cd_c2'], {0: [1]})
+        uinp.parameters['i_cd_c2'][idx] = fun.f_sa(uinp.parameters['i_cd_c2'][idx], basal_mortality, 2)
 
 
     ######################
@@ -2306,44 +2342,27 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     saa = sfun.f1_saa_p11_to_p(sen.saa['follicles_p11'], scalar_poffsp11)
     cw_p_cpoffs[11] += saa
 
-    # ##cl[0] - peak milk yield scalar - now done using saa['milk_yield'] which is applied when the coefficients are assigned
-    # #todo some pre-loop calcs use cl_cp and only the essentials have been updated to cl_p_cp. See W18 p46 for other vars to update
-    # ###dams
-    # saa = sfun.f1_saa_p11_to_p(sen.saa['wwt_p11'], scalar_pdamsp11)
-    # target_shape = np.broadcast_shapes(cl_cpdams.shape, saa.shape)
-    # cl_p_cpdams = np.broadcast_to(cl_cpdams, target_shape).copy()
-    # cl_p_cpdams[0] += saa
-    # ###yatf
-    # saa = sfun.f1_saa_p11_to_p(sen.saa['wwt_p11'], scalar_pyatfp11)
-    # target_shape = np.broadcast_shapes(cl_cpyatf.shape, saa.shape)
-    # cl_p_cpyatf = np.broadcast_to(cl_cpyatf, target_shape).copy()
-    # cl_p_cpyatf[0] += saa
-
-    ##ci[1] & ci[21] - potential intake (pi_p11 includes k_pi x energy when calibrating)
+    ##ci[21] - potential intake (pi_p11 includes k_pi x energy when calibrating)
     #todo some pre-loop calcs use ci_cp and haven't been updated to ci_p_cp (non-essential). See W18 p46 for vars to update
     ###sire
     saa = sfun.f1_saa_p11_to_p(sen.saa['pi_p11'], scalar_psirep11)
     target_shape = np.broadcast_shapes(ci_cpsire.shape, saa.shape)
     ci_p_cpsire = np.broadcast_to(ci_cpsire, target_shape).copy()
-    ci_p_cpsire[1] += saa
     ci_p_cpsire[21] += saa
     ###dams
     saa = sfun.f1_saa_p11_to_p(sen.saa['pi_p11'], scalar_pdamsp11)
     target_shape = np.broadcast_shapes(ci_cpdams.shape, saa.shape)
     ci_p_cpdams = np.broadcast_to(ci_cpdams, target_shape).copy()
-    ci_p_cpdams[1] += saa
     ci_p_cpdams[21] += saa
     ###yatf
     saa = sfun.f1_saa_p11_to_p(sen.saa['pi_p11'], scalar_pyatfp11)
     target_shape = np.broadcast_shapes(ci_cpyatf.shape, saa.shape)
     ci_p_cpyatf = np.broadcast_to(ci_cpyatf, target_shape).copy()
-    ci_p_cpyatf[1] += saa
     ci_p_cpyatf[21] += saa
     ###offs
     saa = sfun.f1_saa_p11_to_p(sen.saa['pi_p11'], scalar_poffsp11)
     target_shape = np.broadcast_shapes(ci_cpoffs.shape, saa.shape)
     ci_p_cpoffs = np.broadcast_to(ci_cpoffs, target_shape).copy()
-    ci_p_cpoffs[1] += saa
     ci_p_cpoffs[21] += saa
 
     ##cg[8 & 9] - energy value of gain (evg_p11 includes k_evg x energy when calibrating. The same absolute change in cg[8] & cg[9])
@@ -2672,9 +2691,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     ##Note: MU feeding standards are calculated later because they are a partial efficiency (PE). PEw = kw / km
     kc_cs_pa1e1b1nwzida0e0b0xyg1 = ck_cpdams[8,...]
 
-    ####################
-    #initial conditions#
-    ####################
+    #######################
+    #initial conditions 1 #
+    #######################
     ##step - used to expand start lw adjustment to all lw patterns
     step_w1 = len_w1/w_start_len1
     step_w3 = len_w3/w_start_len3
@@ -2831,61 +2850,6 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     ebw_initial_pa1e1b1nwzida0e0b0xyg3 = sfun.f1_ffcfw2ebw(cg_cpoffs, cn_cpoffs, ffcfw_initial_pa1e1b1nwzida0e0b0xyg3
                                             , srw_female_wean_pa1e1b1nwzida0e0b0xyg3, eqn_system = eqn_used_g3_q1p[7,0])
 
-
-    ##calc fat, muscle and viscera weight using the composition at weaning that is consistent with the EVG parameters. See [Growth curve & partitioning.xlsx]
-    ### Composition is calculated at the standard initial relative size (ffcfw_initial) and the BW of a single (cb0[15] b0 slice 0)
-    ### so it is the same for all animals in the group. todo option 2: use each animal's initial relative size (and possibly the BW of twins & triplets)
-    ### todo the composition uses cg_cp (cg8 & cg9 without saa['evg_p11']) so the initial Fat% doesn't change with evg_p11. Change to use cg8 & cg9
-    ### including evg_p11 at weaning (as for srw_female_wean used for ffcfw_initial) so it is consistent with the EVG of the age stage at weaning.
-    ###Note:the EVG parameters cg_cp???? are the values prior to adding the saa_p11.
-    fat_propn_wean_yg0, muscle_propn_wean_yg0, viscera_propn_wean_yg0 = sfun.f1_fat_propn_initial(cg_cpsire, cb0_cpsire, ffcfw_initial_yg0
-                                            , fat_propn_birth_yg0)
-    fat_propn_wean_yg1, muscle_propn_wean_yg1, viscera_propn_wean_yg1 = sfun.f1_fat_propn_initial(cg_cpdams, cb0_cpdams, ffcfw_initial_yg1
-                                            , fat_propn_birth_yg1)
-    fat_propn_wean_yg3, muscle_propn_wean_yg3, viscera_propn_wean_yg3 = sfun.f1_fat_propn_initial(cg_cpoffs, cb0_cpoffs, ffcfw_initial_yg3
-                                            , fat_propn_birth_yg3)
-    ###Sire
-    fat_initial_pa1e1b1nwzida0e0b0xyg0 = fat_propn_wean_yg0 * ebw_initial_pa1e1b1nwzida0e0b0xyg0
-    muscle_initial_pa1e1b1nwzida0e0b0xyg0  = muscle_propn_wean_yg0 * ebw_initial_pa1e1b1nwzida0e0b0xyg0
-    viscera_initial_pa1e1b1nwzida0e0b0xyg0 = viscera_propn_wean_yg0 * ebw_initial_pa1e1b1nwzida0e0b0xyg0
-    ###Dams
-    fat_initial_pa1e1b1nwzida0e0b0xyg1 = fat_propn_wean_yg1 * ebw_initial_pa1e1b1nwzida0e0b0xyg1
-    muscle_initial_pa1e1b1nwzida0e0b0xyg1  = muscle_propn_wean_yg1 * ebw_initial_pa1e1b1nwzida0e0b0xyg1
-    viscera_initial_pa1e1b1nwzida0e0b0xyg1 = viscera_propn_wean_yg1 * ebw_initial_pa1e1b1nwzida0e0b0xyg1
-    ###Offs
-    fat_initial_pa1e1b1nwzida0e0b0xyg3 = fat_propn_wean_yg3 * ebw_initial_pa1e1b1nwzida0e0b0xyg3
-    muscle_initial_pa1e1b1nwzida0e0b0xyg3  = muscle_propn_wean_yg3 * ebw_initial_pa1e1b1nwzida0e0b0xyg3
-    viscera_initial_pa1e1b1nwzida0e0b0xyg3 = viscera_propn_wean_yg3 * ebw_initial_pa1e1b1nwzida0e0b0xyg3
-
-    # ##calc fat, muscle and viscera weight using f1_body_composition() based on Oddy [Sheep calcs.xlsx] relationships.
-    # ### No b axis on srw so that initial doesn't have a random effect from RR SA.
-    # fat_initial_pa1e1b1nwzida0e0b0xyg0, muscle_initial_pa1e1b1nwzida0e0b0xyg0, viscera_initial_pa1e1b1nwzida0e0b0xyg0 \
-    #     = sfun.f1_body_composition(cg_cpsire, cn_cpsire, fun.f_slice(cx_cpsire, {x_pos: [0,1]})
-    #                                , ebw_initial_pa1e1b1nwzida0e0b0xyg0, srw_female_pa1e1b1nwzida0e0b0xyg0
-    #                                , eqn_system = eqn_used_g0_q1p[7,0])
-    # fat_initial_pa1e1b1nwzida0e0b0xyg1, muscle_initial_pa1e1b1nwzida0e0b0xyg1, viscera_initial_pa1e1b1nwzida0e0b0xyg1 \
-    #     = sfun.f1_body_composition(cg_cpdams, cn_cpdams, fun.f_slice(cx_cpdams, {x_pos: [1,2]})
-    #                                , ebw_initial_pa1e1b1nwzida0e0b0xyg1, srw_female_pa1e1b1nwzida0e0b0xyg1
-    #                                , eqn_system = eqn_used_g1_q1p[7,0])
-    # fat_initial_pa1e1b1nwzida0e0b0xyg3, muscle_initial_pa1e1b1nwzida0e0b0xyg3, viscera_initial_pa1e1b1nwzida0e0b0xyg3 \
-    #     = sfun.f1_body_composition(cg_cpoffs, cn_cpoffs, fun.f_slice(cx_cpoffs, {x_pos: mask_x})
-    #                                , ebw_initial_pa1e1b1nwzida0e0b0xyg3, srw_female_pa1e1b1nwzida0e0b0xyg3
-    #                                , eqn_system = eqn_used_g3_q1p[7,0])
-
-    ##if stubble update fat, muscle and viscera weight   Stubble is using the same functions but with a custom m/d and b axis on srw
-    if stubble:
-        fat_initial_pa1e1b1nwzida0e0b0xyg0, muscle_initial_pa1e1b1nwzida0e0b0xyg0, viscera_initial_pa1e1b1nwzida0e0b0xyg0 \
-            = sfun.f1_body_composition(cg_cpsire, cn_cpsire, fun.f_slice(cx_cpsire, {x_pos: [0,1]})
-                                       , ebw_initial_pa1e1b1nwzida0e0b0xyg0, srw_female_pa1e1b1nwzida0e0b0xyg0
-                                       , stubble['i_md'], eqn_system = eqn_used_g0_q1p[7,0])
-        fat_initial_pa1e1b1nwzida0e0b0xyg1, muscle_initial_pa1e1b1nwzida0e0b0xyg1, viscera_initial_pa1e1b1nwzida0e0b0xyg1 \
-            = sfun.f1_body_composition(cg_cpdams, cn_cpdams, fun.f_slice(cx_cpdams, {x_pos: [1,2]})
-                                       , ebw_initial_pa1e1b1nwzida0e0b0xyg1, srw_female_pa1e1b1nwzida0e0b0xyg1
-                                       , stubble['i_md'], eqn_system = eqn_used_g1_q1p[7,0])
-        fat_initial_pa1e1b1nwzida0e0b0xyg3, muscle_initial_pa1e1b1nwzida0e0b0xyg3, viscera_initial_pa1e1b1nwzida0e0b0xyg3 \
-            = sfun.f1_body_composition(cg_cpoffs, cn_cpoffs, fun.f_slice(cx_cpoffs, {x_pos: mask_x})
-                                       , ebw_initial_pa1e1b1nwzida0e0b0xyg3, srw_female_pa1e1b1nwzida0e0b0xyg3
-                                       , stubble['i_md'], eqn_system = eqn_used_g3_q1p[7,0])
 
     ##numbers
     ###Distribution of initial numbers across the a1 axis
@@ -3308,6 +3272,108 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     d_nw_max_pa1e1b1nwzida0e0b0xyg1[0:-1, ...] = np.maximum(0, nw_max_pa1e1b1nwzida0e0b0xyg1[1:, ...] - nw_max_pa1e1b1nwzida0e0b0xyg1[0:-1, ...]) / np.maximum(1,days_period_pa1e1b1nwzida0e0b0xyg1[0:-1, ...]) #np max to stop div/0
     d_nw_max_pa1e1b1nwzida0e0b0xyg3 = np.zeros_like(nw_max_pa1e1b1nwzida0e0b0xyg3)
     d_nw_max_pa1e1b1nwzida0e0b0xyg3[0:-1, ...] = np.maximum(0, nw_max_pa1e1b1nwzida0e0b0xyg3[1:, ...] - nw_max_pa1e1b1nwzida0e0b0xyg3[0:-1, ...]) / np.maximum(1,days_period_cut_pa1e1b1nwzida0e0b0xyg3[0:-1, ...]) #np max to stop div/0
+
+    #######################################
+    #Composition and initial conditions 2 #
+    #######################################
+    #The updated method requires nw_max so this is separate from #initial conditions 1#
+    ##Initial composition is at the reference composition at its initial nw & rc consistent with the EVG parameters
+    ##and the calculations in [Growth curve & partitioning.xlsx]
+    ### The reference composition at each animal's initial state includes initial FFCFW with the w, x, d & b0 adjustments
+    ### b0 is active for offs, sire & dams (no active b0 axis) use the average weighted by the BTRT proportions (as w_b_std).
+    ### Lambs with a lower birth weight have a higher level of feeding on the standard path.
+    ###Note:the EVG parameters cg_cp???? are the values prior to adding the saa_p11.
+    ###todo the composition uses cg_cp (cg8 & cg9 without saa['evg_p11']) so the initial Fat% doesn't change with evg_p11.
+    ### Change to use cg8 & cg9 including evg_p11 (as for ffcfw_initial which uses srw_female_wean)
+    ### so it is consistent with the EVG of the age stage at weaning.
+
+    ##Composition term of EVG: the rate of reversion (only dams & offs revert, the composition of sire & yatf is not
+    ## altered).
+    evg_comp_k = fun.f_sa(0.0, sen.sav['evg_comp_k'], 5)
+
+    ###The composition is from the normal growth path with the level of feeding declining as relative size increases (cg40 &
+    ### cg41), the same path as the reference composition of the EVG composition term (sav['evg_comp_k']) so the animal starts
+    ### at the reference. The exponent of the level of feeding is cg41 / cx1 so it varies with the growth rate of the sex.
+    level_power_yg0 = cg_cpsire[41, ...] / fun.f_slice(cx_cpsire[1, ...], {x_pos: [0,1]})
+    level_power_yg1 = cg_cpdams[41, ...] / fun.f_slice(cx_cpdams[1, ...], {x_pos: [1,2]})
+    level_power_yg3 = cg_cpoffs[41, ...] / fun.f_slice(cx_cpoffs[1, ...], {x_pos: mask_x})
+    ### Size at birth relative to the SRW of the sex (cx15 / cx11) because z on the path is nw / SRW of the sex
+    relsize_birth_yg0 = (np.sum(cb0_cpsire[15, ...] * btrt_propn_b0xyg0, axis = b0_pos, keepdims=True)
+                        * fun.f_slice(cx_cpsire[15, ...] / cx_cpsire[11, ...], {x_pos: [0,1]}))
+    relsize_birth_yg1 = (np.sum(cb0_cpdams[15, ...] * btrt_propn_b0xyg1, axis = b0_pos, keepdims=True)
+                        * fun.f_slice(cx_cpdams[15, ...] / cx_cpdams[11, ...], {x_pos: [1,2]}))
+    relsize_birth_yg3 = cb0_cpoffs[15, ...] * fun.f_slice(cx_cpoffs[15, ...] / cx_cpoffs[11, ...], {x_pos: mask_x})
+    ### Initial normal weight, relative size & condition as in the first period of the loop
+    ### nw start = ffcfw + cn3 x (nw_max - ffcfw) (capped at nw_max).
+    ### Note: The weaning index is clipped separately for srw_p (p is a singleton if the p11 saa are not active) & nw_max (full p axis).
+    def f_initial_state(cg, cn, ffcfw, srw_p, nw_max_p, date_weaned_idx):
+        srw_wean = np.take_along_axis(srw_p, np.clip(date_weaned_idx, 0, srw_p.shape[p_pos] - 1), axis=p_pos)
+        nw_max_wean = np.take_along_axis(nw_max_p, np.clip(date_weaned_idx, 0, nw_max_p.shape[p_pos] - 1), axis=p_pos)
+        nw = np.minimum(nw_max_wean, ffcfw + cn[3, ...] * (nw_max_wean - ffcfw))
+        relsize1 = np.minimum(ffcfw, nw_max_wean) / srw_wean
+        zf2 = np.clip((relsize1 - cg[6, ...]) / (cg[7, ...] - cg[6, ...]), 0, 1)
+        return nw / srw_wean, fun.f_divide(ffcfw, nw), zf2
+    relsize_initial_yg0, relcond_initial_yg0, zf2_initial_yg0 = f_initial_state(cg_cpsire, cn_cpsire
+                                        , ffcfw_initial_pa1e1b1nwzida0e0b0xyg0, srw_p_pa1e1b1nwzida0e0b0xyg0
+                                        , nw_max_pa1e1b1nwzida0e0b0xyg0, date_weaned_idx_i_pa1e1b1nwzida0e0b0xyg0)
+    relsize_initial_yg1, relcond_initial_yg1, zf2_initial_yg1 = f_initial_state(cg_cpdams, cn_cpdams
+                                        , ffcfw_initial_pa1e1b1nwzida0e0b0xyg1, srw_p_pa1e1b1nwzida0e0b0xyg1
+                                        , nw_max_pa1e1b1nwzida0e0b0xyg1, date_weaned_idx_i_pa1e1b1nwzida0e0b0xyg1)
+    relsize_initial_yg3, relcond_initial_yg3, zf2_initial_yg3 = f_initial_state(cg_cpoffs, cn_cpoffs
+                                        , ffcfw_initial_pa1e1b1nwzida0e0b0xyg3, srw_p_pa1e1b1nwzida0e0b0xyg3
+                                        , nw_max_pa1e1b1nwzida0e0b0xyg3, date_weaned_idx_i_pa1e1b1nwzida0e0b0xyg3)
+    fat_propn_wean_yg0, muscle_propn_wean_yg0, viscera_propn_wean_yg0 = sfun.f1_fat_propn(cg_cpsire, relsize_birth_yg0
+                                            , relsize_initial_yg0, relcond_initial_yg0, zf2_initial_yg0
+                                            , fat_propn_birth_yg0, level_power_yg0)
+    fat_propn_wean_yg1, muscle_propn_wean_yg1, viscera_propn_wean_yg1 = sfun.f1_fat_propn(cg_cpdams, relsize_birth_yg1
+                                            , relsize_initial_yg1, relcond_initial_yg1, zf2_initial_yg1
+                                            , fat_propn_birth_yg1, level_power_yg1)
+    fat_propn_wean_yg3, muscle_propn_wean_yg3, viscera_propn_wean_yg3 = sfun.f1_fat_propn(cg_cpoffs, relsize_birth_yg3
+                                            , relsize_initial_yg3, relcond_initial_yg3, zf2_initial_yg3
+                                            , fat_propn_birth_yg3, level_power_yg3)
+    ###Sire
+    fat_initial_pa1e1b1nwzida0e0b0xyg0 = fat_propn_wean_yg0 * ebw_initial_pa1e1b1nwzida0e0b0xyg0
+    muscle_initial_pa1e1b1nwzida0e0b0xyg0  = muscle_propn_wean_yg0 * ebw_initial_pa1e1b1nwzida0e0b0xyg0
+    viscera_initial_pa1e1b1nwzida0e0b0xyg0 = viscera_propn_wean_yg0 * ebw_initial_pa1e1b1nwzida0e0b0xyg0
+    ###Dams
+    fat_initial_pa1e1b1nwzida0e0b0xyg1 = fat_propn_wean_yg1 * ebw_initial_pa1e1b1nwzida0e0b0xyg1
+    muscle_initial_pa1e1b1nwzida0e0b0xyg1  = muscle_propn_wean_yg1 * ebw_initial_pa1e1b1nwzida0e0b0xyg1
+    viscera_initial_pa1e1b1nwzida0e0b0xyg1 = viscera_propn_wean_yg1 * ebw_initial_pa1e1b1nwzida0e0b0xyg1
+    ###Offs
+    fat_initial_pa1e1b1nwzida0e0b0xyg3 = fat_propn_wean_yg3 * ebw_initial_pa1e1b1nwzida0e0b0xyg3
+    muscle_initial_pa1e1b1nwzida0e0b0xyg3  = muscle_propn_wean_yg3 * ebw_initial_pa1e1b1nwzida0e0b0xyg3
+    viscera_initial_pa1e1b1nwzida0e0b0xyg3 = viscera_propn_wean_yg3 * ebw_initial_pa1e1b1nwzida0e0b0xyg3
+
+    # ##calc fat, muscle and viscera weight using f1_body_composition() based on Oddy [Sheep calcs.xlsx] relationships.
+    # ### No b axis on srw so that initial doesn't have a random effect from RR SA.
+    # fat_initial_pa1e1b1nwzida0e0b0xyg0, muscle_initial_pa1e1b1nwzida0e0b0xyg0, viscera_initial_pa1e1b1nwzida0e0b0xyg0 \
+    #     = sfun.f1_body_composition(cg_cpsire, cn_cpsire, fun.f_slice(cx_cpsire, {x_pos: [0,1]})
+    #                                , ebw_initial_pa1e1b1nwzida0e0b0xyg0, srw_female_pa1e1b1nwzida0e0b0xyg0
+    #                                , eqn_system = eqn_used_g0_q1p[7,0])
+    # fat_initial_pa1e1b1nwzida0e0b0xyg1, muscle_initial_pa1e1b1nwzida0e0b0xyg1, viscera_initial_pa1e1b1nwzida0e0b0xyg1 \
+    #     = sfun.f1_body_composition(cg_cpdams, cn_cpdams, fun.f_slice(cx_cpdams, {x_pos: [1,2]})
+    #                                , ebw_initial_pa1e1b1nwzida0e0b0xyg1, srw_female_pa1e1b1nwzida0e0b0xyg1
+    #                                , eqn_system = eqn_used_g1_q1p[7,0])
+    # fat_initial_pa1e1b1nwzida0e0b0xyg3, muscle_initial_pa1e1b1nwzida0e0b0xyg3, viscera_initial_pa1e1b1nwzida0e0b0xyg3 \
+    #     = sfun.f1_body_composition(cg_cpoffs, cn_cpoffs, fun.f_slice(cx_cpoffs, {x_pos: mask_x})
+    #                                , ebw_initial_pa1e1b1nwzida0e0b0xyg3, srw_female_pa1e1b1nwzida0e0b0xyg3
+    #                                , eqn_system = eqn_used_g3_q1p[7,0])
+
+    ##if stubble update fat, muscle and viscera weight   Stubble is using the same functions but with a custom m/d and b axis on srw
+    if stubble:
+        fat_initial_pa1e1b1nwzida0e0b0xyg0, muscle_initial_pa1e1b1nwzida0e0b0xyg0, viscera_initial_pa1e1b1nwzida0e0b0xyg0 \
+            = sfun.f1_body_composition(cg_cpsire, cn_cpsire, fun.f_slice(cx_cpsire, {x_pos: [0,1]})
+                                       , ebw_initial_pa1e1b1nwzida0e0b0xyg0, srw_female_pa1e1b1nwzida0e0b0xyg0
+                                       , stubble['i_md'], eqn_system = eqn_used_g0_q1p[7,0])
+        fat_initial_pa1e1b1nwzida0e0b0xyg1, muscle_initial_pa1e1b1nwzida0e0b0xyg1, viscera_initial_pa1e1b1nwzida0e0b0xyg1 \
+            = sfun.f1_body_composition(cg_cpdams, cn_cpdams, fun.f_slice(cx_cpdams, {x_pos: [1,2]})
+                                       , ebw_initial_pa1e1b1nwzida0e0b0xyg1, srw_female_pa1e1b1nwzida0e0b0xyg1
+                                       , stubble['i_md'], eqn_system = eqn_used_g1_q1p[7,0])
+        fat_initial_pa1e1b1nwzida0e0b0xyg3, muscle_initial_pa1e1b1nwzida0e0b0xyg3, viscera_initial_pa1e1b1nwzida0e0b0xyg3 \
+            = sfun.f1_body_composition(cg_cpoffs, cn_cpoffs, fun.f_slice(cx_cpoffs, {x_pos: mask_x})
+                                       , ebw_initial_pa1e1b1nwzida0e0b0xyg3, srw_female_pa1e1b1nwzida0e0b0xyg3
+                                       , stubble['i_md'], eqn_system = eqn_used_g3_q1p[7,0])
+
 
 
     #########################
@@ -5297,7 +5363,11 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                 , age_pa1e1b1nwzida0e0b0xyg1[p:p+1], rev_trait_values['dams'][p]
                                 , nec_dams, kc_cs_pa1e1b1nwzida0e0b0xyg1, nel_dams, kl_cs_dams
                                 , gest_propn_pa1e1b1nwzida0e0b0xyg1[p:p+1], lact_propn_pa1e1b1nwzida0e0b0xyg1[p:p+1]
-                                , days_per_period=days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1], ebw_start=ebw_start_dams)
+                                , days_per_period=days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1], ebw_start=ebw_start_dams
+                                , fat=fat_start_dams, muscle=muscle_start_dams, viscera=viscera_start_dams
+                                , relsize=relsize_start_dams, relsize_birth=relsize_birth_yg1
+                                , fat_propn_birth=fat_propn_birth_yg1
+                                , level_power=level_power_yg1, k_comp=evg_comp_k)
                         if eqn_used:
                             ebg_dams = temp0
                             evg_dams = temp1
@@ -5317,7 +5387,11 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                         temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_lwc_cs(cg_cpoffs, rc_start_offs, mei_offs
                                 , mem_offs, new_offs, zf1_offs, zf2_offs, kg_offs, kw_cs_offs
                                 , age_cut_pa1e1b1nwzida0e0b0xyg3[p:p+1], rev_trait_values['offs'][p]
-                                , days_per_period=days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1], ebw_start=ebw_start_offs)
+                                , days_per_period=days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1], ebw_start=ebw_start_offs
+                                , fat=fat_start_offs, muscle=muscle_start_offs, viscera=viscera_start_offs
+                                , relsize=relsize_start_offs, relsize_birth=relsize_birth_yg3
+                                , fat_propn_birth=fat_propn_birth_yg3
+                                , level_power=level_power_yg3, k_comp=evg_comp_k)
                         if eqn_used:
                             ebg_offs = temp0
                             evg_offs = temp1
@@ -5341,7 +5415,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                 , ck_cpsire, rc_start_sire, mei_sire, neme_mu_sire, km_sire, hp_mei_mu_sire, new_sire
                                 , kw_mu_yg0, zf1_sire, zf2_sire, heat_loss_sirem0p1, age_pa1e1b1nwzida0e0b0xyg0[p:p+1]
                                 , rev_trait_values['sire'][p], days_period_pa1e1b1nwzida0e0b0xyg0[p:p+1], sam_kg=sam_kg_sire
-                                , ebw_start=ebw_start_sire)
+                                , ebw_start=ebw_start_sire, fat=fat_start_sire, muscle=muscle_start_sire, viscera=viscera_start_sire
+                                , relsize=relsize_start_sire, relsize_birth=relsize_birth_yg0
+                                , fat_propn_birth=fat_propn_birth_yg0)
                         #use this version of hp_total in f_templc_nfs() in next function call
                         hp_total_mu_sire = temp6
                         if eqn_used:
@@ -5382,7 +5458,11 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                 , kw_mu_yg1, zf1_dams, zf2_dams, heat_loss_damsm0p1, age_pa1e1b1nwzida0e0b0xyg1[p:p+1]
                                 , rev_trait_values['dams'][p], days_period_pa1e1b1nwzida0e0b0xyg1[p:p+1], nec=nec_dams
                                 , kc=kc_mu_pa1e1b1nwzida0e0b0xyg1, nel=nel_dams, kl=kl_mu_dams, gest_propn=gest_propn_pa1e1b1nwzida0e0b0xyg1[p:p+1]
-                                , lact_propn=lact_propn_pa1e1b1nwzida0e0b0xyg1[p:p+1], sam_kg=sam_kg_dams, ebw_start=ebw_start_dams)
+                                , lact_propn=lact_propn_pa1e1b1nwzida0e0b0xyg1[p:p+1], sam_kg=sam_kg_dams, ebw_start=ebw_start_dams
+                                , fat=fat_start_dams, muscle=muscle_start_dams, viscera=viscera_start_dams
+                                , relsize=relsize_start_dams, relsize_birth=relsize_birth_yg1
+                                , fat_propn_birth=fat_propn_birth_yg1
+                                , level_power=level_power_yg1, k_comp=evg_comp_k)
                         #use this version of hp_total in f_templc_nfs() in next function call. It excludes chill increment
                         hp_total_mu_dams = temp6
                         if eqn_used:
@@ -5423,7 +5503,10 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                 , ck_cpoffs, rc_start_offs, mei_offs, neme_mu_offs, km_offs, hp_mei_mu_offs, new_offs
                                 , kw_mu_yg3, zf1_offs, zf2_offs, heat_loss_offsm0p1, age_cut_pa1e1b1nwzida0e0b0xyg3[p:p+1]
                                 , rev_trait_values['offs'][p], days_period_pa1e1b1nwzida0e0b0xyg3[p:p+1], sam_kg=sam_kg_offs
-                                , ebw_start=ebw_start_offs)
+                                , ebw_start=ebw_start_offs, fat=fat_start_offs, muscle=muscle_start_offs, viscera=viscera_start_offs
+                                , relsize=relsize_start_offs, relsize_birth=relsize_birth_yg3
+                                , fat_propn_birth=fat_propn_birth_yg3
+                                , level_power=level_power_yg3, k_comp=evg_comp_k)
                         #use this version of hp_total in f_templc_nfs() in next function call
                         hp_total_mu_offs = temp6
                         if eqn_used:
@@ -8646,25 +8729,25 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             #Report the values, coefficients and target for the current iteration
             b=1; w=2; p=3; y=4; h=5; a2=6; a=7 # set the slice numbers in the saa_p11 arrays (a is using the a3 slice)
 
-            logger.debug(f"PCFW target {pcfw_target} this {pcfw} with (bv={sen.saa['bvcfw_p11'][p]})")
-            logger.debug(f"YCFW target {ycfw_target} this {ycfw} with (bv={sen.saa['bvcfw_p11'][y]} & {sen.saa['ycfw_scalar']})")
-            logger.debug(f"HCFW target {hcfw_target} this {hcfw} with (bv={sen.saa['bvcfw_p11'][h]})")
-            logger.debug(f"ACFW target {acfw_target} this {acfw} with (bv={sen.saa['bvcfw_p11'][a]})")
+            logger.debug(f"PCFW target {pcfw_target} this {pcfw} with (sfw={sfw_coefficient}, bv={sen.saa['bvcfw_p11'][p]})")
+            logger.debug(f"YCFW target {ycfw_target} this {ycfw} with (sfw={sfw_coefficient}, bv={sen.saa['bvcfw_p11'][y]} & scalar={ycfw_scalar})")
+            logger.debug(f"HCFW target {hcfw_target} this {hcfw} with (sfw={sfw_coefficient}, bv={sen.saa['bvcfw_p11'][h]})")
+            logger.debug(f"ACFW target {acfw_target} this {acfw} with (sfw={sfw_coefficient}, bv={sen.saa['bvcfw_p11'][a]})")
             logger.debug(f"2yo={a2cfw} 3yo={a3cfw} 4yo={a4cfw} 5yo={a5cfw}")
-            logger.debug(f"PFD target {pfd_target} this {pfd} with (sfd={sen.saa['sfd_p11'][p]})")
-            logger.debug(f"YFD target {yfd_target} this {yfd} with (sfd={sen.saa['sfd_p11'][y]} & {sen.saa['yfd_scalar']})")
-            logger.debug(f"HFD target {hfd_target} this {hfd} with (sfd={sen.saa['sfd_p11'][h]})")
-            logger.debug(f"AFD target {afd_target} this {afd} with (sfd={sen.saa['sfd_p11'][a]})")
+            logger.debug(f"PFD target {pfd_target} this {pfd} with (sfd={sfd_coefficient} + {sen.saa['sfd_p11'][p]})")
+            logger.debug(f"YFD target {yfd_target} this {yfd} with (sfd={sfd_coefficient} + {sen.saa['sfd_p11'][y]} & scalar={yfd_scalar})")
+            logger.debug(f"HFD target {hfd_target} this {hfd} with (sfd={sfd_coefficient} + {sen.saa['sfd_p11'][h]})")
+            logger.debug(f"AFD target {afd_target} this {afd} with (sfd={sfd_coefficient} + {sen.saa['sfd_p11'][a]})")
             logger.debug(f"2yo={a2fd} 3yo={a3fd} 4yo={a4fd} 5yo={a5fd}")
-            logger.debug(f"PSS target {pss_target} this {pss} with (iss={sen.saa['iss_p11'][p]})")
-            logger.debug(f"YSS target {yss_target} this {yss} with (iss={sen.saa['iss_p11'][y]})")
-            logger.debug(f"HSS target {hss_target} this {hss} with (iss={sen.saa['iss_p11'][h]})")
-            logger.debug(f"ASS target {ass_target} this {ass} with (iss={sen.saa['iss_p11'][a]})")
+            logger.debug(f"PSS target {pss_target} this {pss} with (iss={ss_coefficient} + {sen.saa['iss_p11'][p]})")
+            logger.debug(f"YSS target {yss_target} this {yss} with (iss={ss_coefficient} + {sen.saa['iss_p11'][y]})")
+            logger.debug(f"HSS target {hss_target} this {hss} with (iss={ss_coefficient} + {sen.saa['iss_p11'][h]})")
+            logger.debug(f"ASS target {ass_target} this {ass} with (iss={ss_coefficient} + {sen.saa['iss_p11'][a]})")
             logger.debug(f"2yo={a2ss} 3yo={a3ss} 4yo={a4ss} 5yo={a5ss}")
-            logger.debug(f"PSL target {psl_target} this {psl} with (follicles={sen.saa['follicles_p11'][p]})")
-            logger.debug(f"YSL target {ysl_target} this {ysl} with (follicles={sen.saa['follicles_p11'][y]})")
-            logger.debug(f"HSL target {hsl_target} this {hsl} with (follicles={sen.saa['follicles_p11'][h]})")
-            logger.debug(f"ASL target {asl_target} this {asl} with (follicles={sen.saa['follicles_p11'][a]})")
+            logger.debug(f"PSL target {psl_target} this {psl} with (follicles={sl_coefficient} + {sen.saa['follicles_p11'][p]})")
+            logger.debug(f"YSL target {ysl_target} this {ysl} with (follicles={sl_coefficient} + {sen.saa['follicles_p11'][y]})")
+            logger.debug(f"HSL target {hsl_target} this {hsl} with (follicles={sl_coefficient} + {sen.saa['follicles_p11'][h]})")
+            logger.debug(f"ASL target {asl_target} this {asl} with (follicles={sl_coefficient} + {sen.saa['follicles_p11'][a]})")
             logger.debug(f"2yo={a2sl} 3yo={a3sl} 4yo={a4sl} 5yo={a5sl}")
             logger.debug(f"YCON target {ycon_target} this {ycon} with ({sen.saa['con_p11'][y]})")
             logger.debug(f"A2CON target {a2con_target} this {a2con} with ({sen.saa['con_p11'][h]})")   #A2CON is active at the hogget age stage
@@ -8680,19 +8763,18 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             logger.debug(f"YERA twins target {yera2_target} this {yera2} with ({sen.saa['era_p11'][y]})")
             logger.debug(f"AERA twins target {aera2_target} this {aera2} with ({sen.saa['era_p11'][a]})")
             logger.debug(f"2yo={a2era2} 3yo={a3era2} 4yo={a4era2} 5yo={a5era2}")
-            ##srw_p11[w] & milk_scalar in the WWT line below are the totals including k_srw & k_cl0 x w_wt when w_wt is active
             if wwt_calibrated:
-                logger.debug(f"Weaning weight coefficient w_wt {w_wt} (k_cl0={k_cl0}, k_srw={k_srw})")
-            logger.debug(f"BWT target {bwt_target} this {bwt} with (srw_p11={sen.saa['srw_p11'][b]})")
-            logger.debug(f"WWT target {wwt_target} this {wwt} with (srw_p11={sen.saa['srw_p11'][w]} & milk_scalar={sen.saa['milk_yield']})")
+                logger.debug(f"Weaning weight coefficient w_wt {w_wt} (k_cl0={k_cl0}, k_srw={k_srw})")    #these are wrapped into srw_p11[w] & milk_yield that are reported below
+            logger.debug(f"BWT target {bwt_target} this {bwt} with (srw={srw_coefficient} + {sen.saa['srw_p11'][b]})")
+            logger.debug(f"WWT target {wwt_target} this {wwt} with (srw={srw_coefficient} + {sen.saa['srw_p11'][w]} & milk_scalar={milk_yield})")
             logger.debug(f"Initial ffcfw% {ffcfw_initial_parameter} (proportion of SRW at weaning, from the wWT target when calibrating)")
-            logger.debug(f"PWT target {pwt_target} this {pwt} with (srw_p11={sen.saa['srw_p11'][p]})")
-            logger.debug(f"YWT target {ywt_target} this {ywt} with (srw_p11={sen.saa['srw_p11'][y]}, k={sen.saa['growth_constant']} & PI={sen.saa['pi_p11'][y]})")
-            logger.debug(f"HWT target {hwt_target} this {hwt} with (srw_p11={sen.saa['srw_p11'][h]})")
-            logger.debug(f"AWT target {awt_target} this {awt} with (srw={srw_parameter}, srw_p11={sen.saa['srw_p11'][a]} & PI={sen.saa['pi_p11'][a]})")
+            logger.debug(f"PWT target {pwt_target} this {pwt} with (srw={srw_coefficient} + {sen.saa['srw_p11'][p]})")
+            logger.debug(f"YWT target {ywt_target} this {ywt} with (srw={srw_coefficient} + {sen.saa['srw_p11'][y]}, k={growth_constant} & PI={sen.saa['pi_p11'][y]})")
+            logger.debug(f"HWT target {hwt_target} this {hwt} with (srw={srw_coefficient} + {sen.saa['srw_p11'][h]})")
+            logger.debug(f"AWT target {awt_target} this {awt} with (srw={srw_parameter} + whole life {srw_coefficient} + srw_p11={sen.saa['srw_p11'][a]} & PI={sen.saa['pi_p11'][a]})")
             logger.debug(f"2yo={a2wt} 3yo={a3wt} 4yo={a4wt} 5yo={a5wt}")
             logger.debug(f"PFAT target {pfat_target} this {pfat} with (PI={sen.saa['pi_p11'][p]})")
-            logger.debug(f"YFAT target {yfat_target} this {yfat} with (PI={sen.saa['pi_p11'][y]} & pi_z={sen.saa['pi_z_constant']})")
+            logger.debug(f"YFAT target {yfat_target} this {yfat} with (PI={sen.saa['pi_p11'][y]} & pi_z={pi_z_constant})")
             logger.debug(f"HFAT target {hfat_target} this {hfat} with (PI={sen.saa['pi_p11'][h]})")
             logger.debug(f"AFAT target {afat_target} this {afat} with (PI={sen.saa['pi_p11'][a]})")
             logger.debug(f"2yo={a2fat} 3yo={a3fat} 4yo={a4fat} 5yo={a5fat}")
@@ -8702,9 +8784,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             logger.debug(f"HCS target {hcs_target} this {hcs} with (PI={sen.saa['pi_p11'][h]})")
             logger.debug(f"ACS target {acs_target} this {acs} with (PI={sen.saa['pi_p11'][a]})")
             logger.debug(f"2yo={a2cs} 3yo={a3cs} 4yo={a4cs} 5yo={a5cs}")
-            ##EVG & PI below are the total saa including the energy (k_evg & k_pi x energy) when the energy coefficient is active
-            if energy_calibrated:
-                logger.debug(f"Energy {energy_p11[a]} (k_evg={energy_k_evg}, k_pi={energy_k_pi})")
+            ##EVG & PI below include a_energy either as an adult only or a lifetime effect
+            if energy_calibrated:    #report the lifetime effect that is included below
+                logger.debug(f"Energy {energy_p11[a]} (k_evg={energy_k_evg}, k_pi={energy_k_pi}; whole of life: evg_adj={evg_adj}, pi_adj={pi_adj})")
             logger.debug(f"PWBE target {pwbe_target} this {pwbe} with (EVG={sen.saa['evg_p11'][p]} & PI={sen.saa['pi_p11'][p]})")
             logger.debug(f"YWBE target {ywbe_target} this {ywbe} with (EVG={sen.saa['evg_p11'][y]} & PI={sen.saa['pi_p11'][y]})")
             logger.debug(f"HWBE target {hwbe_target} this {hwbe} with (EVG={sen.saa['evg_p11'][h]} & PI={sen.saa['pi_p11'][h]})")
@@ -8727,10 +8809,10 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             logger.debug(f"2yo={a2fatper} 3yo={a3fatper} 4yo={a4fatper} 5yo={a5fatper}")
             logger.debug(f"Estimated Fat% when ALW = SRW, {fat_at_srw} with (SRW_actual={srw_actual}, ALW={awt}, Fat%={afatper} & EVG={cg8})")
             logger.debug(f"Estimated SRW when Fat% = {srwfat_yg1[0,0]*100}, {srw_from_fat} with (ALW={awt}, Fat%={afatper} & EVG={cg8})")
-            logger.debug(f"PSURV target {psurv_target} this {psurv} with ({sen.saa['bsurv_p11'][p]})")
-            logger.debug(f"YSURV target {ysurv_target} this {ysurv} with ({sen.saa['bsurv_p11'][y]})")
-            logger.debug(f"HSURV target {hsurv_target} this {hsurv} with ({sen.saa['bsurv_p11'][h]})")
-            logger.debug(f"ASURV target {asurv_target} this {asurv} with (Base={sen.saa['bsurv_p11'][a]} & PN={sen.saa['pnsurv_p11'][a]})")
+            logger.debug(f"PSURV target {psurv_target} this {psurv} with (Base={basal_mortality} p11={sen.saa['bsurv_p11'][p]})")
+            logger.debug(f"YSURV target {ysurv_target} this {ysurv} with (Base={basal_mortality} p11={sen.saa['bsurv_p11'][y]})")
+            logger.debug(f"HSURV target {hsurv_target} this {hsurv} with (Base={basal_mortality} p11={sen.saa['bsurv_p11'][h]})")
+            logger.debug(f"ASURV target {asurv_target} this {asurv} with (Base={basal_mortality} p11={sen.saa['bsurv_p11'][a]} & PN={sen.saa['pnsurv_p11'][a]})")
             logger.debug(f"2yo={a2surv} 3yo={a3surv} 4yo={a4surv} 5yo={a5surv}")
             logger.debug(f"Y-A5SURV target {ya5surv_target} this {ya5surv} with (Base={sen.saa['bsurv_p11'][a]} & PN={sen.saa['pnsurv_p11'][a]})")
 
@@ -8752,7 +8834,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         elif o_trait_values is not None:
             o_trait_values["output"] = trait_values_p
             o_trait_values["names"] = [name for name, value in trait_values]
-            return
+            return None
         else:  #report_lp_traits: stop the trial because the btrt savs aren't applied, so the LP results would be wrong
             raise RuntimeError(
                 "Trait values reported (sav['report_trait_values']). The trial is stopped because the btrt con/ls/era savs are not applied")
