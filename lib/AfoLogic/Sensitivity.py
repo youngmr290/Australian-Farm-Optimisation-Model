@@ -411,8 +411,9 @@ def create_sa():
     sav['force_ebg_scalar'] = False  #SA to force scaling of energy components to ebg (active if components are the REV target traits)
     sav['age_max'] = '-'  #SA on length of the generator for dams (years)
     sav['age_max_offs'] = '-'    #SA on length of the generator for offspring (years)
-    sav['eqn_compare']      = '-'                  #SA to alter if the different equation systems in the sheep sim are run and compared
-    sav['lwc_mid_rc']       = '-'                  #SA to calculate EVG at the mid-period rc rather than the rc at the start of the period (default False). Removes the drift in fat over cycles of gain & loss (CS & MU LWC equations)
+    sav['eqn_compare']      = '-'        #SA to alter if the different equation systems in the sheep sim are run and compared
+    sav['lwc_mid_rc']       = '-'        #SA to calculate EVG at the mid-period rc rather than the rc at the start of the period (default False). Removes the drift in fat over cycles of gain & loss (CS & MU LWC equations)
+    sav['evg_comp_k']       = '-'        #SA for the composition term of EVG (CSIRO & MU LWC equations): EVG += sign(energy surplus) x k x (reference - actual whole body energy per kg EBW), so a change in composition reverts towards the composition the current EVG parameters give on the normal growth path. Default 0 (off). The level of feeding on the normal growth path for the reference is cg40 & cg41 (Universal)
     sav['eqn_used_g0_q1p7'] = np.full(uinp.sheep['i_eqn_used_g0_q1p7'].shape, '-', dtype=object) #SA value for which equation system to use
     sav['eqn_used_g1_q1p7'] = np.full(uinp.sheep['i_eqn_used_g1_q1p7'].shape, '-', dtype=object) #SA value for which equation system to use
     sav['eqn_used_g2_q1p7'] = np.full(uinp.sheep['i_eqn_used_g2_q1p7'].shape, '-', dtype=object) #SA value for which equation system to use
@@ -448,6 +449,7 @@ def create_sa():
     sav['adjp_fd_initial_w3'] = np.full(sinp.structuralsa['i_adjp_fd_initial_w3'].shape, '-', dtype=object)      #initial fd adjustment offs
     sav['adjp_fl_initial_w3'] = np.full(sinp.structuralsa['i_adjp_fl_initial_w3'].shape, '-', dtype=object)      #initial fl adjustment offs
     sav['firstprejoin_averaged'] = False #do the a, e & b axes get averaged at the first prejoining (ewe lambs). If the value is False the mate/not mate decision is made at the previous weaning (then at prejoining nm passes to nm and mated passes to mated). This means DSP loses some flexibility (cant feed up animal then not mate). But this is not a huge limitation because mating decision is made over summer when little info about upcoming season is known.
+    sav['calibration_prejoin_1to1'] = False  #Calibration only (error if the LP is solved). At prejoining, if the number of w doesn't change, pass the dams 1:1 on w (averaged across a1, e1 & b1) rather than regrouping by percentile across w, a1, e1 & b1. Keeps each start w a separate path and removes the heavy bias of a single start w.
     sav['condense_at_seasonstart'] = '-'  # SA to alter if condensing occurs at season start. Default is False except in the MP model when this can be set to True so that core fvps can be masked out and just the season nodes for fvps.
     sav['user_fvp_date_dams_iu'] = np.full(sinp.structuralsa['i_dams_user_fvp_date_iu'].shape, '-', dtype=object)      #SA to control user fvp dates.
     sav['user_fvp_date_dams_yiu'] = np.full((len_y,)+sinp.structuralsa['i_dams_user_fvp_date_iu'].shape, '-', dtype=object)      #SA to control user fvp dates.
@@ -537,6 +539,7 @@ def create_sa():
     #####################
     ##SAV
     sav['srw_c2'] = np.full(uinp.parameters['i_srw_c2'].shape, '-', dtype=object)  #SA value for srw of each c2 genotype.
+    sav['ffcfw_initial_c2'] = np.full(uinp.parameters['i_ffcfw_initial_c2'].shape, '-', dtype=object)  #SA value for the initial ffcfw (proportion of SRW at weaning) of each c2 genotype. A calibrated genotype uses FFCFW_initial reported by the calibration.
     sav['sfw_c2'] = np.full(uinp.parameters['i_sfw_c2'].shape, '-', dtype=object)  #std fleece weight genotype params
     sav['sfd_c2'] = np.full(uinp.parameters['i_sfd_c2'].shape, '-', dtype=object)  #std fibre diameter genotype params
     sav['cn_c1c2'] = np.full(uinp.parameters['i_cn_c2'].shape, '-', dtype=object)  #normal growth params for genotypes
@@ -562,11 +565,16 @@ def create_sa():
     sam['muscle_target_c2'] = np.ones(uinp.parameters['i_muscle_target_c2'].shape, dtype='float64')   #std muscle mass target genotype params
     ##SAP
     ##SAA
-    saa['sfd_c2'] = 0.0              #std fibre diameter genotype params
+    saa['sfd_c2'] = np.zeros(uinp.parameters['i_sfd_c2'].shape, dtype='float64')  #std fibre diameter genotype params
     saa['sfw_c2'] = np.zeros(uinp.parameters['i_sfw_c2'].shape, dtype='float64')  #std fleece weight genotype params
-    saa['srw_c2'] = 0.0              #std reference weight genotype params
+    saa['srw_c2'] = np.zeros(uinp.parameters['i_srw_c2'].shape, dtype='float64')  #std reference weight genotype params
     saa['bvcfw_c2'] = 0.0            #BV for clean fleece weight params
+    saa['cn_c1c2'] = np.zeros(uinp.parameters['i_cn_c2'].shape, dtype='float64')  #SA value for normal growth params.
+    saa['ci_c1c2'] = np.zeros(uinp.parameters['i_ci_c2'].shape, dtype='float64')  #SA value for intake params.
+    saa['cl_c1c2'] = np.zeros(uinp.parameters['i_cl_c2'].shape, dtype='float64')  #SA value for lactation params.
+    saa['cw_c1c2'] = np.zeros(uinp.parameters['i_cw_c2'].shape, dtype='float64')  #SA value for wool growth params.
     saa['cg_c1c2'] = np.zeros(uinp.parameters['i_cg_c2'].shape, dtype='float64')  #SA value for weight gain params.
+    saa['cd_c1c2'] = np.zeros(uinp.parameters['i_cd_c2'].shape, dtype='float64')  #SA value for mortality params.
     saa['ck_c1c2'] = np.zeros(uinp.parameters['i_ck_c2'].shape, dtype='float64')  #SA value for energy efficiency params.
     saa['cl0_c1c2'] = np.zeros(uinp.parameters['i_cl0_c2'].shape, dtype='float64')  #SA value for litter size genotype params.
     saa['scan_std_c2'] = 0.0         #std scanning percentage of a genotype. Controls the MU repro, initial propn of sing/twin/trip prog required to replace the dams, the lifetime productivity of the dams as affected by their BTRT.
@@ -574,11 +582,6 @@ def create_sa():
     saa['lss'] = 0.0                 #lamb survival of singles. This SA alters the BTRT of the initial animals, it does not alter the calculation of lamb mortality. Therefore, both need to be used.
     saa['lstw'] = 0.0                #lamb survival of twins. This SA alters the BTRT of the initial animals, it does not alter the calculation of lamb mortality. Therefore, both need to be used.
     saa['lstr'] = 0.0                #lamb survival of triplets. This SA alters the BTRT of the initial animals, it does not alter the calculation of lamb mortality. Therefore, both need to be used.
-    saa['ycfw_scalar'] = 0.0         #Genotype calibration: Adjust scalar for ycfw genotype params
-    saa['yfd_scalar'] = 0.0          #Genotype calibration: Adjust scalar for yfd genotype params
-    saa['milk_yield'] = 0.0          #Genotype calibration: Adjust cl_yatf[0] parameter which alters milk production, lamb milk intake and ewe PI during lactation
-    saa['growth_constant'] = 0.0     #Genotype calibration: Adjust growth constant (k) param
-    saa['pi_z_constant'] = 0.0       #Genotype calibration: Adjust c1[2] & c1[22] parameters, PI z scalar constant
     ##SAV controlling the differential evolution in SheepCalibration.py (default values are set in SheepCalibration.py)
     sav['calib_polish'] = '-'        #SA to control if the DE solution is polished (L-BFGS-B) in SheepCalibration.py
     sav['calib_tol'] = '-'           #SA to alter the DE relative convergence tolerance in SheepCalibration.py
