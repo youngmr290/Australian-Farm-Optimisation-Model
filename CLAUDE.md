@@ -43,7 +43,8 @@ your own).
   Targets, weights, best-bet starting values and bounds come from `ExcelInputs/Calibration_control.xlsx`
   (sheets `Targets`/`Weights`/`BestBet`/`Low`/`High`); coefficients being fit normally live in
   `Universal.xlsx` but are *not* written back there automatically — results (fitted coefficients, success,
-  weighted SSE, iterations) are written to `ExcelInputs/CalibrationResults.xlsx` for manual review/transfer.
+  weighted SSE, iterations) are written to `ExcelInputs/CalibrationResults_<exp_no>.xlsx` for manual review/transfer
+  (named by the experiment since 22 Nov 2026; report mode writes `Output/TraitValues_<exp_no>.xlsx`; no suffix without an exp_no).
   Coefficient sets are grouped into independent "teams" (e.g. different traits/genotypes) that can each run
   DE in parallel; `calibration_objective()` calls `StockGenerator.generator(coefficients_c=..., calibrate_trait_values=True, ...)`
   directly as the DE objective function (skipping the Pyomo/LP stages entirely) and returns the
