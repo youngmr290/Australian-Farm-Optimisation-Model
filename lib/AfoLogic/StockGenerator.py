@@ -84,15 +84,32 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     genotype = pinp.sheep['a_c2_c0'][0].copy()  #2 is CFS for MLP & GEPEP traditional, 3 is GFS for GEPEP
     srw_parameter = uinp.parameters['i_srw_c2'][genotype].copy()  #set a value in case whole section is commented out
     calibrate_offs = True   #the offspring are generated unless calibrating without sav['calib_offs'] (see below)
-    ###Set whole of life sfw calibration coefficient. Set outside the calibration code because it is used in the trait report.
-    sfw_coefficient = 0.0  #change in SFW (kg, i_sfw_c2), whole of life. Only if the sfw coefficient is active
     ##Flag that the energy coefficient is active in the coefficient block (see below). If so SRW is not endogenous.
     ### Set outside the calibration code (with the energy values for the debug report) because it is used in the trait report.
     energy_calibrated = False
-    energy_p11 = energy_k_evg = energy_k_pi = None
+    energy_p11 = energy_k_evg = energy_k_pi = 0
     ##Flag that the weaning weight coefficient (w_wt) is active in the coefficient block (see below), with the values for the debug report.
     wwt_calibrated = False
     w_wt = k_cl0 = k_srw = 0
+    ##Set default values for the whole of life calibration coefficients.
+    ### Set outside the calibration code because they are used in the trait report.
+    ###Note: when the calibrated genotype is evaluated (from exp.xlsx) these calibration coefficients are applied to parameters in Universal.xlsx (not these variables)
+    sfw_coefficient = 0.0  #change SFW (kg, i_sfw_c2), whole of life. Only if the sfw coefficient is active
+    sfd_coefficient = 0.0  #change SFD (u, i_sfd_c2), whole of life.
+    ss_coefficient = 0.0  #change SS (N/kTex, i_cw_c2[16]), whole of life.
+    sl_coefficient = 0.0  #change SL (mm, i_cw_c2[11]), whole of life.
+    srw_coefficient = 0.0  #change SRW (kg, i_srw_c2), whole of life.
+    sav_srw = '-'  #Used when SRW is calculated endogenously
+    ycfw_scalar = 0.0
+    yfd_scalar = 0.0
+    birth_weight = 0.0
+    milk_yield = 0.0
+    growth_constant = 0.0
+    pi_z_constant = 0.0
+    basal_mortality = 0.0
+    evg_adj = 0.0
+    pi_adj = 0.0
+
     calibration_code_inc = calibrate_trait_values or o_trait_values is not None
     ##A trial initiated in RunAfoRaw can report its trait values (sav['report_trait_values'])
     ### using the debug report of the calibration traits. This is included so the genotype production levels
@@ -129,17 +146,6 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 raise ValueError(f"Calibration trait names ({description}) do not match [Calibration_control.xlsx]Targets:\n  "
                                  + "\n  ".join(mismatch[:10]) + (f"\n  ... and {len(mismatch) - 10} more" if len(mismatch) > 10 else ""))
 
-        ##set default values for variables that are used in the calibration
-        ### These can be sa passed from exp.xlsx, therefore reset here so not applied twice
-        sen.saa['ycfw_scalar'] = 0.0
-        sen.saa['yfd_scalar'] = 0.0
-        sen.saa['milk_yield'] = 0.0
-        sen.saa['growth_constant'] = 0.0
-        sen.saa['pi_z_constant'] = 0.0
-        sen.saa['basal_mortality'] = 0.0
-        sen.saa['evg_adj'] = 0.0
-        sen.saa['pi_adj'] = 0.0
-        sen.sav['srw_c2'][...] = '-'   #Used when SRW is calculated endogenously
 
         ##Set default value for adult_evg which is used as a flag for endogenous calculation of SRW
         adult_evg = None
@@ -154,10 +160,10 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         w = np.nan  #fleece growth prior to weaning is not carried forward to shearing
         p = coefficients_c[j]; j += 1
         y = coefficients_c[j]; j += 1
-        # sen.saa['ycfw_scalar'] = coefficients_c[j]; j += 1    #YCFW scalar, cw_dams[25] parameter which scales SFW
+        # ycfw_scalar = coefficients_c[j]; j += 1    #YCFW scalar, cw_dams[25] parameter which scales SFW
         h = coefficients_c[j]; j += 1
         a = coefficients_c[j]; j += 1
-        # sfw_coefficient = coefficients_c[j]; j += 1    #SFW (kg), i_sfw_c2 whole of life (all genotypes, as saa['sfw_c2'] ':' in exp.xlsx). GEPEP teams (TMSwith)
+        # sfw_coefficient = coefficients_c[j]; j += 1    #SFW (kg) for teams calibration
         sen.saa['bvcfw_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         #Standard fibre diameter, SFD parameter
@@ -166,9 +172,10 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         w = np.nan  #fleece growth prior to weaning is not carried forward to shearing
         p = coefficients_c[j]; j += 1
         y = coefficients_c[j]; j += 1
-        # sen.saa['yfd_scalar'] = coefficients_c[j]; j += 1    #YFD scalar, cw_dams[26] parameter which scales SFD
+        # yfd_scalar = coefficients_c[j]; j += 1    #YFD scalar, cw_dams[26] parameter which scales SFD
         h = coefficients_c[j]; j += 1
         a = coefficients_c[j]; j += 1
+        # sfd_coefficient = coefficients_c[j]; j += 1    #SFD (u) for teams calibration
         sen.saa['sfd_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         #Intrinsic staple strength, cw[16] parameter
@@ -179,6 +186,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         y = coefficients_c[j]; j += 1
         h = coefficients_c[j]; j += 1
         a = coefficients_c[j]; j += 1
+        # ss_coefficient = coefficients_c[j]; j += 1    #SS (N/kTex) for teams calibration
         sen.saa['iss_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         #Follicle number to calibrate staple length, cw[11] parameter
@@ -189,6 +197,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         y = coefficients_c[j]; j += 1
         h = coefficients_c[j]; j += 1
         a = coefficients_c[j]; j += 1
+        # sl_coefficient = coefficients_c[j]; j += 1    #SL (mm) for teams calibration
         sen.saa['follicles_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         #Conception, cb1[24,25&26, 0:] parameter
@@ -226,10 +235,10 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         ###If doing the combination then the fixed coefficients, k_srw & k_cl0, allocate w_wt to the 2 component coefficients.
         ##PWT or YWT can be calibrated by SRW age stage coefficients or by adjusting the growth constant (Note:only one target age stage).
         w = p = y = h = a = None
-        # sen.saa['birth_weight'] = coefficients_c[j]; j += 1    #Birth weight, #todo still to decide how to control BWT
+        # birth_weight = coefficients_c[j]; j += 1    #Birth weight, #todo still to decide how to control BWT
         b = np.nan  #bwt is changed with a separate coefficient
         w = np.nan  #wwt can be changed with separate coefficients
-        # sen.saa['milk_yield'] = coefficients_c[j]; j += 1    #Weaning weight, cl_yatf[0] parameter which alters milk production, lamb milk intake and ewe PI during lactation
+        # milk_yield = coefficients_c[j]; j += 1    #Weaning weight, cl_yatf[0] parameter which alters milk production, lamb milk intake and ewe PI during lactation
         w_wt = coefficients_c[j]; wwt_calibrated = True; j += 1
         if wwt_calibrated:   #w_wt is active
             k_srw = coefficients_c[j]; j += 1   #fixed coefficient: change in the SRW (kg) of the weaning age stage (srw_p11[w]) per unit of w_wt
@@ -237,19 +246,19 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             w = k_srw * w_wt
         p = coefficients_c[j]; j += 1
         y = coefficients_c[j]; j += 1   #ywt can be changed using the growth constant
-        # sen.saa['growth_constant'] = coefficients_c[j]; j += 1    #Yearling weight, cn_dams[1] parameter which alters the growth path
+        # growth_constant = coefficients_c[j]; j += 1    #Yearling weight, cn_dams[1] parameter which alters the growth path
         h = coefficients_c[j]; j += 1
         a = coefficients_c[j]; j += 1
+        # srw_coefficient = coefficients_c[j]; j += 1    #SRW (kg) for teams calibration
         sen.saa['srw_p11'] = sfun.f1_create_saa_param_p11(b=b, w=w, p=p, y=y, h=h, a=a)   #b & w passed so srw_p11[p] doesn't cascade to [w] and w_wt doesn't cascade to [b]
-        if wwt_calibrated:   #w_wt is active
-            sen.saa['milk_yield'] = sen.saa['milk_yield'] + k_cl0 * w_wt
+        milk_yield = milk_yield + k_cl0 * w_wt
 
         #Potential intake to calibrate Carcase fatness & WBE, ci[1] parameter
         w = p = y = h = a = None
         w = np.nan  #intake pre-weaning is handled with the cl[0] parameter, which is intake of milk
         p = coefficients_c[j]; j += 1
         y = coefficients_c[j]; j += 1
-        # sen.saa['pi_z_constant'] = coefficients_c[j]; j += 1    #ci[22] parameter which alters the scaling of PI by z
+        # pi_z_constant = coefficients_c[j]; j += 1    #ci[22] parameter which alters the scaling of PI by z
         h = np.nan  #no hfat
         # a = coefficients_c[j]; j += 1  #np.nan when SRW is an active calibration coefficient
         sen.saa['pi_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
@@ -283,8 +292,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             sen.saa['pi_p11'] = sen.saa['pi_p11'] + energy_k_pi * energy_p11
             # ###OR: whole of life (Team calibrations) through the genotype parameters. Exported as saa evg_adj & pi_adj
             # ###Also changes the birth stage & the pre-loop calcs that use cg_cp & ci_cp (e.g. initial composition)
-            # sen.saa['evg_adj'] = energy_k_evg * a
-            # sen.saa['pi_adj'] = energy_k_pi * a
+            # evg_adj = energy_k_evg * a
+            # pi_adj = energy_k_pi * a
 
         #Basal survival, cd[1] parameter
         w = p = y = h = a = None
@@ -293,7 +302,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         # y = coefficients_c[j]; j += 1
         h = np.nan  # adult survival does not cascade to younger ages. The EV of aSURV is only due to adults
         a = coefficients_c[j]; j += 1  #adult survival can also be represented in peri-natal survival
-        # sen.saa['basal_mortality'] = coefficients_c[j]; j += 1    #basal survival, cd_dams[1] parameter
+        # basal_mortality = coefficients_c[j]; j += 1    #basal survival, cd_dams[1] parameter
         sen.saa['bsurv_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         #Peri-natal survival, cu2[23, -1] parameter
@@ -548,34 +557,40 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             marginal_fatper = sfun.f1_wbe2fat_propn(cg_c2, adult_evg, 1)   #the propn of fat in the marginal kg at SRW
             rc_slope = sfun.f1_wbe2fat_propn(cg_c2, adult_evg + cg_c2[11], 1) - marginal_fatper   #change in the marginal fat propn per unit of rc (from cg11)
             rc_curve = sfun.f1_wbe2fat_propn(cg_c2, adult_evg + cg_c2[16], 1) - marginal_fatper   #change in the marginal fat propn per unit of (rc - 1)^2 above rc 1 (from cg16)
-            sen.sav['srw_c2'][genotype] = srw_parameter = sfun.f1_srw_from_fat(srw_awt, srw_afatper, srwfat, marginal_fatper, rc_slope, rc_curve)
+            sav_srw = srw_parameter = sfun.f1_srw_from_fat(srw_awt, srw_afatper, srwfat, marginal_fatper, rc_slope, rc_curve)
             logger.debug(f"Endogenous SRW {srw_parameter} "
                          f"from {[k for k, v in fatness_traits.items() if v]} "
                          f"target: ALW={srw_awt}, Fat%={srw_afatper}, EVG={adult_evg}, cg11={cg_c2[11]}, cg16={cg_c2[16]}")
             # srw_from_fat = awt * (1 - afatper) / (1 - srwfat_yg1)   #alternative formula that assumes lean mass is constant eg Hutton's model.
 
-        ###Apply the endogenous SRW. Note: If it wasn't calculated above then sav['srw_cw'] is '-'
-        uinp.parameters['i_srw_c2'] = fun.f_sa(uinp.parameters['i_srw_c2'].astype(float), sen.sav['srw_c2'], 5)
+        ###Apply the endogenous SRW. Note: If it wasn't calculated above then sav_srw is '-'
+        uinp.parameters['i_srw_c2'] = fun.f_sa(uinp.parameters['i_srw_c2'].astype(float), sav_srw, 5)
 
         ###Apply the SAA for genotype calibration coefficients that exclude the p11 axis
-        uinp.parameters['i_sfw_c2'] = uinp.parameters['i_sfw_c2'].astype(float) + sfw_coefficient   #all genotypes (as saa['sfw_c2'] ':' in exp.xlsx)
+        uinp.parameters['i_sfw_c2'] = fun.f_sa(uinp.parameters['i_sfw_c2'], sfw_coefficient, 2)
+        uinp.parameters['i_sfd_c2'] = fun.f_sa(uinp.parameters['i_sfd_c2'], sfd_coefficient, 2)
+        uinp.parameters['i_srw_c2'] = fun.f_sa(uinp.parameters['i_srw_c2'], srw_coefficient, 2)
+        idx = fun.f_slice_idx(uinp.parameters['i_cw_c2'], {0: [11]})
+        uinp.parameters['i_cw_c2'][idx] = fun.f_sa(uinp.parameters['i_cw_c2'][idx], sl_coefficient, 2)
+        idx = fun.f_slice_idx(uinp.parameters['i_cw_c2'], {0: [16]})
+        uinp.parameters['i_cw_c2'][idx] = fun.f_sa(uinp.parameters['i_cw_c2'][idx], ss_coefficient, 2)
         idx = fun.f_slice_idx(uinp.parameters['i_cw_c2'], {0: [25]})
-        uinp.parameters['i_cw_c2'][idx] = fun.f_sa(uinp.parameters['i_cw_c2'][idx], sen.saa['ycfw_scalar'], 2)
+        uinp.parameters['i_cw_c2'][idx] = fun.f_sa(uinp.parameters['i_cw_c2'][idx], ycfw_scalar, 2)
         idx = fun.f_slice_idx(uinp.parameters['i_cw_c2'], {0: [26]})
-        uinp.parameters['i_cw_c2'][idx] = fun.f_sa(uinp.parameters['i_cw_c2'][idx], sen.saa['yfd_scalar'], 2)
+        uinp.parameters['i_cw_c2'][idx] = fun.f_sa(uinp.parameters['i_cw_c2'][idx], yfd_scalar, 2)
         idx = fun.f_slice_idx(uinp.parameters['i_cl_c2'], {0: [0]})
-        uinp.parameters['i_cl_c2'][idx] = fun.f_sa(uinp.parameters['i_cl_c2'][idx], sen.saa['milk_yield'], 2)
-        sen.sap['pi_yatf'] = fun.f_sa(sen.sap['pi_yatf'], sen.saa['milk_yield'], 2)  #increase yatf PI (pasture as well as milk)
+        uinp.parameters['i_cl_c2'][idx] = fun.f_sa(uinp.parameters['i_cl_c2'][idx], milk_yield, 2)
+        sen.sap['pi_yatf'] = fun.f_sa(sen.sap['pi_yatf'], milk_yield, 2)  #increase yatf PI (pasture as well as milk)
         idx = fun.f_slice_idx(uinp.parameters['i_cn_c2'], {0: [1]})
-        uinp.parameters['i_cn_c2'][idx] = fun.f_sa(uinp.parameters['i_cn_c2'][idx].astype(float), sen.saa['growth_constant'], 2)
-        idx = fun.f_slice_idx(uinp.parameters['i_ci_c2'], {0: [22]})   #slice 22 GFS coefficient
-        uinp.parameters['i_ci_c2'][idx] = fun.f_sa(uinp.parameters['i_ci_c2'][idx], sen.saa['pi_z_constant'], 2)
-        idx = fun.f_slice_idx(uinp.parameters['i_cd_c2'], {0: [1]})
-        uinp.parameters['i_cd_c2'][idx] = fun.f_sa(uinp.parameters['i_cd_c2'][idx], sen.saa['basal_mortality'], 2)
-        idx = fun.f_slice_idx(uinp.parameters['i_cg_c2'], {0: [8, 10]})  #slices 8 & 9, the same absolute change
-        uinp.parameters['i_cg_c2'][idx] = fun.f_sa(uinp.parameters['i_cg_c2'][idx], sen.saa['evg_adj'], 2)
+        uinp.parameters['i_cn_c2'][idx] = fun.f_sa(uinp.parameters['i_cn_c2'][idx].astype(float), growth_constant, 2)
         idx = fun.f_slice_idx(uinp.parameters['i_ci_c2'], {0: [21]})
-        uinp.parameters['i_ci_c2'][idx] = fun.f_sa(uinp.parameters['i_ci_c2'][idx], sen.saa['pi_adj'], 2)
+        uinp.parameters['i_ci_c2'][idx] = fun.f_sa(uinp.parameters['i_ci_c2'][idx], pi_adj, 2)
+        idx = fun.f_slice_idx(uinp.parameters['i_ci_c2'], {0: [22]})
+        uinp.parameters['i_ci_c2'][idx] = fun.f_sa(uinp.parameters['i_ci_c2'][idx], pi_z_constant, 2)
+        idx = fun.f_slice_idx(uinp.parameters['i_cg_c2'], {0: [8, 10]})  #slices 8 & 9, the same absolute change
+        uinp.parameters['i_cg_c2'][idx] = fun.f_sa(uinp.parameters['i_cg_c2'][idx], evg_adj, 2)
+        idx = fun.f_slice_idx(uinp.parameters['i_cd_c2'], {0: [1]})
+        uinp.parameters['i_cd_c2'][idx] = fun.f_sa(uinp.parameters['i_cd_c2'][idx], basal_mortality, 2)
 
 
     ######################
@@ -8715,24 +8730,24 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             b=1; w=2; p=3; y=4; h=5; a2=6; a=7 # set the slice numbers in the saa_p11 arrays (a is using the a3 slice)
 
             logger.debug(f"PCFW target {pcfw_target} this {pcfw} with (sfw={sfw_coefficient}, bv={sen.saa['bvcfw_p11'][p]})")
-            logger.debug(f"YCFW target {ycfw_target} this {ycfw} with (sfw={sfw_coefficient}, bv={sen.saa['bvcfw_p11'][y]} & {sen.saa['ycfw_scalar']})")
+            logger.debug(f"YCFW target {ycfw_target} this {ycfw} with (sfw={sfw_coefficient}, bv={sen.saa['bvcfw_p11'][y]} & scalar={ycfw_scalar})")
             logger.debug(f"HCFW target {hcfw_target} this {hcfw} with (sfw={sfw_coefficient}, bv={sen.saa['bvcfw_p11'][h]})")
             logger.debug(f"ACFW target {acfw_target} this {acfw} with (sfw={sfw_coefficient}, bv={sen.saa['bvcfw_p11'][a]})")
             logger.debug(f"2yo={a2cfw} 3yo={a3cfw} 4yo={a4cfw} 5yo={a5cfw}")
-            logger.debug(f"PFD target {pfd_target} this {pfd} with (sfd={sen.saa['sfd_p11'][p]})")
-            logger.debug(f"YFD target {yfd_target} this {yfd} with (sfd={sen.saa['sfd_p11'][y]} & {sen.saa['yfd_scalar']})")
-            logger.debug(f"HFD target {hfd_target} this {hfd} with (sfd={sen.saa['sfd_p11'][h]})")
-            logger.debug(f"AFD target {afd_target} this {afd} with (sfd={sen.saa['sfd_p11'][a]})")
+            logger.debug(f"PFD target {pfd_target} this {pfd} with (sfd={sfd_coefficient} + {sen.saa['sfd_p11'][p]})")
+            logger.debug(f"YFD target {yfd_target} this {yfd} with (sfd={sfd_coefficient} + {sen.saa['sfd_p11'][y]} & scalar={yfd_scalar})")
+            logger.debug(f"HFD target {hfd_target} this {hfd} with (sfd={sfd_coefficient} + {sen.saa['sfd_p11'][h]})")
+            logger.debug(f"AFD target {afd_target} this {afd} with (sfd={sfd_coefficient} + {sen.saa['sfd_p11'][a]})")
             logger.debug(f"2yo={a2fd} 3yo={a3fd} 4yo={a4fd} 5yo={a5fd}")
-            logger.debug(f"PSS target {pss_target} this {pss} with (iss={sen.saa['iss_p11'][p]})")
-            logger.debug(f"YSS target {yss_target} this {yss} with (iss={sen.saa['iss_p11'][y]})")
-            logger.debug(f"HSS target {hss_target} this {hss} with (iss={sen.saa['iss_p11'][h]})")
-            logger.debug(f"ASS target {ass_target} this {ass} with (iss={sen.saa['iss_p11'][a]})")
+            logger.debug(f"PSS target {pss_target} this {pss} with (iss={ss_coefficient} + {sen.saa['iss_p11'][p]})")
+            logger.debug(f"YSS target {yss_target} this {yss} with (iss={ss_coefficient} + {sen.saa['iss_p11'][y]})")
+            logger.debug(f"HSS target {hss_target} this {hss} with (iss={ss_coefficient} + {sen.saa['iss_p11'][h]})")
+            logger.debug(f"ASS target {ass_target} this {ass} with (iss={ss_coefficient} + {sen.saa['iss_p11'][a]})")
             logger.debug(f"2yo={a2ss} 3yo={a3ss} 4yo={a4ss} 5yo={a5ss}")
-            logger.debug(f"PSL target {psl_target} this {psl} with (follicles={sen.saa['follicles_p11'][p]})")
-            logger.debug(f"YSL target {ysl_target} this {ysl} with (follicles={sen.saa['follicles_p11'][y]})")
-            logger.debug(f"HSL target {hsl_target} this {hsl} with (follicles={sen.saa['follicles_p11'][h]})")
-            logger.debug(f"ASL target {asl_target} this {asl} with (follicles={sen.saa['follicles_p11'][a]})")
+            logger.debug(f"PSL target {psl_target} this {psl} with (follicles={sl_coefficient} + {sen.saa['follicles_p11'][p]})")
+            logger.debug(f"YSL target {ysl_target} this {ysl} with (follicles={sl_coefficient} + {sen.saa['follicles_p11'][y]})")
+            logger.debug(f"HSL target {hsl_target} this {hsl} with (follicles={sl_coefficient} + {sen.saa['follicles_p11'][h]})")
+            logger.debug(f"ASL target {asl_target} this {asl} with (follicles={sl_coefficient} + {sen.saa['follicles_p11'][a]})")
             logger.debug(f"2yo={a2sl} 3yo={a3sl} 4yo={a4sl} 5yo={a5sl}")
             logger.debug(f"YCON target {ycon_target} this {ycon} with ({sen.saa['con_p11'][y]})")
             logger.debug(f"A2CON target {a2con_target} this {a2con} with ({sen.saa['con_p11'][h]})")   #A2CON is active at the hogget age stage
@@ -8750,16 +8765,16 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             logger.debug(f"2yo={a2era2} 3yo={a3era2} 4yo={a4era2} 5yo={a5era2}")
             if wwt_calibrated:
                 logger.debug(f"Weaning weight coefficient w_wt {w_wt} (k_cl0={k_cl0}, k_srw={k_srw})")    #these are wrapped into srw_p11[w] & milk_yield that are reported below
-            logger.debug(f"BWT target {bwt_target} this {bwt} with (srw_p11={sen.saa['srw_p11'][b]})")
-            logger.debug(f"WWT target {wwt_target} this {wwt} with (srw_p11={sen.saa['srw_p11'][w]} & milk_scalar={sen.saa['milk_yield']})")
+            logger.debug(f"BWT target {bwt_target} this {bwt} with (srw={srw_coefficient} + {sen.saa['srw_p11'][b]})")
+            logger.debug(f"WWT target {wwt_target} this {wwt} with (srw={srw_coefficient} + {sen.saa['srw_p11'][w]} & milk_scalar={milk_yield})")
             logger.debug(f"Initial ffcfw% {ffcfw_initial_parameter} (proportion of SRW at weaning, from the wWT target when calibrating)")
-            logger.debug(f"PWT target {pwt_target} this {pwt} with (srw_p11={sen.saa['srw_p11'][p]})")
-            logger.debug(f"YWT target {ywt_target} this {ywt} with (srw_p11={sen.saa['srw_p11'][y]}, k={sen.saa['growth_constant']} & PI={sen.saa['pi_p11'][y]})")
-            logger.debug(f"HWT target {hwt_target} this {hwt} with (srw_p11={sen.saa['srw_p11'][h]})")
-            logger.debug(f"AWT target {awt_target} this {awt} with (srw={srw_parameter}, srw_p11={sen.saa['srw_p11'][a]} & PI={sen.saa['pi_p11'][a]})")
+            logger.debug(f"PWT target {pwt_target} this {pwt} with (srw={srw_coefficient} + {sen.saa['srw_p11'][p]})")
+            logger.debug(f"YWT target {ywt_target} this {ywt} with (srw={srw_coefficient} + {sen.saa['srw_p11'][y]}, k={growth_constant} & PI={sen.saa['pi_p11'][y]})")
+            logger.debug(f"HWT target {hwt_target} this {hwt} with (srw={srw_coefficient} + {sen.saa['srw_p11'][h]})")
+            logger.debug(f"AWT target {awt_target} this {awt} with (srw={srw_parameter} + whole life {srw_coefficient} + srw_p11={sen.saa['srw_p11'][a]} & PI={sen.saa['pi_p11'][a]})")
             logger.debug(f"2yo={a2wt} 3yo={a3wt} 4yo={a4wt} 5yo={a5wt}")
             logger.debug(f"PFAT target {pfat_target} this {pfat} with (PI={sen.saa['pi_p11'][p]})")
-            logger.debug(f"YFAT target {yfat_target} this {yfat} with (PI={sen.saa['pi_p11'][y]} & pi_z={sen.saa['pi_z_constant']})")
+            logger.debug(f"YFAT target {yfat_target} this {yfat} with (PI={sen.saa['pi_p11'][y]} & pi_z={pi_z_constant})")
             logger.debug(f"HFAT target {hfat_target} this {hfat} with (PI={sen.saa['pi_p11'][h]})")
             logger.debug(f"AFAT target {afat_target} this {afat} with (PI={sen.saa['pi_p11'][a]})")
             logger.debug(f"2yo={a2fat} 3yo={a3fat} 4yo={a4fat} 5yo={a5fat}")
@@ -8771,7 +8786,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             logger.debug(f"2yo={a2cs} 3yo={a3cs} 4yo={a4cs} 5yo={a5cs}")
             ##EVG & PI below include a_energy either as an adult only or a lifetime effect
             if energy_calibrated:    #report the lifetime effect that is included below
-                logger.debug(f"Energy {energy_p11[a]} (k_evg={energy_k_evg}, k_pi={energy_k_pi}; whole of life evg_adj={sen.saa['evg_adj']}, pi_adj={sen.saa['pi_adj']})")
+                logger.debug(f"Energy {energy_p11[a]} (k_evg={energy_k_evg}, k_pi={energy_k_pi}; whole of life: evg_adj={evg_adj}, pi_adj={pi_adj})")
             logger.debug(f"PWBE target {pwbe_target} this {pwbe} with (EVG={sen.saa['evg_p11'][p]} & PI={sen.saa['pi_p11'][p]})")
             logger.debug(f"YWBE target {ywbe_target} this {ywbe} with (EVG={sen.saa['evg_p11'][y]} & PI={sen.saa['pi_p11'][y]})")
             logger.debug(f"HWBE target {hwbe_target} this {hwbe} with (EVG={sen.saa['evg_p11'][h]} & PI={sen.saa['pi_p11'][h]})")
@@ -8794,10 +8809,10 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             logger.debug(f"2yo={a2fatper} 3yo={a3fatper} 4yo={a4fatper} 5yo={a5fatper}")
             logger.debug(f"Estimated Fat% when ALW = SRW, {fat_at_srw} with (SRW_actual={srw_actual}, ALW={awt}, Fat%={afatper} & EVG={cg8})")
             logger.debug(f"Estimated SRW when Fat% = {srwfat_yg1[0,0]*100}, {srw_from_fat} with (ALW={awt}, Fat%={afatper} & EVG={cg8})")
-            logger.debug(f"PSURV target {psurv_target} this {psurv} with (Base={sen.saa['basal_mortality']} p11={sen.saa['bsurv_p11'][p]})")
-            logger.debug(f"YSURV target {ysurv_target} this {ysurv} with (Base={sen.saa['basal_mortality']} p11={sen.saa['bsurv_p11'][y]})")
-            logger.debug(f"HSURV target {hsurv_target} this {hsurv} with (Base={sen.saa['basal_mortality']} p11={sen.saa['bsurv_p11'][h]})")
-            logger.debug(f"ASURV target {asurv_target} this {asurv} with (Base={sen.saa['basal_mortality']} p11={sen.saa['bsurv_p11'][a]} & PN={sen.saa['pnsurv_p11'][a]})")
+            logger.debug(f"PSURV target {psurv_target} this {psurv} with (Base={basal_mortality} p11={sen.saa['bsurv_p11'][p]})")
+            logger.debug(f"YSURV target {ysurv_target} this {ysurv} with (Base={basal_mortality} p11={sen.saa['bsurv_p11'][y]})")
+            logger.debug(f"HSURV target {hsurv_target} this {hsurv} with (Base={basal_mortality} p11={sen.saa['bsurv_p11'][h]})")
+            logger.debug(f"ASURV target {asurv_target} this {asurv} with (Base={basal_mortality} p11={sen.saa['bsurv_p11'][a]} & PN={sen.saa['pnsurv_p11'][a]})")
             logger.debug(f"2yo={a2surv} 3yo={a3surv} 4yo={a4surv} 5yo={a5surv}")
             logger.debug(f"Y-A5SURV target {ya5surv_target} this {ya5surv} with (Base={sen.saa['bsurv_p11'][a]} & PN={sen.saa['pnsurv_p11'][a]})")
 
@@ -8819,7 +8834,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         elif o_trait_values is not None:
             o_trait_values["output"] = trait_values_p
             o_trait_values["names"] = [name for name, value in trait_values]
-            return
+            return None
         else:  #report_lp_traits: stop the trial because the btrt savs aren't applied, so the LP results would be wrong
             raise RuntimeError(
                 "Trait values reported (sav['report_trait_values']). The trial is stopped because the btrt con/ls/era savs are not applied")
