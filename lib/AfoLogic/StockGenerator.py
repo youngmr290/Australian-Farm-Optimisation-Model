@@ -163,7 +163,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         # ycfw_scalar = coefficients_c[j]; j += 1    #YCFW scalar, cw_dams[25] parameter which scales SFW
         h = coefficients_c[j]; j += 1
         a = coefficients_c[j]; j += 1
-        sfw_coefficient = coefficients_c[j]; j += 1    #SFW (kg) for teams calibration
+        # sfw_coefficient = coefficients_c[j]; j += 1    #SFW (kg) for teams calibration
         sen.saa['bvcfw_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         #Standard fibre diameter, SFD parameter
@@ -175,7 +175,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         # yfd_scalar = coefficients_c[j]; j += 1    #YFD scalar, cw_dams[26] parameter which scales SFD
         h = coefficients_c[j]; j += 1
         a = coefficients_c[j]; j += 1
-        sfd_coefficient = coefficients_c[j]; j += 1    #SFD (u) for teams calibration
+        # sfd_coefficient = coefficients_c[j]; j += 1    #SFD (u) for teams calibration
         sen.saa['sfd_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         #Intrinsic staple strength, cw[16] parameter
@@ -186,7 +186,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         y = coefficients_c[j]; j += 1
         h = coefficients_c[j]; j += 1
         a = coefficients_c[j]; j += 1
-        ss_coefficient = coefficients_c[j]; j += 1    #SS (N/kTex) for teams calibration
+        # ss_coefficient = coefficients_c[j]; j += 1    #SS (N/kTex) for teams calibration
         sen.saa['iss_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         #Follicle number to calibrate staple length, cw[11] parameter
@@ -197,7 +197,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         y = coefficients_c[j]; j += 1
         h = coefficients_c[j]; j += 1
         a = coefficients_c[j]; j += 1
-        sl_coefficient = coefficients_c[j]; j += 1    #SL (mm) for teams calibration
+        # sl_coefficient = coefficients_c[j]; j += 1    #SL (mm) for teams calibration
         sen.saa['follicles_p11'] = sfun.f1_create_saa_param_p11(w=w, p=p, y=y, h=h, a=a)
 
         #Conception, cb1[24,25&26, 0:] parameter
